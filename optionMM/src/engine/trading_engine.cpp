@@ -84,6 +84,21 @@ void TradingEngine::populate_instrument_registry() noexcept {
     // Wire instrument registry to feed handler
     if (feed_)
         feed_->set_instruments(instruments_, n_instruments_);
+
+    // Seed option_T_ so pricer_loop has valid values before timer fires
+    refresh_option_T();
+}
+
+void TradingEngine::refresh_option_T() noexcept {
+    const int64_t now_ns = get_monotonic_ns();
+    static constexpr double NS_PER_YEAR = 365.0 * 24.0 * 3600.0 * 1e9;
+    for (int p = 0; p < cfg_.product_count && p < MAX_PRODUCTS; ++p) {
+        for (uint16_t oi = 0; oi < option_count_[p]; ++oi) {
+            const Instrument& opt = instruments_[option_ids_[p][oi]];
+            double T = (opt.expiry_epoch_ns - now_ns) / NS_PER_YEAR;
+            option_T_[p][oi] = (T > 1e-4) ? T : 1e-4;
+        }
+    }
 }
 
 void TradingEngine::init_strategies() noexcept {
@@ -221,14 +236,9 @@ void TradingEngine::pricer_loop() noexcept {
             const uint16_t    opt_id = option_ids_[prod][oi];
             const Instrument& opt    = instruments_[opt_id];
 
-            // Time to expiry in years
-            double T = (opt.expiry_epoch_ns - tick.recv_ts_ns)
-                       / (365.0 * 24.0 * 3600.0 * 1e9);
-            if (T < 1e-4) T = 1e-4;
-
             F_arr[oi]        = F;
             K_arr[oi]        = opt.strike;
-            T_arr[oi]        = T;
+            T_arr[oi]        = option_T_[prod][oi];   // pre-computed, refreshed every 1s
             r_arr[oi]        = cfg_.pricing.risk_free_rate;
             sigma_arr[oi]    = surf->get_vol(option_log_K_[prod][oi] - log_F, T_arr[oi]);
             is_call_arr[oi]  = (opt.option_type == OptionType::Call) ? 1 : 0;
@@ -553,21 +563,38 @@ void TradingEngine::risk_monitor_loop() noexcept {
 void TradingEngine::timer_loop() noexcept {
     set_thread_name("omm-timer");
 
+    int64_t last_hedge_ns   = get_monotonic_ns();
+    int64_t last_T_refresh_ns = last_hedge_ns;
+    const int64_t hedge_interval_ns =
+        static_cast<int64_t>(cfg_.timer.hedge_check_interval_ms) * 1'000'000LL;
+    static constexpr int64_t T_REFRESH_NS = 1'000'000'000LL;  // 1 second
+
     while (!stop_flag_.load(std::memory_order_relaxed)) {
-        // Hedge check event every hedge_check_interval_ms
-        struct timespec ts{0,
-            static_cast<long>(cfg_.timer.hedge_check_interval_ms) * 1'000'000L};
+        // Sleep 100ms at a time so stop_flag is checked promptly
+        struct timespec ts{0, 100'000'000};
         nanosleep(&ts, nullptr);
 
         if (stop_flag_.load(std::memory_order_relaxed)) break;
 
-        TimerEvent ev{};
-        ev.trigger_ts_ns = get_monotonic_ns();
-        ev.type          = TimerEventType::HedgeCheck;
+        const int64_t now = get_monotonic_ns();
 
-        for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i) {
-            if (strategies_[i])
-                strategies_[i]->on_timer(ev);
+        // Refresh option_T_ every second (T changes by ~1/86400 per day)
+        if (now - last_T_refresh_ns >= T_REFRESH_NS) {
+            refresh_option_T();
+            last_T_refresh_ns = now;
+        }
+
+        // Hedge check at configured interval
+        if (now - last_hedge_ns >= hedge_interval_ns) {
+            TimerEvent ev{};
+            ev.trigger_ts_ns = now;
+            ev.type          = TimerEventType::HedgeCheck;
+
+            for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i) {
+                if (strategies_[i])
+                    strategies_[i]->on_timer(ev);
+            }
+            last_hedge_ns = now;
         }
     }
 }

@@ -115,6 +115,12 @@ private:
     uint16_t option_count_[MAX_PRODUCTS]{};
     // Per-product cached log(K) for each option — eliminates log() in hot pricer path
     double   option_log_K_[MAX_PRODUCTS][MAX_INSTRUMENTS]{};
+    // Per-product cached T (time to expiry in years) — refreshed every second by
+    // timer_loop; read by pricer_loop. Stored as plain doubles: pricer reads a
+    // slightly stale value at worst (1s drift ≈ 0.001% for a 3-month option).
+    // alignas(64) keeps the array on its own cache line to avoid false sharing
+    // with the write side in timer_loop.
+    alignas(64) double option_T_[MAX_PRODUCTS][MAX_INSTRUMENTS]{};
 
     // Greeks snapshot — updated by pricer thread, read by gRPC server
     alignas(64) Greeks     greeks_snapshot_[MAX_INSTRUMENTS]{};
@@ -147,6 +153,9 @@ private:
     void populate_instrument_registry() noexcept;
     void init_strategies() noexcept;
     void init_vol_surfaces() noexcept;
+    // Recomputes option_T_ for all products using current monotonic time.
+    // Called once at startup and then every second from timer_loop.
+    void refresh_option_T() noexcept;
 };
 
 } // namespace omm
