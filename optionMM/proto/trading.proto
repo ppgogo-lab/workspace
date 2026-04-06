@@ -1,0 +1,171 @@
+syntax = "proto3";
+
+package omm.proto;
+
+// ─── Common types ─────────────────────────────────────────────────────────────
+
+message Greeks {
+    uint32 instrument_id = 1;
+    double theo_price    = 2;
+    double delta         = 3;
+    double gamma         = 4;
+    double vega          = 5;
+    double theta         = 6;
+    double rho           = 7;
+    double iv            = 8;
+    double T             = 9;
+    int64  calc_ts_ns    = 10;
+}
+
+message Position {
+    uint32 instrument_id  = 1;
+    int32  net_position   = 2;
+    double avg_price      = 3;
+    double realized_pnl   = 4;
+    double unrealized_pnl = 5;
+}
+
+message PortfolioGreeks {
+    double total_delta = 1;
+    double total_gamma = 2;
+    double total_vega  = 3;
+    double total_theta = 4;
+}
+
+message RiskAlert {
+    enum AlertType {
+        POSITION_BREACH = 0;
+        DELTA_BREACH    = 1;
+        GAMMA_BREACH    = 2;
+        VEGA_BREACH     = 3;
+    }
+    AlertType type       = 1;
+    string    message    = 2;
+    int64     ts_ns      = 3;
+}
+
+message Tick {
+    uint32 instrument_id  = 1;
+    double last_price     = 2;
+    double bid_price      = 3;
+    double ask_price      = 4;
+    int32  bid_volume     = 5;
+    int32  ask_volume     = 6;
+    int64  exchange_ts_ns = 7;
+    int64  recv_ts_ns     = 8;
+}
+
+message OrderUpdate {
+    uint64 client_order_id  = 1;
+    uint32 instrument_id    = 2;
+    string status           = 3;
+    double fill_price       = 4;
+    int32  fill_volume      = 5;
+    int64  ts_ns            = 6;
+}
+
+message QuoteUpdate {
+    uint64 client_quote_id = 1;
+    uint32 instrument_id   = 2;
+    double bid_price       = 3;
+    double ask_price       = 4;
+    int32  bid_volume      = 5;
+    int32  ask_volume      = 6;
+    string status          = 7;
+    int64  ts_ns           = 8;
+}
+
+message VolSurfaceSlice {
+    double expiry_T = 1;
+    repeated double strikes = 2;
+    repeated double vols    = 3;
+}
+
+message VolSurface {
+    uint32 product_index           = 1;
+    repeated VolSurfaceSlice slices = 2;
+    int64  fit_ts_ns               = 3;
+}
+
+// ─── Control request/response ─────────────────────────────────────────────────
+
+message MMParams {
+    double bid_spread            = 1;
+    double ask_spread            = 2;
+    double hedge_delta_threshold = 3;
+    int32  quote_volume          = 4;
+    int32  max_position          = 5;
+    bool   enabled               = 6;
+}
+
+message SetStrategyParamsRequest {
+    uint32   product_index = 1;
+    MMParams params        = 2;
+}
+
+message SetStrategyParamsResponse {
+    bool   ok      = 1;
+    string message = 2;
+}
+
+message StartStopRequest {
+    int32 product_index = 1;  // -1 = all products
+}
+
+message StartStopResponse {
+    bool   ok      = 1;
+    string message = 2;
+}
+
+message RiskThreshold {
+    double max_net_position = 1;
+    double max_delta        = 2;
+    double max_gamma        = 3;
+    double max_vega         = 4;
+}
+
+message SetRiskThresholdRequest  { RiskThreshold threshold = 1; }
+message SetRiskThresholdResponse { bool ok = 1; string message = 2; }
+
+message ManualOrderRequest {
+    uint32 instrument_id = 1;
+    string side          = 2;  // "buy" | "sell"
+    double price         = 3;
+    int32  volume        = 4;
+}
+message ManualOrderResponse { bool ok = 1; string message = 2; uint64 order_id = 3; }
+
+message CancelOrderRequest  { uint64 order_id = 1; uint32 instrument_id = 2; }
+message CancelOrderResponse { bool ok = 1; string message = 2; }
+
+message SnapshotRequest  {}
+message SnapshotResponse {
+    repeated Greeks    greeks     = 1;
+    repeated Position  positions  = 2;
+    PortfolioGreeks    portfolio  = 3;
+    repeated MMParams  mm_params  = 4;
+}
+
+message StreamRequest { uint32 product_index = 1; }  // 0xFF = all
+
+// ─── Service ──────────────────────────────────────────────────────────────────
+
+service TradingMonitor {
+    // ── Streaming (server → client) ──────────────────────────────────────────
+    rpc StreamGreeks     (StreamRequest) returns (stream Greeks);
+    rpc StreamPositions  (StreamRequest) returns (stream Position);
+    rpc StreamTicks      (StreamRequest) returns (stream Tick);
+    rpc StreamOrders     (StreamRequest) returns (stream OrderUpdate);
+    rpc StreamQuotes     (StreamRequest) returns (stream QuoteUpdate);
+    rpc StreamRiskAlerts (StreamRequest) returns (stream RiskAlert);
+    rpc StreamVolSurface (StreamRequest) returns (stream VolSurface);
+
+    // ── Control (client → server, unary) ─────────────────────────────────────
+    rpc SetStrategyParams  (SetStrategyParamsRequest)  returns (SetStrategyParamsResponse);
+    rpc StartStrategy      (StartStopRequest)          returns (StartStopResponse);
+    rpc StopStrategy       (StartStopRequest)          returns (StartStopResponse);
+    rpc SetRiskThreshold   (SetRiskThresholdRequest)   returns (SetRiskThresholdResponse);
+    rpc SendManualOrder    (ManualOrderRequest)         returns (ManualOrderResponse);
+    rpc CancelOrder        (CancelOrderRequest)        returns (CancelOrderResponse);
+    rpc GetSnapshot        (SnapshotRequest)           returns (SnapshotResponse);
+}

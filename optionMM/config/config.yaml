@@ -1,0 +1,96 @@
+instance:
+  exchange_id: "SHFE"
+  account_id:  "ACC001"
+
+feed:
+  type: multicast
+  multicast:
+    interface: "eth0"
+    port: 9001
+    rcvbuf_mb: 8
+    groups:
+      - "239.1.1.1"
+  fpga:
+    device: "/dev/fpga0"
+
+gateway:
+  type: ctp
+  ctp:
+    front_addr: "tcp://180.168.146.187:10201"
+    broker_id:  "9999"
+    user_id:    "000001"
+    password:   "changeme"
+    app_id:     ""
+    auth_code:  ""
+  femas:
+    front_addr: "tcp://127.0.0.1:17001"
+    broker_id:  "0001"
+    user_id:    "000001"
+    password:   "changeme"
+
+pricing:
+  risk_free_rate: 0.025
+  vol_surface:
+    method: svi                 # svi | sabr | cubic_spline
+    fit_interval_seconds: 60
+  sabr_beta: 1.0
+
+risk:
+  hard:
+    max_volume_per_order: 100
+  soft:
+    max_net_position: 500
+    max_delta:        1000.0
+    max_gamma:        500.0
+    max_vega:         10000.0
+
+# One entry per underlying option series.
+# Each product gets its own strategy thread pinned to strategy_core.
+products:
+  - underlying_id:   "cu2501"
+    exchange_id:     "SHFE"
+    strategy_core:   4
+    strategy_type:   simple_mm
+    params:
+      bid_spread:             0.5
+      ask_spread:             0.5
+      quote_volume:           10
+      hedge_delta_threshold:  50.0
+      min_quote_interval_ms:  100.0
+      max_position:           500
+      enabled:                true
+
+  - underlying_id:   "cu2502"
+    exchange_id:     "SHFE"
+    strategy_core:   5
+    strategy_type:   simple_mm
+    params:
+      bid_spread:             0.5
+      ask_spread:             0.5
+      quote_volume:           10
+      hedge_delta_threshold:  50.0
+      min_quote_interval_ms:  100.0
+      max_position:           500
+      enabled:                true
+
+timer:
+  hedge_check_interval_ms:   1000
+  quote_refresh_interval_ms: 500
+  session_schedule:
+    - open:  "09:00:00"
+      close: "11:30:00"
+    - open:  "13:30:00"
+      close: "15:00:00"
+
+monitoring:
+  grpc_listen_addr: "0.0.0.0:50051"
+
+thread_affinity:
+  feed_core:               2
+  pricer_core:             3
+  # strategy cores are declared per-product above (cores 4, 5, ...)
+  gateway_dispatcher_core: 12
+  vol_fitter_core:         13
+  risk_monitor_core:       14
+  timer_core:              14
+  grpc_server_core:        15
