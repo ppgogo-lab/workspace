@@ -46,6 +46,20 @@ void compute_batch_avx2(
     Black76Result* out,
     int            count
 ) noexcept;
+
+// Optimized batch pricer with pre-computed sqrt(T) and exp(-r*T).
+// Used when T and r are constant across the batch (same expiry, same rate).
+void compute_batch_avx2_precomputed(
+    const double*  F,
+    const double*  K,
+    const double*  T,
+    const double*  sqrt_T,    // pre-computed sqrt(T) per option
+    const double*  disc,      // pre-computed exp(-r*T) per option
+    const double*  sigma,
+    const uint8_t* is_call,
+    Black76Result* out,
+    int            count
+) noexcept;
 #endif
 
 // ─── Implied volatility inversion ────────────────────────────────────────────
@@ -63,7 +77,7 @@ void compute_batch_avx2(
     double tol = 1e-7     // convergence tolerance on IV
 ) noexcept;
 
-// ─── Dispatch helper ─────────────────────────────────────────────────────────
+// ─── Dispatch helpers ─────────────────────────────────────────────────────────
 // Calls AVX2 batch if available, otherwise falls back to scalar loop.
 inline void compute_batch(
     const double*  F,
@@ -80,6 +94,28 @@ inline void compute_batch(
 #else
     for (int i = 0; i < count; ++i)
         out[i] = compute_scalar(F[i], K[i], T[i], r[i], sigma[i], is_call[i] != 0);
+#endif
+}
+
+// Dispatch for precomputed sqrt(T) and disc variant.
+inline void compute_batch_precomputed(
+    const double*  F,
+    const double*  K,
+    const double*  T,
+    const double*  sqrt_T,
+    const double*  disc,
+    const double*  sigma,
+    const uint8_t* is_call,
+    Black76Result* out,
+    int            count
+) noexcept {
+#ifdef __AVX2__
+    compute_batch_avx2_precomputed(F, K, T, sqrt_T, disc, sigma, is_call, out, count);
+#else
+    for (int i = 0; i < count; ++i) {
+        double r_val = (T[i] > 1e-10) ? -std::log(disc[i]) / T[i] : 0.0;
+        out[i] = compute_scalar(F[i], K[i], T[i], r_val, sigma[i], is_call[i] != 0);
+    }
 #endif
 }
 

@@ -260,6 +260,119 @@ void compute_batch_avx2(const double* F, const double* K, const double* T,
         out[i] = compute_scalar(F[i], K[i], T[i], r[i], sigma[i], is_call[i] != 0);
 }
 
+// ─── AVX2 batch pricer with pre-computed sqrt(T) and disc ────────────────────
+// Optimized for the case where all options share the same expiry (same T, r).
+// Eliminates 8 sqrt() and 8 exp() calls per 4-option batch.
+
+static void compute_4_precomputed(const double* F, const double* K,
+                                   const double* T, const double* sqrt_T,
+                                   const double* disc, const double* sigma,
+                                   const uint8_t* is_call,
+                                   Black76Result* out) noexcept {
+    __m256d vF     = _mm256_loadu_pd(F);
+    __m256d vK     = _mm256_loadu_pd(K);
+    __m256d vT     = _mm256_loadu_pd(T);
+    __m256d vSig   = _mm256_loadu_pd(sigma);
+    __m256d vSqrtT = _mm256_loadu_pd(sqrt_T);   // pre-computed
+    __m256d vDisc  = _mm256_loadu_pd(disc);     // pre-computed
+
+    __m256d vSigSqrtT = _mm256_mul_pd(vSig, vSqrtT);
+
+    // d1 = (log(F/K) + 0.5*sigma^2*T) / (sigma*sqrt(T))
+    __m256d ratio = _mm256_div_pd(vF, vK);
+    alignas(32) double lbuf[4], rbuf[4];
+    _mm256_store_pd(lbuf, ratio);
+    for (int i = 0; i < 4; ++i) rbuf[i] = std::log(lbuf[i]);
+    __m256d log_FK = _mm256_load_pd(rbuf);
+
+    __m256d half_var = _mm256_mul_pd(
+        _mm256_mul_pd(vSig, vSig),
+        _mm256_mul_pd(_mm256_set1_pd(0.5), vT)
+    );
+    __m256d d1 = _mm256_div_pd(_mm256_add_pd(log_FK, half_var), vSigSqrtT);
+    __m256d d2 = _mm256_sub_pd(d1, vSigSqrtT);
+
+    __m256d Nd1 = norm_cdf_avx2(d1);
+    __m256d Nd2 = norm_cdf_avx2(d2);
+    __m256d nd1 = norm_pdf_avx2(d1);
+
+    // call: price = disc*(F*Nd1 - K*Nd2), delta = disc*Nd1
+    __m256d call_price = _mm256_mul_pd(vDisc,
+        _mm256_sub_pd(_mm256_mul_pd(vF, Nd1), _mm256_mul_pd(vK, Nd2)));
+    __m256d call_delta = _mm256_mul_pd(vDisc, Nd1);
+
+    // put: price = disc*(K*Nnd2 - F*Nnd1), delta = -disc*Nnd1
+    __m256d one = _mm256_set1_pd(1.0);
+    __m256d Nnd1 = _mm256_sub_pd(one, Nd1);
+    __m256d Nnd2 = _mm256_sub_pd(one, Nd2);
+    __m256d put_price = _mm256_mul_pd(vDisc,
+        _mm256_sub_pd(_mm256_mul_pd(vK, Nnd2), _mm256_mul_pd(vF, Nnd1)));
+    __m256d put_delta = _mm256_sub_pd(_mm256_setzero_pd(),
+                                       _mm256_mul_pd(vDisc, Nnd1));
+
+    // gamma = disc * nd1 / (F * sigma * sqrt(T))
+    __m256d gamma = _mm256_div_pd(
+        _mm256_mul_pd(vDisc, nd1),
+        _mm256_mul_pd(vF, vSigSqrtT)
+    );
+
+    // vega = disc * F * nd1 * sqrt(T)
+    __m256d vega = _mm256_mul_pd(vDisc,
+        _mm256_mul_pd(vF, _mm256_mul_pd(nd1, vSqrtT)));
+
+    // Extract and write per-option
+    alignas(32) double prices_call[4], prices_put[4];
+    alignas(32) double deltas_call[4], deltas_put[4];
+    alignas(32) double gammas[4], vegas[4];
+    alignas(32) double d1_arr[4];
+    alignas(32) double sig_arr[4], sqrtT_arr[4], disc_arr[4], vT_arr[4];
+
+    _mm256_store_pd(prices_call, call_price);
+    _mm256_store_pd(prices_put,  put_price);
+    _mm256_store_pd(deltas_call, call_delta);
+    _mm256_store_pd(deltas_put,  put_delta);
+    _mm256_store_pd(gammas, gamma);
+    _mm256_store_pd(vegas,  vega);
+    _mm256_store_pd(d1_arr, d1);
+    _mm256_store_pd(sig_arr,   vSig);
+    _mm256_store_pd(sqrtT_arr, vSqrtT);
+    _mm256_store_pd(disc_arr,  vDisc);
+    _mm256_store_pd(vT_arr,    vT);
+
+    for (int i = 0; i < 4; ++i) {
+        bool call = (is_call[i] != 0);
+        double p = call ? prices_call[i] : prices_put[i];
+        out[i].price = p;
+        out[i].delta = call ? deltas_call[i] : deltas_put[i];
+        out[i].gamma = gammas[i];
+        out[i].vega  = vegas[i];
+        // theta = (-disc*F*nd1*sigma / (2*sqrt(T)) - r*price) / 365
+        double nd1_s  = std::exp(-0.5 * d1_arr[i] * d1_arr[i]) * 0.3989422804014327;
+        // r is not passed in; reconstruct from disc and T: r = -ln(disc)/T
+        double r_val = (vT_arr[i] > 1e-10) ? -std::log(disc_arr[i]) / vT_arr[i] : 0.0;
+        out[i].theta = (-disc_arr[i] * F[i] * nd1_s * sig_arr[i]
+                         / (2.0 * sqrtT_arr[i])
+                        - r_val * p) / 365.0;
+        out[i].rho = -vT_arr[i] * p;
+    }
+}
+
+void compute_batch_avx2_precomputed(const double* F, const double* K,
+                                     const double* T, const double* sqrt_T,
+                                     const double* disc, const double* sigma,
+                                     const uint8_t* is_call, Black76Result* out,
+                                     int count) noexcept {
+    int i = 0;
+    for (; i + 4 <= count; i += 4)
+        compute_4_precomputed(F+i, K+i, T+i, sqrt_T+i, disc+i, sigma+i,
+                              is_call+i, out+i);
+    // Tail: scalar fallback (recompute sqrt_T and disc for tail elements)
+    for (; i < count; ++i) {
+        double r_val = (T[i] > 1e-10) ? -std::log(disc[i]) / T[i] : 0.0;
+        out[i] = compute_scalar(F[i], K[i], T[i], r_val, sigma[i], is_call[i] != 0);
+    }
+}
+
 #endif // __AVX2__
 
 // ─── Implied volatility (bisection) ──────────────────────────────────────────

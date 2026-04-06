@@ -121,6 +121,11 @@ private:
     // alignas(64) keeps the array on its own cache line to avoid false sharing
     // with the write side in timer_loop.
     alignas(64) double option_T_[MAX_PRODUCTS][MAX_INSTRUMENTS]{};
+    // Per-product cached sqrt(T) and exp(-r*T) — refreshed every second alongside
+    // option_T_. These are the two expensive transcendentals that are constant
+    // across all options in a product (same expiry, same r).
+    alignas(64) double option_sqrt_T_[MAX_PRODUCTS][MAX_INSTRUMENTS]{};
+    alignas(64) double option_disc_[MAX_PRODUCTS][MAX_INSTRUMENTS]{};
 
     // Greeks snapshot — updated by pricer thread, read by gRPC server
     alignas(64) Greeks     greeks_snapshot_[MAX_INSTRUMENTS]{};

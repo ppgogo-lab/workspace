@@ -92,11 +92,15 @@ void TradingEngine::populate_instrument_registry() noexcept {
 void TradingEngine::refresh_option_T() noexcept {
     const int64_t now_ns = get_monotonic_ns();
     static constexpr double NS_PER_YEAR = 365.0 * 24.0 * 3600.0 * 1e9;
+    const double r = cfg_.pricing.risk_free_rate;
     for (int p = 0; p < cfg_.product_count && p < MAX_PRODUCTS; ++p) {
         for (uint16_t oi = 0; oi < option_count_[p]; ++oi) {
             const Instrument& opt = instruments_[option_ids_[p][oi]];
             double T = (opt.expiry_epoch_ns - now_ns) / NS_PER_YEAR;
-            option_T_[p][oi] = (T > 1e-4) ? T : 1e-4;
+            if (T < 1e-4) T = 1e-4;
+            option_T_[p][oi]      = T;
+            option_sqrt_T_[p][oi] = std::sqrt(T);
+            option_disc_[p][oi]   = std::exp(-r * T);
         }
     }
 }
@@ -223,7 +227,8 @@ void TradingEngine::pricer_loop() noexcept {
         alignas(32) double     F_arr[MAX_BATCH];
         alignas(32) double     K_arr[MAX_BATCH];
         alignas(32) double     T_arr[MAX_BATCH];
-        alignas(32) double     r_arr[MAX_BATCH];
+        alignas(32) double     sqrt_T_arr[MAX_BATCH];
+        alignas(32) double     disc_arr[MAX_BATCH];
         alignas(32) double     sigma_arr[MAX_BATCH];
         alignas(32) uint8_t    is_call_arr[MAX_BATCH];
         alignas(32) Black76Result results[MAX_BATCH];
@@ -238,15 +243,16 @@ void TradingEngine::pricer_loop() noexcept {
 
             F_arr[oi]        = F;
             K_arr[oi]        = opt.strike;
-            T_arr[oi]        = option_T_[prod][oi];   // pre-computed, refreshed every 1s
-            r_arr[oi]        = cfg_.pricing.risk_free_rate;
+            T_arr[oi]        = option_T_[prod][oi];        // pre-computed, refreshed every 1s
+            sqrt_T_arr[oi]   = option_sqrt_T_[prod][oi];   // pre-computed, refreshed every 1s
+            disc_arr[oi]     = option_disc_[prod][oi];     // pre-computed, refreshed every 1s
             sigma_arr[oi]    = surf->get_vol(option_log_K_[prod][oi] - log_F, T_arr[oi]);
             is_call_arr[oi]  = (opt.option_type == OptionType::Call) ? 1 : 0;
         }
 
-        // Batch Black-76 computation (4 options per AVX2 iteration)
-        compute_batch(F_arr, K_arr, T_arr, r_arr, sigma_arr, is_call_arr,
-                      results, batch_n);
+        // Batch Black-76 computation using pre-computed sqrt(T) and disc
+        compute_batch_precomputed(F_arr, K_arr, T_arr, sqrt_T_arr, disc_arr,
+                                  sigma_arr, is_call_arr, results, batch_n);
 
         // Pass 2: build PricingSignals (collect all, then single batch push)
         for (uint16_t oi = 0; oi < batch_n; ++oi) {
