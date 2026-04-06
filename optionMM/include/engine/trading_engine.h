@@ -108,6 +108,14 @@ private:
     // product routing: instrument_id → product_index
     uint8_t    instr_to_product_[MAX_INSTRUMENTS];
 
+    // Per-product option index: built once at startup, used by pricer_loop to
+    // reprice all options for a product when a future tick arrives.
+    // option_ids_[p][0..option_count_[p]-1] are the option instrument ids.
+    uint16_t option_ids_[MAX_PRODUCTS][MAX_INSTRUMENTS]{};
+    uint16_t option_count_[MAX_PRODUCTS]{};
+    // Per-product cached log(K) for each option — eliminates log() in hot pricer path
+    double   option_log_K_[MAX_PRODUCTS][MAX_INSTRUMENTS]{};
+
     // Greeks snapshot — updated by pricer thread, read by gRPC server
     alignas(64) Greeks     greeks_snapshot_[MAX_INSTRUMENTS]{};
     // Tick snapshot — updated by pricer thread, read by vol fitter thread.

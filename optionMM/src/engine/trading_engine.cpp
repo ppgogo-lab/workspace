@@ -56,8 +56,9 @@ void TradingEngine::populate_instrument_registry() noexcept {
     // Query instruments from gateway (blocking at startup)
     gateway_->query_instruments(instruments_, &n_instruments_, MAX_INSTRUMENTS);
 
-    // Build instr_to_product_ mapping:
-    // For each instrument, look for a matching product config by underlying_id
+    // Build instr_to_product_ mapping and per-product option index
+    std::memset(option_count_, 0, sizeof(option_count_));
+
     for (uint16_t i = 0; i < n_instruments_; ++i) {
         instruments_[i].instrument_id = i;
         for (int p = 0; p < cfg_.product_count; ++p) {
@@ -65,6 +66,17 @@ void TradingEngine::populate_instrument_registry() noexcept {
                 instruments_[i].product_index = static_cast<uint8_t>(p);
                 instr_to_product_[i] = static_cast<uint8_t>(p);
                 break;
+            }
+        }
+        // Index options per product for fast batch repricing on future ticks
+        const Instrument& instr = instruments_[i];
+        if (instr.kind == InstrumentKind::Option) {
+            uint8_t p = instr.product_index;
+            if (p < MAX_PRODUCTS && option_count_[p] < MAX_INSTRUMENTS) {
+                option_ids_[p][option_count_[p]] = i;
+                // Cache log(K) so pricer_loop avoids log() per option per tick
+                option_log_K_[p][option_count_[p]] = std::log(instr.strike);
+                option_count_[p]++;
             }
         }
     }
@@ -150,6 +162,15 @@ void TradingEngine::stop() noexcept {
 }
 
 // ─── Pricer thread ────────────────────────────────────────────────────────────
+// Trigger model: a FUTURE tick drives repricing of ALL options for that product.
+//   - Future tick arrives → update tick_snapshot_ for the future → for each
+//     option in the product, compute Black-76 using the future price as F and
+//     the vol surface for sigma → emit one PricingSignal per option.
+//   - Option tick arrives → update tick_snapshot_ only (for the vol fitter to
+//     read mid-prices for IV inversion). No PricingSignal emitted.
+//
+// This is the correct market-making model: the forward price drives repricing,
+// not individual option prints. A single future tick reprices the whole book.
 
 void TradingEngine::pricer_loop() noexcept {
     set_thread_name("omm-pricer");
@@ -163,56 +184,83 @@ void TradingEngine::pricer_loop() noexcept {
 
         const Instrument& instr = instruments_[id];
         if (instr.instrument_id == INVALID_INSTRUMENT_ID) continue;
-        if (instr.kind != InstrumentKind::Option) continue;
 
-        uint8_t prod = instr_to_product_[id];
+        // Always update tick snapshot (used by vol fitter for IV inversion)
+        tick_snapshot_[id] = tick;
 
-        // Get vol surface snapshot (acquire load)
+        // Only future ticks trigger a full option repricing pass
+        if (instr.kind != InstrumentKind::Future) continue;
+
+        const uint8_t prod  = instr_to_product_[id];
+        const double  F     = tick.last_price;
+        if (F < 1e-10) continue;  // no valid forward yet
+
         const IVolSurface* surf = vol_surfaces_[prod].get();
+        const int64_t      now  = get_monotonic_ns();
+        const uint16_t     n    = option_count_[prod];
+        if (n == 0) continue;
 
-        // Compute T (time to expiry in years)
-        double T = (instr.expiry_epoch_ns - tick.recv_ts_ns)
-                   / (365.0 * 24.0 * 3600.0 * 1e9);
-        if (T < 1e-4) T = 1e-4;
+        // ── Batch Black-76 computation (AVX2 SIMD) ───────────────────────────
+        // Allocate aligned stack arrays for batch pricing (max 128 options/product)
+        constexpr uint16_t MAX_BATCH = 128;
+        const uint16_t batch_n = (n < MAX_BATCH) ? n : MAX_BATCH;
 
-        // Forward price: use underlying best bid/ask mid if available,
-        // else use last_price of the instrument itself (fallback)
-        double F = tick.last_price;
-        // Look up underlying instrument
-        if (instr.underlying_id < n_instruments_) {
-            const Instrument& und = instruments_[instr.underlying_id];
-            (void)und;
-            // In production: use the latest tick for the underlying.
-            // Here we use last_price as a proxy.
+        alignas(32) double     F_arr[MAX_BATCH];
+        alignas(32) double     K_arr[MAX_BATCH];
+        alignas(32) double     T_arr[MAX_BATCH];
+        alignas(32) double     r_arr[MAX_BATCH];
+        alignas(32) double     sigma_arr[MAX_BATCH];
+        alignas(32) uint8_t    is_call_arr[MAX_BATCH];
+        alignas(32) Black76Result results[MAX_BATCH];
+        alignas(64) PricingSignal sigs[MAX_BATCH];
+
+        // Pass 1: populate input arrays
+        const double log_F = std::log(F);  // computed once per future tick
+
+        for (uint16_t oi = 0; oi < batch_n; ++oi) {
+            const uint16_t    opt_id = option_ids_[prod][oi];
+            const Instrument& opt    = instruments_[opt_id];
+
+            // Time to expiry in years
+            double T = (opt.expiry_epoch_ns - tick.recv_ts_ns)
+                       / (365.0 * 24.0 * 3600.0 * 1e9);
+            if (T < 1e-4) T = 1e-4;
+
+            F_arr[oi]        = F;
+            K_arr[oi]        = opt.strike;
+            T_arr[oi]        = T;
+            r_arr[oi]        = cfg_.pricing.risk_free_rate;
+            sigma_arr[oi]    = surf->get_vol(option_log_K_[prod][oi] - log_F, T_arr[oi]);
+            is_call_arr[oi]  = (opt.option_type == OptionType::Call) ? 1 : 0;
         }
 
-        double sigma = surf->get_vol_by_strike(F, instr.strike, T);
-        bool is_call = (instr.option_type == OptionType::Call);
+        // Batch Black-76 computation (4 options per AVX2 iteration)
+        compute_batch(F_arr, K_arr, T_arr, r_arr, sigma_arr, is_call_arr,
+                      results, batch_n);
 
-        Black76Result res = compute_scalar(F, instr.strike, T,
-                                            cfg_.pricing.risk_free_rate,
-                                            sigma, is_call);
+        // Pass 2: build PricingSignals (collect all, then single batch push)
+        for (uint16_t oi = 0; oi < batch_n; ++oi) {
+            const uint16_t     opt_id = option_ids_[prod][oi];
+            const Black76Result& res  = results[oi];
 
-        // Build PricingSignal
-        PricingSignal sig{};
-        sig.greeks.instrument_id = id;
-        sig.greeks.theo_price    = res.price;
-        sig.greeks.delta         = res.delta;
-        sig.greeks.gamma         = res.gamma;
-        sig.greeks.vega          = res.vega;
-        sig.greeks.theta         = res.theta;
-        sig.greeks.rho           = res.rho;
-        sig.greeks.iv            = sigma;
-        sig.greeks.T             = T;
-        sig.greeks.calc_ts_ns    = get_monotonic_ns();
-        sig.trigger_tick         = tick;
+            PricingSignal& sig = sigs[oi];
+            sig.greeks.instrument_id = opt_id;
+            sig.greeks.theo_price    = res.price;
+            sig.greeks.delta         = res.delta;
+            sig.greeks.gamma         = res.gamma;
+            sig.greeks.vega          = res.vega;
+            sig.greeks.theta         = res.theta;
+            sig.greeks.rho           = res.rho;
+            sig.greeks.iv            = sigma_arr[oi];
+            sig.greeks.T             = T_arr[oi];
+            sig.greeks.calc_ts_ns    = now;
+            sig.trigger_tick         = tick;  // carry the triggering future tick
 
-        // Route to the correct strategy thread
-        (void)signal_buf_[prod].try_push(sig);
-
-        // Update snapshots for gRPC / risk monitor / vol fitter
-        greeks_snapshot_[id] = sig.greeks;
-        tick_snapshot_[id]   = tick;  // raw tick for vol fitter IV inversion
+            // Update snapshots for gRPC / risk monitor
+            greeks_snapshot_[opt_id] = sig.greeks;
+        }
+        // Single release-store publishes all N signals atomically
+        (void)signal_buf_[prod].try_push_batch(sigs, batch_n);
     }
 }
 

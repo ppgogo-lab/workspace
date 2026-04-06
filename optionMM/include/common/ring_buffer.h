@@ -87,6 +87,24 @@ public:
         return true;
     }
 
+    // Push N items atomically: writes all slots, then ONE release-store to publish.
+    // Returns false without pushing anything if there is not enough space for all N items.
+    // NOTE: producer-side only; N must be >= 1.
+    [[nodiscard]] bool try_push_batch(const T* items, int count) noexcept {
+        if (count <= 0) return true;
+        const std::size_t head = head_.load(std::memory_order_relaxed);
+        const std::size_t tail = tail_.load(std::memory_order_acquire);
+        // Check space: need count slots available
+        const std::size_t avail = (tail - head - 1) & MASK;  // free slots (excluding reserved)
+        if (static_cast<std::size_t>(count) > avail) return false;
+        // Write all items without any fence
+        for (int i = 0; i < count; ++i)
+            buffer_[(head + i) & MASK].data = items[i];
+        // Single release-store publishes all N items to the consumer atomically
+        head_.store((head + count) & MASK, std::memory_order_release);
+        return true;
+    }
+
     // ── Consumer interface (call from consumer thread only) ──────────────────
 
     // Try to pop one item. Returns false if the buffer is empty (non-blocking).
