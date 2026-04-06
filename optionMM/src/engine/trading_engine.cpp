@@ -132,6 +132,17 @@ void TradingEngine::init_vol_surfaces() noexcept {
             s->slices[0].expiry_T = 0.25;
             s->slices[0].valid   = true;
             vol_surfaces_[i].publish();
+
+            WingVolSurface* w = wing_surfaces_[i].get_inactive();
+            w->n_slices = 1;
+            w->slices[0].ATM_vol    = 0.20;
+            w->slices[0].slope_call = -0.1;
+            w->slices[0].slope_put  =  0.1;
+            w->slices[0].curve_call =  0.05;
+            w->slices[0].curve_put  =  0.05;
+            w->slices[0].expiry_T   =  0.25;
+            w->slices[0].valid      =  true;
+            wing_surfaces_[i].publish();
         }
     }
 }
@@ -214,7 +225,9 @@ void TradingEngine::pricer_loop() noexcept {
         const double  F     = tick.last_price;
         if (F < 1e-10) continue;  // no valid forward yet
 
-        const IVolSurface* surf = vol_surfaces_[prod].get();
+        const IVolSurface* surf = (cfg_.pricing.vol_method == VolMethod::Wing)
+            ? wing_surfaces_[prod].get()
+            : vol_surfaces_[prod].get();
         const int64_t      now  = get_monotonic_ns();
         const uint16_t     n    = option_count_[prod];
         if (n == 0) continue;
@@ -493,46 +506,88 @@ void TradingEngine::vol_fitter_loop() noexcept {
                 expiry_counts[ei]++;
             }
 
-            // ── Pass 3: fit SVI per expiry, build new surface ─────────────────
-            SVIVolSurface* surf = vol_surfaces_[p].get_inactive();
-            surf->n_slices = 0;
+            // ── Pass 3: fit per expiry, build new surface ─────────────────────
+            if (cfg_.pricing.vol_method == VolMethod::Wing) {
+                WingVolSurface* surf = wing_surfaces_[p].get_inactive();
+                surf->n_slices = 0;
 
-            for (int e = 0; e < n_expiries; ++e) {
-                int cnt = expiry_counts[e];
-                if (cnt < 5) {
-                    // Not enough quotes — copy existing slice if available
-                    const SVIVolSurface* cur =
-                        static_cast<const SVIVolSurface*>(vol_surfaces_[p].get());
-                    for (int s = 0; s < cur->n_slices; ++s) {
-                        if (std::fabs(cur->slices[s].expiry_T - expiry_Ts[e]) < 1.0/365.0) {
-                            surf->slices[surf->n_slices++] = cur->slices[s];
-                            break;
+                for (int e = 0; e < n_expiries; ++e) {
+                    int cnt = expiry_counts[e];
+                    if (cnt < 5) {
+                        const WingVolSurface* cur =
+                            static_cast<const WingVolSurface*>(wing_surfaces_[p].get());
+                        for (int s = 0; s < cur->n_slices; ++s) {
+                            if (std::fabs(cur->slices[s].expiry_T - expiry_Ts[e]) < 1.0/365.0) {
+                                surf->slices[surf->n_slices++] = cur->slices[s];
+                                break;
+                            }
                         }
+                        continue;
                     }
-                    continue;
+
+                    WingParams params{};
+                    params.expiry_T = expiry_Ts[e];
+                    bool ok = fit_wing_slice(
+                        strikes  + expiry_start[e],
+                        mkt_vols + expiry_start[e],
+                        cnt, fwd_prices[e], expiry_Ts[e], params);
+
+                    if (ok) {
+                        surf->slices[surf->n_slices++] = params;
+                        OMM_LOG_INFO("volfitter",
+                            "product={} expiry_T={:.4f} n={} ATM={:.4f} sc={:.4f} sp={:.4f} cc={:.4f} cp={:.4f}",
+                            p, expiry_Ts[e], cnt,
+                            params.ATM_vol, params.slope_call, params.slope_put,
+                            params.curve_call, params.curve_put);
+                    } else {
+                        OMM_LOG_WARN("volfitter",
+                            "product={} expiry_T={:.4f} wing fit failed (n={})", p, expiry_Ts[e], cnt);
+                    }
                 }
 
-                SVIParams params{};
-                params.expiry_T = expiry_Ts[e];
-                bool ok = fit_svi_slice(
-                    strikes  + expiry_start[e],
-                    mkt_vols + expiry_start[e],
-                    cnt, fwd_prices[e], expiry_Ts[e], params);
+                if (surf->n_slices > 0)
+                    wing_surfaces_[p].publish();
+            } else {
+                SVIVolSurface* surf = vol_surfaces_[p].get_inactive();
+                surf->n_slices = 0;
 
-                if (ok) {
-                    surf->slices[surf->n_slices++] = params;
-                    OMM_LOG_INFO("volfitter",
-                        "product={} expiry_T={:.4f} n={} a={:.4f} b={:.4f} rho={:.3f} m={:.4f} sigma={:.4f}",
-                        p, expiry_Ts[e], cnt,
-                        params.a, params.b, params.rho, params.m, params.sigma);
-                } else {
-                    OMM_LOG_WARN("volfitter",
-                        "product={} expiry_T={:.4f} fit failed (n={})", p, expiry_Ts[e], cnt);
+                for (int e = 0; e < n_expiries; ++e) {
+                    int cnt = expiry_counts[e];
+                    if (cnt < 5) {
+                        // Not enough quotes — copy existing slice if available
+                        const SVIVolSurface* cur =
+                            static_cast<const SVIVolSurface*>(vol_surfaces_[p].get());
+                        for (int s = 0; s < cur->n_slices; ++s) {
+                            if (std::fabs(cur->slices[s].expiry_T - expiry_Ts[e]) < 1.0/365.0) {
+                                surf->slices[surf->n_slices++] = cur->slices[s];
+                                break;
+                            }
+                        }
+                        continue;
+                    }
+
+                    SVIParams params{};
+                    params.expiry_T = expiry_Ts[e];
+                    bool ok = fit_svi_slice(
+                        strikes  + expiry_start[e],
+                        mkt_vols + expiry_start[e],
+                        cnt, fwd_prices[e], expiry_Ts[e], params);
+
+                    if (ok) {
+                        surf->slices[surf->n_slices++] = params;
+                        OMM_LOG_INFO("volfitter",
+                            "product={} expiry_T={:.4f} n={} a={:.4f} b={:.4f} rho={:.3f} m={:.4f} sigma={:.4f}",
+                            p, expiry_Ts[e], cnt,
+                            params.a, params.b, params.rho, params.m, params.sigma);
+                    } else {
+                        OMM_LOG_WARN("volfitter",
+                            "product={} expiry_T={:.4f} fit failed (n={})", p, expiry_Ts[e], cnt);
+                    }
                 }
+
+                if (surf->n_slices > 0)
+                    vol_surfaces_[p].publish();
             }
-
-            if (surf->n_slices > 0)
-                vol_surfaces_[p].publish();
         }
     }
 }

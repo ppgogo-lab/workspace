@@ -12,7 +12,7 @@ namespace omm {
 // Maximum expiry slices per surface (e.g. monthly expiries for 2 years)
 static constexpr int MAX_EXPIRIES = 24;
 // Maximum strikes per expiry slice
-static constexpr int MAX_STRIKES  = 64;
+static constexpr int MAX_STRIKES  = 256;
 
 // ─── Abstract vol surface interface ──────────────────────────────────────────
 // All methods are noexcept — called on the critical path from the pricer thread.

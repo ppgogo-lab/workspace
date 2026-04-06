@@ -106,10 +106,11 @@ static PricingConfig parse_pricing(const YAML::Node& n) {
 
     std::string method = get<std::string>(n["vol_surface"]["method"],
                                           "pricing.vol_surface.method", "svi");
-    if      (method == "svi")         c.vol_method = VolMethod::SVI;
-    else if (method == "sabr")        c.vol_method = VolMethod::SABR;
+    if      (method == "svi")          c.vol_method = VolMethod::SVI;
+    else if (method == "sabr")         c.vol_method = VolMethod::SABR;
     else if (method == "cubic_spline") c.vol_method = VolMethod::CubicSpline;
-    else throw std::runtime_error("config: pricing.vol_surface.method must be svi/sabr/cubic_spline");
+    else if (method == "wing")         c.vol_method = VolMethod::Wing;
+    else throw std::runtime_error("config: pricing.vol_surface.method must be svi/sabr/cubic_spline/wing");
     return c;
 }
 

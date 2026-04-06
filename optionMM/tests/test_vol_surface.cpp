@@ -3,6 +3,7 @@
 #include "pricing/svi.h"
 #include "pricing/sabr.h"
 #include "pricing/cubic_spline.h"
+#include "pricing/wing.h"
 
 #include <cmath>
 #include <thread>
@@ -255,6 +256,208 @@ TEST(VolSurfaceManager, AtomicSwapThreadSafety) {
             s->slices[0] = {a, 0.1, -0.3, 0.0, 0.1, 1.0, true};
             mgr.publish();
             a = 0.04 + 0.01 * ((writer_iters.load() % 3));
+            writer_iters.fetch_add(1, std::memory_order_relaxed);
+        }
+    });
+
+    std::thread reader([&] {
+        while (!stop.load(std::memory_order_relaxed)) {
+            const IVolSurface* s = mgr.get();
+            double v = s->get_vol(0.0, 1.0);
+            EXPECT_FALSE(std::isnan(v));
+            EXPECT_GT(v, 0.0);
+            reader_iters.fetch_add(1, std::memory_order_relaxed);
+        }
+    });
+
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    stop.store(true, std::memory_order_relaxed);
+    writer.join();
+    reader.join();
+
+    EXPECT_GT(reader_iters.load(), 1000) << "Reader barely ran";
+    EXPECT_GT(writer_iters.load(), 100)  << "Writer barely ran";
+}
+
+// ─── Wing: single-slice sanity ────────────────────────────────────────────────
+
+TEST(Wing, FlatSurface) {
+    // slope_call=slope_put=curve_call=curve_put=0 → flat vol everywhere
+    WingVolSurface surf;
+    surf.n_slices = 1;
+    surf.slices[0] = {0.20, 0.0, 0.0, 0.0, 0.0, 1.0, true};
+    double iv_atm = surf.get_vol(0.0, 1.0);
+    double iv_otm = surf.get_vol(0.5, 1.0);
+    EXPECT_NEAR(iv_atm, 0.20, 1e-10);
+    EXPECT_NEAR(iv_otm, 0.20, 1e-10);
+}
+
+TEST(Wing, FallbackWhenEmpty) {
+    WingVolSurface surf;
+    surf.n_slices = 0;
+    double iv = surf.get_vol(0.0, 1.0);
+    EXPECT_GT(iv, 0.0);
+    EXPECT_FALSE(std::isnan(iv));
+    EXPECT_FALSE(surf.is_valid());
+}
+
+TEST(Wing, GetVolByStrike) {
+    WingVolSurface surf;
+    surf.n_slices = 1;
+    surf.slices[0] = {0.20, -0.1, 0.1, 0.05, 0.05, 1.0, true};
+    double F = 100.0, K = 105.0, T = 0.5;
+    double v1 = surf.get_vol(std::log(K / F), T);
+    double v2 = surf.get_vol_by_strike(F, K, T);
+    EXPECT_NEAR(v1, v2, 1e-14);
+}
+
+TEST(Wing, NoNaNOverRange) {
+    WingVolSurface surf;
+    surf.n_slices = 1;
+    surf.slices[0] = {0.20, -0.15, 0.20, 0.05, 0.08, 1.0, true};
+    for (double k = -2.0; k <= 2.0; k += 0.05) {
+        for (double T = 0.1; T <= 2.0; T += 0.1) {
+            double v = surf.get_vol(k, T);
+            EXPECT_FALSE(std::isnan(v)) << "NaN at k=" << k << " T=" << T;
+            EXPECT_FALSE(std::isinf(v)) << "Inf at k=" << k << " T=" << T;
+            EXPECT_GE(v, 0.0) << "Negative vol at k=" << k << " T=" << T;
+        }
+    }
+}
+
+TEST(Wing, CallPutAsymmetry) {
+    // slope_call != slope_put → call wing and put wing differ
+    WingVolSurface surf;
+    surf.n_slices = 1;
+    surf.slices[0] = {0.20, -0.2, 0.3, 0.05, 0.05, 1.0, true};
+    double iv_call = surf.get_vol( 0.2, 1.0);  // k > 0: call wing
+    double iv_put  = surf.get_vol(-0.2, 1.0);  // k < 0: put wing
+    // put wing has larger slope so iv_put > iv_call
+    EXPECT_GT(iv_put, iv_call);
+}
+
+TEST(Wing, MultiSliceInterpolation) {
+    // Two flat slices at T=0.5 and T=1.0, both at 20%.
+    // Interpolated vol at any T in between should be ~20%.
+    WingVolSurface surf;
+    surf.n_slices = 2;
+    surf.slices[0] = {0.20, 0.0, 0.0, 0.0, 0.0, 0.5, true};
+    surf.slices[1] = {0.20, 0.0, 0.0, 0.0, 0.0, 1.0, true};
+    for (double T = 0.5; T <= 1.0; T += 0.1) {
+        double v = surf.get_vol(0.0, T);
+        EXPECT_NEAR(v, 0.20, 1e-6) << "Vol should be 20% at T=" << T;
+    }
+}
+
+// ─── Wing fitter ──────────────────────────────────────────────────────────────
+
+TEST(WingFitter, FlatSmile) {
+    constexpr int N = 11;
+    double F = 100.0, T = 0.5;
+    double strikes[N], vols[N];
+    for (int i = 0; i < N; ++i) {
+        strikes[i] = 80.0 + i * 4.0;
+        vols[i]    = 0.25;
+    }
+    WingParams out{};
+    bool ok = fit_wing_slice(strikes, vols, N, F, T, out);
+    ASSERT_TRUE(ok);
+    EXPECT_TRUE(out.valid);
+    WingVolSurface surf;
+    surf.n_slices = 1;
+    surf.slices[0] = out;
+    for (int i = 0; i < N; ++i) {
+        double k  = std::log(strikes[i] / F);
+        double iv = surf.get_vol(k, T);
+        EXPECT_NEAR(iv, 0.25, 0.02) << "Flat fit error at K=" << strikes[i];
+    }
+}
+
+TEST(WingFitter, SymmetricParabolicSmile) {
+    // iv(k) = 0.20 + 0.05*k^2 — symmetric, no skew
+    // Wing model with slope_call=slope_put=0, curve_call=curve_put=0.05 should fit exactly.
+    constexpr int N = 9;
+    double F = 100.0, T = 1.0;
+    double strikes[N] = {75, 80, 85, 90, 95, 100, 105, 110, 115};
+    double vols[N];
+    for (int i = 0; i < N; ++i) {
+        double k = std::log(strikes[i] / F);
+        vols[i] = 0.20 + 0.05 * k * k;
+    }
+    WingParams out{};
+    bool ok = fit_wing_slice(strikes, vols, N, F, T, out);
+    ASSERT_TRUE(ok);
+    double max_err = 0.0;
+    for (int i = 0; i < N; ++i) {
+        double k  = std::log(strikes[i] / F);
+        double iv = WingVolSurface::wing_iv(out, k);
+        max_err = std::fmax(max_err, std::fabs(iv - vols[i]));
+    }
+    EXPECT_LT(max_err, 0.005) << "Max symmetric parabolic fit error: " << max_err;
+}
+
+TEST(WingFitter, AsymmetricSkew) {
+    // Typical equity skew: put wing steeper than call wing
+    constexpr int N = 9;
+    double F = 100.0, T = 0.5;
+    double strikes[N] = {75, 80, 85, 90, 95, 100, 105, 110, 115};
+    double vols[N];
+    for (int i = 0; i < N; ++i) {
+        double k = std::log(strikes[i] / F);
+        // Asymmetric: steeper on put side
+        double kp = std::fmax(k, 0.0);
+        double km = std::fmax(-k, 0.0);
+        vols[i] = 0.20 - 0.10 * kp + 0.20 * km + 0.04 * kp * kp + 0.06 * km * km;
+    }
+    WingParams out{};
+    bool ok = fit_wing_slice(strikes, vols, N, F, T, out);
+    ASSERT_TRUE(ok);
+    EXPECT_TRUE(out.valid);
+    // Put slope should be larger in magnitude than call slope
+    EXPECT_GT(out.slope_put, -out.slope_call);
+    // Fit quality
+    double max_err = 0.0;
+    for (int i = 0; i < N; ++i) {
+        double k  = std::log(strikes[i] / F);
+        double iv = WingVolSurface::wing_iv(out, k);
+        max_err = std::fmax(max_err, std::fabs(iv - vols[i]));
+    }
+    EXPECT_LT(max_err, 0.005) << "Max asymmetric skew fit error: " << max_err;
+}
+
+TEST(WingFitter, InsufficientPoints) {
+    // Fewer than 5 points — fitter should return false
+    double strikes[3] = {95.0, 100.0, 105.0};
+    double vols[3]    = {0.22, 0.20, 0.22};
+    WingParams out{};
+    bool ok = fit_wing_slice(strikes, vols, 3, 100.0, 0.5, out);
+    EXPECT_FALSE(ok);
+    EXPECT_FALSE(out.valid);
+}
+
+// ─── VolSurfaceManager: Wing atomic swap ─────────────────────────────────────
+
+TEST(VolSurfaceManager, WingAtomicSwap) {
+    VolSurfaceManager<WingVolSurface> mgr;
+
+    for (int buf = 0; buf < 2; ++buf) {
+        WingVolSurface* w = mgr.get_inactive();
+        w->n_slices = 1;
+        w->slices[0] = {0.20, -0.1, 0.1, 0.05, 0.05, 1.0, true};
+        mgr.publish();
+    }
+
+    std::atomic<bool> stop{false};
+    std::atomic<int>  reader_iters{0}, writer_iters{0};
+
+    std::thread writer([&] {
+        double atm = 0.20;
+        while (!stop.load(std::memory_order_relaxed)) {
+            WingVolSurface* w = mgr.get_inactive();
+            w->n_slices = 1;
+            w->slices[0] = {atm, -0.1, 0.1, 0.05, 0.05, 1.0, true};
+            mgr.publish();
+            atm = 0.18 + 0.04 * ((writer_iters.load() % 3) * 0.5);
             writer_iters.fetch_add(1, std::memory_order_relaxed);
         }
     });

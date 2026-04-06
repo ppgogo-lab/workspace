@@ -7,6 +7,9 @@
 #include "pricing/black76.h"
 #include "pricing/vol_surface.h"
 #include "pricing/svi.h"
+#include "pricing/sabr.h"
+#include "pricing/cubic_spline.h"
+#include "pricing/wing.h"
 #include "gateway/gateway.h"
 #include "strategy/mm_framework.h"
 #include "strategy/mm_params.h"
@@ -100,7 +103,8 @@ private:
     PostTradeRisk                             post_risk_;
 
     // Vol surfaces (one per product)
-    std::array<VolSurfaceManager<SVIVolSurface>, MAX_PRODUCTS> vol_surfaces_;
+    std::array<VolSurfaceManager<SVIVolSurface>,  MAX_PRODUCTS> vol_surfaces_;
+    std::array<VolSurfaceManager<WingVolSurface>, MAX_PRODUCTS> wing_surfaces_;
 
     // ── Instrument registry ───────────────────────────────────────────────────
     Instrument instruments_[MAX_INSTRUMENTS]{};

@@ -54,6 +54,7 @@ add_library(pricing_lib STATIC
     src/pricing/svi.cpp
     src/pricing/sabr.cpp
     src/pricing/cubic_spline.cpp
+    src/pricing/wing.cpp
 )
 target_compile_options(pricing_lib PRIVATE -mavx2 -mfma)
 
@@ -128,6 +129,7 @@ target_link_libraries(logger_lib PUBLIC spdlog::spdlog Threads::Threads)
 add_library(engine_lib STATIC
     src/engine/trading_engine.cpp
 )
+target_compile_options(engine_lib PRIVATE -mavx2 -mfma)
 target_link_libraries(engine_lib PUBLIC
     common_lib pricing_lib risk_lib strategy_lib feed_lib gateway_lib logger_lib)
 
@@ -135,6 +137,7 @@ target_link_libraries(engine_lib PUBLIC
 add_library(engine_lib_test STATIC
     src/engine/trading_engine.cpp
 )
+target_compile_options(engine_lib_test PRIVATE -mavx2 -mfma)
 target_link_libraries(engine_lib_test PUBLIC
     common_lib pricing_lib risk_lib strategy_lib feed_lib sim_gateway_lib logger_lib)
 
@@ -200,3 +203,10 @@ target_link_libraries(test_latency PRIVATE engine_lib_test GTest::gtest_main Thr
 target_compile_options(test_latency PRIVATE -mavx2 -mfma)
 # Intentionally no add_test() — latency benchmarks must be run explicitly:
 #   ./build/tests/test_latency --gtest_filter="LatencyTest.*"
+
+# test_vol_calibration — reads MarketTick.csv, calibrates all 4 vol models, writes CSV results
+# Run manually: ./build/test_vol_calibration
+add_executable(test_vol_calibration tests/test_vol_calibration.cpp)
+target_link_libraries(test_vol_calibration PRIVATE pricing_lib GTest::gtest_main)
+target_compile_options(test_vol_calibration PRIVATE -mavx2 -mfma)
+# Intentionally no add_test() — depends on external CSV file path

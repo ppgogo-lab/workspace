@@ -47,10 +47,11 @@ bool fit_sabr_slice(const double* strikes, const double* market_vols,
     SABRParams p = out;
     p.beta     = beta;
     p.expiry_T = T;
+    p.forward_F = F;  // Store the forward used during fitting
     // Initial guess: alpha from ATM vol, rho/nu from typical values
     double avg_vol = 0.0;
     for (int i = 0; i < n; ++i) avg_vol += market_vols[i];
-    p.alpha = avg_vol / n;
+    p.alpha = (avg_vol / n) * std::pow(F, 1.0 - beta);
     p.rho   = -0.2;
     p.nu    = 0.4;
 

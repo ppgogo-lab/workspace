@@ -20,6 +20,7 @@ struct SABRParams {
     double rho{-0.2};
     double nu{0.4};
     double expiry_T{1.0};
+    double forward_F{1.0}; // forward price used during fitting
     bool   valid{false};
 };
 
@@ -68,8 +69,8 @@ public:
     int        n_slices{0};
 
     [[nodiscard]] double get_vol(double k, double T) const noexcept override {
-        // k = ln(K/F), so K = F*exp(k); use F=1 and K=exp(k) for unit-forward vol
-        // This gives the same vol since SABR vol only depends on F/K ratio
+        // k = ln(K/F), so K = F*exp(k)
+        // Use the actual forward F stored in params (fitted with that F)
         if (n_slices == 0 || T < 1e-10) return 0.20;
 
         // Find slice by T
@@ -77,8 +78,8 @@ public:
         for (int i = 0; i < n_slices - 1; ++i) {
             if (T <= slices[i + 1].expiry_T) { p = &slices[i]; break; }
         }
-        // Unit forward: F=1, K=exp(k)
-        return sabr_vol(*p, 1.0, std::exp(k), T);
+        // Use actual forward from params: K = F*exp(k)
+        return sabr_vol(*p, p->forward_F, p->forward_F * std::exp(k), T);
     }
 
     [[nodiscard]] double get_vol_by_strike(double F, double K,

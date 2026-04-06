@@ -200,13 +200,12 @@ TEST(LatencyTest, TickToQuoteLatency) {
     gw->set_last_price(13, 130.0);  // rb P3600 ITM put
 
     gw->connect(cfg.gateway);
-    auto* gw_ptr = gw.get();
 
     auto engine = std::make_unique<TradingEngine>(cfg, std::move(gw), nullptr);
     engine->start();
 
-    // ── Pre-warm: inject ticks for all option instruments ─────────────────────
-    // cu options: bid/ask around the mid prices above
+    // ── Pre-warm: inject option ticks for vol fitter, then future ticks ──────
+    // Push option ticks with realistic bid/ask so vol fitter can invert to IV
     struct { uint16_t id; double last; double bid; double ask; } prewarm[] = {
         {1, 2800.0, 2750.0, 2850.0},
         {2, 1900.0, 1870.0, 1930.0},
@@ -231,55 +230,50 @@ TEST(LatencyTest, TickToQuoteLatency) {
     std::this_thread::sleep_for(std::chrono::seconds(3));
 
     // ── Latency measurement loop ───────────────────────────────────────────────
-    // Option instrument ids in round-robin order
-    constexpr uint16_t OPT_IDS[] = {1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13};
-    constexpr int N_OPT = static_cast<int>(sizeof(OPT_IDS) / sizeof(OPT_IDS[0]));
-    // product index for each option id
-    constexpr uint8_t OPT_PROD[] = {0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1};
+    // Push FUTURE ticks (id=0 for cu, id=7 for rb) — each future tick reprices
+    // all options for that product and emits N PricingSignals (one per option).
+    // We alternate between cu and rb futures in round-robin.
 
-    // Realistic mid prices for each option id (same order as OPT_IDS)
-    constexpr double OPT_MID[] = {
-        2800.0, 1900.0, 1200.0, 400.0, 900.0, 1200.0,
-         130.0,   75.0,   35.0,  30.0,  75.0,  130.0
-    };
+    constexpr uint16_t FUTURE_IDS[] = {0, 7};       // cu2501, rb2501
+    constexpr uint8_t  FUTURE_PROD[] = {0, 1};      // product indices
+    constexpr double   FUTURE_MID[] = {75000.0, 3500.0};  // ATM forward prices
 
     constexpr int N = 5000;
     std::vector<int64_t> latencies;
-    latencies.reserve(N);
+    latencies.reserve(N * 12);  // each future tick → 6 option quotes per product
 
     for (int i = 0; i < N; ++i) {
-        int slot = i % N_OPT;
-        uint16_t id   = OPT_IDS[slot];
-        uint8_t  prod = OPT_PROD[slot];
-        double   mid  = OPT_MID[slot];
+        int slot = i % 2;  // alternate cu/rb
+        uint16_t fut_id = FUTURE_IDS[slot];
+        uint8_t  prod   = FUTURE_PROD[slot];
+        double   F      = FUTURE_MID[slot];
 
         MarketTick tick{};
-        tick.instrument_id  = id;
-        tick.last_price     = mid;
-        tick.bid_price[0]   = mid * 0.995;
-        tick.ask_price[0]   = mid * 1.005;
-        tick.bid_volume[0]  = 10;
-        tick.ask_volume[0]  = 10;
+        tick.instrument_id  = fut_id;
+        tick.last_price     = F;
+        tick.bid_price[0]   = F - 10.0;
+        tick.ask_price[0]   = F + 10.0;
+        tick.bid_volume[0]  = 100;
+        tick.ask_volume[0]  = 100;
         tick.exchange_ts_ns = get_monotonic_ns();
         tick.recv_ts_ns     = tick.exchange_ts_ns;
 
         int64_t t0 = tick.recv_ts_ns;
         (void)engine->tick_buf().try_push(tick);
 
-        // Spin-wait up to 2ms for a quote to appear in the product's quote_buf
-        constexpr int64_t TIMEOUT_NS = 2'000'000LL;
-        Quote q{};
-        bool got_quote = false;
+        // Spin-wait up to 5ms for quotes to appear (one future tick → 6 option quotes)
+        constexpr int64_t TIMEOUT_NS = 5'000'000LL;
         int64_t deadline = t0 + TIMEOUT_NS;
-        while (get_monotonic_ns() < deadline) {
-            if (engine->quote_buf(prod).try_pop(q)) {
-                got_quote = true;
-                break;
-            }
-        }
+        int quotes_collected = 0;
+        constexpr int EXPECTED_QUOTES = 6;  // 6 options per product
 
-        if (got_quote && q.send_ts > t0) {
-            latencies.push_back(q.send_ts - t0);
+        while (get_monotonic_ns() < deadline && quotes_collected < EXPECTED_QUOTES) {
+            Quote q{};
+            if (engine->quote_buf(prod).try_pop(q)) {
+                int64_t latency = q.send_ts - t0;
+                if (latency > 0) latencies.push_back(latency);
+                quotes_collected++;
+            }
         }
 
         // 200µs inter-tick sleep — 5kHz rate, avoids ring buffer saturation
@@ -291,11 +285,12 @@ TEST(LatencyTest, TickToQuoteLatency) {
     // ── Report ────────────────────────────────────────────────────────────────
     std::sort(latencies.begin(), latencies.end());
     size_t n = latencies.size();
+    size_t expected_total_quotes = N * 6; // 6 options per future tick
 
     std::cout << "\n[LATENCY] Tick-to-quote over " << N
-              << " ticks, 2 products (cu/rb), 12 option instruments\n"
+              << " future ticks, 2 products (cu/rb), 12 option quotes per cycle\n"
               << "[LATENCY] Quotes captured: " << n
-              << " (" << (100.0 * n / N) << "%)\n";
+              << " (" << (100.0 * n / expected_total_quotes) << "%)\n";
 
     if (n > 0) {
         std::cout << "[LATENCY] min:   " << latencies.front()          << " ns\n"
@@ -307,8 +302,8 @@ TEST(LatencyTest, TickToQuoteLatency) {
     }
 
     // Correctness assertions (not SLA — WSL/dev environment has high jitter)
-    EXPECT_GT(n, static_cast<size_t>(N * 0.80))
-        << "Expected at least 80% of ticks to produce quotes";
+    EXPECT_GT(n, static_cast<size_t>(expected_total_quotes * 0.80))
+        << "Expected at least 80% of option quotes to be captured";
     if (n > 0) {
         EXPECT_GT(latencies.front(), 0LL) << "Latency must be positive";
         // Sanity: p99 < 100ms (even under heavy WSL load)
