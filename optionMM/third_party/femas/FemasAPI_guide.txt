@@ -1,0 +1,2387 @@
+上海金融期货信息技术有限公司技术文档
+
+FemasAPI 开发
+技术指南
+
+2014 年 12 月 30 日
+
+开发技术指南
+
+上海金融期货信息技术有限公司技术文档
+
+开发技术指南
+
+第一章 飞马特性说明
+1. 如何获取飞马交易及行情 API、开发文档以及开发实例？
+【答：
+】所有飞马相关资料都在飞马平台技术交流群（154929875）群共享中发布，请及时获
+取最新版本。飞马平台技术交流群均遵守实名制规则，在申请加入时请告知实名并在加入后
+及时修改群名片，对于不符合群公告要求的群成员将不定期予以清除。
+
+2. 飞马是否向投资者提供交易客户端软件？
+【答：
+】飞马向全市场免费提供投资者交易及行情 API，同时向市场投资者提供界面化的交
+易终端软件 FemasTT，下载地址为 http://101.251.67.7/website/TTHomepage.html 。目前市
+场上也有第三方厂商提供的终端产品（基于免费开放的 API 二次开发），支持飞马多交易所
+版本的终端软件产品包括彭博、文华、飞讯、快期、TB 等
+
+3. 飞马每秒的订单处理能力有多大？
+【答：
+】飞马内部处理时间（包含上行和下行的总处理时间）约为 25us，每秒能处理的订单
+量约为 1,000,000/25=40,000。如果以用户量来说明的话，能处理 4 万笔的报单相当于飞马能
+接受 200 个用户每秒均按照 API 的最大限制量 200 来报单而不会出现积压。
+
+4. 飞马目前有哪些版本？对应的 API 版本是多少？
+【答：
+】目前飞马有以下广泛使用的版本：
+序号
+
+飞马系列
+
+飞马版本
+
+使用环境
+
+适用 API
+
+功能说明
+
+1
+
+Classic
+
+v1.03.01
+
+大仿真/生产
+
+Classic_v1.03
+
+仅支持中金所生产与仿真所有业务
+
+2
+
+AllFutures
+
+v1.01.02
+
+仿真云/生产
+
+AllFutures_v1.01
+
+支持四个交易所
+
+V2.00.07
+
+生产环境
+
+V2.00
+
+支持中金所和上期所生产业务
+
+3
+
+注意：列表中所列出飞马版本是目前相应环境的最新版本。
+
+5. 飞马是否能够提供 Level-2 行情？
+【答：
+】飞马只免费提供一档行情，不直接提供 Level-2 行情，但飞马行情 API 接口可支持
+版权所有© 上海金融期货信息技术有限公司
+
+第 1 页
+
+上海金融期货信息技术有限公司技术文档
+
+开发技术指南
+
+Level-2 行情业务。
+level-2 行情（也称深度行情、五档行情）由独立于飞马的深度行情服务器统一提供，需
+要另外申请，另行收费，目前中金所数讯和移动机房内均有发布。
+详细情况可加入 DataFeed 技术交流群（166589343）深入了解，DataFeed 技术交流群均
+遵守实名制规则，在申请加入时请告知实名并在加入后及时修改群名片，对于不符合群公告
+要求的群成员将不定期予以清除。
+
+6. 飞马是否提供历史行情？
+【答：
+】飞马不提供历史行情，历史行情数据和 level-2 行情一样，是需要另外收费的。详细
+情况可加入 DataFeed 技术交流群（166589343）深入了解，DataFeed 技术交流群均遵守实名
+制规则，在申请加入时请告知实名并在加入后及时修改群名片，对于不符合群公告要求的群
+成员将不定期予以清除。
+
+7. 飞马是否提供 UDP 行情？应该如何接入 UDP 行情？
+【答：
+】飞马行情目前提供 TCP 和 UDP 两种接入模式。一般来说，飞马的普通行情前置都为
+TCP 行情服务器，使用 UDP 行情服务器需要向期货公司申请。
+如果使用 UDP 行情，在创建完 API 实例后必须要设置使用多播通道。设置多播通道函
+数 SetUseMultiChannel(bool bUseMulti = false) 中 bUseMulti 为是否使用多播标识，该参数
+缺省设置或者设置为 false 是均使用的是 TCP 行情，
+只有当该参数设置为 true 是才会使用 UDP
+行情。
+使 用 UDP 行 情 不 需 要 注 册 前 置 ， 只 需 要 注 册 多 播 通 道 。 注 册 多 播 通 道 函 数
+RegisterMultiChannel("multi://[接收多播的网卡所属的地址段]@[接收多播的地址]:[端口
+号]"),该函数指定使用哪个本机网卡接收多播。
+
+第二章
+
+测试环境说明
+
+1. 仿真云测试环境地址和说明。
+【答：
+】仿真云是中金技术搭建的以云平台为基础的仿真测试平台，目前主要承载的业务是
+多交易所版（AllFutures 系列）飞马的仿真测试，服务对象为各期货公司。期货公司通过邮
+版权所有© 上海金融期货信息技术有限公司
+
+第 2 页
+
+上海金融期货信息技术有限公司技术文档
+
+开发技术指南
+
+件申请测试资源，平台将直接分配好虚拟资源并部署模板应用，期货公司可通过互联网或者
+证联网访问本环境，直接进行业务操作，交易人员也可直接通过互联网或者证联网接入仿真
+云中进行仿真交易。
+
+
+环境说明：本测试环境将接入各期货交易所提供的大仿真测试交易撮合系统。
+
+
+
+交易时间： 各交易所仿真系统下的正常交易时间，与生产撮合系统交易时段、交易时间一
+致。
+
+
+
+访问方式：证联网或互联网接入访问。
+
+
+
+适用对象：本环境只接受期货公司申请，且申请需要通过审核。
+
+
+
+交易账户：期货公司应该配置各单位在各交易所仿真系统下的真实账户信息。
+
+
+
+飞马系统每日 8:45 启动，15:30 关闭，暂不支持夜盘。
+
+
+
+本环境开户、费率同步、结算数据同步由申请环境的期货公司进行。
+
+
+
+本环境可保留 30 天以内的业务数据。
+
+
+
+本环境下的交易日与生产系统的交易日相同。
+
+2. 期货公司应该如何申请仿真云测试环境？
+【答：
+】期货公司提交大仿真测试环境申请表（详见《用户飞马接入指南》
+），发送申请邮件
+至所属客户经理邮箱，或直接发送至期货事业部技术支持公共邮箱
+product_support@cffex.com.cn，审核通过后，期货公司将收到会员管理工具以及相关接入信
+息。
+
+3. 投资者应该如何申请仿真云测试环境的测试账号？
+【答：
+】仿真云测试环境账户信息由各个期货公司管理和分配，必须为各交易所大仿真系统
+下的真实账户信息，交易账号和行情账号一致，投资者和软件开发商可通过相应的期货公司
+申请。
+
+第三章
+
+API 技术基础
+
+1. 飞马 API 库中包含那些文件？都有什么作用？
+【答：
+】飞马 API 库中包含以下文件：
+版权所有© 上海金融期货信息技术有限公司
+
+第 3 页
+
+上海金融期货信息技术有限公司技术文档
+
+开发技术指南
+
+
+
+行情接口类定义文件（USTPFtdcMduserApi.h）
+
+
+
+交易接口类定义文件（USTPFtdcTraderApi.h）
+
+
+
+客户端接口使用的业务数据结构定义文件（ USTPFtdcUserApiStruct.h ）
+
+
+
+客户端接口使用的业务数据类型定义文件（USTPFtdcUserApiDataType.h）
+
+
+
+行情接口库文件（USTPmduserapi.lib,USTPmduserapi.dll; libUSTPmduserapi.so[Linux]）
+
+
+
+交易接口库文件（USTPtraderapi.lib,USTPtraderapi.dll; libUSTPtraderapi.so[linux]）
+交易和行情接口类定义文件都包含 API 和 SPI 类定义，客户端使用 API 向飞马后台发送操
+作请求，通过继承 SPI 并重载回调函数来处理飞马后台向客户端回传的响应及回报。
+
+2. 飞马 API 采用何种通讯模式？采用何种通讯协议？
+【答：
+】飞马 API 使用建立在 TCP 协议之上 FTD 协议与飞马后台系统进行通讯，FTD 协议
+中的所有通讯都基于某个通讯模式。通讯模式实际上就是通讯双方协同工作的方式。飞马系
+统涉及的通讯模式共有三种：
+
+
+
+对话通讯模式 ：由客户端主动发起的通讯请求。该请求被飞马系统接收和处理，
+
+并给予响应。例如报单、查询等。这种通讯模式与普通的客户/服务器模式相同。
+对话通讯模式下支持对话数据流和查询数据流：
+对话数据流是一个双向数据流，客户端发送交易请求，飞马系统反馈应答。飞马系
+统不维护对话流的状态。系统故障时，对话数据流会重置，通讯途中的数据可能会丢失。
+查询数据流是一个双向数据流，客户端发送查询请求，飞马系统反馈应答。飞马系
+统不维护查询流的状态。系统故障时，查询数据流会重置，通讯途中的数据可能会丢失。
+
+
+
+私有通讯模式 ：飞马平台主动向某个特定的用户发出的信息。例如成交回报等
+私有通讯模式下支持私有数据流：
+私有流是一个单向数据流，由飞马平台发向客户端，用于传送用户私有的通知和回
+
+报信息。私有流是一个可靠的数据流，飞马系统维护每个用户的私有流，在一个交易日
+内，客户端断线后恢复连接时，可以请求飞马系统以 restart 或者 resume 模式发送断线
+之前的私有流数据。私有数据流向客户端提供报单状态报告、成交回报等信息。
+
+
+
+广播通讯模式 ：飞马系统主动向飞马中的所有用户都发出相同的信息。 例如公告、
+
+市场公共信息等。
+广播通讯模式对应公共数据流（Public）
+：
+
+版权所有© 上海金融期货信息技术有限公司
+
+第 4 页
+
+上海金融期货信息技术有限公司技术文档
+
+开发技术指南
+
+公共数据流与私有数据流类似，也是一个可靠的数据流。公共数据流向客户端提供
+合约状态信息等。
+
+3. 飞马 API 的实例会输出哪些文件？文件有什么作用？文件位置能否指定？
+【答：
+】交易员 API 在运行过程中，会将一些数据写入本地文件中。例如：行情接口实例生
+成（MduserApiresume.con）
+，交易接口实例（Private.con，Public.con，TraderApiresume.con）
+。
+以 上 流 文 件 的 存 放 路 径 都 是 通 过 接 口 实 例 创 建 函 数
+（CreateFtdcTraderApi\CreateFtdcMduserApi）参数指定，如 CreateFtdcTraderApi(".\\flow\\")
+将会在当前目录的 flow 文件夹存放流文件，注意要确保文件存放路径已存在。
+这些流文件是交易过程中自动生成的，因此，在开发多 API 实例的客户端时需要注意
+操作系统的文件句柄限制。另外，流文件中存储了客户端与后台的数据交互进度标识，因此，
+多实例共用流文件可能造成数据紊乱或缺失。
+
+4. 飞马 API 是否是线程安全的？API 和 SPI 是一个线程还是不同线程？
+【答：
+】飞马的 API 是线程安全的，用户可以创建多个 API 实例同时运行。CUSTPFtdcTraderSpi
+提供的接口回调是由 API 工作线程驱动，通过实现 SPI 中的接口方法，可以从飞马平台收取
+所需数据。
+关于线程数问题，在飞马系统角度上，一个 API 实例会引起两个线程，一个线程用于维
+护 API 和飞马系统的会话和心跳；另一个线程用于处理请求和回应。从这个意义上说 API 和
+SPI 是同一线程，
+如果回调函数阻塞，
+就等于阻塞了 API 工作线程。因此，
+在 CUSTPFtdcTraderSpi
+派生类的回调函数中，通常应迅速返回，可以利用将数据放入缓冲区或通过 Windows 的消
+息机制来实现。
+从客户端程序来说，API 和 SPI 在本地是否属于同一线程可以由开发者自己控制。如果
+开发者在回调函数中直接调用 API，API 和 SPI 在客户端是属于同一个线程的，此时回调函数
+堵塞，API 请求将会堵塞在本地；如果开发着应用程序至少由两个线程组成，一个是应用程
+序主线程，一个是交易员 API 工作线程，API 和 SPI 可以属于不同线程，此时回调函数堵塞，
+API 请求会堵塞在飞马系统的消息队列中。
+
+5. 基于飞马 API 开发的客户端程序在交易前有哪些必须执行的步骤？
+版权所有© 上海金融期货信息技术有限公司
+
+第 5 页
+
+上海金融期货信息技术有限公司技术文档
+
+开发技术指南
+
+【答：
+】飞马客户端程序在交易前必须执行以下步骤：
+
+
+创建 API 实例（CreateFtdcTraderApi）
+
+
+
+注册对应的回调接口类的实例（ RegisterSpi ）
+
+
+
+订阅私有流（ SubscribePrivateTopic ）
+
+
+
+订阅公有流（SubscribePublicTopic）
+
+
+
+注册前置机网络地址（RegisterFront）
+
+
+
+初始化 API 与 飞马服务器建立连接（Init）
+
+
+
+连接成功后回调（OnFrontConnected）
+
+
+
+发起用户登录请求（ReqUserLogin）
+
+
+
+登录请求响应（OnRspUserLogin）返回登录结果，登录成功后，客户端就能开始交易
+
+6. 飞马报单类 API 和查询类 API 的使用次数限制是多少？
+【答：
+】报单类 API 的在途订单每秒不能超过 200 笔，即发送出去还没有收到响应的订单不
+能超过 200 笔；
+查询类 API 的限制是每秒只能查询 1 笔。
+
+7. 飞马的心跳机制是如何设计的？能否自己设置心跳时间？
+【答：
+】飞马 API 与飞马系统建立起会话连接后，API 与后台之间会定时互发心跳包，以确定
+会话是否正常。
+当飞马系统一定时间间隔（心跳超时间隔，默认为 5s）没有收到该会话发过来的心跳
+包，便会向飞马 API 发起心跳超时警告，飞马 API 的 OnHeartBeatWarning 接口将会被调用。
+当飞马系统长时间收不到飞马 API 的心跳包（默认为 10s），会话被断开，错误代码
+0X2001，谓之心跳读失败；
+当飞马系统向飞马 API 发送心跳包失败，会话被断开，错误代码 0X2002，谓之心跳写
+失败；
+心跳超时间隔可由客户指定，通过飞马 API 的 SetHeartBeatTimeout 接口更改心跳超时
+时间。但是该时间间隔一般不要设置过小或者过大：设置过大可能会导致客户掉线而飞马系
+统不知晓，不能及时重连；设置过小在网络环境较差的情况下可能导致频繁的断线重连。一
+般设置在 10~50 之间。
+版权所有© 上海金融期货信息技术有限公司
+
+第 6 页
+
+上海金融期货信息技术有限公司技术文档
+
+开发技术指南
+
+8. 飞马 API 中 BrokerID 的代表什么含义？它与会员编号有什么区别？
+【答：
+】BrokerID 是期货公司在飞马系统中的一个标识，一套系统对于一个期货公司只有一
+个 BrokerID，一般建议期货公司设置成保证金监控中心代码。该字段是大部分报单类和查询
+类 API 接口的必填字段。
+会员编号是期货公司在交易所的一个标识，对于多交易所版，期货公司对于不同的交易
+所需要录入不同的会员编号（与席位编号一致），因此一套系统对于一个期货公司会需要录
+入多个会员编号。该字段对客户是不透明的，使用 API 开发时不需要这个信息。
+
+9. 飞马 API 中的 UserID、InvestorID、AccountID、ClientID 各代表什么含义？
+【答：
+】飞马的 UserID 是用户代码，是飞马系统中特有的代表操作员的一个代号，由期货公
+司自行分配，一个用户可以跟飞马后台建立一个会话进行交互；
+飞马的 InvestorID 是投资者编号，由期货公司在飞马系统录入，应该对应于主席系统的
+投资者代码，同时期货公司必须为每一个 InvestorID 至少指定至少一个 UserID。
+UserID 和 InvestorID 之间的是可以设置为多对多的，假如一个实力强大的抄手，希望同
+时管理多个账户，那么可以给这个操盘者的 UserID 关联到多个 InvestorID；另外一方面假如
+某个投资者希望对一份资金同时执行不同的策略，只需要给这个 InvestorID 分配多个用户，
+各用户之间就可以信息共享，权利对等。
+飞马的 AccountID 是资金帐号，在飞马系统中根据投资者编号自动生成的，目前在飞马
+系统中它与投资者编号 InvestorID 是一对一的，它实际代表了投资者的账户信息，未来一个
+投资者可能存在美元账户、人民币账户等多个资金帐号。
+飞马的 ClientID 是交易编码，由期货公司在飞马系统录入，是交易所为每个投资者开设
+的唯一编号，中金所一个投资者最多有投机、套保、套利、做市商四个交易编码，除中金所
+外，其他交易所一个投资者只有一个交易编码。
+
+10. 飞马报单时如何指定不同类型的交易编码进行交易？
+【答：
+】主要通过 HedgeFlag 字段区分。除中金所是一户四码外，其他交易所均是一户一码。
+进行中金所交易时，客户需要指定下单用户 UserID（哪个操作员），下单投资者 InvestorID
+（用谁的钱）
+，和投机套保标识 HedgeFlag（哪种交易编码）
+，飞马通过这些字段先找到相应
+版权所有© 上海金融期货信息技术有限公司
+
+第 7 页
+
+上海金融期货信息技术有限公司技术文档
+
+开发技术指南
+
+类型的交易编码，而无需客户直接填写交易编码。
+除中金所外，进行上期所、大商所、郑商所交易时，客户需要指定下单用户 UserID（哪
+个操作员）
+，下单投资者 InvestorID（用谁的钱）
+，系统就可以找到对应的唯一交易编码。填
+写 HedgeFlag 区分交易类型，但不同交易类型的报单检查规则以及费率保证金可能不同，须
+谨慎填写。
+
+11. 飞马的 UserOrderLocalID，UserOrderActionLocalID，OrderLocalID，OrderSysID
+各代表什么含义？
+【答：
+】这些都是在不同操作时由不同对象生成的报单编号：
+UserOrderLocalID 是用户本地报单编号，客户端程序在发起 ReqOrderInsert 请求时由用户指
+定，报单时该字段应该在上一次报单 UserOrderLocalID 或撤单 UserOrderActionLocalID 的基础
+上字符序增加。在同一套飞马中，一个订单的 BrokerID+UserID+UserOrderLocalID 形成唯一主
+键；
+UserOrderActionLocalID 是用户本地撤单编号，客户端程序在发起 ReqOrderAction 请求时由
+用户指定，撤单时该字段应该在上一次报单 UserOrderLocalID 或撤单 UserOrderActionLocalID
+的基础上字符序增加，在同一套飞马中与 BrokerID+UserID+UserOrderActionLocalID 形成唯一
+主键，UserOrderActionLocalID 和 UserOrderLocalID 应该是同一序列字符序增加；
+OrderLocalID 是飞马报单编号，飞马系统向交易系统发起报单类请求时（报单、撤单、报价、
+组合请求）由飞马系统指定，并在 OnRtnOrder 中返回给客户.在飞马系统一个订单的
+ExchangeID+SeatID+OrderLocalID 形成唯一主键；
+OrderSysID 是系统报单号，是交易系统为每一笔发送到交易系统的报单分配的编号，在交易
+系统内一个订单的 ExchangeID+OrderSysID 形成唯一主键。
+
+12. 飞马是否能够保证回报的次序性？
+【答：
+】由于飞马直接转发交易系统的回报，而交易系统是能够保证回报的次序的，因此飞
+马也是能够保证回报的次序性的，即先报的报单的一定是先收到回报。
+需要说明的是同一笔报单的响应（OnRsp）和回报（OnRtn）的次序不能完全保证，这
+是由于 OnRsp 是通过对话流发送，
+而 OnRtn 是通过私有流发送，OnRsp 正常情况下会在 OnRtn
+之前到来，但不排除 OnRsp 后于 OnRtn 到来的可能性。
+
+版权所有© 上海金融期货信息技术有限公司
+
+第 8 页
+
+上海金融期货信息技术有限公司技术文档
+
+开发技术指南
+
+13. 飞马支持哪些指令？是否支持 FAK/FOK？是否支持市价单？
+【答：
+】四所版飞马支持四个交易所（包括能源交易中心）的所有生产指令。
+支持中金所基础报单功能包括开仓、平仓、撤单，支持限价单、FAK、FOK、市价单、市价
+转限价、五档市价单、五档市价转限价、最优价单、最优价转限价报单指令。
+订 单
+
+ORDERPRICETYPE
+
+TIMECONDITION
+
+VOLUMECONDITION
+
+ARBITYPE
+
+限价单
+
+USTP_FTDC_OPT_LimitPrice
+
+USTP_FTDC_TC_GFD
+
+USTP_FTDC_VC_AV
+
+USTP_FTDC_AT_Basic
+
+FOK
+
+USTP_FTDC_OPT_LimitPrice
+
+USTP_FTDC_TC_IOC
+
+USTP_FTDC_VC_CV
+
+USTP_FTDC_AT_Basic
+
+FAK
+
+USTP_FTDC_OPT_LimitPrice
+
+USTP_FTDC_TC_IOC
+
+USTP_FTDC_VC_AV
+
+USTP_FTDC_AT_Basic
+
+市价单
+
+USTP_FTDC_OPT_AnyPrice
+
+USTP_FTDC_TC_IOC
+
+USTP_FTDC_TC_AV
+
+USTP_FTDC_AT_Basic
+
+市 价转
+
+USTP_FTDC_OPT_AnyPrice
+
+USTP_FTDC_TC_GFD
+
+USTP_FTDC_VC_AV
+
+USTP_FTDC_AT_Basic
+
+USTP_FTDC_OPT_FiveLevelPrice
+
+USTP_FTDC_TC_IOC
+
+USTP_FTDC_VC_AV
+
+USTP_FTDC_AT_Basic
+
+USTP_FTDC_OPT_FiveLevelPrice
+
+USTP_FTDC_TC_GFD
+
+USTP_FTDC_VC_AV
+
+USTP_FTDC_AT_Basic
+
+最优价
+
+USTP_FTDC_OPT_BestPrice
+
+USTP_FTDC_TC_IOC
+
+USTP_FTDC_VC_AV
+
+USTP_FTDC_AT_Basic
+
+最 优价
+
+USTP_FTDC_OPT_BestPrice
+
+USTP_FTDC_TC_GFD
+
+USTP_FTDC_VC_AV
+
+USTP_FTDC_AT_Basic
+
+类型
+
+限价
+五 档市
+价
+五 档市
+价 转限
+价
+
+转限价
+
+上期所基础报单功能包括开仓、平今、平昨（平仓同平昨）
+、撤单，支持限价单、FAK、FOK、
+市价单报单指令。
+订 单 类
+
+ORDERPRICETYPE
+
+TIMECONDITION
+
+VOLUMECONDITION
+
+ARBITYPE
+
+限价单
+
+USTP_FTDC_OPT_LimitPrice
+
+USTP_FTDC_TC_GFD
+
+USTP_FTDC_VC_AV
+
+USTP_FTDC_AT_Basic
+
+FOK
+
+USTP_FTDC_OPT_LimitPrice
+
+USTP_FTDC_TC_IOC
+
+USTP_FTDC_VC_CV
+
+USTP_FTDC_AT_Basic
+
+FAK
+
+USTP_FTDC_OPT_LimitPrice
+
+USTP_FTDC_TC_IOC
+
+USTP_FTDC_VC_AV
+
+USTP_FTDC_AT_Basic
+
+型
+
+版权所有© 上海金融期货信息技术有限公司
+
+第 9 页
+
+上海金融期货信息技术有限公司技术文档
+
+市价单
+
+USTP_FTDC_OPT_AnyPrice
+
+开发技术指南
+
+USTP_FTDC_TC_IOC
+
+USTP_FTDC_TC_AV
+
+USTP_FTDC_AT_Basic
+
+大商所基础报单功能包括开仓、平仓、撤单，支持限价单、限价止盈（损）单、市价单、市
+价止盈（损）单、FOK 单、FAK 单（也叫 IOC 单）、套利组合单报单指令。
+订单类型
+
+ORDERPRICETYPE
+
+限价单
+
+USTP_FTDC_OPT_LimitPrice
+
+USTP_FTDC_TC_GFD
+
+USTP_FTDC_VC_AV
+
+USTP_FTDC_AT_Basic
+
+限价止盈单
+
+USTP_FTDC_OPT_LimitStopProfitPrice
+
+USTP_FTDC_TC_GFD
+
+USTP_FTDC_VC_AV
+
+USTP_FTDC_AT_Basic
+
+限价止损单
+
+USTP_FTDC_OPT_LimitStopLosPrice
+
+USTP_FTDC_TC_GFD
+
+USTP_FTDC_VC_AV
+
+USTP_FTDC_AT_Basic
+
+FOK
+
+USTP_FTDC_OPT_LimitPrice
+
+USTP_FTDC_TC_IOC
+
+USTP_FTDC_VC_CV
+
+USTP_FTDC_AT_Basic
+
+FAK
+
+USTP_FTDC_OPT_LimitPrice
+
+USTP_FTDC_TC_IOC
+
+USTP_FTDC_VC_AV
+
+USTP_FTDC_AT_Basic
+
+市价单
+
+USTP_FTDC_OPT_AnyPrice
+
+USTP_FTDC_TC_IOC
+
+USTP_FTDC_TC_AV
+
+USTP_FTDC_AT_Basic
+
+市价止盈单
+
+USTP_FTDC_OPT_StopProfitPrice
+
+USTP_FTDC_TC_IOC
+
+USTP_FTDC_TC_AV
+
+USTP_FTDC_AT_Basic
+
+市价止损单
+
+USTP_FTDC_OPT_StopLosPrice
+
+USTP_FTDC_TC_IOC
+
+USTP_FTDC_TC_AV
+
+USTP_FTDC_AT_Basic
+
+套利组合单
+
+USTP_FTDC_OPT_LimitPrice
+
+USTP_FTDC_TC_GFD
+
+USTP_FTDC_VC_AV
+
+USTP_FTDC_AT_SP/
+
+TIMECONDITION
+
+VOLUMECONDITION
+
+ARBITYPE
+
+USTP_FTDC_AT_SPC
+套利组合
+
+USTP_FTDC_OPT_LimitPrice
+
+USTP_FTDC_TC_IOC
+
+USTP_FTDC_VC_CV
+
+FOK 单
+套利组合
+
+USTP_FTDC_AT_SP/
+USTP_FTDC_AT_SPC
+
+USTP_FTDC_OPT_LimitPrice
+
+USTP_FTDC_TC_IOC
+
+USTP_FTDC_VC_AV
+
+FAK 单
+
+USTP_FTDC_AT_SP/
+USTP_FTDC_AT_SPC
+
+注：套利组合单 HedgeFlag 只能为 USTP_FTDC_CHF_Arbitrage
+
+郑商所基础报单功能包括开仓、平仓、撤单，支持限价单、市价单、止损单、套利组合单报
+单指令。
+订单类型
+
+ORDERPRICETYPE
+
+限价单
+
+USTP_FTDC_OPT_LimitPrice
+
+USTP_FTDC_TC_GFD
+
+USTP_FTDC_VC_AV
+
+USTP_FTDC_AT_Basic
+
+市价单
+
+USTP_FTDC_OPT_AnyPrice
+
+USTP_FTDC_TC_IOC
+
+USTP_FTDC_TC_AV
+
+USTP_FTDC_AT_Basic
+
+限价止损单
+
+USTP_FTDC_OPT_LimitStopLosPrice
+
+USTP_FTDC_TC_GFD
+
+USTP_FTDC_VC_AV
+
+USTP_FTDC_AT_Basic
+
+市价止损单
+
+USTP_FTDC_OPT_StopLosPrice
+
+USTP_FTDC_TC_GFD
+
+USTP_FTDC_VC_AV
+
+USTP_FTDC_AT_Basic
+
+TIMECONDITION
+
+版权所有© 上海金融期货信息技术有限公司
+
+第 10 页
+
+VOLUMECONDITION
+
+ARBITYPE
+
+上海金融期货信息技术有限公司技术文档
+
+套利单
+
+USTP_FTDC_OPT_LimitPrice
+
+开发技术指南
+
+USTP_FTDC_TC_GFD
+
+USTP_FTDC_VC_AV
+
+USTP_FTDC_AT_STD/
+USTP_FTDC_AT_STG
+
+注：套利组合单 HedgeFlag 只能为 USTP_FTDC_CHF_Arbitrage
+
+能源交易所基础报单功能包括开仓、平今、平昨（平仓同平昨）、撤单，支持限价单、FAK、
+FOK 报单指令。
+订 单 类
+
+ORDERPRICETYPE
+
+TIMECONDITION
+
+VOLUMECONDITION
+
+ARBITYPE
+
+限价单
+
+USTP_FTDC_OPT_LimitPrice
+
+USTP_FTDC_TC_GFD
+
+USTP_FTDC_VC_AV
+
+USTP_FTDC_AT_Basic
+
+FOK
+
+USTP_FTDC_OPT_LimitPrice
+
+USTP_FTDC_TC_IOC
+
+USTP_FTDC_VC_CV
+
+USTP_FTDC_AT_Basic
+
+FAK
+
+USTP_FTDC_OPT_LimitPrice
+
+USTP_FTDC_TC_IOC
+
+USTP_FTDC_VC_AV
+
+USTP_FTDC_AT_Basic
+
+型
+
+第三章
+
+API 使用详解
+
+1. 报单指令（ReqOrderInsert）
+交易终端
+
+飞马平台
+
+API
+
+交易系统
+
+查询费率、合约、资金信息
+对话流查询
+对话流查询
+对话流查询响应
+对话流查询响应
+下单5手
+
+报单请求（UserOrderLocalID）
+报单请求（BrokerID+UserID+UserOrderLocalID）
+
+报单请求（ExchangeID+SeatID+OrderLocalID）
+报单响应（ExchangeID+OrderSysID）
+报单响应（ExchangeID+OrderSysID,
+BrokerID+UserID+OrderLocalID）
+
+报单响应（ExchangeID+OrderSysID）
+委托回报（ExchangeID+OrderSysID,SeatID+OrderLocalID）
+（RemainVolume，OrderStatus）
+
+委托回报（ExchangeID+OrderSysID）
+（RemainVolume，OrderStatus）
+
+成交了2手
+
+委托回报（ExchangeID+OrderSysID,SeatID+OrderLocalID）
+（RemainVolume，OrderStatus）
+
+委托回报（ExchangeID,OrderSysID）
+（RemainVolume，OrderStatus）
+委托回报（ExchangeID+OrderSysID,SeatID+OrderLocalID）
+（RemainVolume，OrderStatus）
+委托回报（ExchangeID+OrderSysID,SeatID+OrderLocalID）
+（RemainVolume，OrderStatus）
+
+RemainVolume=5
+OrderStatus=3
+
+RemainVolume=2
+OrderStatus=1
+
+成交回报（OrderSysID,TradeID）
+
+成交回报（OrderSysID,TradeID）
+
+成交回报（OrderSysID,TradeID）
+
+撤单
+
+撤单请求（UserOrderActionLocalID,
+UserOrderLocalID/OrderSysID）
+
+撤单请求（BrokerID+UserID+UserOrderActionLocalID）
+(UserOrderLocalID,OrderSysID)
+撤单请求（ExchangeID+SeatID+ActionLocalID）
+(OrderLocalID，OrderSysID)
+撤单响应
+
+报单响应（ExchangeID+OrderSysID,
+BrokerID+UserID+OrderLocalID）
+
+报单响应（ExchangeID+OrderSysID）
+委托回报（ExchangeID+OrderSysID,SeatID+OrderLocalID）
+（RemainVolume，OrderStatus）
+
+委托回报（ExchangeID+OrderSysID）
+（RemainVolume，OrderStatus）
+
+RemainVolume=0
+OrderStatus=5
+
+委托回报（ExchangeID+OrderSysID,SeatID+OrderLocalID）
+（RemainVolume，OrderStatus）
+
+a) 关于响应和回报
+
+
+正确的报单：飞马接受到请求后发给交易所，交易所收到后返回 OnRspOrderInsert(ErrorID=0)
+
+版权所有© 上海金融期货信息技术有限公司
+
+第 11 页
+
+上海金融期货信息技术有限公司技术文档
+
+开发技术指南
+
+通知给飞马,飞马转发 OnRsp (正确)给用户；交易所确认后返回 OnRtnOrder(OrderStatus)给飞
+马 ， 飞 马 转 发 OnRtnOrder 给 客 户 。 若 该 订 单 在 交 易 所 被 成 交 ， 交 易 所 再 返 回
+OnRtnOrder(OrderStatus,Volume)，OnRtnTrade(TradeID, Volume)。
+
+
+立即成交的报单：对于 IOC(不成交立即撤单)的报单，如果该报单在交易所能够立即成交的
+话，交易所将返回一次 OnRspOrderInsert，一次 OnRtnOrder 和一次 OnRtnTrade；若没有成
+交，将只有一个 OnRspOrderInsert 和一个 OnRtnOrder。
+
+b) 关于错单
+
+
+错误的报单：飞马接受请求后发现订单有错误（客户信息有误、资金不足等）
+，飞马会主动
+发起一个 OnRspOrderInsert(ErrorID!=0)，将该订单打回给客户，并不再上传给交易所；
+
+
+
+错误的报单：飞马检查通过后发给交易所，交易所二次检查时发现错误（价格错误等）
+，交
+易所会返回 OnRspOrderInsert(ErrorID!=0)通知飞马,飞马转发 OnRsp(错误)给用户；同时交易
+所还会返回一个 OnRtnErrOrderInsert 给飞马，飞马转发该错误回报给客户.
+
+
+
+无论正确的报单还是错误的报单，
+客户都会收到 OnRspOrderInsert，
+正确的报单 ErrorID 为 0，
+错误的报单 ErrorID 不为 0。
+
+
+
+如果报单没有通过飞马系统的逻辑检验，飞马不再将报单上传到交易系统，客户只会收到
+OnRspOrderInsert；如果飞马接受了客户的报单，但是报单没有通过交易所的逻辑检查，客
+户将既收到 OnRspOrderInsert，又收到 OnRtnErrOrderInsert。
+
+c)
+
+报单序列号
+
+报单过程中会产生以下报单序列号
+
+
+BrokerID ,UserID, UserOrderLocalID
+用户在报单时, 需要给每一笔报单分配一个 UserOrderlocalID，该序号与 UserID，BrokerID 组
+成的序列，可以唯一定位用户的一笔报单。在没有收到报单响应以及回报之前，用户可以用
+该序列号撤单。
+
+
+
+ExchangeID, SeatID, OrderLocalID
+飞马向交易系统报单时，将给每一个报单分配一个 OrderLocalID, 该序号和 SeatID,ExchangeID
+组成的序列，唯一标识了一笔飞马处理过的订单。
+
+
+
+ExchangeID, OrderSysID
+版权所有© 上海金融期货信息技术有限公司
+
+第 12 页
+
+上海金融期货信息技术有限公司技术文档
+
+开发技术指南
+
+交易系统每接受一笔报单，
+将给该笔报单一个 OrderSysID，该序号与 ExchangeID 组成的序列，
+可以唯一定位一笔交易系统接受的订单。
+
+d) 关于字段
+报单接口的以下字段应按照以下规则填写
+//强平原因
+ForceCloseReason = 0
+
+（非强平）
+
+//自动挂起标志
+IsAutoSuspend = 0
+
+（否）
+
+//用户自定义标识
+UserCustom = ……
+
+(本字段由用户填写，飞马将始终保存该字段的原始值)
+
+2. 报单响应（OnRspOrderInsert）
+报单时飞马对报单请求的响应，只要用户发起了 ReqOrderInsert，该事件就会被触发，无论
+该报单是正确还是错误。报单响应中包含了以下信息
+
+
+原始报单信息
+
+
+
+报单序列号
+
+
+
+ExchangeID+OrderSysID
+
+
+
+BrokerID+UserID+UserOrderLocalID
+报单响应可以用来定位报单和过滤委托回报：
+1)收到报单响应 OnRspOrderInsert 后，利用 RspInfo 判断报单是否正确；
+2)如果 是正确 的报单 ，利用 UserID,UserOrderLocalID 过滤响 应信息 ，同时 记录关 联的
+ExchangeID 和 OrderSysID；
+3)收到委托回报和成交回报时，利用 ExchangeID,OrderSysID 过滤出自己的回报信息。
+
+3. 撤单指令（ReqOrderAction）
+a) 关于撤单回报和响应
+撤单操作与报单操作的工作流程相似。
+
+版权所有© 上海金融期货信息技术有限公司
+
+第 13 页
+
+上海金融期货信息技术有限公司技术文档
+
+
+
+开发技术指南
+
+正确的撤单：飞马接受到请求后发给交易所，交易所收到后返回 OnRspOrderAction(ErrorID=0)
+通知给飞马,飞马转发 OnRsp (正确)给用户；交易所处理后返回 OnRtnOrder(OrderStatus 为已
+撤单)给飞马，飞马转发 OnRtnOrder 给客户。
+
+
+
+错误的撤单：飞马检查撤单请求有错误，飞马会主动发起一个 OnRspOrderAction (ErrorID!=0)，
+将该撤单请求打回给客户，并不再上传给交易所；
+
+
+
+错误的撤单：飞马检查通过后发给交易所，交易所拒绝了该请求 ，交易所会返回
+OnRspOrderAction (ErrorID!=0)通知飞马,飞马转发 OnRsp(错误)给用户；同时交易所还会返回
+一个 OnRtnErrOrderAction 给飞马，飞马转发该错误回报给客户.
+
+b) 关于字段
+//报单操作类型
+ActionFlag = USTP_FTDC_AF_Delete
+
+(删除报单)
+
+//系统报单号
+//用户设定，需要撤销的报单的系统报单号
+OrderSysID = ……
+//用户本地报单号
+//用户设定，需要撤销的报单的用户本地报单号
+//当 OrderSysID 和 UserOrderLocalID 同时赋值时，撤销的是 OrderSysID 指定的单
+UserOrderLocalID = ……
+//用户本地撤单号
+//用户设定，本次撤单操作的用户本地报单号，与 UserOrderLocalID 统一序列增加
+UserOrderActionLocalID = ……
+
+c)
+
+
+关于序列号
+
+BrokerID ,UserID, UserOrderActionLocalID
+用户在撤单时, 需要给撤单操作分配一个 UserOrderActionlocalID，该序号与 UserID，BrokerID
+组成的序列，可以在飞马中唯一定位用户的一次撤单操作。
+飞马将报单、撤单视为同等的请求，每一次请求必须有一个请求序列号。
+UserOrderActionLocalID 是撤单的请求序列号， UserOrderLocalID 是报单的请求序列号，请求
+版权所有© 上海金融期货信息技术有限公司
+
+第 14 页
+
+上海金融期货信息技术有限公司技术文档
+
+开发技术指南
+
+序列号必须是唯一的，即 UserOrderLocalID 和 UserOrderActionLocalID 不能重复。
+
+4. 委托回报（OnRtnOrder）
+委托回报主要反映了报单当前的状态。当订单的状态发生变化时，例如成交或者撤单时，该
+事件会被触发。委托回报中包含了以下信息
+
+
+原始报单信息
+
+
+
+报单序列号
+
+
+
+ExchangeID+OrderSysID
+
+
+
+ExchangeID+SeatID+OrderLocalID
+
+
+
+BrokerID+UserID+UserOrderLocalID
+
+
+
+BrokerID+OrderUserID+UserOrderLocalID
+飞马支持多个用户同时操作同一个投资者的账户，每个用户都可以收到跟这个投资者相关
+的回报。为了统计用户的行为，区分不同用户的报单，需要对回报进行过滤。
+刚刚介绍了利用 OnRspOrderInsert 可以过滤委托回报。如果用户想直接从委托回报中筛选，
+不能直接用回报中的 UserID 和 UserOrderLocalID 去定位报单，因为回报中的 UserID 是登陆
+账号，并不是报单账号。应该使用回报中的 OrderUserID 和 UserOrderLocalID 去定位报单
+
+
+
+报单委托状态
+//全部成交
+#define USTP_FTDC_OS_AllTraded '0'
+//部分成交还在队列中
+#define USTP_FTDC_OS_PartTradedQueueing '1'
+//部分成交不在队列中
+#define USTP_FTDC_OS_PartTradedNotQueueing '2'
+//未成交还在队列中
+#define USTP_FTDC_OS_NoTradeQueueing '3'
+//未成交不在队列中
+#define USTP_FTDC_OS_NoTradeNotQueueing '4'
+//已撤单
+#define USTP_FTDC_OS_Canceled '5'
+
+版权所有© 上海金融期货信息技术有限公司
+
+第 15 页
+
+上海金融期货信息技术有限公司技术文档
+
+开发技术指南
+
+//订单已报入交易所未应答
+#define USTP_FTDC_OS_AcceptedNoReply '6'
+
+
+剩余手数
+VolumeTraded 表示已经成交的数量，VolumeRemain 表示还没有成交的数量。如果这是一笔
+10 手 的 报 单 ， Volume=10 ， 如 果 该 报 单 成 交 了 3 笔 ， 那 么 此 时 VolumeTraded=3 ，
+VolumeRemain=7。
+
+5. 成交回报（OnRtnTrade）
+成交回报是成交事件最直接的反馈。成交回报是逐笔发送的，也就是说，如果一定订单分 3
+次成交，那么用户将收到 3 次成交回报。
+
+6. 客户询价指令（ReqForQuote）
+客户询价是指任意客户（普通投资者和做市商）可以在某一合约上向做市商发起询价请
+求。客户发起询价请求后，将收到询价响应（OnRspForQuote）。询价成功后（OnRspForQuote
+的 ErrorID = 0）
+，如果有做市商做出相应报价，客户可以通过接收行情变化得到该合约上的
+最新报价。
+鉴于交易系统的 API 限制和流控机制，客户的询价不要过于频繁，不要做无谓的询价。
+一般在不活跃的合约上才进行询价。
+客户（主要是做市商）想要获取询价信息，需要订阅单独的询价流（SubscribeForQuote）
+，
+飞马会转发交易系统收集的询价信息，客户通过询价回报（OnRtnQuote）可以知道市场上
+有关于哪些合约的询价。询价流大约 20s 左右更新一次。
+
+7. 做市商报价指令（ReqQuoteInsert）
+做市商报价是指做市商在收到客户在某一合约上的询价之后，有义务在一定时间之内在
+该合约上进行报价，在同一合约上双边报价，报价的买卖方向上的数量、价格可以不一致。
+飞马新增报价输入接口 ReqQuoteInsert，报价接口和报单接口的使用方法类似。
+
+版权所有© 上海金融期货信息技术有限公司
+
+第 16 页
+
+上海金融期货信息技术有限公司技术文档
+
+交易终端
+
+开发技术指南
+
+飞马平台
+
+API
+
+交易系统
+
+初始化API前订阅询价流
+
+订阅询价流SubcribeForQuote
+订阅询价流SubcribeForQuote
+询价流OnRtnForQuote
+
+询价流OnRtnForQuote
+发起报价响应
+
+报价请求ReqQuoteInsert
+UserQuoteLocalID
+BidUserOrderLocalID
+AskUserOrderLocalID
+
+报价请求ReqQuoteInsert
+UserQuoteLocalID
+BidUserOrderLocalID
+AskUserOrderLocalID
+
+报价响应OnRspQuoteInsert
+
+报价响应OnRspQuoteInsert
+
+委托回报OnRtnOrder
+OrderSysID=BidOrderSysID
+委托回报OnRtnOrder
+OrderSysID=AskOrderSysID
+
+委托回报OnRtnOrder
+OrderSysID=BidOrderSysID
+委托回报OnRtnOrder
+OrderSysID=AskOrderSysID
+
+报价回报OnRtnQuote
+QuoteSysID
+
+报价回报OnRtnQuote
+QuoteSysID
+假设Bid的方向部分成交
+
+委托回报OnRtnOrder
+OrderSysID=BidOrderSysID
+成交回报OnRtnTrade
+OrderSysID=BidOrderSysID
+
+委托回报OnRtnOrder
+OrderSysID=BidOrderSysID
+成交回报OnRtnTrade
+OrderSysID=BidOrderSysID
+
+询价流OnRtnForQuote
+
+报价请求ReqQuoteInsert
+QuoteLocalID
+报价响应OnRspQuoteInsert
+QuoteSysID
+BidOrderSysID
+AskOrderSysID
+
+委托回报OnRtnOrder
+OrderSysID=BidOrderSysID
+委托回报OnRtnOrder
+OrderSysID=AskOrderSysID
+报价回报OnRtnQuote
+QuoteSysID
+
+委托回报OnRtnOrder
+OrderSysID=BidOrderSysID
+
+成交回报OnRtnTrade
+OrderSysID=BidOrderSysID
+
+剩余部分撤销
+撤销报价请求ReqQuoteAction
+UserQuoteActionLocalID
+QuoteSysID/UserQuoteLocalID
+
+撤销报价请求ReqQuoteAction
+UserQuoteActionLocalID
+QuoteSysID/UserQuoteLocalID
+
+撤销报价响应OnRspQuoteAction
+
+撤销报价响应OnRspQuoteAction
+
+委托回报OnRtnOrder
+OrderSysID=BidOrderSysID
+委托回报OnRtnOrder
+OrderSysID=AskOrderSysID
+
+委托回报OnRtnOrder
+OrderSysID=BidOrderSysID
+委托回报OnRtnOrder
+OrderSysID=AskOrderSysID
+
+报价回报OnRtnQuote
+QuoteSysID
+CancleTime
+
+报价回报OnRtnQuote
+QuoteSysID
+CancleTime
+
+撤销报价请求ReqQuoteAction
+QuoteActionLocalID
+QuoteSysID/QuoteLocalID
+撤销报价响应OnRspQuoteAction
+委托回报OnRtnOrder
+OrderSysID=BidOrderSysID
+委托回报OnRtnOrder
+OrderSysID=AskOrderSysID
+报价回报OnRtnQuote
+QuoteSysID
+CancleTime
+
+a) 关于响应和回报的顺序
+
+
+如果报价单成功上报到交易所，客户将依次收到报价响应 OnRspQuoteInsert(ErrorID=0)，
+OnRtnOrder( 拆 分 后 的 买 单 回 报 ， OrderStatus=3) ， OnRtnOrder( 拆 分 后 的 卖 单 回 报
+OrderStatus=3)，OnRtnQuote(报价回报)。
+
+
+
+如果报价单中某一个方向（假设买方向）的报价被部分成交，客户将收到该报单的委托
+和成交回报，依次为 OnRtnOrder(拆分后的买单回报，OrderStatus=1)，OnRtnTrade。
+如果此时撤销报价 ReqQuoteAction，将撤销报价中的两个方向报单各自的未成交部分，
+客户将依次收到 OnRtnOrder(拆分后的买单回报，OrderStatus=5)，OnRtnOrder(拆分后的
+卖单回报 OrderStatus=5)，OnRtnQuote(报价回报，CancelTime)。
+
+
+
+如果报价单中某一个方向（假设买方向）的报价被全部成交，客户将收到该报单的委托
+和成交回报，依次为 OnRtnOrder(拆分后的买单回报，OrderStatus=0)，OnRtnTrade。
+如果此时撤销报价 ReqQuoteAction，将撤销报价中的剩余方向报单的未成交部分，客户
+
+版权所有© 上海金融期货信息技术有限公司
+
+第 17 页
+
+上海金融期货信息技术有限公司技术文档
+
+开发技术指南
+
+将 依 次 收 到 OnRspQuoteAction(ErrorID=0) ， OnRtnOrder( 拆 分 后 的 卖 单 回 报 ，
+OrderStatus=5)，OnRtnQuote(报价回报，CancelTime)，此时买单已经全部成交,客户将不
+会收到买单方向的回报。
+
+
+如果报价单中两个方向报价均被部分成交，客户将分别收到两个报单的委托和成交回报，
+依次为 OnRtnOrder(拆分后的买单回报，OrderStatus=1)，OnRtnTrade，OnRtnOrder(拆分
+后的卖单回报，OrderStatus=1)，OnRtnTrade。
+如果此时撤销报价 ReqQuoteAction，将撤销两个报单的未成交部分，客户将依次收到
+OnRspQuoteAction(ErrorID=0) ， OnRtnOrder( 拆 分 后 的 买 单 回 报 ， OrderStatus=5) ，
+OnRtnOrder(拆分后的卖单回报，OrderStatus=5)，OnRtnQuote(报价回报，CancelTime)。
+
+
+
+如果报价单的两个方向的报价均被全部成交，客户将分别收到两个报单的委托和成交回
+报，依次为 OnRtnOrder(拆分后的买单回报，OrderStatus=0)，OnRtnTrade，OnRtnOrder(拆
+分后的卖单回报，OrderStatus=0)，OnRtnTrade。
+如果此时撤销报价 ReqQuoteAction，客户将收到 OnRspQuoteAction(ErrorID ！= 0)，撤
+销报价失败。
+
+b) 关于错误的报价单
+
+
+错误的报价单：飞马接受请求后发现报价单有错误（客户信息有误、资金不足等），飞
+马会主动发起一个 OnRspQuoteInsert(ErrorID!=0)，将该订单打回给客户，并不再上传给
+交易所；
+
+
+
+错误的报价单：飞马检查通过后发给交易所，交易所二次检查时发现错误（价格错误等）
+，
+交易所会返回 OnRspQuoteInsert(ErrorID!=0)通知飞马,飞马转发 OnRsp(错误)给用户；同
+时交易所还会返回一个 OnRtnErrQuoteInsert 给飞马，飞马转发该错误回报给客户.
+
+
+
+无论正确的报价单还是错误的报价单，客户都会收到 OnRspQuoteInsert，正确的报单
+ErrorID 为 0，错误的报单 ErrorID 不为 0。
+
+
+
+如果报单没有通过飞马系统的逻辑检验，飞马不再将报单上传到交易系统，客户只会收
+到 OnRspQuoteInsert；如果飞马接受了客户的报单，但是报单没有通过交易所的逻辑检
+查，客户将既收到 OnRspQuoteInsert，又收到 OnRtnErrQuoteInsert。
+
+c)
+
+关于报价字段
+
+//本地报价单号
+UserQuoteLocalID = …..
+版权所有© 上海金融期货信息技术有限公司
+
+第 18 页
+
+上海金融期货信息技术有限公司技术文档
+
+开发技术指南
+
+//报价单中的买单的本地报单单号
+BidUserOrderLocalID = ……
+//报价单中的卖单的本地报单单号
+AskUserOrderLocalID = ……
+特别注意：报价单的本地报价单号 UserQuoteLocalID、买单本地报单号 BidUserOrderLocalID、
+买单本地报单号 AskUserOrderLocalID 与报单的本地报单编号 UserOrderLocalID、撤单的本地
+撤单编号 UserOrderActionLocalID 是一致的，必须保证同一个序列字符序增加。另外一个报
+价单的三个编号必须满足以下关系：
+MaxOrderLocalID<UserQuoteLocalID<BidUserOrderLocalID<AskUserOrderLocalID
+
+d) 关于序列号
+报价单的请求和响应中包含了三个报单的序列号，他们分别是
+1.
+
+2.
+
+报价单本身的序列号
+BrokerID,UserID,UserQuoteLocalID
+
+(ReqQuoteInsert,OnRspQuoteInsert,OnRtnQuote)
+
+ExchangeID+QuoteSysID
+
+(OnRspQuoteInsert,OnRtnQuote)
+
+买单的序列号
+BrokerID,UserID,BidUserOrderLocalID
+
+(ReqQuoteInsert,OnRtnQuote)
+
+ExchangeID+BidOrderSysID
+
+(OnRtnQuote)
+
+ExchangeID+OrderSysID
+
+(OnRtnOrder)
+
+OnRtnOrder 中的 OrderSysID 就是 OnRtnQuote 中的 BidOrderSysID；
+OnRtnOrder 中的 UserOrderLocalID 就是 OnRtnQuote 中的 BidUserOrderLocalID；
+3.
+
+卖单的序列号
+BrokerID,UserID,AskUserQuoteLocalID (ReqQuoteInsert,OnRtnQuote)
+ExchangeID+BidOrderSysID
+
+(OnRtnQuote)
+
+ExchangeID+OrderSysID
+
+(OnRtnOrder)
+
+OnRtnOrder 中的 OrderSysID 就是 OnRtnQuote 中的 AskOrderSysID；
+OnRtnOrder 中的 UserOrderLocalID 就是 OnRtnQuote 中的 AskUserOrderLocalID；
+客户要注意 OnRtnOrder 和 OnRtnQuote 中的 UserID 均是登陆用户，并非发起报单或者报价
+的用户，建议用户在 OnRspQuoteInsert 中根据 BrokerID,UserID,UserQuoteLocalID 确定报价的
+系统报单号 QuoteSysID，在 OnRtnQuote 中根据 QuoteSysID 确认报价单。
+
+版权所有© 上海金融期货信息技术有限公司
+
+第 19 页
+
+上海金融期货信息技术有限公司技术文档
+
+开发技术指南
+
+8. 撤销报价指令（ReqQuoteAction）
+撤销报价单可以有两种方式，一是通过撤销报单接口（ReqOrderAction）来撤销两个订单中
+的一个或者两个，当某一边的订单被撤销，不改变报价单的状态。另一种是通过撤销报价指
+令（ReqQuoteAction）直接撤销报价。关于撤销报价 ReqQuoteAction 的请求和响应顺序，请
+参见做市商报价接口中关于响应和回报的说明。
+
+a) 关于字段
+//要撤销报价单的系统报价单号
+QuoteSysID = ……
+//要撤销报价单的本地报价单号
+UserQuoteLocalID = …..
+//撤销报价操作的本地操作编号
+UserQuoteActionLocalID
+
+= ……
+
+特别注意：撤销报单时填写的本地操作编号 UserQuoteActionLocalID，与报价单的本地报
+价 单 号 UserQuoteLocalID 、 买 单 本 地 报 单 号 BidUserOrderLocalID 、 买 单 本 地 报 单 号
+AskUserOrderLocalID 、 报 单 的 本 地 报 单 编 号 UserOrderLocalID 、 撤 单 的 本 地 撤 单 编 号
+UserOrderActionLocalID 是一致的，必须保证同一个序列字符序增加。
+
+b) 做市商一般报价处理流程
+1、订阅询价流
+
+SubcribeForQuote
+
+2、收到询价信息 OnRtnForQuote (InstrumentID)
+3、发起报价请求
+
+ReqQuoteInsert(UserQuoteLocalID、BidUserOrderLocalID、AskUserOrderLocalID)
+
+4、处理报价响应 OnRspQuoteInsert(ErrorID,QuoteSysID,BidOrderSysID,AskOrderSysID)
+5、处理买单回报 OnRtnOrder (OrderSysID = BidOrderSysID，OrderStatus = 3 )
+6、处理卖单回报 OnRtnOrder (OrderSysID = AskOrderSysID，OrderStatus = 3 )
+注意：客户（特别是软件开发商）在处理回报时如果涉及资金的计算，不要重复处理双边报
+单的回报和报价回报。
+如有成交：
+7、处理买单回报 OnRtnOrder (OrderSysID = BidOrderSysID，OrderStatus =0/1)
+8、处理买单成交 OnRtnTrade (OrderSysID = BidOrderSysID，VolumeTraded )
+版权所有© 上海金融期货信息技术有限公司
+
+第 20 页
+
+上海金融期货信息技术有限公司技术文档
+
+开发技术指南
+
+9、处理卖单回报 OnRtnOrder (OrderSysID = AskOrderSysID，OrderStatus =0/1 )
+10、处理卖单成交
+
+OnRtnTrade (OrderSysID = AskOrderSysID，VolumeTraded )
+
+如需撤销报价：
+11、发起撤销报价请求
+
+ReqQuoteAction(QuoteSysID/UserQuoteLocalID,UserQuoteActionLocalID)
+
+12、处理撤销报价响应
+
+OnRspQuoteAction(ErrorID,QuoteSysID)
+
+13、处理买单回报
+
+OnRtnOrder (OrderSysID = BidOrderSysID，OrderStatus = 5)
+
+14、处理卖单回报 OnRtnOrder (OrderSysID = AskOrderSysID，OrderStatus = 5 )
+注意：如果某一个方向上的报单已经全部成交或者已经全部被撤销（ReqOrderAction 可单独
+撤销某一个方向的报单），撤销报价响应 OnRspQuoteAction 的 ErrorID 为 0，但是该方向上将
+收不到报单回报 OnRtnOrder。
+如果两个方向的报单都已经全部成交或者都已经被撤销，撤销报价响应 OnRspQuoteAction
+的 ErrorID 不为 0，两个方向都收不到报单回报 OnRtnOrder。
+
+9. 组合申请/组合拆分指令（ReqMarginCombAction）
+客户在已有持仓的情况下，可以通过组合申请指令 ReqMarginCombAction 将多个单一合
+约上的持仓组合为组合持仓（也可以调用拆分组合持仓方法将已有组合持仓拆分为单腿持
+仓），组合后可以释放部分保证金。OnRspMarginCombAction 方法是 ReqMarginCombAction
+方法的应答，OnRtnMarginCombAction 方法是 ReqMarginCombAction 的确认回报。
+
+a) 关于保证金收取方式
+交易编码持仓可以选择双边、期货合约组大边、手动策略、自动策略、手动策略大边、
+自动策略大边中的一种保证金收取模式计算保证金。这里“手动”表示组合是客户以指令的
+方式发出申请。
+“自动”由交易所根据持仓情况自动发起持仓组合（暂不支持）
+。
+1. 双边：传统买卖分别收取保证金。
+2. 单向大边：按照合约组买卖方向保证金较大者收取（大边适用于期货品种，期权品
+种仍按照双边收取）
+。
+3. 手动策略：按照客户策略组合指令中的描述，对已有的多条客户持仓记录进行手动
+组合，组合的部分只收取组合持仓的保证金，未进行组合的部分按双边收取。
+4. 自动策略：交易系统对所有的客户保证金收取方式为自动策略的客户持仓按照合约
+组合优先级进行自动组合。
+版权所有© 上海金融期货信息技术有限公司
+
+第 21 页
+
+上海金融期货信息技术有限公司技术文档
+
+开发技术指南
+
+5. 手动策略大边：先手动策略，未进行组合的客户持仓同一合约组的再大边。
+6. 自动策略大边：先自动策略，未进行组合的客户持仓同一合约组的再大边。
+由期货公司在交易前设置客户的保证金收取类型。只有期货公司将客户保证金收取类型设置
+为手动策略组合或者手动策略大边后，客户在交易时才可以使用 ReqMarginCombAction 接口
+在盘中进行组合以及拆分。
+
+b) 关于字段
+//组合请求的本地操作编号，与报单、报价时编号同一个序列增加
+UserActionLocalID = ……
+//组合合约代码，根据 OnRtnMarginCombinationLeg 接口获取当天可交易的组合合约
+CombInstrumentID = …..
+//撤销报价操作的本地操作编号
+UserQuoteActionLocalID
+
+c)
+
+= ……
+
+关于资金释放
+
+客户发起组合请求时，不检查客户资金，组合请求成功后，实际占用保证金会立即释放
+出一部分，以提高资金的利用率。
+当客户需要平掉组合持仓中的合约时，需要先拆分此组合合约。申请拆分时，飞马系统
+会要求客户补足拆分为单腿合约后的保证金的差额。如果资金不足，将不允许客户拆分。
+例如：组合合约 BIF1402& IF1403 由 IF1402 多仓和 IF1403 空仓按照 1：1 组合而成，客户 A、客
+户 B 和客户 C 在 IF1402 持 3 手多仓，在 IF1403 持 5 手空仓。
+客户 A 的保证金收取方式为手动策略大边。如果客户 A 申请在 BIF1402& IF1403 上组合 2 手，
+客户实际收取的保证金为 2 手组合合约的保证金（组合保证金）再加上 3 手空仓的保证金（大
+边保证金）之和。
+客户 B 的保证金收取方式为手动策略。如果客户 B 申请在 BIF1402& IF1403 上组合 2 手，客
+户 B 实际收取的保证金为 2 手组合合约的保证金（组合保证金）加上 1 手多仓的保证金（多
+头保证金）再加上 3 手空仓的保证金（空头保证金）之和。
+客户 C 的保证金收取方式为大边保证金。客户 C 实际收取的保证金为 5 手空仓的保证金
+（大边保证金）
+。
+
+d) 关于持仓变化
+客户能够查询的持仓表有三张，分别是交易编码单腿持仓表、交易编码组合持仓表、交
+版权所有© 上海金融期货信息技术有限公司
+
+第 22 页
+
+上海金融期货信息技术有限公司技术文档
+
+开发技术指南
+
+易编码总持仓表。交易编码在某个合约上的持仓始终遵循以下规则：
+总持仓表持仓量=单腿持仓表持仓量 + ∑组合持仓表持仓量*单腿乘数
+例如：组合合约 2210 由 IF1402 多仓和 IF1403 空仓按照 1：1 组合而成，组合合约 2212
+由 IF1406 多仓和 IF1403 空仓按照 1：1 组合而成，客户 A 在 IF1402 持 5 手多仓，在 IF1403
+持 5 手空仓，IF1406 持 5 手多仓。
+假设客户 A 成功在两个组合合约上分别组合了 2 手。三个持仓表变化为
+交易编码总持仓：
+IF1402：5 手多仓 → 5 手多仓，
+IF1403：5 手空仓 → 5 手空仓，
+IF1406：5 手多仓 → 5 手多仓。
+交易编码单腿持仓：
+IF1402：5 手多仓 → 3 手多仓，
+IF1403：5 手空仓 → 1 手空仓，
+IF1406：5 手多仓 → 3 手多仓。
+交易编码组合持仓：
+2210：0 手 → 2 手
+2212：0 手 → 2 手
+
+e) 关于组合合约规则
+组合规则描述了交易所支持的组合合约、组合合约的单腿构成情况、组合单腿之间的数
+量关系等组合合约要素。客户订阅了公共流之后，当天交易系统支持的组合合约规则将通过
+OnRtnMarginCombinationLeg 接口推送给该客户。客户申请组合时先确认组合合约的各单腿
+持仓充足，指定需要发起组合的组合合约代码
+EXCHANGEID
+
+COMBINSTRUMENTID
+
+LEGID
+
+LEGINSTRUMENTID
+
+DIRECTION
+
+LEGMULTIPLE
+
+PRIORITY
+
+(交易所代码）
+
+(策略组合号)
+
+(腿号)
+
+(单腿合约号)
+
+(单腿方向)
+
+(单腿乘数)
+
+(优先级)
+
+CFFEX
+
+2210
+
+0
+
+2210
+
+0
+
+1
+
+1
+
+CFFEX
+
+2210
+
+1
+
+IF1402
+
+0
+
+1
+
+1
+
+CFFEX
+
+2210
+
+2
+
+IF1403
+
+1
+
+1
+
+1
+
+CFFEX
+
+2211
+
+0
+
+2211
+
+1
+
+1
+
+2
+
+CFFEX
+
+2211
+
+1
+
+IF1402
+
+1
+
+1
+
+2
+
+CFFEX
+
+2211
+
+2
+
+IF1403
+
+0
+
+1
+
+2
+
+
+
+组合合约号是一串数字符号，不是由单腿合约构成的字符串；
+
+
+
+一条组合规则由多条记录组成，例如 2210 这个组合规则由两个合约组成，在推送时会
+
+版权所有© 上海金融期货信息技术有限公司
+
+第 23 页
+
+上海金融期货信息技术有限公司技术文档
+
+开发技术指南
+
+有 3 条记录，分别是组成组合合约的两条单腿的合约信息和一条组合合约（LegID = 0）
+的信息；
+
+
+交易所支持的组合规则是每天变化的，相同组合规则的组合合约代码在不同交易日中可
+能不同；
+
+
+
+组合合约的优先级在发生交易系统强平时有重要作用，强平时如果单腿持仓不足，交易
+系统将按优先级从低到高的顺序强制拆分组合持仓，数字越小表示优先级越高，数字越
+大优先级越低。
+
+10. 订阅类 API 使用说明
+飞马比较重要的一种响应模式就是订阅发布模式，用户只需要订阅相应的主题（数据流）
+，
+只要数据流中存在该用户订阅的内容，就会主动发布给该用户。
+Subject 1
+Subject 2
+
+Subscriber
+A
+
+Subscriber
+B
+
+NonSubscriber
+
+Message
+
+Message
+
+Message
+
+Publisher
+
+Data Flow
+
+用户在订阅相应的数据流时，需要选择订阅类型，飞马目前支持三种订阅类型：
+USTP_TERT_RESTART:从本交易日开始重传
+USTP_TERT_RESUME:从上次收到的续传
+USTP_TERT_QUICK: 只传送登录后公共流的内容
+我们举个例子说明一下他们的区别：假如数据从 8：00 开始发布，用户在 8：15 分登
+陆，RESTART 和 RESUME 模式用户将收到从 8：00 开始收取数据，QUICK 模式下用户将从 8：
+15 开始收取数据；
+若该用户在 9：00 登出了，5 分钟后再次登陆，RESTART 模式下将仍从 8：00 开始收
+取数据，RESUME 模式下将从 9：00 开始收取数据，QUICK 模式下将从 9:05 开始收取数据。
+
+
+
+订阅公共流 SubscribePublicTopic
+公共流中传输的是全市场统一的信息，所有用户收到的信息都是相同的，比如合约状态变化
+版权所有© 上海金融期货信息技术有限公司
+
+第 24 页
+
+上海金融期货信息技术有限公司技术文档
+
+开发技术指南
+
+的通知，组合合约规则推送。
+
+
+订阅私有流 SubscribePrivateTopic
+私有流中传输的是飞马主动向某个特定用户推送的信息，不同的用户将收到不同的私有流内
+容，比如用户的委托回报，成交回报，错单回报等。
+
+
+
+订阅交易员流 SubscribeUserTopic
+交易员流与私有流的内容完全一致，用户只需要订阅其中的一种即可。如果既订阅私有流，
+又订阅交易员流，用户将会收到重复的回报。
+
+
+
+订阅询价流 SubscribeForQuote
+询价流是一种特殊的共有流，用户订阅询价流后，将可以收到全市场的询价信息。询价流的
+发布模式和行情快照类似，每 20s 发布一次当前最新的询价信息。
+
+
+
+订阅行情主题流 SubscribeMarketDataTopic
+
+
+
+什么是主题号
+主题号是中金所行情系统中特有的概念，不同的主题号代表了不同频率、不同深度、不同内
+容的行情，目前用户可以订阅的行情主题如下
+主题号
+
+深度
+
+频率
+
+内容
+
+环境
+
+100
+
+一档行情
+
+2 次/s
+
+IF/TF/T/IC/IH
+
+ALL
+
+110
+
+五档行情
+
+2 次/s
+
+IF/TF/T/IC/IH
+
+互联网/生产
+
+301
+
+五档行情
+
+2 次/s
+
+IO/HO
+
+大仿真
+
+多交易所版飞马中，为了区分不同交易所的行情数据，飞马系统给每个交易所的行情数据定
+义了一个主题号，默认主题号为
+交易所
+
+中金所
+
+上期所
+
+大商所
+
+郑商所
+
+主题号
+
+100
+
+21001
+
+4101
+
+5301
+
+该主题号可由期货公司自行配置，投资者可通过接口 GetMarketTopic 获取。
+
+11. 查询功能
+飞马查询功能的一个特点是既支持精确查找，又支持模糊查找。
+精确查找是指根据查找条件可定位到某一条或几条记录；
+模糊查询是指在某些条件不明确的时候，可根据其他查找条件查找所有满足条件的记录；
+使用查询功能时要注意相应查询结构体生成后，需要进行初始化。
+版权所有© 上海金融期货信息技术有限公司
+
+第 25 页
+
+上海金融期货信息技术有限公司技术文档
+
+开发技术指南
+
+a) 用户投资者查询（ReqQryUserInvestorID）
+飞马的用户（UserID）和投资者(InvestorID)是多对多的关系。用户是用来登陆的，投资者
+是用来下单的。当一个用户管理着多个投资者的时候，下单时需要选定一个投资者，可以通
+过 ReqQryUserInvestorID 查找登陆用户有关联关系的所有投资者。
+
+
+关于字段
+//经纪公司编号
+
+必填
+
+TUstpFtdcBrokerIDType BrokerID;
+//用户代码
+
+只能填登录用户，不填默认为登录用户
+
+TUstpFtdcUserIDType
+
+UserID;
+
+b) 合约查询（ReqQryInstrumentID）
+
+
+模糊查询: 初始化后直接查询，可查询系统所有的合约
+
+
+
+按交易所查询: 只填写 ExchangeID，可查询该交易所下所有当日可交易的合约
+//交易所代码 填写需要查询的交易所
+ExchangeID =
+
+
+
+‘SHFE’
+
+按品种查询：只填写 ProdunctID，可查询该品种下所有的合约
+//产品代码 填写需要查找的产品代码
+ProdunctID = ’IF’
+
+c)
+
+委托/成交查询（ReqQryOrder/ReqQryTrade）
+
+委托查询能根据查询条件查询所有满足条件的委托单；
+成交查询能根据查询条件查询所有满足条件的成交单。
+
+
+关于字段
+//经纪公司编号 必填
+TUstpFtdcBrokerIDType BrokerID;
+
+
+
+按用户查询
+除填写必填字段外，只填写 UserID，不填 InvestorID，可查询所有由本用户下单的委托。
+//用户代码
+
+只能填登录用户，不填默认为登录用户
+
+UserID = ‘TESTUSER’;
+
+版权所有© 上海金融期货信息技术有限公司
+
+第 26 页
+
+上海金融期货信息技术有限公司技术文档
+
+//投资者编号
+
+不填或者填 NULL
+
+InvestorID = ‘NULL’
+
+
+开发技术指南
+
+or
+
+InvestorID = ’’;
+
+按投资者查询
+除填写必填字段外，只填写 InvestorID，不填 UserID，可查询该投资者下所有用户的委托
+//用户代码
+
+只能填登录用户，不填默认为登录用户
+
+UserID = ‘NULL’
+
+or
+
+UserID = ‘’;
+
+//投资者编号
+
+只能填与登录用户有关联关系的投资者
+
+InvestorID = ’12321343’
+
+d) 资金查询（ReqQryInvestorAccount）
+资金查询得到的是相应用户在飞马中的资金信息，包括可用资金、冻结和占用保证金、
+手续费、权利金、持仓盈亏等有用信息。
+
+
+关于字段
+//经纪公司编号 必填
+TUstpFtdcBrokerIDType BrokerID;
+//用户代码
+
+只能填登录用户，不填默认为登录用户
+
+TUstpFtdcUserIDType
+
+UserID;
+
+当 InvestorID 不填或者填写为‘NULL’时，可查询登录用户关联的所有资金账号的资金信息
+
+e) 持仓查询
+持仓记录得到是相应用户在飞马中的持仓信息，包括持仓量、持仓成本、持仓所占用的
+保证金、最后一笔持仓的成交信息以及报单信息等。
+
+
+关于字段
+//经纪公司编号 必填
+TUstpFtdcBrokerIDType BrokerID;
+//用户代码
+TUstpFtdcUserIDType
+
+只能填登录用户，不填默认为登录用户
+UserID;
+
+除填写必填字段外，如果只填写 InvestorID，将查询该投资者下所有交易编码满足查询
+条件的持仓；
+版权所有© 上海金融期货信息技术有限公司
+
+第 27 页
+
+上海金融期货信息技术有限公司技术文档
+
+开发技术指南
+
+如果只填写 InstrumentID,将查询所有投资者在该合约上满足查询条件的持仓；
+
+f)
+
+费率查询（ReqQryInvestorMargin/ ReqQryInvestorMargin）
+
+费率查询得到的保证金率以及手续费率，就是相应用户在飞马交易时收取保证金和手续
+费的标准。
+
+
+关于字段
+//经纪公司编号 必填
+TUstpFtdcBrokerIDType BrokerID;
+//用户代码
+TUstpFtdcUserIDType
+
+只能填登录用户，不填默认为登录用户
+UserID;
+
+除填写必填字段外，如果只填写 InvestorID，将查询该投资者下所有交易编码满足查询
+条件的费率；
+如果只填写 InstrumentID,将查询所有投资者在该合约上满足查询条件的费率；
+
+12. 初始化交易
+
+版权所有© 上海金融期货信息技术有限公司
+
+第 28 页
+
+上海金融期货信息技术有限公司技术文档
+
+交易终端
+
+开发技术指南
+
+飞马平台
+
+API
+创建API对象
+CreateFtdcTraderApi
+
+注册事件处理对象
+RegisterSpi
+订阅共有流
+SubscribePublicTopic
+
+订阅私有流
+SubscribePrivateTopic
+注册前置机地址
+RegisterFront
+初始化API
+Init
+
+建立连接
+FrontConnect
+
+*等待API响应
+Join
+确认已经连接
+OnFrontConnected
+
+确认已经连接
+OnFrontConnected
+登录请求
+ReqUserLogin
+
+登录请求
+ReqUserLogin
+登录响应
+OnRspUserLogin
+登录响应
+OnRspUserLogin
+私有流/共有流回报
+私有流/共有流回报
+
+首先，终端程序创建 TraderApi 对象(CreateFtdcTraderApi)，注册用户定义的事件
+处理对象 (RegisterSpi) ，订阅公用流 (SubscribePublicTopic) 、私有流
+(SubscribePrivateTopic)，注册前置机(RegisterFront)。完成上述 TraderApi 设置后，初
+始化 TraderApi(Init)，连接飞马交易。
+飞马接受 TraderApi 的连接后，终端程序就会收到连线通知(OnFrontConnected)。
+终端程序收到连线通知后，发出登入请求(ReqUserLogin)。
+用户登入时需要输入：
+//经纪公司代码
+TUstpFtdcBrokerIDType BrokerID;
+//用户代码，就是期货公司为操作员分配的操作源代码，不同于投资者代码
+版权所有© 上海金融期货信息技术有限公司
+
+第 29 页
+
+上海金融期货信息技术有限公司技术文档
+
+开发技术指南
+
+TUstpFtdcUserIDType UserID;
+//密码
+TUstpFtdcPasswordType Password;
+//用户端产品信息，就是终端程序的名称
+TUstpFtdcProductInfoType UserProductInfo;
+
+登入成功后，会收到登入响应(OnRspUserLogin)
+
+
+当前用户的最大本地报单号，用户应该根据这个编号来调整报单和撤单时候的用户本地报单号
+
+//用户最大本地报单号
+TUstpFtdcUserOrderLocalIDType MaxOrderLocalID;
+
+
+登陆时间。终端程序依此可以估计交易所的时间
+
+//登录成功时间
+TUstpFtdcTimeType LoginTime;
+
+登入成功后，终端程序还会收到私有流数据，如委托回报、成交回报等。
+在正式开始交易之前，客户端可能还需要查询如下基础数据，包括：
+查询合约：ReqQryInstrument。
+查询资金：ReqQryTradingAccount。
+查询持仓：ReqQryInvestorPosition 。
+查询报单：ReqQryOrder。
+查询成交：ReqQryTrade。
+
+13. 初始化 TCP 行情
+
+版权所有© 上海金融期货信息技术有限公司
+
+第 30 页
+
+上海金融期货信息技术有限公司技术文档
+
+交易终端
+
+开发技术指南
+
+飞马平台
+
+API
+创建API对象
+CreateFtdcMdusererApi
+注册事件处理对象
+RegisterSpi
+订阅行情主题
+SubscribeMarketDataTopic
+注册前置机地址
+RegisterFront
+初始化API
+Init
+
+建立连接
+FrontConnect
+
+*等待API响应
+Join
+
+确认已经连接
+OnFrontConnected
+
+确认已经连接
+OnFrontConnected
+登录请求
+ReqUserLogin
+
+登录请求
+ReqUserLogin
+登录响应
+OnRspUserLogin
+
+登录响应
+OnRspUserLogin
+订阅合约
+SubMarketData
+
+订阅合约
+SubMarketData
+订阅合约信息
+OnRspMarketData
+
+*订阅合约信息
+OnRspMarketData
+*退订合约
+UnSubMarketData
+
+退订合约
+UnSubMarketData
+
+退订合约信息
+OnRspOnSubMarketData
+
+*退订合约信息
+OnRspUnSubMarketData
+
+行情推送
+OnRtnDepthMarketData
+行情推送
+OnRtnDepthMarketData
+
+首先，终端程序创建 MduserApi 对象(CreateFtdc MduserApi)，注册用户定义的事
+件处理对象 (RegisterSpi) ，订阅行情主题 (SubscribeMarketDataTopic) ，注册前置机
+(RegisterFront)。完成上述 MduserApi 设置后，初始化 TraderApi(Init)，连接飞马行情。
+飞马接受 MduserApi 的连接后，终端程序就会收到连线通知(OnFrontConnected)。
+终端程序收到连线通知后，发出登入请求(ReqUserLogin)。 登陆时填写内容与交易 API
+
+版权所有© 上海金融期货信息技术有限公司
+
+第 31 页
+
+上海金融期货信息技术有限公司技术文档
+
+开发技术指南
+
+一致。
+飞马接受 MduserApi 登陆成功后，终端程序需要订阅合约（SubMarketData）
+，订阅
+成功后，终端程序就可以通过行情推送接（OnRtnDepthMarketData）收到 TCP 行情了。
+
+14. 初始化 UDP 行情
+交易终端
+
+飞马平台
+
+API
+创建API对象
+CreateFtdcMdusererApi
+注册事件处理对象
+RegisterSpi
+设置多播通道
+SetUseMultiChannel
+注册多播通道地址
+RegisterMultiChannel
+
+初始化API
+Init
+行情推送
+OnRtnDepthMarketData
+行情推送
+OnRtnDepthMarketData
+
+首先，终端程序创建 MduserApi 对象(CreateFtdc MduserApi)，注册用户定义的事
+件处理对象 (RegisterSpi) ，设置多播通道 (RegisterMultiChannel) ，注册多播通道地址
+（RegisterMultiChannel）。完成上述 MduserApi 设置后，初始化 TraderApi(Init)，连
+接多播行情通道。
+
+版权所有© 上海金融期货信息技术有限公司
+
+第 32 页
+
+

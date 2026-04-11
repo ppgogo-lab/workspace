@@ -8,7 +8,7 @@
 namespace omm {
 
 // ─── Feed configuration ───────────────────────────────────────────────────────
-enum class FeedType : uint8_t { Multicast, FPGA };
+enum class FeedType : uint8_t { Multicast, FPGA, FEMAS };
 
 struct MulticastConfig {
     char      interface[32]{"eth0"};   // network interface name, e.g. "enp65s0f0"
@@ -22,10 +22,21 @@ struct FpgaConfig {
     char device_path[64]{"/dev/fpga0"};
 };
 
+struct FemasMdConfig {
+    char front_addr[128]{};
+    char broker_id[16]{};
+    char user_id[32]{};
+    char password[32]{};
+    char exchange_id[16]{"CFFEX"};
+    int  topic_id{100};
+    int  heartbeat_timeout_sec{30};
+};
+
 struct FeedConfig {
     FeedType       type{FeedType::Multicast};
     MulticastConfig multicast;
     FpgaConfig      fpga;
+    FemasMdConfig   femas;
 };
 
 // ─── Gateway configuration ────────────────────────────────────────────────────

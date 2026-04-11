@@ -49,7 +49,8 @@ static FeedConfig parse_feed(const YAML::Node& n) {
     std::string type = get<std::string>(n["type"], "feed.type", "multicast");
     if (type == "fpga")      c.type = FeedType::FPGA;
     else if (type == "multicast") c.type = FeedType::Multicast;
-    else throw std::runtime_error("config: feed.type must be 'multicast' or 'fpga', got: " + type);
+    else if (type == "femas") c.type = FeedType::FEMAS;
+    else throw std::runtime_error("config: feed.type must be 'multicast', 'fpga', or 'femas', got: " + type);
 
     if (auto mc = n["multicast"]) {
         str_copy(c.multicast.interface, sizeof(c.multicast.interface),
@@ -68,6 +69,21 @@ static FeedConfig parse_feed(const YAML::Node& n) {
     if (auto fp = n["fpga"])
         str_copy(c.fpga.device_path, sizeof(c.fpga.device_path),
                  fp["device"], "feed.fpga.device", "/dev/fpga0");
+    if (auto fm = n["femas"]) {
+        str_copy(c.femas.front_addr, sizeof(c.femas.front_addr),
+                 fm["front_addr"], "feed.femas.front_addr", "");
+        str_copy(c.femas.broker_id, sizeof(c.femas.broker_id),
+                 fm["broker_id"], "feed.femas.broker_id", "");
+        str_copy(c.femas.user_id, sizeof(c.femas.user_id),
+                 fm["user_id"], "feed.femas.user_id", "");
+        str_copy(c.femas.password, sizeof(c.femas.password),
+                 fm["password"], "feed.femas.password", "");
+        str_copy(c.femas.exchange_id, sizeof(c.femas.exchange_id),
+                 fm["exchange_id"], "feed.femas.exchange_id", "CFFEX");
+        c.femas.topic_id = get<int>(fm["topic_id"], "feed.femas.topic_id", 100);
+        c.femas.heartbeat_timeout_sec =
+            get<int>(fm["heartbeat_timeout_sec"], "feed.femas.heartbeat_timeout_sec", 30);
+    }
     return c;
 }
 

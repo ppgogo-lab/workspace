@@ -8,9 +8,11 @@
 #include "gateway/femas_gateway.h"
 #include "feed/multicast_feed.h"
 #include "feed/fpga_feed.h"
+#include "feed/femas_feed.h"
 
 #include <csignal>
 #include <cstdio>
+#include <cstring>
 #include <memory>
 
 namespace {
@@ -54,6 +56,11 @@ int main(int argc, char* argv[]) {
 
     // Select feed handler from config (tick_buf wired by TradingEngine constructor)
     std::unique_ptr<omm::IFeedHandler> feed;
+    auto fill_if_empty = [](char* dst, std::size_t dst_size, const char* src) {
+        if (dst[0] != '\0' || !src) return;
+        std::strncpy(dst, src, dst_size - 1);
+        dst[dst_size - 1] = '\0';
+    };
     switch (cfg.feed.type) {
         case omm::FeedType::Multicast:
             feed = std::make_unique<omm::MulticastFeedHandler>(cfg.feed.multicast, nullptr);
@@ -62,6 +69,20 @@ int main(int argc, char* argv[]) {
         case omm::FeedType::FPGA:
             feed = std::make_unique<omm::FPGAFeedHandler>(cfg.feed.fpga, nullptr);
             OMM_LOG_INFO("startup", "feed: FPGA device={}", cfg.feed.fpga.device_path);
+            break;
+        case omm::FeedType::FEMAS:
+            fill_if_empty(cfg.feed.femas.front_addr, sizeof(cfg.feed.femas.front_addr),
+                          cfg.gateway.femas.front_addr);
+            fill_if_empty(cfg.feed.femas.broker_id, sizeof(cfg.feed.femas.broker_id),
+                          cfg.gateway.femas.broker_id);
+            fill_if_empty(cfg.feed.femas.user_id, sizeof(cfg.feed.femas.user_id),
+                          cfg.gateway.femas.user_id);
+            fill_if_empty(cfg.feed.femas.password, sizeof(cfg.feed.femas.password),
+                          cfg.gateway.femas.password);
+
+            feed = std::make_unique<omm::FEMASFeedHandler>(cfg.feed.femas, nullptr);
+            OMM_LOG_INFO("startup", "feed: FEMAS front={} topic_id={}",
+                         cfg.feed.femas.front_addr, cfg.feed.femas.topic_id);
             break;
     }
 

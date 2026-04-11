@@ -1,5 +1,5 @@
 instance:
-  exchange: SHFE
+  exchange_id: "SHFE"
   account_id: "TEST001"
 
 feed:
@@ -12,6 +12,14 @@ feed:
     rcvbuf_mb: 8
   fpga:
     device: "/dev/fpga0"
+  femas:
+    front_addr: "tcp://127.0.0.1:17002"
+    broker_id: ""
+    user_id: ""
+    password: ""
+    exchange_id: "CFFEX"
+    topic_id: 100
+    heartbeat_timeout_sec: 30
 
 gateway:
   type: ctp

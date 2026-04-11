@@ -70,6 +70,10 @@ public:
     void set_tick_buf(SPSCRingBuffer<MarketTick, 1024>* buf) noexcept {
         tick_buf_ = buf;
     }
+
+    [[nodiscard]] uint16_t instrument_count() const noexcept {
+        return n_instruments_;
+    }
 };
 
 } // namespace omm

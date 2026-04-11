@@ -2,6 +2,7 @@
 #include "strategy/simple_mm.h"
 #include "feed/multicast_feed.h"
 #include "feed/fpga_feed.h"
+#include "feed/femas_feed.h"
 #include "common/thread_utils.h"
 #include "logger/logger.h"
 #include "pricing/black76.h"
@@ -40,7 +41,7 @@ TradingEngine::TradingEngine(const SystemConfig& cfg,
       }
     , post_risk_(cfg.risk.soft)
 {
-    std::memset(instr_to_product_, 0, sizeof(instr_to_product_));
+    std::memset(instr_to_product_, 0xFF, sizeof(instr_to_product_));
     // Apply initial MM params from config
     for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i)
         mm_params_[i].apply(cfg_.products[i].params);
@@ -61,13 +62,26 @@ void TradingEngine::populate_instrument_registry() noexcept {
 
     for (uint16_t i = 0; i < n_instruments_; ++i) {
         instruments_[i].instrument_id = i;
+        instruments_[i].product_index = 0xFF;
         for (int p = 0; p < cfg_.product_count; ++p) {
-            if (instruments_[i].underlying_code == cfg_.products[p].underlying_id) {
+            if (instruments_[i].code == cfg_.products[p].underlying_id ||
+                instruments_[i].underlying_code == cfg_.products[p].underlying_id) {
                 instruments_[i].product_index = static_cast<uint8_t>(p);
                 instr_to_product_[i] = static_cast<uint8_t>(p);
                 break;
             }
         }
+    }
+
+    for (uint16_t i = 0; i < n_instruments_; ++i) {
+        if (instruments_[i].kind != InstrumentKind::Option) continue;
+        for (uint16_t u = 0; u < n_instruments_; ++u) {
+            if (instruments_[u].kind != InstrumentKind::Future) continue;
+            if (!(instruments_[u].code == instruments_[i].underlying_code)) continue;
+            instruments_[i].underlying_id = u;
+            break;
+        }
+
         // Index options per product for fast batch repricing on future ticks
         const Instrument& instr = instruments_[i];
         if (instr.kind == InstrumentKind::Option) {
@@ -241,6 +255,7 @@ void TradingEngine::pricer_loop() noexcept {
         if (instr.kind != InstrumentKind::Future) continue;
 
         const uint8_t prod  = instr_to_product_[id];
+        if (prod >= MAX_PRODUCTS) continue;
         const double  F     = tick.last_price;
         if (F < 1e-10) continue;  // no valid forward yet
 

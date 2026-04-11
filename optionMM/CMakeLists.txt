@@ -39,6 +39,30 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(GRPC REQUIRED grpc++)
 pkg_check_modules(GRPCPP REQUIRED grpc++)
 
+# Exchange SDK paths
+set(CTP_SDK_DIR   "${CMAKE_SOURCE_DIR}/third_party/ctp")
+set(FEMAS_SDK_DIR "${CMAKE_SOURCE_DIR}/third_party/femas")
+
+# CTP .so has no "lib" prefix so -lthosttraderapi_se won't find it.
+# Use IMPORTED targets to link by absolute path.
+add_library(ctp_trader SHARED IMPORTED)
+set_target_properties(ctp_trader PROPERTIES
+    IMPORTED_LOCATION "${CTP_SDK_DIR}/thosttraderapi_se.so")
+
+add_library(femas_trader SHARED IMPORTED)
+set_target_properties(femas_trader PROPERTIES
+    IMPORTED_LOCATION "${FEMAS_SDK_DIR}/libUSTPtraderapiAF.so"
+    # FEMAS SDK was built against OpenSSL 1.0 (CentOS 7); suppress unresolved
+    # SSL symbols at link time. They are only needed at runtime on the target host.
+    IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
+    INTERFACE_LINK_OPTIONS "-Wl,--allow-shlib-undefined")
+
+add_library(femas_md SHARED IMPORTED)
+set_target_properties(femas_md PROPERTIES
+    IMPORTED_LOCATION "${FEMAS_SDK_DIR}/libUSTPmduserapiAF.so"
+    IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
+    INTERFACE_LINK_OPTIONS "-Wl,--allow-shlib-undefined")
+
 # ─── common_lib ───────────────────────────────────────────────────────────────
 add_library(common_lib STATIC
     src/common/config.cpp
@@ -78,8 +102,18 @@ target_link_libraries(strategy_lib PUBLIC risk_lib common_lib)
 add_library(feed_lib STATIC
     src/feed/multicast_feed.cpp
     src/feed/fpga_feed.cpp
+    src/feed/femas_feed.cpp
 )
-target_link_libraries(feed_lib PUBLIC common_lib)
+target_include_directories(feed_lib PUBLIC
+    ${CMAKE_SOURCE_DIR}/include
+    ${FEMAS_SDK_DIR}
+)
+target_link_libraries(feed_lib PUBLIC
+    common_lib
+    femas_md
+)
+
+if(0)
 
 # ─── Exchange SDK paths ───────────────────────────────────────────────────────
 set(CTP_SDK_DIR   "${CMAKE_SOURCE_DIR}/third_party/ctp")
@@ -99,7 +133,15 @@ set_target_properties(femas_trader PROPERTIES
     IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
     INTERFACE_LINK_OPTIONS "-Wl,--allow-shlib-undefined")
 
+add_library(femas_md SHARED IMPORTED)
+set_target_properties(femas_md PROPERTIES
+    IMPORTED_LOCATION "${FEMAS_SDK_DIR}/libUSTPmduserapiAF.so"
+    IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
+    INTERFACE_LINK_OPTIONS "-Wl,--allow-shlib-undefined")
+
 # ─── sim_gateway_lib (SimGateway only — no exchange SDK, used by tests) ──────
+endif()
+
 add_library(sim_gateway_lib STATIC
     src/gateway/sim_gateway.cpp
 )

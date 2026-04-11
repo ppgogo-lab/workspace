@@ -25,6 +25,8 @@ OptionMM is an ultra-low latency, high-frequency trading system targeting market
 - **Max products per instance**: `MAX_PRODUCTS = 32` (compile-time constant). Products are declared in the static config.
 - **No runtime switching** of feed type or gateway — all connectivity decisions are made via static config at launch.
 - **Configuration**: Static YAML file per instance. No central configuration service.
+- **Local development rule**: Always build, test, and run this project in **WSL Ubuntu** by default. Do not use the Windows shell for project execution unless the task is explicitly Windows-specific.
+- **Local utility rule**: Use WSL-hosted helper scripts under `scripts/` for repeatable local tasks such as PDF text extraction.
 
 ---
 
