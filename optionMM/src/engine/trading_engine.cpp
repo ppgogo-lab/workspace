@@ -143,6 +143,25 @@ void TradingEngine::init_vol_surfaces() noexcept {
             w->slices[0].expiry_T   =  0.25;
             w->slices[0].valid      =  true;
             wing_surfaces_[i].publish();
+
+            OrcWingVolSurface* ow = orc_wing_surfaces_[i].get_inactive();
+            ow->n_slices = 1;
+            ow->slices[0].ref_price      = 100.0;
+            ow->slices[0].atm_forward    = 100.0;
+            ow->slices[0].ssr            = 1.0;
+            ow->slices[0].vol_ref        = 0.20;
+            ow->slices[0].slope_ref      = -0.1;
+            ow->slices[0].vcr            = 0.0;
+            ow->slices[0].scr            = 0.0;
+            ow->slices[0].put_curv       = 0.05;
+            ow->slices[0].call_curv      = 0.05;
+            ow->slices[0].down_cutoff    = -0.15;
+            ow->slices[0].up_cutoff      = 0.15;
+            ow->slices[0].down_smoothing = 0.5;
+            ow->slices[0].up_smoothing   = 0.5;
+            ow->slices[0].expiry_T       = 0.25;
+            ow->slices[0].valid          = true;
+            orc_wing_surfaces_[i].publish();
         }
     }
 }
@@ -225,9 +244,14 @@ void TradingEngine::pricer_loop() noexcept {
         const double  F     = tick.last_price;
         if (F < 1e-10) continue;  // no valid forward yet
 
-        const IVolSurface* surf = (cfg_.pricing.vol_method == VolMethod::Wing)
-            ? wing_surfaces_[prod].get()
-            : vol_surfaces_[prod].get();
+        const IVolSurface* surf = nullptr;
+        if (cfg_.pricing.vol_method == VolMethod::Wing) {
+            surf = wing_surfaces_[prod].get();
+        } else if (cfg_.pricing.vol_method == VolMethod::OrcWing) {
+            surf = orc_wing_surfaces_[prod].get();
+        } else {
+            surf = vol_surfaces_[prod].get();
+        }
         const int64_t      now  = get_monotonic_ns();
         const uint16_t     n    = option_count_[prod];
         if (n == 0) continue;
@@ -259,7 +283,9 @@ void TradingEngine::pricer_loop() noexcept {
             T_arr[oi]        = option_T_[prod][oi];        // pre-computed, refreshed every 1s
             sqrt_T_arr[oi]   = option_sqrt_T_[prod][oi];   // pre-computed, refreshed every 1s
             disc_arr[oi]     = option_disc_[prod][oi];     // pre-computed, refreshed every 1s
-            sigma_arr[oi]    = surf->get_vol(option_log_K_[prod][oi] - log_F, T_arr[oi]);
+            sigma_arr[oi]    = (cfg_.pricing.vol_method == VolMethod::OrcWing)
+                ? surf->get_vol_by_strike(F, opt.strike, T_arr[oi])
+                : surf->get_vol(option_log_K_[prod][oi] - log_F, T_arr[oi]);
             is_call_arr[oi]  = (opt.option_type == OptionType::Call) ? 1 : 0;
         }
 
@@ -547,6 +573,48 @@ void TradingEngine::vol_fitter_loop() noexcept {
 
                 if (surf->n_slices > 0)
                     wing_surfaces_[p].publish();
+            } else if (cfg_.pricing.vol_method == VolMethod::OrcWing) {
+                OrcWingVolSurface* surf = orc_wing_surfaces_[p].get_inactive();
+                surf->n_slices = 0;
+
+                for (int e = 0; e < n_expiries; ++e) {
+                    int cnt = expiry_counts[e];
+                    if (cnt < 8) {
+                        const OrcWingVolSurface* cur =
+                            static_cast<const OrcWingVolSurface*>(orc_wing_surfaces_[p].get());
+                        for (int s = 0; s < cur->n_slices; ++s) {
+                            if (std::fabs(cur->slices[s].expiry_T - expiry_Ts[e]) < 1.0 / 365.0) {
+                                surf->slices[surf->n_slices++] = cur->slices[s];
+                                break;
+                            }
+                        }
+                        continue;
+                    }
+
+                    OrcWingParams params{};
+                    params.ref_price = fwd_prices[e];
+                    params.atm_forward = fwd_prices[e];
+                    params.expiry_T = expiry_Ts[e];
+                    const bool ok = fit_orc_wing_slice(
+                        strikes + expiry_start[e],
+                        mkt_vols + expiry_start[e],
+                        cnt, fwd_prices[e], expiry_Ts[e], params);
+
+                    if (ok) {
+                        surf->slices[surf->n_slices++] = params;
+                        OMM_LOG_INFO("volfitter",
+                            "product={} expiry_T={:.4f} n={} vr={:.4f} sr={:.4f} pc={:.4f} cc={:.4f} dc={:.4f} uc={:.4f} dsm={:.4f} usm={:.4f}",
+                            p, expiry_Ts[e], cnt,
+                            params.vol_ref, params.slope_ref, params.put_curv, params.call_curv,
+                            params.down_cutoff, params.up_cutoff, params.down_smoothing, params.up_smoothing);
+                    } else {
+                        OMM_LOG_WARN("volfitter",
+                            "product={} expiry_T={:.4f} orcWing fit failed (n={})", p, expiry_Ts[e], cnt);
+                    }
+                }
+
+                if (surf->n_slices > 0)
+                    orc_wing_surfaces_[p].publish();
             } else {
                 SVIVolSurface* surf = vol_surfaces_[p].get_inactive();
                 surf->n_slices = 0;

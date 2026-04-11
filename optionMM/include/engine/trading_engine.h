@@ -10,6 +10,7 @@
 #include "pricing/sabr.h"
 #include "pricing/cubic_spline.h"
 #include "pricing/wing.h"
+#include "pricing/orc_wing.h"
 #include "gateway/gateway.h"
 #include "strategy/mm_framework.h"
 #include "strategy/mm_params.h"
@@ -105,6 +106,7 @@ private:
     // Vol surfaces (one per product)
     std::array<VolSurfaceManager<SVIVolSurface>,  MAX_PRODUCTS> vol_surfaces_;
     std::array<VolSurfaceManager<WingVolSurface>, MAX_PRODUCTS> wing_surfaces_;
+    std::array<VolSurfaceManager<OrcWingVolSurface>, MAX_PRODUCTS> orc_wing_surfaces_;
 
     // ── Instrument registry ───────────────────────────────────────────────────
     Instrument instruments_[MAX_INSTRUMENTS]{};

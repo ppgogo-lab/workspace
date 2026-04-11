@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cmath>
 #include <immintrin.h>  // AVX2 intrinsics
 
 namespace omm {

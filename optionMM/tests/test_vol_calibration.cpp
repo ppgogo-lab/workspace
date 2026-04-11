@@ -5,10 +5,12 @@
 #include <string>
 #include <algorithm>
 #include <cmath>
+#include <unordered_map>
 #include "pricing/black76.h"
 #include "pricing/svi.h"
 #include "pricing/sabr.h"
 #include "pricing/wing.h"
+#include "pricing/orc_wing.h"
 #include "pricing/cubic_spline.h"
 
 using namespace omm;
@@ -49,10 +51,12 @@ struct CalibrationResult {
     SVIParams svi;
     SABRParams sabr;
     WingParams wing;
+    OrcWingParams orc_wing;
     bool spline_ok;
     bool svi_ok;
     bool sabr_ok;
     bool wing_ok;
+    bool orc_wing_ok;
 };
 
 // ── Helper functions ─────────────────────────────────────────────────────────
@@ -168,13 +172,14 @@ ExpirySlice build_expiry_slice(const std::string& expiry_code,
     return slice;
 }
 
-// Calibrate all four models for one expiry slice
+// Calibrate all five models for one expiry slice
 CalibrationResult calibrate_slice(const ExpirySlice& slice, double sabr_beta = 0.5) {
     CalibrationResult result{};
     result.spline_ok = false;
     result.svi_ok    = false;
     result.sabr_ok   = false;
     result.wing_ok   = false;
+    result.orc_wing_ok = false;
 
     int n = static_cast<int>(slice.iv_points.size());
     if (n < 5) return result;
@@ -200,6 +205,8 @@ CalibrationResult calibrate_slice(const ExpirySlice& slice, double sabr_beta = 0
 
     // Wing (takes strikes[], vols[], n, F, T, out)
     result.wing_ok = fit_wing_slice(strikes.data(), vols.data(), n, slice.F, slice.T, result.wing);
+    result.orc_wing_ok =
+        fit_orc_wing_slice(strikes.data(), vols.data(), n, slice.F, slice.T, result.orc_wing);
 
     return result;
 }
@@ -213,6 +220,8 @@ void write_params_csv(const std::string& path,
          << "svi_ok,svi_a,svi_b,svi_rho,svi_m,svi_sigma,"
          << "sabr_ok,sabr_alpha,sabr_beta,sabr_rho,sabr_nu,"
          << "wing_ok,wing_ATM_vol,wing_slope_call,wing_slope_put,wing_curve_call,wing_curve_put,"
+         << "orc_wing_ok,orc_ref_price,orc_atm_forward,orc_ssr,orc_vol_ref,orc_slope_ref,orc_vcr,orc_scr,"
+         << "orc_put_curv,orc_call_curv,orc_down_cutoff,orc_up_cutoff,orc_down_smoothing,orc_up_smoothing,"
          << "spline_ok,spline_n_knots\n";
 
     for (size_t i = 0; i < slices.size(); ++i) {
@@ -250,6 +259,20 @@ void write_params_csv(const std::string& path,
             file << ",,,,,";
         }
 
+        // Orc Wing
+        file << r.orc_wing_ok << ",";
+        if (r.orc_wing_ok) {
+            file << r.orc_wing.ref_price      << "," << r.orc_wing.atm_forward << ","
+                 << r.orc_wing.ssr            << "," << r.orc_wing.vol_ref << ","
+                 << r.orc_wing.slope_ref      << "," << r.orc_wing.vcr << ","
+                 << r.orc_wing.scr            << "," << r.orc_wing.put_curv << ","
+                 << r.orc_wing.call_curv      << "," << r.orc_wing.down_cutoff << ","
+                 << r.orc_wing.up_cutoff      << "," << r.orc_wing.down_smoothing << ","
+                 << r.orc_wing.up_smoothing   << ",";
+        } else {
+            file << ",,,,,,,,,,,,,";
+        }
+
         // Spline
         file << r.spline_ok << ",";
         if (r.spline_ok) {
@@ -266,13 +289,22 @@ inline double safe_wing_vol(const CalibrationResult& r, double k) {
     return std::isfinite(v) ? v : std::numeric_limits<double>::quiet_NaN();
 }
 
+inline double safe_orc_wing_vol(const CalibrationResult& r, double F, double K, double T) {
+    if (!r.orc_wing_ok) return std::numeric_limits<double>::quiet_NaN();
+    OrcWingVolSurface surf;
+    surf.n_slices = 1;
+    surf.slices[0] = r.orc_wing;
+    const double v = surf.get_vol_by_strike(F, K, T);
+    return std::isfinite(v) ? v : std::numeric_limits<double>::quiet_NaN();
+}
+
 // Write vol results CSV (one row per valid IV point)
 void write_vol_results_csv(const std::string& path,
                            const std::vector<ExpirySlice>& slices,
                            const std::vector<CalibrationResult>& results) {
     std::ofstream file(path);
     file << "expiry,T,F,instrument,strike,log_moneyness,option_type,market_price,market_iv,"
-         << "spline_vol,svi_vol,sabr_vol,wing_vol\n";
+         << "spline_vol,svi_vol,sabr_vol,wing_vol,orc_wing_vol\n";
 
     for (size_t i = 0; i < slices.size(); ++i) {
         const auto& s = slices[i];
@@ -322,6 +354,13 @@ void write_vol_results_csv(const std::string& path,
                 double v = WingVolSurface::wing_iv(r.wing, pt.log_moneyness);
                 if (std::isfinite(v)) file << v;
             }
+            file << ",";
+
+            // Orc Wing vol
+            if (r.orc_wing_ok) {
+                double v = safe_orc_wing_vol(r, s.F, pt.strike, s.T);
+                if (std::isfinite(v)) file << v;
+            }
             file << "\n";
         }
     }
@@ -331,8 +370,8 @@ void write_vol_results_csv(const std::string& path,
 
 TEST(VolCalibration, RunAll) {
     const std::string csv_path   = "../tests/MarketTick.csv";
-    const std::string params_out = "../tests/params_results.csv";
-    const std::string vols_out   = "../tests/vol_results.csv";
+    const std::string params_out = "../tests/params_results_20260411.csv";
+    const std::string vols_out   = "../tests/vol_results_20260411.csv";
     const double r = 0.03;  // Risk-free rate (annualised)
 
     // ── Step 1: Parse CSV ────────────────────────────────────────────────────
@@ -408,6 +447,7 @@ TEST(VolCalibration, RunAll) {
                   << "  SVI=" << r.svi_ok
                   << "  SABR=" << r.sabr_ok
                   << "  Wing=" << r.wing_ok
+                  << "  OrcWing=" << r.orc_wing_ok
                   << "  Spline=" << r.spline_ok << "\n";
     }
     std::cout << "\nOutput files:\n  " << params_out << "\n  " << vols_out << "\n";

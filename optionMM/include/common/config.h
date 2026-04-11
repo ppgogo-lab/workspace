@@ -54,7 +54,7 @@ struct GatewayConfig {
 };
 
 // ─── Pricing configuration ────────────────────────────────────────────────────
-enum class VolMethod : uint8_t { SVI, SABR, CubicSpline, Wing };
+enum class VolMethod : uint8_t { SVI, SABR, CubicSpline, Wing, OrcWing };
 
 struct PricingConfig {
     double    risk_free_rate{0.025};   // annualised, e.g. 2.5%

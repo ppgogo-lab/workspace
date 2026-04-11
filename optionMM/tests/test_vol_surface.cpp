@@ -4,6 +4,7 @@
 #include "pricing/sabr.h"
 #include "pricing/cubic_spline.h"
 #include "pricing/wing.h"
+#include "pricing/orc_wing.h"
 
 #include <cmath>
 #include <thread>
@@ -479,4 +480,166 @@ TEST(VolSurfaceManager, WingAtomicSwap) {
 
     EXPECT_GT(reader_iters.load(), 1000) << "Reader barely ran";
     EXPECT_GT(writer_iters.load(), 100)  << "Writer barely ran";
+}
+
+TEST(OrcWing, FlatSurface) {
+    OrcWingVolSurface surf;
+    surf.n_slices = 1;
+    surf.slices[0].ref_price = 100.0;
+    surf.slices[0].atm_forward = 100.0;
+    surf.slices[0].ssr = 1.0;
+    surf.slices[0].vol_ref = 0.20;
+    surf.slices[0].slope_ref = 0.0;
+    surf.slices[0].put_curv = 0.0;
+    surf.slices[0].call_curv = 0.0;
+    surf.slices[0].down_cutoff = -0.2;
+    surf.slices[0].up_cutoff = 0.2;
+    surf.slices[0].down_smoothing = 0.5;
+    surf.slices[0].up_smoothing = 0.5;
+    surf.slices[0].expiry_T = 1.0;
+    surf.slices[0].valid = true;
+    EXPECT_NEAR(surf.get_vol_by_strike(100.0, 80.0, 1.0), 0.20, 1e-10);
+    EXPECT_NEAR(surf.get_vol_by_strike(100.0, 100.0, 1.0), 0.20, 1e-10);
+    EXPECT_NEAR(surf.get_vol_by_strike(100.0, 120.0, 1.0), 0.20, 1e-10);
+}
+
+TEST(OrcWing, GetVolByStrikeMatchesXEval) {
+    OrcWingParams p;
+    p.ref_price = 100.0;
+    p.atm_forward = 100.0;
+    p.ssr = 1.0;
+    p.vol_ref = 0.22;
+    p.slope_ref = -0.15;
+    p.put_curv = 0.08;
+    p.call_curv = 0.03;
+    p.down_cutoff = -0.2;
+    p.up_cutoff = 0.25;
+    p.down_smoothing = 0.7;
+    p.up_smoothing = 0.4;
+    p.expiry_T = 1.0;
+    p.valid = true;
+
+    OrcWingVolSurface surf;
+    surf.n_slices = 1;
+    surf.slices[0] = p;
+
+    const double F = 100.0;
+    const double K = 110.0;
+    const double x = std::log(K / F);
+    EXPECT_NEAR(surf.get_vol_by_strike(F, K, 1.0), OrcWingVolSurface::eval_x(p, x), 1e-12);
+}
+
+TEST(OrcWing, ContinuousAtBoundaries) {
+    OrcWingParams p;
+    p.ref_price = 100.0;
+    p.atm_forward = 100.0;
+    p.ssr = 1.0;
+    p.vol_ref = 0.22;
+    p.slope_ref = -0.10;
+    p.put_curv = 0.12;
+    p.call_curv = 0.06;
+    p.down_cutoff = -0.18;
+    p.up_cutoff = 0.16;
+    p.down_smoothing = 0.6;
+    p.up_smoothing = 0.8;
+    p.valid = true;
+
+    const double eps = 1e-7;
+    EXPECT_NEAR(OrcWingVolSurface::eval_x(p, p.down_cutoff - eps),
+                OrcWingVolSurface::eval_x(p, p.down_cutoff + eps), 1e-5);
+    EXPECT_NEAR(OrcWingVolSurface::eval_x(p, p.up_cutoff - eps),
+                OrcWingVolSurface::eval_x(p, p.up_cutoff + eps), 1e-5);
+    EXPECT_NEAR(OrcWingVolSurface::eval_x(p, p.down_cutoff * (1.0 + p.down_smoothing) - eps),
+                OrcWingVolSurface::eval_x(p, p.down_cutoff * (1.0 + p.down_smoothing) + eps), 1e-5);
+    EXPECT_NEAR(OrcWingVolSurface::eval_x(p, p.up_cutoff * (1.0 + p.up_smoothing) - eps),
+                OrcWingVolSurface::eval_x(p, p.up_cutoff * (1.0 + p.up_smoothing) + eps), 1e-5);
+}
+
+TEST(OrcWing, MultiSliceInterpolation) {
+    OrcWingVolSurface surf;
+    surf.n_slices = 2;
+    surf.slices[0] = {100.0, 100.0, 1.0, 0.18, -0.1, 0.0, 0.0, 0.05, 0.05, -0.15, 0.15, 0.5, 0.5, 0.5, true};
+    surf.slices[1] = {100.0, 100.0, 1.0, 0.22, -0.1, 0.0, 0.0, 0.05, 0.05, -0.15, 0.15, 0.5, 0.5, 1.0, true};
+    EXPECT_NEAR(surf.get_vol_by_strike(100.0, 100.0, 0.75), 0.20, 1e-6);
+}
+
+TEST(OrcWing, NoNaNOverRange) {
+    OrcWingVolSurface surf;
+    surf.n_slices = 1;
+    surf.slices[0] = {100.0, 100.0, 1.0, 0.22, -0.15, 0.0, 0.0, 0.08, 0.04, -0.2, 0.25, 0.7, 0.4, 1.0, true};
+    for (double K = 50.0; K <= 150.0; K += 2.5) {
+        for (double T = 0.1; T <= 2.0; T += 0.1) {
+            const double v = surf.get_vol_by_strike(100.0, K, T);
+            EXPECT_FALSE(std::isnan(v));
+            EXPECT_FALSE(std::isinf(v));
+            EXPECT_GT(v, 0.0);
+        }
+    }
+}
+
+TEST(OrcWingFitter, RecoversSyntheticSmile) {
+    constexpr int N = 17;
+    const double F = 100.0;
+    const double T = 0.75;
+    OrcWingParams truth{100.0, 100.0, 1.0, 0.21, -0.12, 0.0, 0.0, 0.09, 0.04, -0.22, 0.18, 0.8, 0.35, T, true};
+    double strikes[N];
+    double vols[N];
+    for (int i = 0; i < N; ++i) {
+        strikes[i] = 70.0 + 4.0 * i;
+        vols[i] = OrcWingVolSurface::eval_x(truth, std::log(strikes[i] / F));
+    }
+
+    OrcWingParams out{};
+    ASSERT_TRUE(fit_orc_wing_slice(strikes, vols, N, F, T, out));
+    EXPECT_TRUE(out.valid);
+
+    double max_err = 0.0;
+    for (int i = 0; i < N; ++i) {
+        const double model = OrcWingVolSurface::eval_x(out, std::log(strikes[i] / F));
+        max_err = std::fmax(max_err, std::fabs(model - vols[i]));
+    }
+    EXPECT_LT(max_err, 0.02);
+    EXPECT_NEAR(out.down_smoothing, truth.down_smoothing, 0.35);
+    EXPECT_NEAR(out.up_smoothing, truth.up_smoothing, 0.35);
+}
+
+TEST(VolSurfaceManager, OrcWingAtomicSwap) {
+    VolSurfaceManager<OrcWingVolSurface> mgr;
+    for (int buf = 0; buf < 2; ++buf) {
+        OrcWingVolSurface* s = mgr.get_inactive();
+        s->n_slices = 1;
+        s->slices[0] = {100.0, 100.0, 1.0, 0.20, -0.1, 0.0, 0.0, 0.05, 0.05, -0.15, 0.15, 0.5, 0.5, 1.0, true};
+        mgr.publish();
+    }
+
+    std::atomic<bool> stop{false};
+    std::atomic<int> reader_iters{0}, writer_iters{0};
+
+    std::thread writer([&] {
+        while (!stop.load(std::memory_order_relaxed)) {
+            OrcWingVolSurface* s = mgr.get_inactive();
+            s->n_slices = 1;
+            s->slices[0] = {100.0, 100.0, 1.0, 0.18 + 0.01 * (writer_iters.load() % 5), -0.1,
+                            0.0, 0.0, 0.05, 0.05, -0.15, 0.15, 0.5, 0.5, 1.0, true};
+            mgr.publish();
+            writer_iters.fetch_add(1, std::memory_order_relaxed);
+        }
+    });
+
+    std::thread reader([&] {
+        while (!stop.load(std::memory_order_relaxed)) {
+            const IVolSurface* s = mgr.get();
+            const double v = s->get_vol_by_strike(100.0, 100.0, 1.0);
+            EXPECT_FALSE(std::isnan(v));
+            EXPECT_GT(v, 0.0);
+            reader_iters.fetch_add(1, std::memory_order_relaxed);
+        }
+    });
+
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    stop.store(true, std::memory_order_relaxed);
+    writer.join();
+    reader.join();
+    EXPECT_GT(reader_iters.load(), 1000);
+    EXPECT_GT(writer_iters.load(), 100);
 }

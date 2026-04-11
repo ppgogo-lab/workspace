@@ -32,6 +32,7 @@ find_package(yaml-cpp REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(Threads REQUIRED)
 find_package(Protobuf REQUIRED)
+find_package(Ceres REQUIRED)
 
 # gRPC via pkg-config (Ubuntu packages install it this way)
 find_package(PkgConfig REQUIRED)
@@ -55,8 +56,10 @@ add_library(pricing_lib STATIC
     src/pricing/sabr.cpp
     src/pricing/cubic_spline.cpp
     src/pricing/wing.cpp
+    src/pricing/orc_wing.cpp
 )
 target_compile_options(pricing_lib PRIVATE -mavx2 -mfma)
+target_link_libraries(pricing_lib PUBLIC Ceres::ceres)
 
 # ─── risk_lib ─────────────────────────────────────────────────────────────────
 add_library(risk_lib STATIC
