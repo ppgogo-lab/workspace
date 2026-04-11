@@ -98,6 +98,8 @@ void TradingEngine::populate_instrument_registry() noexcept {
     // Wire instrument registry to feed handler
     if (feed_)
         feed_->set_instruments(instruments_, n_instruments_);
+    if (gateway_)
+        gateway_->set_instruments(instruments_, n_instruments_);
 
     // Seed option_T_ so pricer_loop has valid values before timer fires
     refresh_option_T();
@@ -374,8 +376,9 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
 
             switch (ev.type) {
             case GatewayEventType::OrderAck:
-            case GatewayEventType::QuoteAck:
                 strategies_[p]->on_order_ack(ev.order);
+                break;
+            case GatewayEventType::QuoteAck:
                 break;
             case GatewayEventType::OrderFill:
             case GatewayEventType::QuoteFill:
