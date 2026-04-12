@@ -252,6 +252,7 @@ void TradingEngine::pricer_loop() noexcept {
 
         // Always update tick snapshot (used by vol fitter for IV inversion)
         tick_snapshot_[id] = tick;
+        monitor_ticks_.publish(tick);
 
         // Only future ticks trigger a full option repricing pass
         if (instr.kind != InstrumentKind::Future) continue;
@@ -360,12 +361,16 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
         // Round-robin over all strategy output buffers
         for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i) {
             Order order{};
-            if (order_buf_[i].try_pop(order))
+            if (order_buf_[i].try_pop(order)) {
                 gateway_->send_order(order);
+                monitor_orders_.publish(order);
+            }
 
             Quote quote{};
-            if (quote_buf_[i].try_pop(quote))
+            if (quote_buf_[i].try_pop(quote)) {
                 gateway_->send_quote(quote);
+                monitor_quotes_.publish(quote);
+            }
         }
 
         // Drain gateway callbacks and route to strategy threads
@@ -376,12 +381,27 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
 
             switch (ev.type) {
             case GatewayEventType::OrderAck:
+                monitor_orders_.publish(ev.order);
                 strategies_[p]->on_order_ack(ev.order);
                 break;
             case GatewayEventType::QuoteAck:
+                monitor_quotes_.publish(ev.quote);
                 break;
             case GatewayEventType::OrderFill:
             case GatewayEventType::QuoteFill:
+                monitor_trades_.publish(ev.trade);
+                {
+                    Order filled{};
+                    filled.client_order_id = ev.trade.client_order_id;
+                    filled.instrument_id   = ev.trade.instrument_id;
+                    filled.product_index   = ev.trade.product_index;
+                    filled.side            = ev.trade.side;
+                    filled.status          = OrderStatus::Filled;
+                    filled.avg_fill_price  = ev.trade.fill_price;
+                    filled.filled_volume   = ev.trade.fill_volume;
+                    filled.ack_ts          = ev.trade.fill_ts;
+                    monitor_orders_.publish(filled);
+                }
                 strategies_[p]->on_fill(ev.trade);
                 (void)risk_buf_.try_push(ev.trade);  // forward to risk monitor
                 OMM_LOG_INFO("fill", "instr={} side={} qty={} price={:.4f} order_id={}",
@@ -392,7 +412,11 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                              ev.trade.client_order_id);
                 break;
             case GatewayEventType::OrderCancel:
+                monitor_orders_.publish(ev.order);
                 strategies_[p]->on_order_cancel(ev.order.client_order_id);
+                break;
+            case GatewayEventType::OrderReject:
+                monitor_orders_.publish(ev.order);
                 break;
             default:
                 break;

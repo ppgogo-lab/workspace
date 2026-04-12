@@ -36,6 +36,19 @@ static Instrument make_option(uint16_t id, uint16_t underlying_id,
     return instr;
 }
 
+static Instrument make_future(uint16_t id, uint8_t product_idx,
+                              const char* code,
+                              double tick_size = 0.01) {
+    Instrument instr{};
+    instr.instrument_id = id;
+    instr.product_index = product_idx;
+    instr.kind          = InstrumentKind::Future;
+    instr.tick_size     = tick_size;
+    instr.multiplier    = 1.0;
+    std::strncpy(instr.code.data, code, sizeof(instr.code.data) - 1);
+    return instr;
+}
+
 static PricingSignal make_signal(uint16_t instrument_id, double theo,
                                   double delta = 0.5) {
     PricingSignal s{};
@@ -281,10 +294,13 @@ TEST(TradingEngineIntegration, TickToQuote) {
 
     auto gw = std::make_unique<SimGateway>();
     // Add one option instrument — strike at-the-money relative to last_price
+    Instrument fut = make_future(1, 0, "cu2501", 0.01);
     Instrument opt = make_option(0, 1, 0, 5.0, OptionType::Call, 0.01);
     std::memcpy(opt.underlying_code.data, "cu2501", 7);
+    gw->add_instrument(fut);
     gw->add_instrument(opt);
     gw->set_last_price(0, 5.0);
+    gw->set_last_price(1, 5.0);
     gw->connect(cfg.gateway);
 
     auto engine = std::make_unique<TradingEngine>(cfg, std::move(gw), nullptr);

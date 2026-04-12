@@ -16,6 +16,7 @@
 #include "strategy/mm_params.h"
 #include "risk/pre_trade_risk.h"
 #include "risk/post_trade_risk.h"
+#include "monitoring/topic.h"
 
 #include <thread>
 #include <atomic>
@@ -59,9 +60,36 @@ public:
     [[nodiscard]] PostTradeRisk& post_risk_mutable() noexcept { return post_risk_; }
     [[nodiscard]] int product_count() const noexcept { return cfg_.product_count; }
     [[nodiscard]] int n_instruments() const noexcept { return n_instruments_; }
+    [[nodiscard]] const Instrument* instruments() const noexcept { return instruments_; }
+    [[nodiscard]] const MarketTick* tick_snapshot() const noexcept { return tick_snapshot_; }
+    [[nodiscard]] const VolSurfaceManager<OrcWingVolSurface>& orc_wing_surface(int i) const noexcept {
+        return orc_wing_surfaces_[i];
+    }
+    [[nodiscard]] const VolSurfaceManager<WingVolSurface>& wing_surface(int i) const noexcept {
+        return wing_surfaces_[i];
+    }
+    [[nodiscard]] const VolSurfaceManager<SVIVolSurface>& svi_surface(int i) const noexcept {
+        return vol_surfaces_[i];
+    }
+    [[nodiscard]] uint16_t option_count(int i) const noexcept { return option_count_[i]; }
+    [[nodiscard]] uint16_t option_id(int product_idx, uint16_t option_idx) const noexcept {
+        return option_ids_[product_idx][option_idx];
+    }
 
-    // Greeks snapshot — last computed Greeks per instrument (written by pricer thread)
+    // Greeks snapshot – last computed Greeks per instrument (written by pricer thread)
     [[nodiscard]] const Greeks* greeks_snapshot() const noexcept { return greeks_snapshot_; }
+    [[nodiscard]] const MonitoringTopic<MarketTick, 8192>& monitor_ticks() const noexcept {
+        return monitor_ticks_;
+    }
+    [[nodiscard]] const MonitoringTopic<Order, 4096>& monitor_orders() const noexcept {
+        return monitor_orders_;
+    }
+    [[nodiscard]] const MonitoringTopic<Quote, 4096>& monitor_quotes() const noexcept {
+        return monitor_quotes_;
+    }
+    [[nodiscard]] const MonitoringTopic<Trade, 4096>& monitor_trades() const noexcept {
+        return monitor_trades_;
+    }
 
     // Manual order submission from gRPC (bypasses strategy, goes direct to gateway dispatcher)
     [[nodiscard]] OrderId next_manual_order_id() noexcept {
@@ -141,6 +169,12 @@ private:
 
     // Manual order sequence counter (gRPC server thread)
     std::atomic<uint32_t> manual_order_seq_{1};
+
+    // Monitoring histories for gRPC/UI readers. Single-writer per topic.
+    MonitoringTopic<MarketTick, 8192> monitor_ticks_;
+    MonitoringTopic<Order, 4096>      monitor_orders_;
+    MonitoringTopic<Quote, 4096>      monitor_quotes_;
+    MonitoringTopic<Trade, 4096>      monitor_trades_;
 
     // ── Threads ───────────────────────────────────────────────────────────────
     std::atomic<bool> stop_flag_{false};

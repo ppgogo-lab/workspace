@@ -15,10 +15,11 @@
 #include <grpcpp/support/method_handler.h>
 #include <grpcpp/impl/rpc_service_method.h>
 #include <grpcpp/support/server_callback.h>
-#include <grpcpp/impl/codegen/server_callback_handlers.h>
+#include <grpcpp/impl/server_callback_handlers.h>
 #include <grpcpp/server_context.h>
 #include <grpcpp/impl/service_type.h>
 #include <grpcpp/support/sync_stream.h>
+#include <grpcpp/ports_def.inc>
 namespace omm {
 namespace proto {
 
@@ -27,6 +28,7 @@ static const char* TradingMonitor_method_names[] = {
   "/omm.proto.TradingMonitor/StreamPositions",
   "/omm.proto.TradingMonitor/StreamTicks",
   "/omm.proto.TradingMonitor/StreamOrders",
+  "/omm.proto.TradingMonitor/StreamTrades",
   "/omm.proto.TradingMonitor/StreamQuotes",
   "/omm.proto.TradingMonitor/StreamRiskAlerts",
   "/omm.proto.TradingMonitor/StreamVolSurface",
@@ -50,16 +52,17 @@ TradingMonitor::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& cha
   , rpcmethod_StreamPositions_(TradingMonitor_method_names[1], options.suffix_for_stats(),::grpc::internal::RpcMethod::SERVER_STREAMING, channel)
   , rpcmethod_StreamTicks_(TradingMonitor_method_names[2], options.suffix_for_stats(),::grpc::internal::RpcMethod::SERVER_STREAMING, channel)
   , rpcmethod_StreamOrders_(TradingMonitor_method_names[3], options.suffix_for_stats(),::grpc::internal::RpcMethod::SERVER_STREAMING, channel)
-  , rpcmethod_StreamQuotes_(TradingMonitor_method_names[4], options.suffix_for_stats(),::grpc::internal::RpcMethod::SERVER_STREAMING, channel)
-  , rpcmethod_StreamRiskAlerts_(TradingMonitor_method_names[5], options.suffix_for_stats(),::grpc::internal::RpcMethod::SERVER_STREAMING, channel)
-  , rpcmethod_StreamVolSurface_(TradingMonitor_method_names[6], options.suffix_for_stats(),::grpc::internal::RpcMethod::SERVER_STREAMING, channel)
-  , rpcmethod_SetStrategyParams_(TradingMonitor_method_names[7], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_StartStrategy_(TradingMonitor_method_names[8], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_StopStrategy_(TradingMonitor_method_names[9], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_SetRiskThreshold_(TradingMonitor_method_names[10], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_SendManualOrder_(TradingMonitor_method_names[11], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_CancelOrder_(TradingMonitor_method_names[12], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_GetSnapshot_(TradingMonitor_method_names[13], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_StreamTrades_(TradingMonitor_method_names[4], options.suffix_for_stats(),::grpc::internal::RpcMethod::SERVER_STREAMING, channel)
+  , rpcmethod_StreamQuotes_(TradingMonitor_method_names[5], options.suffix_for_stats(),::grpc::internal::RpcMethod::SERVER_STREAMING, channel)
+  , rpcmethod_StreamRiskAlerts_(TradingMonitor_method_names[6], options.suffix_for_stats(),::grpc::internal::RpcMethod::SERVER_STREAMING, channel)
+  , rpcmethod_StreamVolSurface_(TradingMonitor_method_names[7], options.suffix_for_stats(),::grpc::internal::RpcMethod::SERVER_STREAMING, channel)
+  , rpcmethod_SetStrategyParams_(TradingMonitor_method_names[8], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_StartStrategy_(TradingMonitor_method_names[9], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_StopStrategy_(TradingMonitor_method_names[10], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_SetRiskThreshold_(TradingMonitor_method_names[11], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_SendManualOrder_(TradingMonitor_method_names[12], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_CancelOrder_(TradingMonitor_method_names[13], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_GetSnapshot_(TradingMonitor_method_names[14], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
 
 ::grpc::ClientReader< ::omm::proto::Greeks>* TradingMonitor::Stub::StreamGreeksRaw(::grpc::ClientContext* context, const ::omm::proto::StreamRequest& request) {
@@ -124,6 +127,22 @@ void TradingMonitor::Stub::async::StreamOrders(::grpc::ClientContext* context, c
 
 ::grpc::ClientAsyncReader< ::omm::proto::OrderUpdate>* TradingMonitor::Stub::PrepareAsyncStreamOrdersRaw(::grpc::ClientContext* context, const ::omm::proto::StreamRequest& request, ::grpc::CompletionQueue* cq) {
   return ::grpc::internal::ClientAsyncReaderFactory< ::omm::proto::OrderUpdate>::Create(channel_.get(), cq, rpcmethod_StreamOrders_, context, request, false, nullptr);
+}
+
+::grpc::ClientReader< ::omm::proto::OrderUpdate>* TradingMonitor::Stub::StreamTradesRaw(::grpc::ClientContext* context, const ::omm::proto::StreamRequest& request) {
+  return ::grpc::internal::ClientReaderFactory< ::omm::proto::OrderUpdate>::Create(channel_.get(), rpcmethod_StreamTrades_, context, request);
+}
+
+void TradingMonitor::Stub::async::StreamTrades(::grpc::ClientContext* context, const ::omm::proto::StreamRequest* request, ::grpc::ClientReadReactor< ::omm::proto::OrderUpdate>* reactor) {
+  ::grpc::internal::ClientCallbackReaderFactory< ::omm::proto::OrderUpdate>::Create(stub_->channel_.get(), stub_->rpcmethod_StreamTrades_, context, request, reactor);
+}
+
+::grpc::ClientAsyncReader< ::omm::proto::OrderUpdate>* TradingMonitor::Stub::AsyncStreamTradesRaw(::grpc::ClientContext* context, const ::omm::proto::StreamRequest& request, ::grpc::CompletionQueue* cq, void* tag) {
+  return ::grpc::internal::ClientAsyncReaderFactory< ::omm::proto::OrderUpdate>::Create(channel_.get(), cq, rpcmethod_StreamTrades_, context, request, true, tag);
+}
+
+::grpc::ClientAsyncReader< ::omm::proto::OrderUpdate>* TradingMonitor::Stub::PrepareAsyncStreamTradesRaw(::grpc::ClientContext* context, const ::omm::proto::StreamRequest& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncReaderFactory< ::omm::proto::OrderUpdate>::Create(channel_.get(), cq, rpcmethod_StreamTrades_, context, request, false, nullptr);
 }
 
 ::grpc::ClientReader< ::omm::proto::QuoteUpdate>* TradingMonitor::Stub::StreamQuotesRaw(::grpc::ClientContext* context, const ::omm::proto::StreamRequest& request) {
@@ -379,6 +398,16 @@ TradingMonitor::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       TradingMonitor_method_names[4],
       ::grpc::internal::RpcMethod::SERVER_STREAMING,
+      new ::grpc::internal::ServerStreamingHandler< TradingMonitor::Service, ::omm::proto::StreamRequest, ::omm::proto::OrderUpdate>(
+          [](TradingMonitor::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::omm::proto::StreamRequest* req,
+             ::grpc::ServerWriter<::omm::proto::OrderUpdate>* writer) {
+               return service->StreamTrades(ctx, req, writer);
+             }, this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      TradingMonitor_method_names[5],
+      ::grpc::internal::RpcMethod::SERVER_STREAMING,
       new ::grpc::internal::ServerStreamingHandler< TradingMonitor::Service, ::omm::proto::StreamRequest, ::omm::proto::QuoteUpdate>(
           [](TradingMonitor::Service* service,
              ::grpc::ServerContext* ctx,
@@ -387,7 +416,7 @@ TradingMonitor::Service::Service() {
                return service->StreamQuotes(ctx, req, writer);
              }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
-      TradingMonitor_method_names[5],
+      TradingMonitor_method_names[6],
       ::grpc::internal::RpcMethod::SERVER_STREAMING,
       new ::grpc::internal::ServerStreamingHandler< TradingMonitor::Service, ::omm::proto::StreamRequest, ::omm::proto::RiskAlert>(
           [](TradingMonitor::Service* service,
@@ -397,7 +426,7 @@ TradingMonitor::Service::Service() {
                return service->StreamRiskAlerts(ctx, req, writer);
              }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
-      TradingMonitor_method_names[6],
+      TradingMonitor_method_names[7],
       ::grpc::internal::RpcMethod::SERVER_STREAMING,
       new ::grpc::internal::ServerStreamingHandler< TradingMonitor::Service, ::omm::proto::StreamRequest, ::omm::proto::VolSurface>(
           [](TradingMonitor::Service* service,
@@ -407,7 +436,7 @@ TradingMonitor::Service::Service() {
                return service->StreamVolSurface(ctx, req, writer);
              }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
-      TradingMonitor_method_names[7],
+      TradingMonitor_method_names[8],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< TradingMonitor::Service, ::omm::proto::SetStrategyParamsRequest, ::omm::proto::SetStrategyParamsResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](TradingMonitor::Service* service,
@@ -417,7 +446,7 @@ TradingMonitor::Service::Service() {
                return service->SetStrategyParams(ctx, req, resp);
              }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
-      TradingMonitor_method_names[8],
+      TradingMonitor_method_names[9],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< TradingMonitor::Service, ::omm::proto::StartStopRequest, ::omm::proto::StartStopResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](TradingMonitor::Service* service,
@@ -427,7 +456,7 @@ TradingMonitor::Service::Service() {
                return service->StartStrategy(ctx, req, resp);
              }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
-      TradingMonitor_method_names[9],
+      TradingMonitor_method_names[10],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< TradingMonitor::Service, ::omm::proto::StartStopRequest, ::omm::proto::StartStopResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](TradingMonitor::Service* service,
@@ -437,7 +466,7 @@ TradingMonitor::Service::Service() {
                return service->StopStrategy(ctx, req, resp);
              }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
-      TradingMonitor_method_names[10],
+      TradingMonitor_method_names[11],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< TradingMonitor::Service, ::omm::proto::SetRiskThresholdRequest, ::omm::proto::SetRiskThresholdResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](TradingMonitor::Service* service,
@@ -447,7 +476,7 @@ TradingMonitor::Service::Service() {
                return service->SetRiskThreshold(ctx, req, resp);
              }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
-      TradingMonitor_method_names[11],
+      TradingMonitor_method_names[12],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< TradingMonitor::Service, ::omm::proto::ManualOrderRequest, ::omm::proto::ManualOrderResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](TradingMonitor::Service* service,
@@ -457,7 +486,7 @@ TradingMonitor::Service::Service() {
                return service->SendManualOrder(ctx, req, resp);
              }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
-      TradingMonitor_method_names[12],
+      TradingMonitor_method_names[13],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< TradingMonitor::Service, ::omm::proto::CancelOrderRequest, ::omm::proto::CancelOrderResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](TradingMonitor::Service* service,
@@ -467,7 +496,7 @@ TradingMonitor::Service::Service() {
                return service->CancelOrder(ctx, req, resp);
              }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
-      TradingMonitor_method_names[13],
+      TradingMonitor_method_names[14],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< TradingMonitor::Service, ::omm::proto::SnapshotRequest, ::omm::proto::SnapshotResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](TradingMonitor::Service* service,
@@ -503,6 +532,13 @@ TradingMonitor::Service::~Service() {
 }
 
 ::grpc::Status TradingMonitor::Service::StreamOrders(::grpc::ServerContext* context, const ::omm::proto::StreamRequest* request, ::grpc::ServerWriter< ::omm::proto::OrderUpdate>* writer) {
+  (void) context;
+  (void) request;
+  (void) writer;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status TradingMonitor::Service::StreamTrades(::grpc::ServerContext* context, const ::omm::proto::StreamRequest* request, ::grpc::ServerWriter< ::omm::proto::OrderUpdate>* writer) {
   (void) context;
   (void) request;
   (void) writer;
@@ -582,4 +618,5 @@ TradingMonitor::Service::~Service() {
 
 }  // namespace omm
 }  // namespace proto
+#include <grpcpp/ports_undef.inc>
 

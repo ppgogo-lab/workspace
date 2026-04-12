@@ -4,6 +4,42 @@ project(optionMM VERSION 0.1.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+option(OMM_BUILD_TRADER_GUI "Build the optional Qt trader viewer" OFF)
+
+if(WIN32)
+  if(NOT OMM_BUILD_TRADER_GUI)
+    message(FATAL_ERROR "Windows builds currently support only the trader GUI. Configure with -DOMM_BUILD_TRADER_GUI=ON.")
+  endif()
+
+  find_package(Protobuf CONFIG REQUIRED)
+  find_package(gRPC CONFIG REQUIRED)
+  find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
+
+  add_executable(optionmm_trader_gui
+      proto/gen/trading.pb.cc
+      proto/gen/trading.grpc.pb.cc
+      src/gui/main.cpp
+      src/gui/trader_main_window.cpp
+  )
+  if(MSVC)
+    target_compile_options(optionmm_trader_gui PRIVATE /EHsc)
+  endif()
+  target_include_directories(optionmm_trader_gui PRIVATE
+      ${CMAKE_SOURCE_DIR}/include
+      ${CMAKE_SOURCE_DIR}
+  )
+  target_link_libraries(optionmm_trader_gui PRIVATE
+      Qt6::Core
+      Qt6::Gui
+      Qt6::Widgets
+      protobuf::libprotobuf
+      gRPC::grpc++
+      gRPC::grpc
+      ws2_32
+      crypt32
+  )
+  return()
+endif()
 
 # ─── Compiler flags ───────────────────────────────────────────────────────────
 # Note: target CPU is Intel i7-9700 (Coffeelake) — supports AVX2 but NOT AVX-512.
@@ -210,6 +246,29 @@ target_link_libraries(monitoring_lib PUBLIC
 add_executable(optionmm src/main.cpp)
 target_link_libraries(optionmm PRIVATE monitoring_lib engine_lib)
 
+if(OMM_BUILD_TRADER_GUI)
+  find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
+  add_executable(optionmm_trader_gui
+      src/gui/main.cpp
+      src/gui/trader_main_window.cpp
+  )
+  target_include_directories(optionmm_trader_gui PRIVATE
+      ${CMAKE_SOURCE_DIR}/include
+      ${CMAKE_SOURCE_DIR}
+      ${Protobuf_INCLUDE_DIRS}
+      ${GRPC_INCLUDE_DIRS}
+  )
+  target_link_libraries(optionmm_trader_gui PRIVATE
+      monitoring_lib
+      Qt6::Core
+      Qt6::Gui
+      Qt6::Widgets
+      ${Protobuf_LIBRARIES}
+      ${GRPC_LIBRARIES}
+      Threads::Threads
+  )
+endif()
+
 # ─── Tests ────────────────────────────────────────────────────────────────────
 enable_testing()
 find_package(GTest REQUIRED)
@@ -234,6 +293,11 @@ add_test(NAME test_vol_surface COMMAND test_vol_surface)
 add_executable(test_pre_trade_risk tests/test_pre_trade_risk.cpp)
 target_link_libraries(test_pre_trade_risk PRIVATE risk_lib GTest::gtest_main)
 add_test(NAME test_pre_trade_risk COMMAND test_pre_trade_risk)
+
+# test_monitoring_topic
+add_executable(test_monitoring_topic tests/test_monitoring_topic.cpp)
+target_link_libraries(test_monitoring_topic PRIVATE GTest::gtest_main Threads::Threads)
+add_test(NAME test_monitoring_topic COMMAND test_monitoring_topic)
 
 # test_simple_mm (strategy + gateway + engine integration)
 # Uses engine_lib_test which does not pull in CTP/FEMAS SDK shared libraries.

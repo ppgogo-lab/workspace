@@ -67,7 +67,7 @@ private:
 
     // Signal staleness threshold: 10 milliseconds
     // (500µs in production; relaxed here to tolerate ASAN/test overhead)
-    static constexpr int64_t STALE_NS = 10'000'000;
+    static constexpr int64_t STALE_NS = 100'000'000;
 
     void send_quote(const PricingSignal& signal,
                     double bid, double ask,

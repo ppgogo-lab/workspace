@@ -108,6 +108,8 @@ bool SimGateway::cancel_order(OrderId id,
     ev.type = GatewayEventType::OrderCancel;
     ev.order.client_order_id = id;
     ev.order.instrument_id   = instrument_id;
+    ev.order.status          = OrderStatus::Cancelled;
+    ev.order.ack_ts          = get_monotonic_ns();
     (void)callback_buf.try_push(ev);
     return true;
 }

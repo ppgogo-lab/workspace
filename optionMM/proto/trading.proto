@@ -75,6 +75,17 @@ message QuoteUpdate {
     int64  ts_ns           = 8;
 }
 
+message InstrumentInfo {
+    uint32 instrument_id   = 1;
+    string code            = 2;
+    string underlying_code = 3;
+    string kind            = 4;
+    string option_type     = 5;
+    double strike          = 6;
+    uint32 product_index   = 7;
+    uint32 underlying_id   = 8;
+}
+
 message VolSurfaceSlice {
     double expiry_T = 1;
     repeated double strikes = 2;
@@ -140,10 +151,11 @@ message CancelOrderResponse { bool ok = 1; string message = 2; }
 
 message SnapshotRequest  {}
 message SnapshotResponse {
-    repeated Greeks    greeks     = 1;
-    repeated Position  positions  = 2;
-    PortfolioGreeks    portfolio  = 3;
-    repeated MMParams  mm_params  = 4;
+    repeated Greeks         greeks      = 1;
+    repeated Position       positions   = 2;
+    PortfolioGreeks         portfolio   = 3;
+    repeated MMParams       mm_params   = 4;
+    repeated InstrumentInfo instruments = 5;
 }
 
 message StreamRequest { uint32 product_index = 1; }  // 0xFF = all
@@ -156,6 +168,7 @@ service TradingMonitor {
     rpc StreamPositions  (StreamRequest) returns (stream Position);
     rpc StreamTicks      (StreamRequest) returns (stream Tick);
     rpc StreamOrders     (StreamRequest) returns (stream OrderUpdate);
+    rpc StreamTrades     (StreamRequest) returns (stream OrderUpdate);
     rpc StreamQuotes     (StreamRequest) returns (stream QuoteUpdate);
     rpc StreamRiskAlerts (StreamRequest) returns (stream RiskAlert);
     rpc StreamVolSurface (StreamRequest) returns (stream VolSurface);
