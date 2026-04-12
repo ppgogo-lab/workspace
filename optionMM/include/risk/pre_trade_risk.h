@@ -14,8 +14,8 @@ namespace omm {
 //   2. Max volume: reject if order volume exceeds configured max
 //
 // State tracking:
-//   - Open buy/sell orders per instrument (for self-trade detection)
-//   - Open order count (for MAX_OPEN_ORDERS guard)
+//   - Open orders only
+// Quote lifecycle is strategy-owned and intentionally kept out of this module.
 
 class PreTradeRisk {
 public:
@@ -34,8 +34,8 @@ public:
     // Called from the strategy thread — must be noexcept, zero allocation.
     [[nodiscard]] RejectReason check_order(const Order& order) noexcept;
 
-    // Check an outgoing quote (checks both legs).
-    // Returns OK only if both bid and ask pass all checks.
+    // Check an outgoing quote with stateless hard checks only.
+    // Quote lifecycle and live quote ownership remain in the strategy.
     [[nodiscard]] RejectReason check_quote(const Quote& quote) noexcept;
 
     // Lifecycle callbacks — keep open order state accurate

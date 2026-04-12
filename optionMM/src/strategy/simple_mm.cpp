@@ -8,9 +8,9 @@ void SimpleMMStrategy::on_signal(const PricingSignal& signal) noexcept {
 
     // Staleness check: reject signals older than 500µs
     int64_t now = get_monotonic_ns();
-    if (now - signal.greeks.calc_ts_ns > STALE_NS) return;
+    if (now - signal.calc_ts_ns > STALE_NS) return;
 
-    const uint16_t id = signal.greeks.instrument_id;
+    const uint16_t id = signal.instrument_id;
     if (id >= MAX_INSTRUMENTS) return;
 
     // Load params (relaxed — eventual consistency acceptable)
@@ -19,7 +19,10 @@ void SimpleMMStrategy::on_signal(const PricingSignal& signal) noexcept {
     Volume quote_vol  = params_->quote_volume.load(std::memory_order_relaxed);
     int32_t max_pos   = params_->max_position.load(std::memory_order_relaxed);
 
-    double theo = signal.greeks.theo_price;
+    const double theo_bid = signal.theo_bid;
+    const double theo_ask = signal.theo_ask;
+    double theo = 0.5 * (theo_bid + theo_ask);
+    if (theo_bid <= 0.0 || theo_ask < theo_bid) return;
     if (theo <= 0.0) return;
 
     double bid = theo - bid_spread * 0.5;
@@ -46,7 +49,7 @@ void SimpleMMStrategy::on_signal(const PricingSignal& signal) noexcept {
 void SimpleMMStrategy::send_quote(const PricingSignal& signal,
                                    double bid, double ask,
                                    Volume bid_vol, Volume ask_vol) noexcept {
-    const uint16_t id = signal.greeks.instrument_id;
+    const uint16_t id = signal.instrument_id;
 
     Quote q{};
     q.client_quote_id = next_order_id();
@@ -91,12 +94,16 @@ void SimpleMMStrategy::on_order_ack(const Order& order) noexcept {
     pre_risk_->on_order_ack(order);
 }
 
+void SimpleMMStrategy::on_quote_ack(const Quote&) noexcept {}
+
 void SimpleMMStrategy::on_order_cancel(OrderId id) noexcept {
     pre_risk_->on_order_cancel(id);
     // Mark quote as no longer live
     for (auto& lq : last_quote_)
         if (lq.id == id) { lq.live = false; break; }
 }
+
+void SimpleMMStrategy::on_order_reject(const Order&) noexcept {}
 
 void SimpleMMStrategy::on_timer(const TimerEvent& event) noexcept {
     switch (event.type) {

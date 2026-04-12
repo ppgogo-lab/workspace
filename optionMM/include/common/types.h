@@ -129,12 +129,29 @@ static_assert(sizeof(Greeks) == 128);
 static_assert(alignof(Greeks) == 64);
 
 // ─── Pricing signal (pricer → strategy thread) ───────────────────────────────
-// Carries everything the strategy needs to generate a quote.
-struct alignas(64) PricingSignal {
-    Greeks     greeks;
-    MarketTick trigger_tick;    // the tick that triggered this signal
+// Keep this compact. Full Greeks remain in greeks_snapshot_ for risk/monitoring,
+// but the strategy hot path only needs a small subset.
+enum PricingFlags : uint16_t {
+    PricingFlagNone = 0,
+    PricingFlagHasUnderlyingRef = 1u << 0,
 };
-static_assert(sizeof(PricingSignal) == 384);
+
+struct alignas(32) PricingSignal {
+    uint16_t instrument_id{INVALID_INSTRUMENT_ID};
+    uint16_t underlying_id{INVALID_INSTRUMENT_ID};
+    uint16_t flags{PricingFlagNone};
+    uint16_t _pad0{0};
+    uint64_t sequence_no{0};
+    int64_t  calc_ts_ns{0};
+    double   theo_bid{0.0};
+    double   theo_ask{0.0};
+    float    delta{0.0F};
+    float    vega{0.0F};
+    float    underlying_ref_bid{0.0F};
+    float    underlying_ref_ask{0.0F};
+};
+static_assert(sizeof(PricingSignal) == 64);
+static_assert(alignof(PricingSignal) == 32);
 
 // ─── Timer event (timer thread → strategy thread) ────────────────────────────
 enum class TimerEventType : uint8_t {

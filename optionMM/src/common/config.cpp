@@ -4,6 +4,7 @@
 #include <cstring>
 #include <stdexcept>
 #include <string>
+#include <algorithm>
 
 namespace omm {
 
@@ -231,6 +232,31 @@ static MMParamsConfig parse_mm_params(const YAML::Node& n, std::string path_pref
     p.min_quote_interval_ms  = get<double>(n["min_quote_interval_ms"],
                                            (path_prefix+".min_quote_interval_ms").c_str(), 100.0);
     p.max_position           = get<int>(n["max_position"], (path_prefix+".max_position").c_str(), 500);
+    p.warning_position       = get<int>(n["warning_position"], (path_prefix+".warning_position").c_str(),
+                                        std::max(1, p.max_position / 2));
+    p.base_half_spread_ticks = get<double>(n["base_half_spread_ticks"],
+                                           (path_prefix+".base_half_spread_ticks").c_str(),
+                                           std::max(0.5, 0.5 * (p.bid_spread + p.ask_spread) * 0.5));
+    p.min_half_spread_ticks  = get<double>(n["min_half_spread_ticks"],
+                                           (path_prefix+".min_half_spread_ticks").c_str(),
+                                           p.base_half_spread_ticks);
+    p.max_half_spread_ticks  = get<double>(n["max_half_spread_ticks"],
+                                           (path_prefix+".max_half_spread_ticks").c_str(),
+                                           std::max(p.min_half_spread_ticks, p.base_half_spread_ticks * 4.0));
+    p.inventory_skew_per_lot_ticks = get<double>(n["inventory_skew_per_lot_ticks"],
+                                                 (path_prefix+".inventory_skew_per_lot_ticks").c_str(),
+                                                 0.01);
+    p.follow_weight          = get<double>(n["follow_weight"], (path_prefix+".follow_weight").c_str(), 0.35);
+    p.requote_price_epsilon_ticks = get<double>(n["requote_price_epsilon_ticks"],
+                                                (path_prefix+".requote_price_epsilon_ticks").c_str(), 1.0);
+    p.market_width_widen_threshold_ticks = get<double>(n["market_width_widen_threshold_ticks"],
+                                                       (path_prefix+".market_width_widen_threshold_ticks").c_str(),
+                                                       6.0);
+    p.underlying_move_widen_threshold_ticks = get<double>(n["underlying_move_widen_threshold_ticks"],
+                                                          (path_prefix+".underlying_move_widen_threshold_ticks").c_str(),
+                                                          2.0);
+    p.use_one_sided_at_limits = get<bool>(n["use_one_sided_at_limits"],
+                                          (path_prefix+".use_one_sided_at_limits").c_str(), true);
     p.enabled                = get<bool>(n["enabled"], (path_prefix+".enabled").c_str(), true);
     return p;
 }

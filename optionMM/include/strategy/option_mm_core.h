@@ -1,0 +1,106 @@
+#pragma once
+
+#include "strategy/mm_framework.h"
+#include "common/thread_utils.h"
+#include "risk/post_trade_risk.h"
+
+namespace omm {
+
+class OptionMMCoreStrategy : public IMarketMaker {
+public:
+    void init(uint8_t product_idx,
+              SPSCRingBuffer<Quote, 512>* quote_buf,
+              SPSCRingBuffer<Order, 512>* order_buf,
+              PreTradeRisk* pre_risk,
+              AtomicMMParams* params,
+              const Instrument* instruments,
+              const MarketTick* tick_snapshot,
+              const PostTradeRisk* post_risk) noexcept;
+
+    void on_signal(const PricingSignal& signal) noexcept override;
+    void on_fill(const Trade& trade) noexcept override;
+    void on_order_ack(const Order& order) noexcept override;
+    void on_quote_ack(const Quote& quote) noexcept override;
+    void on_order_cancel(OrderId id) noexcept override;
+    void on_order_reject(const Order& order) noexcept override;
+    void on_timer(const TimerEvent& event) noexcept override;
+
+    [[nodiscard]] bool is_enabled() const noexcept override;
+    [[nodiscard]] uint8_t product_index() const noexcept override { return product_idx_; }
+
+private:
+    enum SuppressFlags : uint32_t {
+        SuppressNone = 0,
+        SuppressStaleTheo = 1u << 0,
+        SuppressInvalidMarket = 1u << 1,
+        SuppressPosition = 1u << 2,
+        SuppressRisk = 1u << 3,
+        SuppressSession = 1u << 4,
+        SuppressThrottle = 1u << 5,
+    };
+
+    enum class QuoteState : uint8_t {
+        Idle,
+        Live,
+        ReplacePending,
+        Suppressed,
+    };
+
+    struct OptionState {
+        bool active{false};
+        uint16_t instrument_id{INVALID_INSTRUMENT_ID};
+        uint16_t underlying_id{INVALID_INSTRUMENT_ID};
+        int32_t net_position{0};
+        double last_theo_bid{0.0};
+        double last_theo_ask{0.0};
+        double last_delta{0.0};
+        double last_vega{0.0};
+        double last_underlying_px{0.0};
+        int64_t last_signal_ts{0};
+        double live_bid{0.0};
+        double live_ask{0.0};
+        Volume live_bid_vol{0};
+        Volume live_ask_vol{0};
+        QuoteId live_quote_id{0};
+        int64_t last_quote_ts{0};
+        QuoteState quote_state{QuoteState::Idle};
+        uint32_t suppress_flags{SuppressNone};
+    };
+
+    struct QuoteDecision {
+        bool valid{false};
+        bool cancel_only{false};
+        double bid{0.0};
+        double ask{0.0};
+        Volume bid_vol{0};
+        Volume ask_vol{0};
+        uint32_t suppress_flags{SuppressNone};
+    };
+
+    static constexpr int64_t STALE_NS = 100'000'000LL;
+
+    const MarketTick* tick_snapshot_{nullptr};
+    const PostTradeRisk* post_risk_{nullptr};
+    OptionState option_state_[MAX_INSTRUMENTS]{};
+    uint16_t option_ids_[MAX_INSTRUMENTS]{};
+    uint16_t option_count_{0};
+    bool session_open_{true};
+    double product_net_delta_{0.0};
+    double product_net_vega_{0.0};
+
+    void reevaluate_all() noexcept;
+    void maybe_quote(uint16_t instrument_id) noexcept;
+    QuoteDecision build_decision(OptionState& state, int64_t now_ns) const noexcept;
+    void send_quote(OptionState& state, const QuoteDecision& decision, int64_t now_ns) noexcept;
+    void send_cancel(OptionState& state, int64_t now_ns) noexcept;
+    void update_product_exposure(OptionState& state,
+                                 double old_delta,
+                                 double old_vega) noexcept;
+    [[nodiscard]] bool is_material_change(const OptionState& state,
+                                          const QuoteDecision& decision,
+                                          double epsilon_px,
+                                          int64_t min_interval_ns,
+                                          int64_t now_ns) const noexcept;
+};
+
+} // namespace omm

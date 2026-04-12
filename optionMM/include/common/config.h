@@ -126,8 +126,18 @@ struct MMParamsConfig {
     double  hedge_delta_threshold{50.0};
     double  min_quote_interval_ms{100.0};  // minimum time between quote updates
     int32_t max_position{500};
+    int32_t warning_position{250};
+    double  base_half_spread_ticks{1.0};
+    double  min_half_spread_ticks{1.0};
+    double  max_half_spread_ticks{8.0};
+    double  inventory_skew_per_lot_ticks{0.01};
+    double  follow_weight{0.35};
+    double  requote_price_epsilon_ticks{1.0};
+    double  market_width_widen_threshold_ticks{6.0};
+    double  underlying_move_widen_threshold_ticks{2.0};
+    bool    use_one_sided_at_limits{true};
     bool    enabled{true};
-    uint8_t _pad[3];
+    uint8_t _pad[2];
 };
 
 // ─── Per-product configuration ────────────────────────────────────────────────

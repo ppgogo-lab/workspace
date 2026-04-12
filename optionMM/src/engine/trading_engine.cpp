@@ -1,8 +1,6 @@
 #include "engine/trading_engine.h"
+#include "strategy/option_mm_core.h"
 #include "strategy/simple_mm.h"
-#include "feed/multicast_feed.h"
-#include "feed/fpga_feed.h"
-#include "feed/femas_feed.h"
 #include "common/thread_utils.h"
 #include "logger/logger.h"
 #include "pricing/black76.h"
@@ -123,14 +121,28 @@ void TradingEngine::refresh_option_T() noexcept {
 
 void TradingEngine::init_strategies() noexcept {
     for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i) {
-        auto* s = new SimpleMMStrategy();
-        s->init(static_cast<uint8_t>(i),
-                &quote_buf_[i],
-                &order_buf_[i],
-                &pre_risk_[i],
-                &mm_params_[i],
-                instruments_);
-        strategies_[i].reset(s);
+        if (std::strncmp(cfg_.products[i].strategy_type, "option_mm_core",
+                         sizeof(cfg_.products[i].strategy_type)) == 0) {
+            auto* s = new OptionMMCoreStrategy();
+            s->init(static_cast<uint8_t>(i),
+                    &quote_buf_[i],
+                    &order_buf_[i],
+                    &pre_risk_[i],
+                    &mm_params_[i],
+                    instruments_,
+                    tick_snapshot_,
+                    &post_risk_);
+            strategies_[i].reset(s);
+        } else {
+            auto* s = new SimpleMMStrategy();
+            s->init(static_cast<uint8_t>(i),
+                    &quote_buf_[i],
+                    &order_buf_[i],
+                    &pre_risk_[i],
+                    &mm_params_[i],
+                    instruments_);
+            strategies_[i].reset(s);
+        }
     }
 }
 
@@ -277,8 +289,6 @@ void TradingEngine::pricer_loop() noexcept {
         // ── Batch Black-76 computation (AVX2 SIMD) ───────────────────────────
         // Allocate aligned stack arrays for batch pricing (max 128 options/product)
         constexpr uint16_t MAX_BATCH = 128;
-        const uint16_t batch_n = (n < MAX_BATCH) ? n : MAX_BATCH;
-
         alignas(32) double     F_arr[MAX_BATCH];
         alignas(32) double     K_arr[MAX_BATCH];
         alignas(32) double     T_arr[MAX_BATCH];
@@ -289,51 +299,67 @@ void TradingEngine::pricer_loop() noexcept {
         alignas(32) Black76Result results[MAX_BATCH];
         alignas(64) PricingSignal sigs[MAX_BATCH];
 
-        // Pass 1: populate input arrays
         const double log_F = std::log(F);  // computed once per future tick
 
-        for (uint16_t oi = 0; oi < batch_n; ++oi) {
-            const uint16_t    opt_id = option_ids_[prod][oi];
-            const Instrument& opt    = instruments_[opt_id];
+        for (uint16_t start = 0; start < n; start += MAX_BATCH) {
+            const uint16_t batch_n = std::min<uint16_t>(MAX_BATCH, n - start);
+            for (uint16_t bi = 0; bi < batch_n; ++bi) {
+                const uint16_t oi = start + bi;
+                const uint16_t opt_id = option_ids_[prod][oi];
+                const Instrument& opt = instruments_[opt_id];
 
-            F_arr[oi]        = F;
-            K_arr[oi]        = opt.strike;
-            T_arr[oi]        = option_T_[prod][oi];        // pre-computed, refreshed every 1s
-            sqrt_T_arr[oi]   = option_sqrt_T_[prod][oi];   // pre-computed, refreshed every 1s
-            disc_arr[oi]     = option_disc_[prod][oi];     // pre-computed, refreshed every 1s
-            sigma_arr[oi]    = (cfg_.pricing.vol_method == VolMethod::OrcWing)
-                ? surf->get_vol_by_strike(F, opt.strike, T_arr[oi])
-                : surf->get_vol(option_log_K_[prod][oi] - log_F, T_arr[oi]);
-            is_call_arr[oi]  = (opt.option_type == OptionType::Call) ? 1 : 0;
+                F_arr[bi]        = F;
+                K_arr[bi]        = opt.strike;
+                T_arr[bi]        = option_T_[prod][oi];
+                sqrt_T_arr[bi]   = option_sqrt_T_[prod][oi];
+                disc_arr[bi]     = option_disc_[prod][oi];
+                sigma_arr[bi]    = (cfg_.pricing.vol_method == VolMethod::OrcWing)
+                    ? surf->get_vol_by_strike(F, opt.strike, T_arr[bi])
+                    : surf->get_vol(option_log_K_[prod][oi] - log_F, T_arr[bi]);
+                is_call_arr[bi]  = (opt.option_type == OptionType::Call) ? 1 : 0;
+            }
+
+            compute_batch_precomputed(F_arr, K_arr, T_arr, sqrt_T_arr, disc_arr,
+                                      sigma_arr, is_call_arr, results, batch_n);
+
+            for (uint16_t bi = 0; bi < batch_n; ++bi) {
+                const uint16_t oi = start + bi;
+                const uint16_t opt_id = option_ids_[prod][oi];
+                const Black76Result& res = results[bi];
+                const Instrument& opt = instruments_[opt_id];
+
+                PricingSignal& sig = sigs[bi];
+                sig.instrument_id        = opt_id;
+                sig.underlying_id        = opt.underlying_id;
+                sig.flags                = PricingFlagHasUnderlyingRef;
+                sig.sequence_no          = tick.sequence_no;
+                sig.calc_ts_ns           = now;
+                sig.theo_bid             = res.price;
+                sig.theo_ask             = res.price;
+                sig.delta                = static_cast<float>(res.delta);
+                sig.vega                 = static_cast<float>(res.vega);
+                sig.underlying_ref_bid   = static_cast<float>(tick.bid_price[0]);
+                sig.underlying_ref_ask   = static_cast<float>(tick.ask_price[0]);
+
+                Greeks greek{};
+                greek.instrument_id = opt_id;
+                greek.theo_price    = res.price;
+                greek.delta         = res.delta;
+                greek.gamma         = res.gamma;
+                greek.vega          = res.vega;
+                greek.theta         = res.theta;
+                greek.rho           = res.rho;
+                greek.iv            = sigma_arr[bi];
+                greek.T             = T_arr[bi];
+                greek.calc_ts_ns    = now;
+                greeks_snapshot_[opt_id] = greek;
+            }
+
+            while (!stop_flag_.load(std::memory_order_relaxed)
+                && !signal_buf_[prod].try_push_batch(sigs, batch_n)) {
+                spin_pause();
+            }
         }
-
-        // Batch Black-76 computation using pre-computed sqrt(T) and disc
-        compute_batch_precomputed(F_arr, K_arr, T_arr, sqrt_T_arr, disc_arr,
-                                  sigma_arr, is_call_arr, results, batch_n);
-
-        // Pass 2: build PricingSignals (collect all, then single batch push)
-        for (uint16_t oi = 0; oi < batch_n; ++oi) {
-            const uint16_t     opt_id = option_ids_[prod][oi];
-            const Black76Result& res  = results[oi];
-
-            PricingSignal& sig = sigs[oi];
-            sig.greeks.instrument_id = opt_id;
-            sig.greeks.theo_price    = res.price;
-            sig.greeks.delta         = res.delta;
-            sig.greeks.gamma         = res.gamma;
-            sig.greeks.vega          = res.vega;
-            sig.greeks.theta         = res.theta;
-            sig.greeks.rho           = res.rho;
-            sig.greeks.iv            = sigma_arr[oi];
-            sig.greeks.T             = T_arr[oi];
-            sig.greeks.calc_ts_ns    = now;
-            sig.trigger_tick         = tick;  // carry the triggering future tick
-
-            // Update snapshots for gRPC / risk monitor
-            greeks_snapshot_[opt_id] = sig.greeks;
-        }
-        // Single release-store publishes all N signals atomically
-        (void)signal_buf_[prod].try_push_batch(sigs, batch_n);
     }
 }
 
@@ -342,12 +368,40 @@ void TradingEngine::pricer_loop() noexcept {
 void TradingEngine::strategy_loop(int idx) noexcept {
     set_thread_name("omm-strat");
 
+    GatewayEvent ev{};
+    TimerEvent timer_ev{};
     PricingSignal sig{};
 
     while (!stop_flag_.load(std::memory_order_relaxed)) {
+        while (gateway_event_buf_[idx].try_pop(ev)) {
+            switch (ev.type) {
+            case GatewayEventType::OrderAck:
+                strategies_[idx]->on_order_ack(ev.order);
+                break;
+            case GatewayEventType::QuoteAck:
+                strategies_[idx]->on_quote_ack(ev.quote);
+                break;
+            case GatewayEventType::OrderFill:
+            case GatewayEventType::QuoteFill:
+                strategies_[idx]->on_fill(ev.trade);
+                break;
+            case GatewayEventType::OrderCancel:
+                strategies_[idx]->on_order_cancel(ev.order.client_order_id);
+                break;
+            case GatewayEventType::OrderReject:
+                strategies_[idx]->on_order_reject(ev.order);
+                break;
+            default:
+                break;
+            }
+        }
+
+        while (timer_buf_[idx].try_pop(timer_ev)) {
+            strategies_[idx]->on_timer(timer_ev);
+        }
+
         if (signal_buf_[idx].try_pop(sig))
             strategies_[idx]->on_signal(sig);
-        // Timer events could be routed here if a timer_buf per product is added
         spin_pause();
     }
 }
@@ -382,7 +436,6 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
             switch (ev.type) {
             case GatewayEventType::OrderAck:
                 monitor_orders_.publish(ev.order);
-                strategies_[p]->on_order_ack(ev.order);
                 break;
             case GatewayEventType::QuoteAck:
                 monitor_quotes_.publish(ev.quote);
@@ -405,7 +458,6 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                     filled.ack_ts          = ev.trade.fill_ts;
                     monitor_orders_.publish(filled);
                 }
-                strategies_[p]->on_fill(ev.trade);
                 (void)risk_buf_.try_push(ev.trade);  // forward to risk monitor
                 OMM_LOG_INFO("fill", "instr={} side={} qty={} price={:.4f} order_id={}",
                              ev.trade.instrument_id,
@@ -416,13 +468,16 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                 break;
             case GatewayEventType::OrderCancel:
                 monitor_orders_.publish(ev.order);
-                strategies_[p]->on_order_cancel(ev.order.client_order_id);
                 break;
             case GatewayEventType::OrderReject:
                 monitor_orders_.publish(ev.order);
                 break;
             default:
                 break;
+            }
+            while (!stop_flag_.load(std::memory_order_relaxed)
+                && !gateway_event_buf_[p].try_push(ev)) {
+                spin_pause();
             }
         }
         spin_pause();
@@ -738,9 +793,12 @@ void TradingEngine::timer_loop() noexcept {
     set_thread_name("omm-timer");
 
     int64_t last_hedge_ns   = get_monotonic_ns();
+    int64_t last_quote_refresh_ns = last_hedge_ns;
     int64_t last_T_refresh_ns = last_hedge_ns;
     const int64_t hedge_interval_ns =
         static_cast<int64_t>(cfg_.timer.hedge_check_interval_ms) * 1'000'000LL;
+    const int64_t quote_refresh_interval_ns =
+        static_cast<int64_t>(cfg_.timer.quote_refresh_interval_ms) * 1'000'000LL;
     static constexpr int64_t T_REFRESH_NS = 1'000'000'000LL;  // 1 second
 
     while (!stop_flag_.load(std::memory_order_relaxed)) {
@@ -765,10 +823,27 @@ void TradingEngine::timer_loop() noexcept {
             ev.type          = TimerEventType::HedgeCheck;
 
             for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i) {
-                if (strategies_[i])
-                    strategies_[i]->on_timer(ev);
+                if (!strategies_[i]) continue;
+                while (!stop_flag_.load(std::memory_order_relaxed)
+                    && !timer_buf_[i].try_push(ev)) {
+                    spin_pause();
+                }
             }
             last_hedge_ns = now;
+        }
+
+        if (quote_refresh_interval_ns > 0 && now - last_quote_refresh_ns >= quote_refresh_interval_ns) {
+            TimerEvent ev{};
+            ev.trigger_ts_ns = now;
+            ev.type = TimerEventType::QuoteRefresh;
+            for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i) {
+                if (!strategies_[i]) continue;
+                while (!stop_flag_.load(std::memory_order_relaxed)
+                    && !timer_buf_[i].try_push(ev)) {
+                    spin_pause();
+                }
+            }
+            last_quote_refresh_ns = now;
         }
     }
 }

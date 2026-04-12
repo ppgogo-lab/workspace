@@ -56,15 +56,6 @@ PreTradeRisk::check_quote(const Quote& quote) noexcept {
         quote.ask_volume > cfg_.max_volume_per_order)
         return RejectReason::MAX_VOLUME;
 
-    if (open_count_ + 2 > MAX_OPEN_ORDERS)
-        return RejectReason::TOO_MANY_OPEN_ORDERS;
-
-    // Self-trade: bid would cross own ask or ask would cross own bid
-    if (would_self_trade(quote.instrument_id, Side::Buy,  quote.bid_price))
-        return RejectReason::SELF_TRADE;
-    if (would_self_trade(quote.instrument_id, Side::Sell, quote.ask_price))
-        return RejectReason::SELF_TRADE;
-
     return RejectReason::OK;
 }
 

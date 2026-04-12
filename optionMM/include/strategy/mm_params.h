@@ -25,8 +25,19 @@ struct alignas(64) AtomicMMParams {
     std::atomic<double>  bid_spread{0.5};
     std::atomic<double>  ask_spread{0.5};
     std::atomic<double>  hedge_delta_threshold{50.0};
+    std::atomic<double>  min_quote_interval_ms{100.0};
     std::atomic<int32_t> quote_volume{10};
     std::atomic<int32_t> max_position{500};
+    std::atomic<int32_t> warning_position{250};
+    std::atomic<double>  base_half_spread_ticks{1.0};
+    std::atomic<double>  min_half_spread_ticks{1.0};
+    std::atomic<double>  max_half_spread_ticks{8.0};
+    std::atomic<double>  inventory_skew_per_lot_ticks{0.01};
+    std::atomic<double>  follow_weight{0.35};
+    std::atomic<double>  requote_price_epsilon_ticks{1.0};
+    std::atomic<double>  market_width_widen_threshold_ticks{6.0};
+    std::atomic<double>  underlying_move_widen_threshold_ticks{2.0};
+    std::atomic<bool>    use_one_sided_at_limits{true};
     std::atomic<bool>    enabled{true};
 
     // Load all fields into a plain snapshot (for logging / gRPC read)
@@ -35,8 +46,21 @@ struct alignas(64) AtomicMMParams {
         s.bid_spread              = bid_spread.load(std::memory_order_relaxed);
         s.ask_spread              = ask_spread.load(std::memory_order_relaxed);
         s.hedge_delta_threshold   = hedge_delta_threshold.load(std::memory_order_relaxed);
+        s.min_quote_interval_ms   = min_quote_interval_ms.load(std::memory_order_relaxed);
         s.quote_volume            = quote_volume.load(std::memory_order_relaxed);
         s.max_position            = max_position.load(std::memory_order_relaxed);
+        s.warning_position        = warning_position.load(std::memory_order_relaxed);
+        s.base_half_spread_ticks  = base_half_spread_ticks.load(std::memory_order_relaxed);
+        s.min_half_spread_ticks   = min_half_spread_ticks.load(std::memory_order_relaxed);
+        s.max_half_spread_ticks   = max_half_spread_ticks.load(std::memory_order_relaxed);
+        s.inventory_skew_per_lot_ticks = inventory_skew_per_lot_ticks.load(std::memory_order_relaxed);
+        s.follow_weight           = follow_weight.load(std::memory_order_relaxed);
+        s.requote_price_epsilon_ticks = requote_price_epsilon_ticks.load(std::memory_order_relaxed);
+        s.market_width_widen_threshold_ticks =
+            market_width_widen_threshold_ticks.load(std::memory_order_relaxed);
+        s.underlying_move_widen_threshold_ticks =
+            underlying_move_widen_threshold_ticks.load(std::memory_order_relaxed);
+        s.use_one_sided_at_limits = use_one_sided_at_limits.load(std::memory_order_relaxed);
         s.enabled                 = enabled.load(std::memory_order_relaxed);
         return s;
     }
@@ -46,8 +70,21 @@ struct alignas(64) AtomicMMParams {
         bid_spread.store(c.bid_spread,                     std::memory_order_release);
         ask_spread.store(c.ask_spread,                     std::memory_order_release);
         hedge_delta_threshold.store(c.hedge_delta_threshold, std::memory_order_release);
+        min_quote_interval_ms.store(c.min_quote_interval_ms, std::memory_order_release);
         quote_volume.store(c.quote_volume,                 std::memory_order_release);
         max_position.store(c.max_position,                 std::memory_order_release);
+        warning_position.store(c.warning_position,         std::memory_order_release);
+        base_half_spread_ticks.store(c.base_half_spread_ticks, std::memory_order_release);
+        min_half_spread_ticks.store(c.min_half_spread_ticks, std::memory_order_release);
+        max_half_spread_ticks.store(c.max_half_spread_ticks, std::memory_order_release);
+        inventory_skew_per_lot_ticks.store(c.inventory_skew_per_lot_ticks, std::memory_order_release);
+        follow_weight.store(c.follow_weight,               std::memory_order_release);
+        requote_price_epsilon_ticks.store(c.requote_price_epsilon_ticks, std::memory_order_release);
+        market_width_widen_threshold_ticks.store(c.market_width_widen_threshold_ticks,
+                                                 std::memory_order_release);
+        underlying_move_widen_threshold_ticks.store(c.underlying_move_widen_threshold_ticks,
+                                                    std::memory_order_release);
+        use_one_sided_at_limits.store(c.use_one_sided_at_limits, std::memory_order_release);
         enabled.store(c.enabled,                           std::memory_order_release);
     }
 

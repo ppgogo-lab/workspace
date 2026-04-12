@@ -117,6 +117,8 @@ private:
     // ── Ring buffers (engine owns all) ───────────────────────────────────────
     alignas(64) SPSCRingBuffer<MarketTick,    1024> tick_buf_;
     alignas(64) SPSCRingBuffer<PricingSignal,  256> signal_buf_[MAX_PRODUCTS];
+    alignas(64) SPSCRingBuffer<GatewayEvent,   512> gateway_event_buf_[MAX_PRODUCTS];
+    alignas(64) SPSCRingBuffer<TimerEvent,      64> timer_buf_[MAX_PRODUCTS];
     alignas(64) SPSCRingBuffer<Order,          512> order_buf_ [MAX_PRODUCTS];
     alignas(64) SPSCRingBuffer<Quote,          512> quote_buf_ [MAX_PRODUCTS];
     alignas(64) SPSCRingBuffer<Trade,          256> risk_buf_;

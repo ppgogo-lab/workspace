@@ -52,12 +52,11 @@ static Instrument make_future(uint16_t id, uint8_t product_idx,
 static PricingSignal make_signal(uint16_t instrument_id, double theo,
                                   double delta = 0.5) {
     PricingSignal s{};
-    s.greeks.instrument_id = instrument_id;
-    s.greeks.theo_price    = theo;
-    s.greeks.delta         = delta;
-    s.greeks.calc_ts_ns    = get_monotonic_ns();
-    s.trigger_tick.instrument_id = instrument_id;
-    s.trigger_tick.last_price    = theo;
+    s.instrument_id        = instrument_id;
+    s.calc_ts_ns           = get_monotonic_ns();
+    s.theo_bid             = theo;
+    s.theo_ask             = theo;
+    s.delta                = static_cast<float>(delta);
     return s;
 }
 
@@ -141,7 +140,7 @@ TEST_F(SimpleMmTest, NoQuoteWhenDisabled) {
 TEST_F(SimpleMmTest, StaleSignalDropped) {
     PricingSignal sig = make_signal(0, 5.0);
     // Make signal 1 second old (> 10ms staleness threshold)
-    sig.greeks.calc_ts_ns = get_monotonic_ns() - 1'000'000'000LL;
+    sig.calc_ts_ns = get_monotonic_ns() - 1'000'000'000LL;
     strat.on_signal(sig);
 
     Quote q{};

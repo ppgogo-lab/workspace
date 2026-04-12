@@ -29,8 +29,14 @@ public:
     // Called when an order ack arrives (exchange accepted our order).
     virtual void on_order_ack(const Order& order) noexcept = 0;
 
+    // Called when a quote ack arrives (exchange accepted or replaced our quote).
+    virtual void on_quote_ack(const Quote& quote) noexcept = 0;
+
     // Called when an order is cancelled.
     virtual void on_order_cancel(OrderId id) noexcept = 0;
+
+    // Called when an order is rejected.
+    virtual void on_order_reject(const Order& order) noexcept = 0;
 
     // Called by the timer thread (hedge check, quote refresh, session open/close).
     virtual void on_timer(const TimerEvent& event) noexcept = 0;

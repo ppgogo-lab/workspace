@@ -132,6 +132,7 @@ add_library(risk_lib STATIC
 add_library(strategy_lib STATIC
     src/strategy/mm_framework.cpp
     src/strategy/simple_mm.cpp
+    src/strategy/option_mm_core.cpp
 )
 target_link_libraries(strategy_lib PUBLIC risk_lib common_lib)
 
@@ -222,7 +223,7 @@ add_library(engine_lib_test STATIC
 )
 target_compile_options(engine_lib_test PRIVATE -mavx2 -mfma)
 target_link_libraries(engine_lib_test PUBLIC
-    common_lib pricing_lib risk_lib strategy_lib feed_lib sim_gateway_lib logger_lib)
+    common_lib pricing_lib risk_lib strategy_lib sim_gateway_lib logger_lib)
 
 # ─── monitoring_lib (gRPC server) ─────────────────────────────────────────────
 add_library(monitoring_lib STATIC
@@ -306,6 +307,10 @@ add_test(NAME test_monitoring_topic COMMAND test_monitoring_topic)
 add_executable(test_simple_mm tests/test_simple_mm.cpp)
 target_link_libraries(test_simple_mm PRIVATE engine_lib_test GTest::gtest_main Threads::Threads)
 add_test(NAME test_simple_mm COMMAND test_simple_mm)
+
+add_executable(test_option_mm_core tests/test_option_mm_core.cpp)
+target_link_libraries(test_option_mm_core PRIVATE strategy_lib risk_lib common_lib GTest::gtest_main Threads::Threads)
+add_test(NAME test_option_mm_core COMMAND test_option_mm_core)
 
 # test_latency — NOT added to ctest (run explicitly for benchmarking)
 # Build with RelWithDebInfo for realistic latency numbers.

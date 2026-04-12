@@ -58,27 +58,47 @@ products:
   - underlying_id:   "cu2501"
     exchange_id:     "SHFE"
     strategy_core:   4
-    strategy_type:   simple_mm
+    strategy_type:   option_mm_core
     params:
       bid_spread:             0.5
       ask_spread:             0.5
       quote_volume:           10
       hedge_delta_threshold:  50.0
       min_quote_interval_ms:  100.0
+      warning_position:       250
       max_position:           500
+      base_half_spread_ticks: 1.0
+      min_half_spread_ticks:  1.0
+      max_half_spread_ticks:  8.0
+      inventory_skew_per_lot_ticks: 0.01
+      follow_weight:          0.35
+      requote_price_epsilon_ticks: 1.0
+      market_width_widen_threshold_ticks: 6.0
+      underlying_move_widen_threshold_ticks: 2.0
+      use_one_sided_at_limits: true
       enabled:                true
 
   - underlying_id:   "cu2502"
     exchange_id:     "SHFE"
     strategy_core:   5
-    strategy_type:   simple_mm
+    strategy_type:   option_mm_core
     params:
       bid_spread:             0.5
       ask_spread:             0.5
       quote_volume:           10
       hedge_delta_threshold:  50.0
       min_quote_interval_ms:  100.0
+      warning_position:       250
       max_position:           500
+      base_half_spread_ticks: 1.0
+      min_half_spread_ticks:  1.0
+      max_half_spread_ticks:  8.0
+      inventory_skew_per_lot_ticks: 0.01
+      follow_weight:          0.35
+      requote_price_epsilon_ticks: 1.0
+      market_width_widen_threshold_ticks: 6.0
+      underlying_move_widen_threshold_ticks: 2.0
+      use_one_sided_at_limits: true
       enabled:                true
 
 timer:
