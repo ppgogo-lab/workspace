@@ -13,6 +13,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <map>
 #include <string>
 #include <string_view>
 #include <thread>
@@ -51,6 +52,14 @@ const char* order_status_name(OrderStatus status) noexcept {
     return "Unknown";
 }
 
+const char* side_name(Side side) noexcept {
+    switch (side) {
+    case Side::Buy: return "Buy";
+    case Side::Sell: return "Sell";
+    }
+    return "";
+}
+
 const char* instrument_kind_name(InstrumentKind kind) noexcept {
     switch (kind) {
     case InstrumentKind::Future: return "Future";
@@ -64,13 +73,21 @@ const char* option_type_name(const Instrument& instr) noexcept {
     return instr.option_type == OptionType::Call ? "Call" : "Put";
 }
 
-void populate_order_update(const Order& order, omm::proto::OrderUpdate* msg) {
+void populate_order_update(const TradingEngine& engine, const Order& order, omm::proto::OrderUpdate* msg) {
     msg->set_client_order_id(order.client_order_id);
     msg->set_instrument_id(order.instrument_id);
     msg->set_status(order_status_name(order.status));
     msg->set_fill_price(order.avg_fill_price);
     msg->set_fill_volume(order.filled_volume);
     msg->set_ts_ns(order.ack_ts != 0 ? order.ack_ts : order.send_ts);
+    if (!order.exchange_id.empty()) {
+        msg->set_exchange_id(std::string(order.exchange_id.view()));
+    } else if (order.instrument_id < static_cast<uint16_t>(engine.n_instruments())) {
+        msg->set_exchange_id(std::string(engine.instruments()[order.instrument_id].exchange_id.view()));
+    }
+    msg->set_side(side_name(order.side));
+    msg->set_price(order.price);
+    msg->set_volume(order.volume);
 }
 
 void populate_trade_update(const Trade& trade, omm::proto::OrderUpdate* msg) {
@@ -80,6 +97,11 @@ void populate_trade_update(const Trade& trade, omm::proto::OrderUpdate* msg) {
     msg->set_fill_price(trade.fill_price);
     msg->set_fill_volume(trade.fill_volume);
     msg->set_ts_ns(trade.fill_ts);
+    msg->set_exchange_id(std::string(trade.exchange_id.view()));
+    msg->set_side(side_name(trade.side));
+    msg->set_price(trade.fill_price);
+    msg->set_volume(trade.fill_volume);
+    msg->set_exchange_trade_id(trade.trade_id);
 }
 
 void populate_quote_update(const Quote& quote,
@@ -192,10 +214,13 @@ public:
         o.price           = req->price();
         o.volume          = req->volume();
         o.client_order_id = engine_.next_manual_order_id();
+        o.send_ts         = get_monotonic_ns();
         o.is_manual       = true;
         o.is_hedge        = false;
         if (o.instrument_id < static_cast<uint16_t>(engine_.n_instruments())) {
-            o.product_index = engine_.instruments()[o.instrument_id].product_index;
+            const Instrument& instr = engine_.instruments()[o.instrument_id];
+            o.product_index = instr.product_index;
+            o.exchange_id = instr.exchange_id;
         }
 
         bool ok = engine_.submit_manual_order(o);
@@ -281,6 +306,8 @@ public:
             pi->set_strike(instr.strike);
             pi->set_product_index(instr.product_index);
             pi->set_underlying_id(instr.underlying_id);
+            pi->set_exchange_id(std::string(instr.exchange_id.view()));
+            pi->set_expiry_date(instr.expiry_date);
         }
         return grpc::Status::OK;
     }
@@ -394,7 +421,7 @@ public:
             while (engine_.monitor_orders().read_next(cursor, order)) {
                 if (!product_in_scope(req->product_index(), order.product_index)) continue;
                 omm::proto::OrderUpdate msg;
-                populate_order_update(order, &msg);
+                populate_order_update(engine_, order, &msg);
                 if (!writer->Write(msg)) return grpc::Status::OK;
                 wrote = true;
             }
@@ -483,14 +510,25 @@ public:
                 msg.set_product_index(static_cast<uint32_t>(p));
                 msg.set_fit_ts_ns(get_monotonic_ns());
 
+                std::map<int32_t, std::map<double, double>> vols_by_expiry;
+                std::map<int32_t, double> expiry_t_by_date;
                 for (uint16_t oi = 0; oi < engine_.option_count(p); ++oi) {
                     const uint16_t opt_id = engine_.option_id(p, oi);
                     const Instrument& opt = engine_.instruments()[opt_id];
-                    auto* slice = msg.add_slices();
                     const double T = current_expiry_t(opt);
-                    slice->set_expiry_t(T);
-                    slice->add_strikes(opt.strike);
-                    slice->add_vols(surf->get_vol_by_strike(F, opt.strike, T));
+                    expiry_t_by_date[opt.expiry_date] = T;
+                    vols_by_expiry[opt.expiry_date][opt.strike] =
+                        surf->get_vol_by_strike(F, opt.strike, T);
+                }
+
+                for (const auto& [expiry_date, vol_by_strike] : vols_by_expiry) {
+                    if (vol_by_strike.size() < 2) continue;
+                    auto* slice = msg.add_slices();
+                    slice->set_expiry_t(expiry_t_by_date[expiry_date]);
+                    for (const auto& [strike, vol] : vol_by_strike) {
+                        slice->add_strikes(strike);
+                        slice->add_vols(vol);
+                    }
                 }
 
                 if (msg.slices_size() > 0 && !writer->Write(msg)) {

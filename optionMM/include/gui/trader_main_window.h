@@ -6,10 +6,12 @@
 #include <string>
 
 class QDockWidget;
+class QCloseEvent;
 class QLabel;
 class QSpinBox;
 class QDoubleSpinBox;
 class QComboBox;
+class QMainWindow;
 class QPushButton;
 class QTableWidget;
 class QTreeWidget;
@@ -23,11 +25,15 @@ public:
     ~TraderMainWindow() override;
 
 private:
+    void closeEvent(QCloseEvent* event) override;
     void build_ui();
     void refresh_ui();
     void send_manual_order();
     void start_strategy(bool enabled);
     void apply_strategy_params();
+    void ensure_vol_window();
+    void restore_ui_state();
+    void save_ui_state() const;
 
     std::string grpc_endpoint_;
 
@@ -35,7 +41,7 @@ private:
     std::unique_ptr<Impl> impl_;
 
     QLabel* status_label_{nullptr};
-    QSpinBox* product_selector_{nullptr};
+    QComboBox* product_selector_{nullptr};
     QComboBox* instrument_selector_{nullptr};
     QComboBox* side_selector_{nullptr};
     QDoubleSpinBox* price_editor_{nullptr};
@@ -44,6 +50,9 @@ private:
     QPushButton* sell_button_{nullptr};
     QPushButton* start_button_{nullptr};
     QPushButton* stop_button_{nullptr};
+    QLabel* delta_label_{nullptr};
+    QLabel* gamma_label_{nullptr};
+    QLabel* vega_label_{nullptr};
     QDoubleSpinBox* bid_spread_editor_{nullptr};
     QDoubleSpinBox* ask_spread_editor_{nullptr};
     QDoubleSpinBox* hedge_threshold_editor_{nullptr};
@@ -56,6 +65,9 @@ private:
     QTableWidget* quotes_table_{nullptr};
     QTableWidget* trades_table_{nullptr};
     QWidget* vol_widget_{nullptr};
+    QDockWidget* vol_dock_{nullptr};
+    QMainWindow* vol_window_{nullptr};
+    QWidget* vol_window_widget_{nullptr};
 };
 
 } // namespace omm::gui

@@ -61,6 +61,17 @@ static PricingSignal make_signal(uint16_t instrument_id, double theo,
     return s;
 }
 
+static bool wait_for_gateway_event(SimGateway& gw,
+                                   GatewayEvent* out,
+                                   std::chrono::milliseconds timeout = std::chrono::milliseconds(200)) {
+    const auto deadline = std::chrono::steady_clock::now() + timeout;
+    while (std::chrono::steady_clock::now() < deadline) {
+        if (gw.callback_buf.try_pop(*out)) return true;
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    return false;
+}
+
 // ─── SimpleMMStrategy unit tests ─────────────────────────────────────────────
 
 class SimpleMmTest : public ::testing::Test {
@@ -227,10 +238,10 @@ TEST(SimGateway, ConnectAndSendOrder) {
 
     // Should get OrderAck + Fill (price matches last_price)
     GatewayEvent ev{};
-    ASSERT_TRUE(gw.callback_buf.try_pop(ev));
+    ASSERT_TRUE(wait_for_gateway_event(gw, &ev));
     EXPECT_EQ(ev.type, GatewayEventType::OrderAck);
 
-    ASSERT_TRUE(gw.callback_buf.try_pop(ev));
+    ASSERT_TRUE(wait_for_gateway_event(gw, &ev));
     EXPECT_EQ(ev.type, GatewayEventType::OrderFill);
     EXPECT_EQ(ev.trade.fill_volume, 10);
     EXPECT_EQ(gw.orders_filled(), 1u);
@@ -253,10 +264,10 @@ TEST(SimGateway, SendQuoteGetAck) {
     ASSERT_TRUE(gw.send_quote(q));
 
     GatewayEvent ev{};
-    ASSERT_TRUE(gw.callback_buf.try_pop(ev));
+    ASSERT_TRUE(wait_for_gateway_event(gw, &ev));
     EXPECT_EQ(ev.type, GatewayEventType::QuoteAck);
     // last_price=102 >= ask=101 → ask side fills (someone bought from us)
-    ASSERT_TRUE(gw.callback_buf.try_pop(ev));
+    ASSERT_TRUE(wait_for_gateway_event(gw, &ev));
     EXPECT_EQ(ev.type, GatewayEventType::QuoteFill);
     EXPECT_EQ(ev.trade.side, Side::Sell);
 }
@@ -266,15 +277,104 @@ TEST(SimGateway, CancelOrderGetAck) {
     GatewayConfig cfg{};
     gw.connect(cfg);
 
+    Instrument instr = make_option(0, 1, 0, 100.0, OptionType::Call);
+    gw.add_instrument(instr);
+    gw.set_last_price(0, 20.0);
+
+    Order o{};
+    o.client_order_id = 42;
+    o.instrument_id   = 0;
+    o.product_index   = 0;
+    o.side            = Side::Buy;
+    o.order_type      = OrderType::Limit;
+    o.price           = 10.0;
+    o.volume          = 10;
+    ASSERT_TRUE(gw.send_order(o));
+
     ASSERT_TRUE(gw.cancel_order(42, 0));
 
     GatewayEvent ev{};
-    ASSERT_TRUE(gw.callback_buf.try_pop(ev));
+    ASSERT_TRUE(wait_for_gateway_event(gw, &ev));
+    if (ev.type == GatewayEventType::OrderAck) {
+        ASSERT_TRUE(wait_for_gateway_event(gw, &ev));
+    }
     EXPECT_EQ(ev.type, GatewayEventType::OrderCancel);
     EXPECT_EQ(ev.order.client_order_id, 42u);
 }
 
 // ─── End-to-end: TradingEngine integration ────────────────────────────────────
+
+TEST(SimGateway, PartialFillWithLatency) {
+    SimGateway gw;
+    SimConfig sim{};
+    sim.gateway_ack_latency_ms = 5;
+    sim.gateway_fill_interval_ms = 10;
+    sim.gateway_order_fill_probability = 1.0;
+    sim.gateway_partial_fill_probability = 1.0;
+    sim.gateway_max_fill_size = 3;
+    gw.set_sim_config(sim);
+
+    GatewayConfig cfg{};
+    ASSERT_TRUE(gw.connect(cfg));
+
+    Instrument instr = make_option(0, 1, 0, 100.0, OptionType::Call);
+    gw.add_instrument(instr);
+    gw.set_last_price(0, 5.0);
+
+    Order o{};
+    o.client_order_id = 7;
+    o.instrument_id   = 0;
+    o.product_index   = 0;
+    o.side            = Side::Buy;
+    o.order_type      = OrderType::Limit;
+    o.price           = 5.0;
+    o.volume          = 7;
+    ASSERT_TRUE(gw.send_order(o));
+
+    GatewayEvent ev{};
+    ASSERT_TRUE(wait_for_gateway_event(gw, &ev));
+    ASSERT_EQ(ev.type, GatewayEventType::OrderAck);
+
+    int total_filled = 0;
+    int fills_seen = 0;
+    while (total_filled < 7 && fills_seen < 8) {
+        ASSERT_TRUE(wait_for_gateway_event(gw, &ev));
+        ASSERT_EQ(ev.type, GatewayEventType::OrderFill);
+        EXPECT_LE(ev.trade.fill_volume, 3);
+        total_filled += ev.trade.fill_volume;
+        ++fills_seen;
+    }
+    EXPECT_EQ(total_filled, 7);
+}
+
+TEST(SimGateway, RejectsOrdersWhenConfigured) {
+    SimGateway gw;
+    SimConfig sim{};
+    sim.gateway_reject_probability = 1.0;
+    gw.set_sim_config(sim);
+
+    GatewayConfig cfg{};
+    ASSERT_TRUE(gw.connect(cfg));
+
+    Instrument instr = make_option(0, 1, 0, 100.0, OptionType::Call);
+    gw.add_instrument(instr);
+    gw.set_last_price(0, 5.0);
+
+    Order o{};
+    o.client_order_id = 99;
+    o.instrument_id   = 0;
+    o.product_index   = 0;
+    o.side            = Side::Buy;
+    o.order_type      = OrderType::Limit;
+    o.price           = 5.0;
+    o.volume          = 10;
+    ASSERT_TRUE(gw.send_order(o));
+
+    GatewayEvent ev{};
+    ASSERT_TRUE(wait_for_gateway_event(gw, &ev));
+    EXPECT_EQ(ev.type, GatewayEventType::OrderReject);
+    EXPECT_EQ(ev.order.status, OrderStatus::Rejected);
+}
 
 TEST(TradingEngineIntegration, TickToQuote) {
     // Build a minimal SystemConfig

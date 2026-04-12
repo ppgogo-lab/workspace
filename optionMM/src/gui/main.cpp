@@ -4,6 +4,8 @@
 
 int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
+    QApplication::setOrganizationName("optionMM");
+    QApplication::setApplicationName("TraderDashboard");
 
     std::string endpoint = "127.0.0.1:50051";
     if (argc > 1) endpoint = argv[1];

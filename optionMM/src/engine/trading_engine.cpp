@@ -395,8 +395,11 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                     filled.client_order_id = ev.trade.client_order_id;
                     filled.instrument_id   = ev.trade.instrument_id;
                     filled.product_index   = ev.trade.product_index;
+                    filled.exchange_id     = ev.trade.exchange_id;
                     filled.side            = ev.trade.side;
                     filled.status          = OrderStatus::Filled;
+                    filled.price           = ev.trade.fill_price;
+                    filled.volume          = ev.trade.fill_volume;
                     filled.avg_fill_price  = ev.trade.fill_price;
                     filled.filled_volume   = ev.trade.fill_volume;
                     filled.ack_ts          = ev.trade.fill_ts;

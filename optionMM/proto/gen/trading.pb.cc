@@ -392,11 +392,20 @@ inline constexpr OrderUpdate::Impl_::Impl_(
         status_(
             &::google::protobuf::internal::fixed_address_empty_string,
             ::_pbi::ConstantInitialized()),
+        exchange_id_(
+            &::google::protobuf::internal::fixed_address_empty_string,
+            ::_pbi::ConstantInitialized()),
+        side_(
+            &::google::protobuf::internal::fixed_address_empty_string,
+            ::_pbi::ConstantInitialized()),
         client_order_id_{::uint64_t{0u}},
         instrument_id_{0u},
         fill_volume_{0},
         fill_price_{0},
-        ts_ns_{::int64_t{0}} {}
+        ts_ns_{::int64_t{0}},
+        price_{0},
+        exchange_trade_id_{::uint64_t{0u}},
+        volume_{0} {}
 
 template <typename>
 PROTOBUF_CONSTEXPR OrderUpdate::OrderUpdate(::_pbi::ConstantInitialized)
@@ -522,10 +531,14 @@ inline constexpr InstrumentInfo::Impl_::Impl_(
         option_type_(
             &::google::protobuf::internal::fixed_address_empty_string,
             ::_pbi::ConstantInitialized()),
+        exchange_id_(
+            &::google::protobuf::internal::fixed_address_empty_string,
+            ::_pbi::ConstantInitialized()),
         instrument_id_{0u},
         product_index_{0u},
         strike_{0},
-        underlying_id_{0u} {}
+        underlying_id_{0u},
+        expiry_date_{0} {}
 
 template <typename>
 PROTOBUF_CONSTEXPR InstrumentInfo::InstrumentInfo(::_pbi::ConstantInitialized)
@@ -827,19 +840,29 @@ const ::uint32_t
         6,
         0x081, // bitmap
         PROTOBUF_FIELD_OFFSET(::omm::proto::OrderUpdate, _impl_._has_bits_),
-        9, // hasbit index offset
+        14, // hasbit index offset
         PROTOBUF_FIELD_OFFSET(::omm::proto::OrderUpdate, _impl_.client_order_id_),
         PROTOBUF_FIELD_OFFSET(::omm::proto::OrderUpdate, _impl_.instrument_id_),
         PROTOBUF_FIELD_OFFSET(::omm::proto::OrderUpdate, _impl_.status_),
         PROTOBUF_FIELD_OFFSET(::omm::proto::OrderUpdate, _impl_.fill_price_),
         PROTOBUF_FIELD_OFFSET(::omm::proto::OrderUpdate, _impl_.fill_volume_),
         PROTOBUF_FIELD_OFFSET(::omm::proto::OrderUpdate, _impl_.ts_ns_),
+        PROTOBUF_FIELD_OFFSET(::omm::proto::OrderUpdate, _impl_.exchange_id_),
+        PROTOBUF_FIELD_OFFSET(::omm::proto::OrderUpdate, _impl_.side_),
+        PROTOBUF_FIELD_OFFSET(::omm::proto::OrderUpdate, _impl_.price_),
+        PROTOBUF_FIELD_OFFSET(::omm::proto::OrderUpdate, _impl_.volume_),
+        PROTOBUF_FIELD_OFFSET(::omm::proto::OrderUpdate, _impl_.exchange_trade_id_),
+        3,
+        4,
+        0,
+        6,
+        5,
+        7,
         1,
         2,
-        0,
-        4,
-        3,
-        5,
+        8,
+        10,
+        9,
         0x081, // bitmap
         PROTOBUF_FIELD_OFFSET(::omm::proto::QuoteUpdate, _impl_._has_bits_),
         11, // hasbit index offset
@@ -861,7 +884,7 @@ const ::uint32_t
         6,
         0x081, // bitmap
         PROTOBUF_FIELD_OFFSET(::omm::proto::InstrumentInfo, _impl_._has_bits_),
-        11, // hasbit index offset
+        13, // hasbit index offset
         PROTOBUF_FIELD_OFFSET(::omm::proto::InstrumentInfo, _impl_.instrument_id_),
         PROTOBUF_FIELD_OFFSET(::omm::proto::InstrumentInfo, _impl_.code_),
         PROTOBUF_FIELD_OFFSET(::omm::proto::InstrumentInfo, _impl_.underlying_code_),
@@ -870,14 +893,18 @@ const ::uint32_t
         PROTOBUF_FIELD_OFFSET(::omm::proto::InstrumentInfo, _impl_.strike_),
         PROTOBUF_FIELD_OFFSET(::omm::proto::InstrumentInfo, _impl_.product_index_),
         PROTOBUF_FIELD_OFFSET(::omm::proto::InstrumentInfo, _impl_.underlying_id_),
-        4,
+        PROTOBUF_FIELD_OFFSET(::omm::proto::InstrumentInfo, _impl_.exchange_id_),
+        PROTOBUF_FIELD_OFFSET(::omm::proto::InstrumentInfo, _impl_.expiry_date_),
+        5,
         0,
         1,
         2,
         3,
-        6,
-        5,
         7,
+        6,
+        8,
+        4,
+        9,
         0x081, // bitmap
         PROTOBUF_FIELD_OFFSET(::omm::proto::VolSurfaceSlice, _impl_._has_bits_),
         6, // hasbit index offset
@@ -1023,25 +1050,25 @@ static const ::_pbi::MigrationSchema
         {47, sizeof(::omm::proto::RiskAlert)},
         {56, sizeof(::omm::proto::Tick)},
         {75, sizeof(::omm::proto::OrderUpdate)},
-        {90, sizeof(::omm::proto::QuoteUpdate)},
-        {109, sizeof(::omm::proto::InstrumentInfo)},
-        {128, sizeof(::omm::proto::VolSurfaceSlice)},
-        {137, sizeof(::omm::proto::VolSurface)},
-        {146, sizeof(::omm::proto::MMParams)},
-        {161, sizeof(::omm::proto::SetStrategyParamsRequest)},
-        {168, sizeof(::omm::proto::SetStrategyParamsResponse)},
-        {175, sizeof(::omm::proto::StartStopRequest)},
-        {180, sizeof(::omm::proto::StartStopResponse)},
-        {187, sizeof(::omm::proto::RiskThreshold)},
-        {198, sizeof(::omm::proto::SetRiskThresholdRequest)},
-        {203, sizeof(::omm::proto::SetRiskThresholdResponse)},
-        {210, sizeof(::omm::proto::ManualOrderRequest)},
-        {221, sizeof(::omm::proto::ManualOrderResponse)},
-        {230, sizeof(::omm::proto::CancelOrderRequest)},
-        {237, sizeof(::omm::proto::CancelOrderResponse)},
-        {244, sizeof(::omm::proto::SnapshotRequest)},
-        {245, sizeof(::omm::proto::SnapshotResponse)},
-        {258, sizeof(::omm::proto::StreamRequest)},
+        {100, sizeof(::omm::proto::QuoteUpdate)},
+        {119, sizeof(::omm::proto::InstrumentInfo)},
+        {142, sizeof(::omm::proto::VolSurfaceSlice)},
+        {151, sizeof(::omm::proto::VolSurface)},
+        {160, sizeof(::omm::proto::MMParams)},
+        {175, sizeof(::omm::proto::SetStrategyParamsRequest)},
+        {182, sizeof(::omm::proto::SetStrategyParamsResponse)},
+        {189, sizeof(::omm::proto::StartStopRequest)},
+        {194, sizeof(::omm::proto::StartStopResponse)},
+        {201, sizeof(::omm::proto::RiskThreshold)},
+        {212, sizeof(::omm::proto::SetRiskThresholdRequest)},
+        {217, sizeof(::omm::proto::SetRiskThresholdResponse)},
+        {224, sizeof(::omm::proto::ManualOrderRequest)},
+        {235, sizeof(::omm::proto::ManualOrderResponse)},
+        {244, sizeof(::omm::proto::CancelOrderRequest)},
+        {251, sizeof(::omm::proto::CancelOrderResponse)},
+        {258, sizeof(::omm::proto::SnapshotRequest)},
+        {259, sizeof(::omm::proto::SnapshotResponse)},
+        {272, sizeof(::omm::proto::StreamRequest)},
 };
 static const ::_pb::Message* PROTOBUF_NONNULL const file_default_instances[] = {
     &::omm::proto::_Greeks_default_instance_._instance,
@@ -1091,87 +1118,90 @@ const char descriptor_table_protodef_trading_2eproto[] ABSL_ATTRIBUTE_SECTION_VA
     "rice\030\002 \001(\001\022\021\n\tbid_price\030\003 \001(\001\022\021\n\task_pri"
     "ce\030\004 \001(\001\022\022\n\nbid_volume\030\005 \001(\005\022\022\n\nask_volu"
     "me\030\006 \001(\005\022\026\n\016exchange_ts_ns\030\007 \001(\003\022\022\n\nrecv"
-    "_ts_ns\030\010 \001(\003\"\205\001\n\013OrderUpdate\022\027\n\017client_o"
+    "_ts_ns\030\010 \001(\003\"\342\001\n\013OrderUpdate\022\027\n\017client_o"
     "rder_id\030\001 \001(\004\022\025\n\rinstrument_id\030\002 \001(\r\022\016\n\006"
     "status\030\003 \001(\t\022\022\n\nfill_price\030\004 \001(\001\022\023\n\013fill"
-    "_volume\030\005 \001(\005\022\r\n\005ts_ns\030\006 \001(\003\"\252\001\n\013QuoteUp"
-    "date\022\027\n\017client_quote_id\030\001 \001(\004\022\025\n\rinstrum"
-    "ent_id\030\002 \001(\r\022\021\n\tbid_price\030\003 \001(\001\022\021\n\task_p"
-    "rice\030\004 \001(\001\022\022\n\nbid_volume\030\005 \001(\005\022\022\n\nask_vo"
-    "lume\030\006 \001(\005\022\016\n\006status\030\007 \001(\t\022\r\n\005ts_ns\030\010 \001("
-    "\003\"\257\001\n\016InstrumentInfo\022\025\n\rinstrument_id\030\001 "
-    "\001(\r\022\014\n\004code\030\002 \001(\t\022\027\n\017underlying_code\030\003 \001"
-    "(\t\022\014\n\004kind\030\004 \001(\t\022\023\n\013option_type\030\005 \001(\t\022\016\n"
-    "\006strike\030\006 \001(\001\022\025\n\rproduct_index\030\007 \001(\r\022\025\n\r"
-    "underlying_id\030\010 \001(\r\"B\n\017VolSurfaceSlice\022\020"
-    "\n\010expiry_T\030\001 \001(\001\022\017\n\007strikes\030\002 \003(\001\022\014\n\004vol"
-    "s\030\003 \003(\001\"b\n\nVolSurface\022\025\n\rproduct_index\030\001"
-    " \001(\r\022*\n\006slices\030\002 \003(\0132\032.omm.proto.VolSurf"
-    "aceSlice\022\021\n\tfit_ts_ns\030\003 \001(\003\"\216\001\n\010MMParams"
-    "\022\022\n\nbid_spread\030\001 \001(\001\022\022\n\nask_spread\030\002 \001(\001"
-    "\022\035\n\025hedge_delta_threshold\030\003 \001(\001\022\024\n\014quote"
-    "_volume\030\004 \001(\005\022\024\n\014max_position\030\005 \001(\005\022\017\n\007e"
-    "nabled\030\006 \001(\010\"V\n\030SetStrategyParamsRequest"
-    "\022\025\n\rproduct_index\030\001 \001(\r\022#\n\006params\030\002 \001(\0132"
-    "\023.omm.proto.MMParams\"8\n\031SetStrategyParam"
-    "sResponse\022\n\n\002ok\030\001 \001(\010\022\017\n\007message\030\002 \001(\t\")"
-    "\n\020StartStopRequest\022\025\n\rproduct_index\030\001 \001("
-    "\005\"0\n\021StartStopResponse\022\n\n\002ok\030\001 \001(\010\022\017\n\007me"
-    "ssage\030\002 \001(\t\"a\n\rRiskThreshold\022\030\n\020max_net_"
-    "position\030\001 \001(\001\022\021\n\tmax_delta\030\002 \001(\001\022\021\n\tmax"
-    "_gamma\030\003 \001(\001\022\020\n\010max_vega\030\004 \001(\001\"F\n\027SetRis"
-    "kThresholdRequest\022+\n\tthreshold\030\001 \001(\0132\030.o"
-    "mm.proto.RiskThreshold\"7\n\030SetRiskThresho"
-    "ldResponse\022\n\n\002ok\030\001 \001(\010\022\017\n\007message\030\002 \001(\t\""
-    "X\n\022ManualOrderRequest\022\025\n\rinstrument_id\030\001"
-    " \001(\r\022\014\n\004side\030\002 \001(\t\022\r\n\005price\030\003 \001(\001\022\016\n\006vol"
-    "ume\030\004 \001(\005\"D\n\023ManualOrderResponse\022\n\n\002ok\030\001"
-    " \001(\010\022\017\n\007message\030\002 \001(\t\022\020\n\010order_id\030\003 \001(\004\""
-    "=\n\022CancelOrderRequest\022\020\n\010order_id\030\001 \001(\004\022"
-    "\025\n\rinstrument_id\030\002 \001(\r\"2\n\023CancelOrderRes"
-    "ponse\022\n\n\002ok\030\001 \001(\010\022\017\n\007message\030\002 \001(\t\"\021\n\017Sn"
-    "apshotRequest\"\344\001\n\020SnapshotResponse\022!\n\006gr"
-    "eeks\030\001 \003(\0132\021.omm.proto.Greeks\022&\n\tpositio"
-    "ns\030\002 \003(\0132\023.omm.proto.Position\022-\n\tportfol"
-    "io\030\003 \001(\0132\032.omm.proto.PortfolioGreeks\022&\n\t"
-    "mm_params\030\004 \003(\0132\023.omm.proto.MMParams\022.\n\013"
-    "instruments\030\005 \003(\0132\031.omm.proto.Instrument"
-    "Info\"&\n\rStreamRequest\022\025\n\rproduct_index\030\001"
-    " \001(\r2\344\010\n\016TradingMonitor\022=\n\014StreamGreeks\022"
-    "\030.omm.proto.StreamRequest\032\021.omm.proto.Gr"
-    "eeks0\001\022B\n\017StreamPositions\022\030.omm.proto.St"
-    "reamRequest\032\023.omm.proto.Position0\001\022:\n\013St"
-    "reamTicks\022\030.omm.proto.StreamRequest\032\017.om"
-    "m.proto.Tick0\001\022B\n\014StreamOrders\022\030.omm.pro"
-    "to.StreamRequest\032\026.omm.proto.OrderUpdate"
-    "0\001\022B\n\014StreamTrades\022\030.omm.proto.StreamReq"
-    "uest\032\026.omm.proto.OrderUpdate0\001\022B\n\014Stream"
-    "Quotes\022\030.omm.proto.StreamRequest\032\026.omm.p"
-    "roto.QuoteUpdate0\001\022D\n\020StreamRiskAlerts\022\030"
-    ".omm.proto.StreamRequest\032\024.omm.proto.Ris"
-    "kAlert0\001\022E\n\020StreamVolSurface\022\030.omm.proto"
-    ".StreamRequest\032\025.omm.proto.VolSurface0\001\022"
-    "^\n\021SetStrategyParams\022#.omm.proto.SetStra"
-    "tegyParamsRequest\032$.omm.proto.SetStrateg"
-    "yParamsResponse\022J\n\rStartStrategy\022\033.omm.p"
-    "roto.StartStopRequest\032\034.omm.proto.StartS"
-    "topResponse\022I\n\014StopStrategy\022\033.omm.proto."
-    "StartStopRequest\032\034.omm.proto.StartStopRe"
-    "sponse\022[\n\020SetRiskThreshold\022\".omm.proto.S"
-    "etRiskThresholdRequest\032#.omm.proto.SetRi"
-    "skThresholdResponse\022P\n\017SendManualOrder\022\035"
-    ".omm.proto.ManualOrderRequest\032\036.omm.prot"
-    "o.ManualOrderResponse\022L\n\013CancelOrder\022\035.o"
-    "mm.proto.CancelOrderRequest\032\036.omm.proto."
-    "CancelOrderResponse\022F\n\013GetSnapshot\022\032.omm"
-    ".proto.SnapshotRequest\032\033.omm.proto.Snaps"
-    "hotResponseb\006proto3"
+    "_volume\030\005 \001(\005\022\r\n\005ts_ns\030\006 \001(\003\022\023\n\013exchange"
+    "_id\030\007 \001(\t\022\014\n\004side\030\010 \001(\t\022\r\n\005price\030\t \001(\001\022\016"
+    "\n\006volume\030\n \001(\005\022\031\n\021exchange_trade_id\030\013 \001("
+    "\004\"\252\001\n\013QuoteUpdate\022\027\n\017client_quote_id\030\001 \001"
+    "(\004\022\025\n\rinstrument_id\030\002 \001(\r\022\021\n\tbid_price\030\003"
+    " \001(\001\022\021\n\task_price\030\004 \001(\001\022\022\n\nbid_volume\030\005 "
+    "\001(\005\022\022\n\nask_volume\030\006 \001(\005\022\016\n\006status\030\007 \001(\t\022"
+    "\r\n\005ts_ns\030\010 \001(\003\"\331\001\n\016InstrumentInfo\022\025\n\rins"
+    "trument_id\030\001 \001(\r\022\014\n\004code\030\002 \001(\t\022\027\n\017underl"
+    "ying_code\030\003 \001(\t\022\014\n\004kind\030\004 \001(\t\022\023\n\013option_"
+    "type\030\005 \001(\t\022\016\n\006strike\030\006 \001(\001\022\025\n\rproduct_in"
+    "dex\030\007 \001(\r\022\025\n\runderlying_id\030\010 \001(\r\022\023\n\013exch"
+    "ange_id\030\t \001(\t\022\023\n\013expiry_date\030\n \001(\005\"B\n\017Vo"
+    "lSurfaceSlice\022\020\n\010expiry_T\030\001 \001(\001\022\017\n\007strik"
+    "es\030\002 \003(\001\022\014\n\004vols\030\003 \003(\001\"b\n\nVolSurface\022\025\n\r"
+    "product_index\030\001 \001(\r\022*\n\006slices\030\002 \003(\0132\032.om"
+    "m.proto.VolSurfaceSlice\022\021\n\tfit_ts_ns\030\003 \001"
+    "(\003\"\216\001\n\010MMParams\022\022\n\nbid_spread\030\001 \001(\001\022\022\n\na"
+    "sk_spread\030\002 \001(\001\022\035\n\025hedge_delta_threshold"
+    "\030\003 \001(\001\022\024\n\014quote_volume\030\004 \001(\005\022\024\n\014max_posi"
+    "tion\030\005 \001(\005\022\017\n\007enabled\030\006 \001(\010\"V\n\030SetStrate"
+    "gyParamsRequest\022\025\n\rproduct_index\030\001 \001(\r\022#"
+    "\n\006params\030\002 \001(\0132\023.omm.proto.MMParams\"8\n\031S"
+    "etStrategyParamsResponse\022\n\n\002ok\030\001 \001(\010\022\017\n\007"
+    "message\030\002 \001(\t\")\n\020StartStopRequest\022\025\n\rpro"
+    "duct_index\030\001 \001(\005\"0\n\021StartStopResponse\022\n\n"
+    "\002ok\030\001 \001(\010\022\017\n\007message\030\002 \001(\t\"a\n\rRiskThresh"
+    "old\022\030\n\020max_net_position\030\001 \001(\001\022\021\n\tmax_del"
+    "ta\030\002 \001(\001\022\021\n\tmax_gamma\030\003 \001(\001\022\020\n\010max_vega\030"
+    "\004 \001(\001\"F\n\027SetRiskThresholdRequest\022+\n\tthre"
+    "shold\030\001 \001(\0132\030.omm.proto.RiskThreshold\"7\n"
+    "\030SetRiskThresholdResponse\022\n\n\002ok\030\001 \001(\010\022\017\n"
+    "\007message\030\002 \001(\t\"X\n\022ManualOrderRequest\022\025\n\r"
+    "instrument_id\030\001 \001(\r\022\014\n\004side\030\002 \001(\t\022\r\n\005pri"
+    "ce\030\003 \001(\001\022\016\n\006volume\030\004 \001(\005\"D\n\023ManualOrderR"
+    "esponse\022\n\n\002ok\030\001 \001(\010\022\017\n\007message\030\002 \001(\t\022\020\n\010"
+    "order_id\030\003 \001(\004\"=\n\022CancelOrderRequest\022\020\n\010"
+    "order_id\030\001 \001(\004\022\025\n\rinstrument_id\030\002 \001(\r\"2\n"
+    "\023CancelOrderResponse\022\n\n\002ok\030\001 \001(\010\022\017\n\007mess"
+    "age\030\002 \001(\t\"\021\n\017SnapshotRequest\"\344\001\n\020Snapsho"
+    "tResponse\022!\n\006greeks\030\001 \003(\0132\021.omm.proto.Gr"
+    "eeks\022&\n\tpositions\030\002 \003(\0132\023.omm.proto.Posi"
+    "tion\022-\n\tportfolio\030\003 \001(\0132\032.omm.proto.Port"
+    "folioGreeks\022&\n\tmm_params\030\004 \003(\0132\023.omm.pro"
+    "to.MMParams\022.\n\013instruments\030\005 \003(\0132\031.omm.p"
+    "roto.InstrumentInfo\"&\n\rStreamRequest\022\025\n\r"
+    "product_index\030\001 \001(\r2\344\010\n\016TradingMonitor\022="
+    "\n\014StreamGreeks\022\030.omm.proto.StreamRequest"
+    "\032\021.omm.proto.Greeks0\001\022B\n\017StreamPositions"
+    "\022\030.omm.proto.StreamRequest\032\023.omm.proto.P"
+    "osition0\001\022:\n\013StreamTicks\022\030.omm.proto.Str"
+    "eamRequest\032\017.omm.proto.Tick0\001\022B\n\014StreamO"
+    "rders\022\030.omm.proto.StreamRequest\032\026.omm.pr"
+    "oto.OrderUpdate0\001\022B\n\014StreamTrades\022\030.omm."
+    "proto.StreamRequest\032\026.omm.proto.OrderUpd"
+    "ate0\001\022B\n\014StreamQuotes\022\030.omm.proto.Stream"
+    "Request\032\026.omm.proto.QuoteUpdate0\001\022D\n\020Str"
+    "eamRiskAlerts\022\030.omm.proto.StreamRequest\032"
+    "\024.omm.proto.RiskAlert0\001\022E\n\020StreamVolSurf"
+    "ace\022\030.omm.proto.StreamRequest\032\025.omm.prot"
+    "o.VolSurface0\001\022^\n\021SetStrategyParams\022#.om"
+    "m.proto.SetStrategyParamsRequest\032$.omm.p"
+    "roto.SetStrategyParamsResponse\022J\n\rStartS"
+    "trategy\022\033.omm.proto.StartStopRequest\032\034.o"
+    "mm.proto.StartStopResponse\022I\n\014StopStrate"
+    "gy\022\033.omm.proto.StartStopRequest\032\034.omm.pr"
+    "oto.StartStopResponse\022[\n\020SetRiskThreshol"
+    "d\022\".omm.proto.SetRiskThresholdRequest\032#."
+    "omm.proto.SetRiskThresholdResponse\022P\n\017Se"
+    "ndManualOrder\022\035.omm.proto.ManualOrderReq"
+    "uest\032\036.omm.proto.ManualOrderResponse\022L\n\013"
+    "CancelOrder\022\035.omm.proto.CancelOrderReque"
+    "st\032\036.omm.proto.CancelOrderResponse\022F\n\013Ge"
+    "tSnapshot\022\032.omm.proto.SnapshotRequest\032\033."
+    "omm.proto.SnapshotResponseb\006proto3"
 };
 static ::absl::once_flag descriptor_table_trading_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_trading_2eproto = {
     false,
     false,
-    3739,
+    3874,
     descriptor_table_protodef_trading_2eproto,
     "trading.proto",
     &descriptor_table_trading_2eproto_once,
@@ -3259,7 +3289,9 @@ PROTOBUF_NDEBUG_INLINE OrderUpdate::Impl_::Impl_(
     [[maybe_unused]] const ::omm::proto::OrderUpdate& from_msg)
       : _has_bits_{from._has_bits_},
         _cached_size_{0},
-        status_(arena, from.status_) {}
+        status_(arena, from.status_),
+        exchange_id_(arena, from.exchange_id_),
+        side_(arena, from.side_) {}
 
 OrderUpdate::OrderUpdate(
     ::google::protobuf::Arena* PROTOBUF_NULLABLE arena,
@@ -3278,9 +3310,9 @@ OrderUpdate::OrderUpdate(
                offsetof(Impl_, client_order_id_),
            reinterpret_cast<const char*>(&from._impl_) +
                offsetof(Impl_, client_order_id_),
-           offsetof(Impl_, ts_ns_) -
+           offsetof(Impl_, volume_) -
                offsetof(Impl_, client_order_id_) +
-               sizeof(Impl_::ts_ns_));
+               sizeof(Impl_::volume_));
 
   // @@protoc_insertion_point(copy_constructor:omm.proto.OrderUpdate)
 }
@@ -3288,16 +3320,18 @@ PROTOBUF_NDEBUG_INLINE OrderUpdate::Impl_::Impl_(
     [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
     [[maybe_unused]] ::google::protobuf::Arena* PROTOBUF_NULLABLE arena)
       : _cached_size_{0},
-        status_(arena) {}
+        status_(arena),
+        exchange_id_(arena),
+        side_(arena) {}
 
 inline void OrderUpdate::SharedCtor(::_pb::Arena* PROTOBUF_NULLABLE arena) {
   new (&_impl_) Impl_(internal_visibility(), arena);
   ::memset(reinterpret_cast<char*>(&_impl_) +
                offsetof(Impl_, client_order_id_),
            0,
-           offsetof(Impl_, ts_ns_) -
+           offsetof(Impl_, volume_) -
                offsetof(Impl_, client_order_id_) +
-               sizeof(Impl_::ts_ns_));
+               sizeof(Impl_::volume_));
 }
 OrderUpdate::~OrderUpdate() {
   // @@protoc_insertion_point(destructor:omm.proto.OrderUpdate)
@@ -3311,6 +3345,8 @@ inline void OrderUpdate::SharedDtor(MessageLite& self) {
   this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
   ABSL_DCHECK(this_.GetArena() == nullptr);
   this_._impl_.status_.Destroy();
+  this_._impl_.exchange_id_.Destroy();
+  this_._impl_.side_.Destroy();
   this_._impl_.~Impl_();
 }
 
@@ -3357,16 +3393,16 @@ OrderUpdate::GetClassData() const {
   return OrderUpdate_class_data_.base();
 }
 PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<3, 6, 0, 36, 2>
+const ::_pbi::TcParseTable<4, 11, 0, 59, 2>
 OrderUpdate::_table_ = {
   {
     PROTOBUF_FIELD_OFFSET(OrderUpdate, _impl_._has_bits_),
     0, // no _extensions_
-    6, 56,  // max_field_number, fast_idx_mask
+    11, 120,  // max_field_number, fast_idx_mask
     offsetof(decltype(_table_), field_lookup_table),
-    4294967232,  // skipmap
+    4294965248,  // skipmap
     offsetof(decltype(_table_), field_entries),
-    6,  // num_field_entries
+    11,  // num_field_entries
     0,  // num_aux_entries
     offsetof(decltype(_table_), field_names),  // no aux_entries
     OrderUpdate_class_data_.base(),
@@ -3378,12 +3414,12 @@ OrderUpdate::_table_ = {
   }, {{
     {::_pbi::TcParser::MiniParse, {}},
     // uint64 client_order_id = 1;
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint64_t, offsetof(OrderUpdate, _impl_.client_order_id_), 1>(),
-     {8, 1, 0,
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint64_t, offsetof(OrderUpdate, _impl_.client_order_id_), 3>(),
+     {8, 3, 0,
       PROTOBUF_FIELD_OFFSET(OrderUpdate, _impl_.client_order_id_)}},
     // uint32 instrument_id = 2;
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(OrderUpdate, _impl_.instrument_id_), 2>(),
-     {16, 2, 0,
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(OrderUpdate, _impl_.instrument_id_), 4>(),
+     {16, 4, 0,
       PROTOBUF_FIELD_OFFSET(OrderUpdate, _impl_.instrument_id_)}},
     // string status = 3;
     {::_pbi::TcParser::FastUS1,
@@ -3391,38 +3427,73 @@ OrderUpdate::_table_ = {
       PROTOBUF_FIELD_OFFSET(OrderUpdate, _impl_.status_)}},
     // double fill_price = 4;
     {::_pbi::TcParser::FastF64S1,
-     {33, 4, 0,
+     {33, 6, 0,
       PROTOBUF_FIELD_OFFSET(OrderUpdate, _impl_.fill_price_)}},
     // int32 fill_volume = 5;
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(OrderUpdate, _impl_.fill_volume_), 3>(),
-     {40, 3, 0,
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(OrderUpdate, _impl_.fill_volume_), 5>(),
+     {40, 5, 0,
       PROTOBUF_FIELD_OFFSET(OrderUpdate, _impl_.fill_volume_)}},
     // int64 ts_ns = 6;
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint64_t, offsetof(OrderUpdate, _impl_.ts_ns_), 5>(),
-     {48, 5, 0,
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint64_t, offsetof(OrderUpdate, _impl_.ts_ns_), 7>(),
+     {48, 7, 0,
       PROTOBUF_FIELD_OFFSET(OrderUpdate, _impl_.ts_ns_)}},
+    // string exchange_id = 7;
+    {::_pbi::TcParser::FastUS1,
+     {58, 1, 0,
+      PROTOBUF_FIELD_OFFSET(OrderUpdate, _impl_.exchange_id_)}},
+    // string side = 8;
+    {::_pbi::TcParser::FastUS1,
+     {66, 2, 0,
+      PROTOBUF_FIELD_OFFSET(OrderUpdate, _impl_.side_)}},
+    // double price = 9;
+    {::_pbi::TcParser::FastF64S1,
+     {73, 8, 0,
+      PROTOBUF_FIELD_OFFSET(OrderUpdate, _impl_.price_)}},
+    // int32 volume = 10;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(OrderUpdate, _impl_.volume_), 10>(),
+     {80, 10, 0,
+      PROTOBUF_FIELD_OFFSET(OrderUpdate, _impl_.volume_)}},
+    // uint64 exchange_trade_id = 11;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint64_t, offsetof(OrderUpdate, _impl_.exchange_trade_id_), 9>(),
+     {88, 9, 0,
+      PROTOBUF_FIELD_OFFSET(OrderUpdate, _impl_.exchange_trade_id_)}},
+    {::_pbi::TcParser::MiniParse, {}},
+    {::_pbi::TcParser::MiniParse, {}},
+    {::_pbi::TcParser::MiniParse, {}},
     {::_pbi::TcParser::MiniParse, {}},
   }}, {{
     65535, 65535
   }}, {{
     // uint64 client_order_id = 1;
-    {PROTOBUF_FIELD_OFFSET(OrderUpdate, _impl_.client_order_id_), _Internal::kHasBitsOffset + 1, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt64)},
+    {PROTOBUF_FIELD_OFFSET(OrderUpdate, _impl_.client_order_id_), _Internal::kHasBitsOffset + 3, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt64)},
     // uint32 instrument_id = 2;
-    {PROTOBUF_FIELD_OFFSET(OrderUpdate, _impl_.instrument_id_), _Internal::kHasBitsOffset + 2, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
+    {PROTOBUF_FIELD_OFFSET(OrderUpdate, _impl_.instrument_id_), _Internal::kHasBitsOffset + 4, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
     // string status = 3;
     {PROTOBUF_FIELD_OFFSET(OrderUpdate, _impl_.status_), _Internal::kHasBitsOffset + 0, 0, (0 | ::_fl::kFcOptional | ::_fl::kUtf8String | ::_fl::kRepAString)},
     // double fill_price = 4;
-    {PROTOBUF_FIELD_OFFSET(OrderUpdate, _impl_.fill_price_), _Internal::kHasBitsOffset + 4, 0, (0 | ::_fl::kFcOptional | ::_fl::kDouble)},
+    {PROTOBUF_FIELD_OFFSET(OrderUpdate, _impl_.fill_price_), _Internal::kHasBitsOffset + 6, 0, (0 | ::_fl::kFcOptional | ::_fl::kDouble)},
     // int32 fill_volume = 5;
-    {PROTOBUF_FIELD_OFFSET(OrderUpdate, _impl_.fill_volume_), _Internal::kHasBitsOffset + 3, 0, (0 | ::_fl::kFcOptional | ::_fl::kInt32)},
+    {PROTOBUF_FIELD_OFFSET(OrderUpdate, _impl_.fill_volume_), _Internal::kHasBitsOffset + 5, 0, (0 | ::_fl::kFcOptional | ::_fl::kInt32)},
     // int64 ts_ns = 6;
-    {PROTOBUF_FIELD_OFFSET(OrderUpdate, _impl_.ts_ns_), _Internal::kHasBitsOffset + 5, 0, (0 | ::_fl::kFcOptional | ::_fl::kInt64)},
+    {PROTOBUF_FIELD_OFFSET(OrderUpdate, _impl_.ts_ns_), _Internal::kHasBitsOffset + 7, 0, (0 | ::_fl::kFcOptional | ::_fl::kInt64)},
+    // string exchange_id = 7;
+    {PROTOBUF_FIELD_OFFSET(OrderUpdate, _impl_.exchange_id_), _Internal::kHasBitsOffset + 1, 0, (0 | ::_fl::kFcOptional | ::_fl::kUtf8String | ::_fl::kRepAString)},
+    // string side = 8;
+    {PROTOBUF_FIELD_OFFSET(OrderUpdate, _impl_.side_), _Internal::kHasBitsOffset + 2, 0, (0 | ::_fl::kFcOptional | ::_fl::kUtf8String | ::_fl::kRepAString)},
+    // double price = 9;
+    {PROTOBUF_FIELD_OFFSET(OrderUpdate, _impl_.price_), _Internal::kHasBitsOffset + 8, 0, (0 | ::_fl::kFcOptional | ::_fl::kDouble)},
+    // int32 volume = 10;
+    {PROTOBUF_FIELD_OFFSET(OrderUpdate, _impl_.volume_), _Internal::kHasBitsOffset + 10, 0, (0 | ::_fl::kFcOptional | ::_fl::kInt32)},
+    // uint64 exchange_trade_id = 11;
+    {PROTOBUF_FIELD_OFFSET(OrderUpdate, _impl_.exchange_trade_id_), _Internal::kHasBitsOffset + 9, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt64)},
   }},
   // no aux_entries
   {{
-    "\25\0\0\6\0\0\0\0"
+    "\25\0\0\6\0\0\0\13\4\0\0\0\0\0\0\0"
     "omm.proto.OrderUpdate"
     "status"
+    "exchange_id"
+    "side"
   }},
 };
 PROTOBUF_NOINLINE void OrderUpdate::Clear() {
@@ -3433,13 +3504,26 @@ PROTOBUF_NOINLINE void OrderUpdate::Clear() {
   (void) cached_has_bits;
 
   cached_has_bits = _impl_._has_bits_[0];
-  if (CheckHasBit(cached_has_bits, 0x00000001U)) {
-    _impl_.status_.ClearNonDefaultToEmpty();
+  if (BatchCheckHasBit(cached_has_bits, 0x00000007U)) {
+    if (CheckHasBit(cached_has_bits, 0x00000001U)) {
+      _impl_.status_.ClearNonDefaultToEmpty();
+    }
+    if (CheckHasBit(cached_has_bits, 0x00000002U)) {
+      _impl_.exchange_id_.ClearNonDefaultToEmpty();
+    }
+    if (CheckHasBit(cached_has_bits, 0x00000004U)) {
+      _impl_.side_.ClearNonDefaultToEmpty();
+    }
   }
-  if (BatchCheckHasBit(cached_has_bits, 0x0000003eU)) {
+  if (BatchCheckHasBit(cached_has_bits, 0x000000f8U)) {
     ::memset(&_impl_.client_order_id_, 0, static_cast<::size_t>(
         reinterpret_cast<char*>(&_impl_.ts_ns_) -
         reinterpret_cast<char*>(&_impl_.client_order_id_)) + sizeof(_impl_.ts_ns_));
+  }
+  if (BatchCheckHasBit(cached_has_bits, 0x00000700U)) {
+    ::memset(&_impl_.price_, 0, static_cast<::size_t>(
+        reinterpret_cast<char*>(&_impl_.volume_) -
+        reinterpret_cast<char*>(&_impl_.price_)) + sizeof(_impl_.volume_));
   }
   _impl_._has_bits_.Clear();
   _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
@@ -3465,7 +3549,7 @@ PROTOBUF_NOINLINE void OrderUpdate::Clear() {
 
   cached_has_bits = this_._impl_._has_bits_[0];
   // uint64 client_order_id = 1;
-  if (CheckHasBit(cached_has_bits, 0x00000002U)) {
+  if (CheckHasBit(cached_has_bits, 0x00000008U)) {
     if (this_._internal_client_order_id() != 0) {
       target = stream->EnsureSpace(target);
       target = ::_pbi::WireFormatLite::WriteUInt64ToArray(
@@ -3474,7 +3558,7 @@ PROTOBUF_NOINLINE void OrderUpdate::Clear() {
   }
 
   // uint32 instrument_id = 2;
-  if (CheckHasBit(cached_has_bits, 0x00000004U)) {
+  if (CheckHasBit(cached_has_bits, 0x00000010U)) {
     if (this_._internal_instrument_id() != 0) {
       target = stream->EnsureSpace(target);
       target = ::_pbi::WireFormatLite::WriteUInt32ToArray(
@@ -3493,7 +3577,7 @@ PROTOBUF_NOINLINE void OrderUpdate::Clear() {
   }
 
   // double fill_price = 4;
-  if (CheckHasBit(cached_has_bits, 0x00000010U)) {
+  if (CheckHasBit(cached_has_bits, 0x00000040U)) {
     if (::absl::bit_cast<::uint64_t>(this_._internal_fill_price()) != 0) {
       target = stream->EnsureSpace(target);
       target = ::_pbi::WireFormatLite::WriteDoubleToArray(
@@ -3502,7 +3586,7 @@ PROTOBUF_NOINLINE void OrderUpdate::Clear() {
   }
 
   // int32 fill_volume = 5;
-  if (CheckHasBit(cached_has_bits, 0x00000008U)) {
+  if (CheckHasBit(cached_has_bits, 0x00000020U)) {
     if (this_._internal_fill_volume() != 0) {
       target =
           ::google::protobuf::internal::WireFormatLite::WriteInt32ToArrayWithField<5>(
@@ -3511,11 +3595,58 @@ PROTOBUF_NOINLINE void OrderUpdate::Clear() {
   }
 
   // int64 ts_ns = 6;
-  if (CheckHasBit(cached_has_bits, 0x00000020U)) {
+  if (CheckHasBit(cached_has_bits, 0x00000080U)) {
     if (this_._internal_ts_ns() != 0) {
       target =
           ::google::protobuf::internal::WireFormatLite::WriteInt64ToArrayWithField<6>(
               stream, this_._internal_ts_ns(), target);
+    }
+  }
+
+  // string exchange_id = 7;
+  if (CheckHasBit(cached_has_bits, 0x00000002U)) {
+    if (!this_._internal_exchange_id().empty()) {
+      const ::std::string& _s = this_._internal_exchange_id();
+      ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+          _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "omm.proto.OrderUpdate.exchange_id");
+      target = stream->WriteStringMaybeAliased(7, _s, target);
+    }
+  }
+
+  // string side = 8;
+  if (CheckHasBit(cached_has_bits, 0x00000004U)) {
+    if (!this_._internal_side().empty()) {
+      const ::std::string& _s = this_._internal_side();
+      ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+          _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "omm.proto.OrderUpdate.side");
+      target = stream->WriteStringMaybeAliased(8, _s, target);
+    }
+  }
+
+  // double price = 9;
+  if (CheckHasBit(cached_has_bits, 0x00000100U)) {
+    if (::absl::bit_cast<::uint64_t>(this_._internal_price()) != 0) {
+      target = stream->EnsureSpace(target);
+      target = ::_pbi::WireFormatLite::WriteDoubleToArray(
+          9, this_._internal_price(), target);
+    }
+  }
+
+  // int32 volume = 10;
+  if (CheckHasBit(cached_has_bits, 0x00000400U)) {
+    if (this_._internal_volume() != 0) {
+      target =
+          ::google::protobuf::internal::WireFormatLite::WriteInt32ToArrayWithField<10>(
+              stream, this_._internal_volume(), target);
+    }
+  }
+
+  // uint64 exchange_trade_id = 11;
+  if (CheckHasBit(cached_has_bits, 0x00000200U)) {
+    if (this_._internal_exchange_trade_id() != 0) {
+      target = stream->EnsureSpace(target);
+      target = ::_pbi::WireFormatLite::WriteUInt64ToArray(
+          11, this_._internal_exchange_trade_id(), target);
     }
   }
 
@@ -3544,7 +3675,7 @@ PROTOBUF_NOINLINE void OrderUpdate::Clear() {
 
   ::_pbi::Prefetch5LinesFrom7Lines(&this_);
   cached_has_bits = this_._impl_._has_bits_[0];
-  if (BatchCheckHasBit(cached_has_bits, 0x0000003fU)) {
+  if (BatchCheckHasBit(cached_has_bits, 0x000000ffU)) {
     // string status = 3;
     if (CheckHasBit(cached_has_bits, 0x00000001U)) {
       if (!this_._internal_status().empty()) {
@@ -3552,38 +3683,74 @@ PROTOBUF_NOINLINE void OrderUpdate::Clear() {
                                         this_._internal_status());
       }
     }
-    // uint64 client_order_id = 1;
+    // string exchange_id = 7;
     if (CheckHasBit(cached_has_bits, 0x00000002U)) {
+      if (!this_._internal_exchange_id().empty()) {
+        total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
+                                        this_._internal_exchange_id());
+      }
+    }
+    // string side = 8;
+    if (CheckHasBit(cached_has_bits, 0x00000004U)) {
+      if (!this_._internal_side().empty()) {
+        total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
+                                        this_._internal_side());
+      }
+    }
+    // uint64 client_order_id = 1;
+    if (CheckHasBit(cached_has_bits, 0x00000008U)) {
       if (this_._internal_client_order_id() != 0) {
         total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(
             this_._internal_client_order_id());
       }
     }
     // uint32 instrument_id = 2;
-    if (CheckHasBit(cached_has_bits, 0x00000004U)) {
+    if (CheckHasBit(cached_has_bits, 0x00000010U)) {
       if (this_._internal_instrument_id() != 0) {
         total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(
             this_._internal_instrument_id());
       }
     }
     // int32 fill_volume = 5;
-    if (CheckHasBit(cached_has_bits, 0x00000008U)) {
+    if (CheckHasBit(cached_has_bits, 0x00000020U)) {
       if (this_._internal_fill_volume() != 0) {
         total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(
             this_._internal_fill_volume());
       }
     }
     // double fill_price = 4;
-    if (CheckHasBit(cached_has_bits, 0x00000010U)) {
+    if (CheckHasBit(cached_has_bits, 0x00000040U)) {
       if (::absl::bit_cast<::uint64_t>(this_._internal_fill_price()) != 0) {
         total_size += 9;
       }
     }
     // int64 ts_ns = 6;
-    if (CheckHasBit(cached_has_bits, 0x00000020U)) {
+    if (CheckHasBit(cached_has_bits, 0x00000080U)) {
       if (this_._internal_ts_ns() != 0) {
         total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(
             this_._internal_ts_ns());
+      }
+    }
+  }
+  if (BatchCheckHasBit(cached_has_bits, 0x00000700U)) {
+    // double price = 9;
+    if (CheckHasBit(cached_has_bits, 0x00000100U)) {
+      if (::absl::bit_cast<::uint64_t>(this_._internal_price()) != 0) {
+        total_size += 9;
+      }
+    }
+    // uint64 exchange_trade_id = 11;
+    if (CheckHasBit(cached_has_bits, 0x00000200U)) {
+      if (this_._internal_exchange_trade_id() != 0) {
+        total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(
+            this_._internal_exchange_trade_id());
+      }
+    }
+    // int32 volume = 10;
+    if (CheckHasBit(cached_has_bits, 0x00000400U)) {
+      if (this_._internal_volume() != 0) {
+        total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(
+            this_._internal_volume());
       }
     }
   }
@@ -3605,7 +3772,7 @@ void OrderUpdate::MergeImpl(::google::protobuf::MessageLite& to_msg,
   (void)cached_has_bits;
 
   cached_has_bits = from._impl_._has_bits_[0];
-  if (BatchCheckHasBit(cached_has_bits, 0x0000003fU)) {
+  if (BatchCheckHasBit(cached_has_bits, 0x000000ffU)) {
     if (CheckHasBit(cached_has_bits, 0x00000001U)) {
       if (!from._internal_status().empty()) {
         _this->_internal_set_status(from._internal_status());
@@ -3616,28 +3783,63 @@ void OrderUpdate::MergeImpl(::google::protobuf::MessageLite& to_msg,
       }
     }
     if (CheckHasBit(cached_has_bits, 0x00000002U)) {
+      if (!from._internal_exchange_id().empty()) {
+        _this->_internal_set_exchange_id(from._internal_exchange_id());
+      } else {
+        if (_this->_impl_.exchange_id_.IsDefault()) {
+          _this->_internal_set_exchange_id("");
+        }
+      }
+    }
+    if (CheckHasBit(cached_has_bits, 0x00000004U)) {
+      if (!from._internal_side().empty()) {
+        _this->_internal_set_side(from._internal_side());
+      } else {
+        if (_this->_impl_.side_.IsDefault()) {
+          _this->_internal_set_side("");
+        }
+      }
+    }
+    if (CheckHasBit(cached_has_bits, 0x00000008U)) {
       if (from._internal_client_order_id() != 0) {
         _this->_impl_.client_order_id_ = from._impl_.client_order_id_;
       }
     }
-    if (CheckHasBit(cached_has_bits, 0x00000004U)) {
+    if (CheckHasBit(cached_has_bits, 0x00000010U)) {
       if (from._internal_instrument_id() != 0) {
         _this->_impl_.instrument_id_ = from._impl_.instrument_id_;
       }
     }
-    if (CheckHasBit(cached_has_bits, 0x00000008U)) {
+    if (CheckHasBit(cached_has_bits, 0x00000020U)) {
       if (from._internal_fill_volume() != 0) {
         _this->_impl_.fill_volume_ = from._impl_.fill_volume_;
       }
     }
-    if (CheckHasBit(cached_has_bits, 0x00000010U)) {
+    if (CheckHasBit(cached_has_bits, 0x00000040U)) {
       if (::absl::bit_cast<::uint64_t>(from._internal_fill_price()) != 0) {
         _this->_impl_.fill_price_ = from._impl_.fill_price_;
       }
     }
-    if (CheckHasBit(cached_has_bits, 0x00000020U)) {
+    if (CheckHasBit(cached_has_bits, 0x00000080U)) {
       if (from._internal_ts_ns() != 0) {
         _this->_impl_.ts_ns_ = from._impl_.ts_ns_;
+      }
+    }
+  }
+  if (BatchCheckHasBit(cached_has_bits, 0x00000700U)) {
+    if (CheckHasBit(cached_has_bits, 0x00000100U)) {
+      if (::absl::bit_cast<::uint64_t>(from._internal_price()) != 0) {
+        _this->_impl_.price_ = from._impl_.price_;
+      }
+    }
+    if (CheckHasBit(cached_has_bits, 0x00000200U)) {
+      if (from._internal_exchange_trade_id() != 0) {
+        _this->_impl_.exchange_trade_id_ = from._impl_.exchange_trade_id_;
+      }
+    }
+    if (CheckHasBit(cached_has_bits, 0x00000400U)) {
+      if (from._internal_volume() != 0) {
+        _this->_impl_.volume_ = from._impl_.volume_;
       }
     }
   }
@@ -3661,9 +3863,11 @@ void OrderUpdate::InternalSwap(OrderUpdate* PROTOBUF_RESTRICT PROTOBUF_NONNULL o
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
   swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
   ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.status_, &other->_impl_.status_, arena);
+  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.exchange_id_, &other->_impl_.exchange_id_, arena);
+  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.side_, &other->_impl_.side_, arena);
   ::google::protobuf::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(OrderUpdate, _impl_.ts_ns_)
-      + sizeof(OrderUpdate::_impl_.ts_ns_)
+      PROTOBUF_FIELD_OFFSET(OrderUpdate, _impl_.volume_)
+      + sizeof(OrderUpdate::_impl_.volume_)
       - PROTOBUF_FIELD_OFFSET(OrderUpdate, _impl_.client_order_id_)>(
           reinterpret_cast<char*>(&_impl_.client_order_id_),
           reinterpret_cast<char*>(&other->_impl_.client_order_id_));
@@ -4189,7 +4393,8 @@ PROTOBUF_NDEBUG_INLINE InstrumentInfo::Impl_::Impl_(
         code_(arena, from.code_),
         underlying_code_(arena, from.underlying_code_),
         kind_(arena, from.kind_),
-        option_type_(arena, from.option_type_) {}
+        option_type_(arena, from.option_type_),
+        exchange_id_(arena, from.exchange_id_) {}
 
 InstrumentInfo::InstrumentInfo(
     ::google::protobuf::Arena* PROTOBUF_NULLABLE arena,
@@ -4208,9 +4413,9 @@ InstrumentInfo::InstrumentInfo(
                offsetof(Impl_, instrument_id_),
            reinterpret_cast<const char*>(&from._impl_) +
                offsetof(Impl_, instrument_id_),
-           offsetof(Impl_, underlying_id_) -
+           offsetof(Impl_, expiry_date_) -
                offsetof(Impl_, instrument_id_) +
-               sizeof(Impl_::underlying_id_));
+               sizeof(Impl_::expiry_date_));
 
   // @@protoc_insertion_point(copy_constructor:omm.proto.InstrumentInfo)
 }
@@ -4221,16 +4426,17 @@ PROTOBUF_NDEBUG_INLINE InstrumentInfo::Impl_::Impl_(
         code_(arena),
         underlying_code_(arena),
         kind_(arena),
-        option_type_(arena) {}
+        option_type_(arena),
+        exchange_id_(arena) {}
 
 inline void InstrumentInfo::SharedCtor(::_pb::Arena* PROTOBUF_NULLABLE arena) {
   new (&_impl_) Impl_(internal_visibility(), arena);
   ::memset(reinterpret_cast<char*>(&_impl_) +
                offsetof(Impl_, instrument_id_),
            0,
-           offsetof(Impl_, underlying_id_) -
+           offsetof(Impl_, expiry_date_) -
                offsetof(Impl_, instrument_id_) +
-               sizeof(Impl_::underlying_id_));
+               sizeof(Impl_::expiry_date_));
 }
 InstrumentInfo::~InstrumentInfo() {
   // @@protoc_insertion_point(destructor:omm.proto.InstrumentInfo)
@@ -4247,6 +4453,7 @@ inline void InstrumentInfo::SharedDtor(MessageLite& self) {
   this_._impl_.underlying_code_.Destroy();
   this_._impl_.kind_.Destroy();
   this_._impl_.option_type_.Destroy();
+  this_._impl_.exchange_id_.Destroy();
   this_._impl_.~Impl_();
 }
 
@@ -4293,16 +4500,16 @@ InstrumentInfo::GetClassData() const {
   return InstrumentInfo_class_data_.base();
 }
 PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<3, 8, 0, 75, 2>
+const ::_pbi::TcParseTable<4, 10, 0, 86, 2>
 InstrumentInfo::_table_ = {
   {
     PROTOBUF_FIELD_OFFSET(InstrumentInfo, _impl_._has_bits_),
     0, // no _extensions_
-    8, 56,  // max_field_number, fast_idx_mask
+    10, 120,  // max_field_number, fast_idx_mask
     offsetof(decltype(_table_), field_lookup_table),
-    4294967040,  // skipmap
+    4294966272,  // skipmap
     offsetof(decltype(_table_), field_entries),
-    8,  // num_field_entries
+    10,  // num_field_entries
     0,  // num_aux_entries
     offsetof(decltype(_table_), field_names),  // no aux_entries
     InstrumentInfo_class_data_.base(),
@@ -4312,13 +4519,10 @@ InstrumentInfo::_table_ = {
     ::_pbi::TcParser::GetTable<::omm::proto::InstrumentInfo>(),  // to_prefetch
     #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
   }, {{
-    // uint32 underlying_id = 8;
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(InstrumentInfo, _impl_.underlying_id_), 7>(),
-     {64, 7, 0,
-      PROTOBUF_FIELD_OFFSET(InstrumentInfo, _impl_.underlying_id_)}},
+    {::_pbi::TcParser::MiniParse, {}},
     // uint32 instrument_id = 1;
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(InstrumentInfo, _impl_.instrument_id_), 4>(),
-     {8, 4, 0,
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(InstrumentInfo, _impl_.instrument_id_), 5>(),
+     {8, 5, 0,
       PROTOBUF_FIELD_OFFSET(InstrumentInfo, _impl_.instrument_id_)}},
     // string code = 2;
     {::_pbi::TcParser::FastUS1,
@@ -4338,17 +4542,34 @@ InstrumentInfo::_table_ = {
       PROTOBUF_FIELD_OFFSET(InstrumentInfo, _impl_.option_type_)}},
     // double strike = 6;
     {::_pbi::TcParser::FastF64S1,
-     {49, 6, 0,
+     {49, 7, 0,
       PROTOBUF_FIELD_OFFSET(InstrumentInfo, _impl_.strike_)}},
     // uint32 product_index = 7;
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(InstrumentInfo, _impl_.product_index_), 5>(),
-     {56, 5, 0,
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(InstrumentInfo, _impl_.product_index_), 6>(),
+     {56, 6, 0,
       PROTOBUF_FIELD_OFFSET(InstrumentInfo, _impl_.product_index_)}},
+    // uint32 underlying_id = 8;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(InstrumentInfo, _impl_.underlying_id_), 8>(),
+     {64, 8, 0,
+      PROTOBUF_FIELD_OFFSET(InstrumentInfo, _impl_.underlying_id_)}},
+    // string exchange_id = 9;
+    {::_pbi::TcParser::FastUS1,
+     {74, 4, 0,
+      PROTOBUF_FIELD_OFFSET(InstrumentInfo, _impl_.exchange_id_)}},
+    // int32 expiry_date = 10;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(InstrumentInfo, _impl_.expiry_date_), 9>(),
+     {80, 9, 0,
+      PROTOBUF_FIELD_OFFSET(InstrumentInfo, _impl_.expiry_date_)}},
+    {::_pbi::TcParser::MiniParse, {}},
+    {::_pbi::TcParser::MiniParse, {}},
+    {::_pbi::TcParser::MiniParse, {}},
+    {::_pbi::TcParser::MiniParse, {}},
+    {::_pbi::TcParser::MiniParse, {}},
   }}, {{
     65535, 65535
   }}, {{
     // uint32 instrument_id = 1;
-    {PROTOBUF_FIELD_OFFSET(InstrumentInfo, _impl_.instrument_id_), _Internal::kHasBitsOffset + 4, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
+    {PROTOBUF_FIELD_OFFSET(InstrumentInfo, _impl_.instrument_id_), _Internal::kHasBitsOffset + 5, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
     // string code = 2;
     {PROTOBUF_FIELD_OFFSET(InstrumentInfo, _impl_.code_), _Internal::kHasBitsOffset + 0, 0, (0 | ::_fl::kFcOptional | ::_fl::kUtf8String | ::_fl::kRepAString)},
     // string underlying_code = 3;
@@ -4358,20 +4579,25 @@ InstrumentInfo::_table_ = {
     // string option_type = 5;
     {PROTOBUF_FIELD_OFFSET(InstrumentInfo, _impl_.option_type_), _Internal::kHasBitsOffset + 3, 0, (0 | ::_fl::kFcOptional | ::_fl::kUtf8String | ::_fl::kRepAString)},
     // double strike = 6;
-    {PROTOBUF_FIELD_OFFSET(InstrumentInfo, _impl_.strike_), _Internal::kHasBitsOffset + 6, 0, (0 | ::_fl::kFcOptional | ::_fl::kDouble)},
+    {PROTOBUF_FIELD_OFFSET(InstrumentInfo, _impl_.strike_), _Internal::kHasBitsOffset + 7, 0, (0 | ::_fl::kFcOptional | ::_fl::kDouble)},
     // uint32 product_index = 7;
-    {PROTOBUF_FIELD_OFFSET(InstrumentInfo, _impl_.product_index_), _Internal::kHasBitsOffset + 5, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
+    {PROTOBUF_FIELD_OFFSET(InstrumentInfo, _impl_.product_index_), _Internal::kHasBitsOffset + 6, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
     // uint32 underlying_id = 8;
-    {PROTOBUF_FIELD_OFFSET(InstrumentInfo, _impl_.underlying_id_), _Internal::kHasBitsOffset + 7, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
+    {PROTOBUF_FIELD_OFFSET(InstrumentInfo, _impl_.underlying_id_), _Internal::kHasBitsOffset + 8, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
+    // string exchange_id = 9;
+    {PROTOBUF_FIELD_OFFSET(InstrumentInfo, _impl_.exchange_id_), _Internal::kHasBitsOffset + 4, 0, (0 | ::_fl::kFcOptional | ::_fl::kUtf8String | ::_fl::kRepAString)},
+    // int32 expiry_date = 10;
+    {PROTOBUF_FIELD_OFFSET(InstrumentInfo, _impl_.expiry_date_), _Internal::kHasBitsOffset + 9, 0, (0 | ::_fl::kFcOptional | ::_fl::kInt32)},
   }},
   // no aux_entries
   {{
-    "\30\0\4\17\4\13\0\0\0\0\0\0\0\0\0\0"
+    "\30\0\4\17\4\13\0\0\0\13\0\0\0\0\0\0"
     "omm.proto.InstrumentInfo"
     "code"
     "underlying_code"
     "kind"
     "option_type"
+    "exchange_id"
   }},
 };
 PROTOBUF_NOINLINE void InstrumentInfo::Clear() {
@@ -4382,7 +4608,7 @@ PROTOBUF_NOINLINE void InstrumentInfo::Clear() {
   (void) cached_has_bits;
 
   cached_has_bits = _impl_._has_bits_[0];
-  if (BatchCheckHasBit(cached_has_bits, 0x0000000fU)) {
+  if (BatchCheckHasBit(cached_has_bits, 0x0000001fU)) {
     if (CheckHasBit(cached_has_bits, 0x00000001U)) {
       _impl_.code_.ClearNonDefaultToEmpty();
     }
@@ -4395,11 +4621,19 @@ PROTOBUF_NOINLINE void InstrumentInfo::Clear() {
     if (CheckHasBit(cached_has_bits, 0x00000008U)) {
       _impl_.option_type_.ClearNonDefaultToEmpty();
     }
+    if (CheckHasBit(cached_has_bits, 0x00000010U)) {
+      _impl_.exchange_id_.ClearNonDefaultToEmpty();
+    }
   }
-  if (BatchCheckHasBit(cached_has_bits, 0x000000f0U)) {
+  if (BatchCheckHasBit(cached_has_bits, 0x000000e0U)) {
     ::memset(&_impl_.instrument_id_, 0, static_cast<::size_t>(
-        reinterpret_cast<char*>(&_impl_.underlying_id_) -
-        reinterpret_cast<char*>(&_impl_.instrument_id_)) + sizeof(_impl_.underlying_id_));
+        reinterpret_cast<char*>(&_impl_.strike_) -
+        reinterpret_cast<char*>(&_impl_.instrument_id_)) + sizeof(_impl_.strike_));
+  }
+  if (BatchCheckHasBit(cached_has_bits, 0x00000300U)) {
+    ::memset(&_impl_.underlying_id_, 0, static_cast<::size_t>(
+        reinterpret_cast<char*>(&_impl_.expiry_date_) -
+        reinterpret_cast<char*>(&_impl_.underlying_id_)) + sizeof(_impl_.expiry_date_));
   }
   _impl_._has_bits_.Clear();
   _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
@@ -4425,7 +4659,7 @@ PROTOBUF_NOINLINE void InstrumentInfo::Clear() {
 
   cached_has_bits = this_._impl_._has_bits_[0];
   // uint32 instrument_id = 1;
-  if (CheckHasBit(cached_has_bits, 0x00000010U)) {
+  if (CheckHasBit(cached_has_bits, 0x00000020U)) {
     if (this_._internal_instrument_id() != 0) {
       target = stream->EnsureSpace(target);
       target = ::_pbi::WireFormatLite::WriteUInt32ToArray(
@@ -4474,7 +4708,7 @@ PROTOBUF_NOINLINE void InstrumentInfo::Clear() {
   }
 
   // double strike = 6;
-  if (CheckHasBit(cached_has_bits, 0x00000040U)) {
+  if (CheckHasBit(cached_has_bits, 0x00000080U)) {
     if (::absl::bit_cast<::uint64_t>(this_._internal_strike()) != 0) {
       target = stream->EnsureSpace(target);
       target = ::_pbi::WireFormatLite::WriteDoubleToArray(
@@ -4483,7 +4717,7 @@ PROTOBUF_NOINLINE void InstrumentInfo::Clear() {
   }
 
   // uint32 product_index = 7;
-  if (CheckHasBit(cached_has_bits, 0x00000020U)) {
+  if (CheckHasBit(cached_has_bits, 0x00000040U)) {
     if (this_._internal_product_index() != 0) {
       target = stream->EnsureSpace(target);
       target = ::_pbi::WireFormatLite::WriteUInt32ToArray(
@@ -4492,11 +4726,30 @@ PROTOBUF_NOINLINE void InstrumentInfo::Clear() {
   }
 
   // uint32 underlying_id = 8;
-  if (CheckHasBit(cached_has_bits, 0x00000080U)) {
+  if (CheckHasBit(cached_has_bits, 0x00000100U)) {
     if (this_._internal_underlying_id() != 0) {
       target = stream->EnsureSpace(target);
       target = ::_pbi::WireFormatLite::WriteUInt32ToArray(
           8, this_._internal_underlying_id(), target);
+    }
+  }
+
+  // string exchange_id = 9;
+  if (CheckHasBit(cached_has_bits, 0x00000010U)) {
+    if (!this_._internal_exchange_id().empty()) {
+      const ::std::string& _s = this_._internal_exchange_id();
+      ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+          _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "omm.proto.InstrumentInfo.exchange_id");
+      target = stream->WriteStringMaybeAliased(9, _s, target);
+    }
+  }
+
+  // int32 expiry_date = 10;
+  if (CheckHasBit(cached_has_bits, 0x00000200U)) {
+    if (this_._internal_expiry_date() != 0) {
+      target =
+          ::google::protobuf::internal::WireFormatLite::WriteInt32ToArrayWithField<10>(
+              stream, this_._internal_expiry_date(), target);
     }
   }
 
@@ -4554,31 +4807,47 @@ PROTOBUF_NOINLINE void InstrumentInfo::Clear() {
                                         this_._internal_option_type());
       }
     }
-    // uint32 instrument_id = 1;
+    // string exchange_id = 9;
     if (CheckHasBit(cached_has_bits, 0x00000010U)) {
+      if (!this_._internal_exchange_id().empty()) {
+        total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
+                                        this_._internal_exchange_id());
+      }
+    }
+    // uint32 instrument_id = 1;
+    if (CheckHasBit(cached_has_bits, 0x00000020U)) {
       if (this_._internal_instrument_id() != 0) {
         total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(
             this_._internal_instrument_id());
       }
     }
     // uint32 product_index = 7;
-    if (CheckHasBit(cached_has_bits, 0x00000020U)) {
+    if (CheckHasBit(cached_has_bits, 0x00000040U)) {
       if (this_._internal_product_index() != 0) {
         total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(
             this_._internal_product_index());
       }
     }
     // double strike = 6;
-    if (CheckHasBit(cached_has_bits, 0x00000040U)) {
+    if (CheckHasBit(cached_has_bits, 0x00000080U)) {
       if (::absl::bit_cast<::uint64_t>(this_._internal_strike()) != 0) {
         total_size += 9;
       }
     }
+  }
+  if (BatchCheckHasBit(cached_has_bits, 0x00000300U)) {
     // uint32 underlying_id = 8;
-    if (CheckHasBit(cached_has_bits, 0x00000080U)) {
+    if (CheckHasBit(cached_has_bits, 0x00000100U)) {
       if (this_._internal_underlying_id() != 0) {
         total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(
             this_._internal_underlying_id());
+      }
+    }
+    // int32 expiry_date = 10;
+    if (CheckHasBit(cached_has_bits, 0x00000200U)) {
+      if (this_._internal_expiry_date() != 0) {
+        total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(
+            this_._internal_expiry_date());
       }
     }
   }
@@ -4638,23 +4907,39 @@ void InstrumentInfo::MergeImpl(::google::protobuf::MessageLite& to_msg,
       }
     }
     if (CheckHasBit(cached_has_bits, 0x00000010U)) {
+      if (!from._internal_exchange_id().empty()) {
+        _this->_internal_set_exchange_id(from._internal_exchange_id());
+      } else {
+        if (_this->_impl_.exchange_id_.IsDefault()) {
+          _this->_internal_set_exchange_id("");
+        }
+      }
+    }
+    if (CheckHasBit(cached_has_bits, 0x00000020U)) {
       if (from._internal_instrument_id() != 0) {
         _this->_impl_.instrument_id_ = from._impl_.instrument_id_;
       }
     }
-    if (CheckHasBit(cached_has_bits, 0x00000020U)) {
+    if (CheckHasBit(cached_has_bits, 0x00000040U)) {
       if (from._internal_product_index() != 0) {
         _this->_impl_.product_index_ = from._impl_.product_index_;
       }
     }
-    if (CheckHasBit(cached_has_bits, 0x00000040U)) {
+    if (CheckHasBit(cached_has_bits, 0x00000080U)) {
       if (::absl::bit_cast<::uint64_t>(from._internal_strike()) != 0) {
         _this->_impl_.strike_ = from._impl_.strike_;
       }
     }
-    if (CheckHasBit(cached_has_bits, 0x00000080U)) {
+  }
+  if (BatchCheckHasBit(cached_has_bits, 0x00000300U)) {
+    if (CheckHasBit(cached_has_bits, 0x00000100U)) {
       if (from._internal_underlying_id() != 0) {
         _this->_impl_.underlying_id_ = from._impl_.underlying_id_;
+      }
+    }
+    if (CheckHasBit(cached_has_bits, 0x00000200U)) {
+      if (from._internal_expiry_date() != 0) {
+        _this->_impl_.expiry_date_ = from._impl_.expiry_date_;
       }
     }
   }
@@ -4681,9 +4966,10 @@ void InstrumentInfo::InternalSwap(InstrumentInfo* PROTOBUF_RESTRICT PROTOBUF_NON
   ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.underlying_code_, &other->_impl_.underlying_code_, arena);
   ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.kind_, &other->_impl_.kind_, arena);
   ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.option_type_, &other->_impl_.option_type_, arena);
+  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.exchange_id_, &other->_impl_.exchange_id_, arena);
   ::google::protobuf::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(InstrumentInfo, _impl_.underlying_id_)
-      + sizeof(InstrumentInfo::_impl_.underlying_id_)
+      PROTOBUF_FIELD_OFFSET(InstrumentInfo, _impl_.expiry_date_)
+      + sizeof(InstrumentInfo::_impl_.expiry_date_)
       - PROTOBUF_FIELD_OFFSET(InstrumentInfo, _impl_.instrument_id_)>(
           reinterpret_cast<char*>(&_impl_.instrument_id_),
           reinterpret_cast<char*>(&other->_impl_.instrument_id_));

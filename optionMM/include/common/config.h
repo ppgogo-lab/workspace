@@ -8,7 +8,7 @@
 namespace omm {
 
 // ─── Feed configuration ───────────────────────────────────────────────────────
-enum class FeedType : uint8_t { Multicast, FPGA, FEMAS };
+enum class FeedType : uint8_t { Multicast, FPGA, FEMAS, Sim };
 
 struct MulticastConfig {
     char      interface[32]{"eth0"};   // network interface name, e.g. "enp65s0f0"
@@ -40,7 +40,7 @@ struct FeedConfig {
 };
 
 // ─── Gateway configuration ────────────────────────────────────────────────────
-enum class GatewayType : uint8_t { CTP, FEMAS };
+enum class GatewayType : uint8_t { CTP, FEMAS, Sim };
 
 struct CtpConfig {
     char front_addr[128]{};    // e.g. "tcp://180.168.146.187:10201"
@@ -62,6 +62,32 @@ struct GatewayConfig {
     GatewayType type{GatewayType::CTP};
     CtpConfig   ctp;
     FemasConfig femas;
+};
+
+struct SimConfig {
+    char     profile[16]{"desk"};
+    char     scenario[16]{"normal"};
+    uint32_t random_seed{42};
+    int      tick_interval_ms{100};
+    int      strikes_per_side{4};
+    int      expiry_count{2};
+    double   future_wave_bps{12.0};
+    double   future_noise_bps{4.0};
+    double   option_spread_bps{30.0};
+    Volume   top_level_volume{20};
+    double   au_reference_price{580.0};
+    double   ag_reference_price{7800.0};
+    int      gateway_ack_latency_ms{0};
+    int      gateway_cancel_latency_ms{0};
+    int      gateway_fill_interval_ms{25};
+    double   gateway_order_fill_probability{1.0};
+    double   gateway_quote_cross_fill_probability{1.0};
+    double   gateway_quote_passive_fill_probability{0.0};
+    double   gateway_partial_fill_probability{0.0};
+    double   gateway_reject_probability{0.0};
+    Volume   gateway_max_fill_size{0};
+    int      gateway_slippage_ticks{0};
+    double   gateway_quote_near_touch_ticks{0.5};
 };
 
 // ─── Pricing configuration ────────────────────────────────────────────────────
@@ -156,6 +182,7 @@ struct SystemConfig {
     InstanceConfig      instance;
     FeedConfig          feed;
     GatewayConfig       gateway;
+    SimConfig           sim;
     PricingConfig       pricing;
     RiskConfig          risk;
     ProductConfig       products[MAX_PRODUCTS];

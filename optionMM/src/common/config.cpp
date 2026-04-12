@@ -50,7 +50,8 @@ static FeedConfig parse_feed(const YAML::Node& n) {
     if (type == "fpga")      c.type = FeedType::FPGA;
     else if (type == "multicast") c.type = FeedType::Multicast;
     else if (type == "femas") c.type = FeedType::FEMAS;
-    else throw std::runtime_error("config: feed.type must be 'multicast', 'fpga', or 'femas', got: " + type);
+    else if (type == "sim") c.type = FeedType::Sim;
+    else throw std::runtime_error("config: feed.type must be 'multicast', 'fpga', 'femas', or 'sim', got: " + type);
 
     if (auto mc = n["multicast"]) {
         str_copy(c.multicast.interface, sizeof(c.multicast.interface),
@@ -93,7 +94,8 @@ static GatewayConfig parse_gateway(const YAML::Node& n) {
     std::string type = get<std::string>(n["type"], "gateway.type", "ctp");
     if (type == "ctp")       c.type = GatewayType::CTP;
     else if (type == "femas") c.type = GatewayType::FEMAS;
-    else throw std::runtime_error("config: gateway.type must be 'ctp' or 'femas', got: " + type);
+    else if (type == "sim") c.type = GatewayType::Sim;
+    else throw std::runtime_error("config: gateway.type must be 'ctp', 'femas', or 'sim', got: " + type);
 
     if (auto ctp = n["ctp"]) {
         str_copy(c.ctp.front_addr, sizeof(c.ctp.front_addr), ctp["front_addr"], "gateway.ctp.front_addr");
@@ -109,6 +111,77 @@ static GatewayConfig parse_gateway(const YAML::Node& n) {
         str_copy(c.femas.user_id,    sizeof(c.femas.user_id),    fm["user_id"],    "gateway.femas.user_id");
         str_copy(c.femas.password,   sizeof(c.femas.password),   fm["password"],   "gateway.femas.password");
     }
+    return c;
+}
+
+static SimConfig parse_sim(const YAML::Node& n) {
+    SimConfig c;
+    if (!n) return c;
+
+    const std::string profile = get<std::string>(n["profile"], "sim.profile", "desk");
+    const std::string scenario = get<std::string>(n["scenario"], "sim.scenario", "normal");
+    str_copy(c.profile, sizeof(c.profile), n["profile"], "sim.profile", profile.c_str());
+    str_copy(c.scenario, sizeof(c.scenario), n["scenario"], "sim.scenario", scenario.c_str());
+
+    if (profile == "calm") {
+        c.tick_interval_ms = 160;
+        c.future_wave_bps = 8.0;
+        c.future_noise_bps = 1.6;
+        c.option_spread_bps = 22.0;
+        c.gateway_ack_latency_ms = 30;
+        c.gateway_cancel_latency_ms = 40;
+        c.gateway_fill_interval_ms = 180;
+        c.gateway_order_fill_probability = 0.28;
+        c.gateway_quote_cross_fill_probability = 0.10;
+        c.gateway_quote_passive_fill_probability = 0.015;
+        c.gateway_partial_fill_probability = 0.70;
+        c.gateway_reject_probability = 0.005;
+        c.gateway_max_fill_size = 1;
+        c.gateway_quote_near_touch_ticks = 0.3;
+    } else if (profile == "fast") {
+        c.tick_interval_ms = 70;
+        c.future_wave_bps = 24.0;
+        c.future_noise_bps = 7.0;
+        c.option_spread_bps = 34.0;
+        c.gateway_ack_latency_ms = 10;
+        c.gateway_cancel_latency_ms = 15;
+        c.gateway_fill_interval_ms = 80;
+        c.gateway_order_fill_probability = 0.65;
+        c.gateway_quote_cross_fill_probability = 0.26;
+        c.gateway_quote_passive_fill_probability = 0.05;
+        c.gateway_partial_fill_probability = 0.55;
+        c.gateway_reject_probability = 0.015;
+        c.gateway_max_fill_size = 3;
+        c.gateway_quote_near_touch_ticks = 0.8;
+    }
+
+    c.random_seed        = get<uint32_t>(n["random_seed"], "sim.random_seed", 42);
+    c.tick_interval_ms   = get<int>(n["tick_interval_ms"], "sim.tick_interval_ms", 100);
+    c.strikes_per_side   = get<int>(n["strikes_per_side"], "sim.strikes_per_side", 4);
+    c.expiry_count       = get<int>(n["expiry_count"], "sim.expiry_count", 2);
+    c.future_wave_bps    = get<double>(n["future_wave_bps"], "sim.future_wave_bps", 12.0);
+    c.future_noise_bps   = get<double>(n["future_noise_bps"], "sim.future_noise_bps", 4.0);
+    c.option_spread_bps  = get<double>(n["option_spread_bps"], "sim.option_spread_bps", 30.0);
+    c.top_level_volume   = get<int>(n["top_level_volume"], "sim.top_level_volume", 20);
+    c.au_reference_price = get<double>(n["au_reference_price"], "sim.au_reference_price", 580.0);
+    c.ag_reference_price = get<double>(n["ag_reference_price"], "sim.ag_reference_price", 7800.0);
+    c.gateway_ack_latency_ms = get<int>(n["gateway_ack_latency_ms"], "sim.gateway_ack_latency_ms", 0);
+    c.gateway_cancel_latency_ms = get<int>(n["gateway_cancel_latency_ms"], "sim.gateway_cancel_latency_ms", 0);
+    c.gateway_fill_interval_ms = get<int>(n["gateway_fill_interval_ms"], "sim.gateway_fill_interval_ms", 25);
+    c.gateway_order_fill_probability = get<double>(n["gateway_order_fill_probability"],
+                                                   "sim.gateway_order_fill_probability", 1.0);
+    c.gateway_quote_cross_fill_probability = get<double>(n["gateway_quote_cross_fill_probability"],
+                                                         "sim.gateway_quote_cross_fill_probability", 1.0);
+    c.gateway_quote_passive_fill_probability = get<double>(n["gateway_quote_passive_fill_probability"],
+                                                           "sim.gateway_quote_passive_fill_probability", 0.0);
+    c.gateway_partial_fill_probability = get<double>(n["gateway_partial_fill_probability"],
+                                                     "sim.gateway_partial_fill_probability", 0.0);
+    c.gateway_reject_probability = get<double>(n["gateway_reject_probability"],
+                                               "sim.gateway_reject_probability", 0.0);
+    c.gateway_max_fill_size = get<int>(n["gateway_max_fill_size"], "sim.gateway_max_fill_size", 0);
+    c.gateway_slippage_ticks = get<int>(n["gateway_slippage_ticks"], "sim.gateway_slippage_ticks", 0);
+    c.gateway_quote_near_touch_ticks = get<double>(n["gateway_quote_near_touch_ticks"],
+                                                   "sim.gateway_quote_near_touch_ticks", 0.5);
     return c;
 }
 
@@ -208,6 +281,7 @@ SystemConfig load_config(std::string_view path) {
     cfg.instance  = parse_instance(root["instance"]);
     cfg.feed      = parse_feed(root["feed"]);
     cfg.gateway   = parse_gateway(root["gateway"]);
+    cfg.sim       = parse_sim(root["sim"]);
     cfg.pricing   = parse_pricing(root["pricing"]);
     cfg.risk      = parse_risk(root["risk"]);
     cfg.timer     = parse_timer(root["timer"]);

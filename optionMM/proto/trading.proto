@@ -62,6 +62,11 @@ message OrderUpdate {
     double fill_price       = 4;
     int32  fill_volume      = 5;
     int64  ts_ns            = 6;
+    string exchange_id      = 7;
+    string side             = 8;
+    double price            = 9;
+    int32  volume           = 10;
+    uint64 exchange_trade_id = 11;
 }
 
 message QuoteUpdate {
@@ -84,6 +89,8 @@ message InstrumentInfo {
     double strike          = 6;
     uint32 product_index   = 7;
     uint32 underlying_id   = 8;
+    string exchange_id     = 9;
+    int32  expiry_date     = 10;
 }
 
 message VolSurfaceSlice {

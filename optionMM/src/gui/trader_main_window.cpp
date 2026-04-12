@@ -18,9 +18,12 @@
 #include <QPainter>
 #include <QPainterPath>
 #include <QPushButton>
+#include <QSettings>
+#include <QScreen>
 #include <QSignalBlocker>
 #include <QSpinBox>
 #include <QTableWidget>
+#include <QTime>
 #include <QTimer>
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
@@ -30,6 +33,7 @@
 #include <algorithm>
 #include <atomic>
 #include <deque>
+#include <cctype>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -43,7 +47,9 @@ namespace omm::gui {
 namespace {
 
 struct VolCurveSnapshot {
+    uint32_t curve_id{0};
     uint32_t product_index{0};
+    double expiry_t{0.0};
     std::vector<double> strikes;
     std::vector<double> vols;
 };
@@ -52,8 +58,10 @@ struct InstrumentMeta {
     uint32_t instrument_id{0};
     uint32_t product_index{0};
     uint32_t underlying_id{0};
+    int expiry_date{0};
     std::string code;
     std::string underlying_code;
+    std::string exchange_id;
     std::string kind;
     std::string option_type;
     double strike{0.0};
@@ -120,16 +128,22 @@ protected:
     }
 
 private:
-    QString curve_label(uint32_t product_index) const {
+    QString curve_label(const VolCurveSnapshot& curve) const {
+        const uint32_t product_index = curve.product_index;
         QString label = QString("Product %1").arg(product_index);
         std::lock_guard<std::mutex> lock(state_->mutex);
         for (const auto& [_, meta] : state_->instruments) {
             if (meta.product_index != product_index) continue;
-            if (meta.kind == "Future") return QString::fromStdString(meta.code);
+            if (meta.kind == "Future") {
+                return QString("%1  T=%2")
+                    .arg(QString::fromStdString(meta.code))
+                    .arg(QString::number(curve.expiry_t, 'f', 3));
+            }
             if (!meta.underlying_code.empty()) {
-                label = QString("%1 / P%2")
+                label = QString("%1 / P%2  T=%3")
                     .arg(QString::fromStdString(meta.underlying_code))
-                    .arg(product_index);
+                    .arg(product_index)
+                    .arg(QString::number(curve.expiry_t, 'f', 3));
             }
         }
         return label;
@@ -144,9 +158,9 @@ private:
         painter->setPen(QColor("#3a3123"));
         painter->drawText(panel.adjusted(12, 10, -12, -10),
                           Qt::AlignTop | Qt::AlignLeft,
-                          curve_label(curve.product_index));
+                           curve_label(curve));
 
-        QRect plot = panel.adjusted(16, 32, -16, -16);
+        QRect plot = panel.adjusted(52, 32, -16, -34);
         painter->setPen(QColor("#d8c9b0"));
         painter->drawRect(plot);
 
@@ -157,11 +171,46 @@ private:
             const double max_x = *max_x_it;
             const double min_y = *min_y_it;
             const double max_y = std::max(min_y + 1e-6, *max_y_it);
+            const double x_span = std::max(1e-9, max_x - min_x);
+            const double y_span = std::max(1e-9, max_y - min_y);
+
+            painter->setPen(QColor("#ece2cc"));
+            for (int tick = 0; tick < 4; ++tick) {
+                const double alpha = static_cast<double>(tick) / 3.0;
+                const int y = plot.bottom() - static_cast<int>(alpha * plot.height());
+                painter->drawLine(plot.left(), y, plot.right(), y);
+            }
+            for (int tick = 0; tick < 4; ++tick) {
+                const double alpha = static_cast<double>(tick) / 3.0;
+                const int x = plot.left() + static_cast<int>(alpha * plot.width());
+                painter->drawLine(x, plot.top(), x, plot.bottom());
+            }
+
+            painter->setPen(QColor("#6f6044"));
+            for (int tick = 0; tick < 4; ++tick) {
+                const double alpha = static_cast<double>(tick) / 3.0;
+                const double vol = min_y + alpha * y_span;
+                const int y = plot.bottom() - static_cast<int>(alpha * plot.height());
+                QRect label_rect(panel.left() + 6, y - 10, 40, 20);
+                painter->drawText(label_rect,
+                                  Qt::AlignRight | Qt::AlignVCenter,
+                                  QString::number(vol, 'f', 3));
+            }
+
+            for (int tick = 0; tick < 4; ++tick) {
+                const double alpha = static_cast<double>(tick) / 3.0;
+                const double strike = min_x + alpha * x_span;
+                const int x = plot.left() + static_cast<int>(alpha * plot.width());
+                QRect label_rect(x - 28, plot.bottom() + 6, 56, 18);
+                painter->drawText(label_rect,
+                                  Qt::AlignHCenter | Qt::AlignTop,
+                                  QString::number(strike, 'f', 0));
+            }
 
             QPainterPath path;
             for (std::size_t i = 0; i < curve.strikes.size(); ++i) {
-                const double x_alpha = (curve.strikes[i] - min_x) / std::max(1e-9, max_x - min_x);
-                const double y_alpha = (curve.vols[i] - min_y) / std::max(1e-9, max_y - min_y);
+                const double x_alpha = (curve.strikes[i] - min_x) / x_span;
+                const double y_alpha = (curve.vols[i] - min_y) / y_span;
                 QPointF point(plot.left() + x_alpha * plot.width(),
                               plot.bottom() - y_alpha * plot.height());
                 if (i == 0) path.moveTo(point);
@@ -169,6 +218,15 @@ private:
             }
             painter->setPen(QPen(QColor("#008f8c"), 2.0));
             painter->drawPath(path);
+
+            painter->setPen(QPen(QColor("#008f8c"), 4.0));
+            for (std::size_t i = 0; i < curve.strikes.size(); ++i) {
+                const double x_alpha = (curve.strikes[i] - min_x) / x_span;
+                const double y_alpha = (curve.vols[i] - min_y) / y_span;
+                QPointF point(plot.left() + x_alpha * plot.width(),
+                              plot.bottom() - y_alpha * plot.height());
+                painter->drawPoint(point);
+            }
         }
         painter->restore();
     }
@@ -285,8 +343,10 @@ private:
                         meta.instrument_id = instrument.instrument_id();
                         meta.product_index = instrument.product_index();
                         meta.underlying_id = instrument.underlying_id();
+                        meta.expiry_date = instrument.expiry_date();
                         meta.code = instrument.code();
                         meta.underlying_code = instrument.underlying_code();
+                        meta.exchange_id = instrument.exchange_id();
                         meta.kind = instrument.kind();
                         meta.option_type = instrument.option_type();
                         meta.strike = instrument.strike();
@@ -372,15 +432,18 @@ private:
                 return stub_->StreamVolSurface(ctx, req);
             },
             [this](const omm::proto::VolSurface& surface) {
-                VolCurveSnapshot curve;
-                curve.product_index = surface.product_index();
-                for (const auto& slice : surface.slices()) {
+                for (int slice_index = 0; slice_index < surface.slices_size(); ++slice_index) {
+                    const auto& slice = surface.slices(slice_index);
+                    VolCurveSnapshot curve;
+                    curve.curve_id = surface.product_index() * 100u + static_cast<uint32_t>(slice_index);
+                    curve.product_index = surface.product_index();
+                    curve.expiry_t = slice.expiry_t();
                     for (int i = 0; i < slice.strikes_size() && i < slice.vols_size(); ++i) {
                         curve.strikes.push_back(slice.strikes(i));
                         curve.vols.push_back(slice.vols(i));
                     }
+                    state_->curves[curve.curve_id] = std::move(curve);
                 }
-                state_->curves[surface.product_index()] = std::move(curve);
             });
     }
 
@@ -408,7 +471,92 @@ void set_cell(QTableWidget* table, int row, int col, const QString& text, const 
     auto* item = new QTableWidgetItem(text);
     item->setBackground(bg);
     item->setForeground(QColor("#1d1d1d"));
+    item->setTextAlignment((col == 3 || col == 4 || col == 1 || col == 2 || col == 0)
+        ? Qt::AlignCenter
+        : Qt::AlignCenter);
     table->setItem(row, col, item);
+}
+
+QString infer_exchange_from_code(std::string_view code) {
+    std::string upper;
+    upper.reserve(code.size());
+    for (char ch : code) upper.push_back(static_cast<char>(std::toupper(static_cast<unsigned char>(ch))));
+
+    auto starts = [&](std::string_view prefix) {
+        return upper.rfind(prefix, 0) == 0;
+    };
+
+    if (starts("AU") || starts("AG") || starts("CU") || starts("AL") || starts("ZN")
+        || starts("RB") || starts("HC") || starts("NI") || starts("SN") || starts("PB")
+        || starts("SS") || starts("FU") || starts("BU") || starts("SP") || starts("BR")) {
+        return "SHFE";
+    }
+    if (starts("IF") || starts("IH") || starts("IC") || starts("IM")
+        || starts("T") || starts("TF") || starts("TS") || starts("TL")) {
+        return "CFFEX";
+    }
+    if (starts("M") || starts("A") || starts("Y") || starts("P") || starts("C")
+        || starts("CS") || starts("J") || starts("JM") || starts("I")
+        || starts("EG") || starts("PP") || starts("EB") || starts("L")
+        || starts("V") || starts("PG") || starts("RR")) {
+        return "DCE";
+    }
+    if (starts("SR") || starts("CF") || starts("TA") || starts("MA") || starts("FG")
+        || starts("RM") || starts("ZC") || starts("AP") || starts("CJ")
+        || starts("UR") || starts("SA") || starts("PK") || starts("PF")
+        || starts("SH") || starts("SF") || starts("SM") || starts("OI")) {
+        return "CZCE";
+    }
+    return {};
+}
+
+QString format_expiry_date(int expiry_date) {
+    if (expiry_date <= 0) return {};
+    const int year = expiry_date / 10000;
+    const int month = (expiry_date / 100) % 100;
+    const int day = expiry_date % 100;
+    return QString("%1-%2-%3")
+        .arg(year, 4, 10, QChar('0'))
+        .arg(month, 2, 10, QChar('0'))
+        .arg(day, 2, 10, QChar('0'));
+}
+
+QString format_expiry_short(int expiry_date) {
+    if (expiry_date <= 0) return "-";
+    const int month = (expiry_date / 100) % 100;
+    const int day = expiry_date % 100;
+    return QString("%1/%2")
+        .arg(month, 2, 10, QChar('0'))
+        .arg(day, 2, 10, QChar('0'));
+}
+
+QString format_monotonic_ts(int64_t ts_ns) {
+    if (ts_ns <= 0) return "-";
+
+    static int64_t base_ts_ns = 0;
+    if (base_ts_ns == 0 || ts_ns < base_ts_ns) base_ts_ns = ts_ns;
+
+    const int64_t elapsed_ms = std::max<int64_t>(0, (ts_ns - base_ts_ns) / 1'000'000LL);
+    const QTime time = QTime(0, 0).addMSecs(static_cast<int>(elapsed_ms % (24LL * 3600LL * 1000LL)));
+    return QString("T+%1").arg(time.toString("hh:mm:ss.zzz"));
+}
+
+QColor risk_color(double value, double warning, double danger) {
+    const double magnitude = std::abs(value);
+    if (magnitude >= danger) return QColor("#ffb3b3");
+    if (magnitude >= warning) return QColor("#ffe39b");
+    return QColor("#dff4df");
+}
+
+bool combo_matches(QComboBox* combo,
+                   const std::vector<std::pair<QString, QVariant>>& items) {
+    if (combo == nullptr) return false;
+    if (combo->count() != static_cast<int>(items.size())) return false;
+    for (int i = 0; i < combo->count(); ++i) {
+        if (combo->itemText(i) != items[static_cast<std::size_t>(i)].first) return false;
+        if (combo->itemData(i) != items[static_cast<std::size_t>(i)].second) return false;
+    }
+    return true;
 }
 
 } // namespace
@@ -416,6 +564,9 @@ void set_cell(QTableWidget* table, int row, int col, const QString& text, const 
 struct TraderMainWindow::Impl {
     SharedState state;
     std::unique_ptr<GrpcTraderClient> client;
+    uint32_t selected_product_index{0};
+    uint32_t selected_instrument_id{0};
+    bool ui_state_restored{false};
 };
 
 TraderMainWindow::TraderMainWindow(std::string grpc_endpoint, QWidget* parent)
@@ -424,6 +575,7 @@ TraderMainWindow::TraderMainWindow(std::string grpc_endpoint, QWidget* parent)
       impl_(std::make_unique<Impl>()) {
     setWindowTitle(QString("optionMM Trader Dashboard - %1").arg(QString::fromStdString(grpc_endpoint_)));
     build_ui();
+    restore_ui_state();
     impl_->client = std::make_unique<GrpcTraderClient>(grpc_endpoint_, &impl_->state);
     impl_->client->start();
 
@@ -434,16 +586,27 @@ TraderMainWindow::TraderMainWindow(std::string grpc_endpoint, QWidget* parent)
 
 TraderMainWindow::~TraderMainWindow() = default;
 
+void TraderMainWindow::closeEvent(QCloseEvent* event) {
+    save_ui_state();
+    QMainWindow::closeEvent(event);
+}
+
 void TraderMainWindow::build_ui() {
     auto* toolbar = addToolBar("Desk");
     toolbar->setMovable(false);
     toolbar->addWidget(new QLabel("Product"));
-    product_selector_ = new QSpinBox();
-    product_selector_->setRange(0, 31);
+    product_selector_ = new QComboBox();
     toolbar->addWidget(product_selector_);
     toolbar->addSeparator();
     status_label_ = new QLabel("Connecting");
     toolbar->addWidget(status_label_);
+    toolbar->addSeparator();
+    delta_label_ = new QLabel("Delta --");
+    gamma_label_ = new QLabel("Gamma --");
+    vega_label_ = new QLabel("Vega --");
+    toolbar->addWidget(delta_label_);
+    toolbar->addWidget(gamma_label_);
+    toolbar->addWidget(vega_label_);
 
     auto* central = new QWidget();
     auto* layout = new QVBoxLayout(central);
@@ -451,17 +614,31 @@ void TraderMainWindow::build_ui() {
     hero->setStyleSheet("font-size: 22px; font-weight: 700; color: #2b2418;");
     layout->addWidget(hero);
 
-    t_table_ = make_table({"BidQty", "BidPx", "Theo", "Strike/Inst", "AskPx", "AskQty", "Delta", "Pos"});
+    t_table_ = make_table({"C.MM", "C.St", "C.BQty", "C.Bid", "C.Theo", "C.Ask", "C.AQty",
+                           "Exp", "Strike", "Net",
+                           "P.BQty", "P.Bid", "P.Theo", "P.Ask", "P.AQty", "P.St", "P.MM"});
+    t_table_->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    t_table_->verticalHeader()->setDefaultSectionSize(22);
     layout->addWidget(t_table_);
-
-    auto* vol_box = new QGroupBox("ORC Wing / Vol Curves");
-    auto* vol_layout = new QVBoxLayout(vol_box);
-    vol_widget_ = new VolCurveGridWidget(&impl_->state);
-    vol_layout->addWidget(vol_widget_);
-    layout->addWidget(vol_box);
     setCentralWidget(central);
 
+    vol_dock_ = new QDockWidget("ORC Wing / Vol Curves", this);
+    vol_dock_->setFeatures(QDockWidget::DockWidgetMovable |
+                           QDockWidget::DockWidgetFloatable |
+                           QDockWidget::DockWidgetClosable);
+    auto* vol_panel = new QWidget();
+    auto* vol_layout = new QVBoxLayout(vol_panel);
+    vol_layout->setContentsMargins(8, 8, 8, 8);
+    vol_widget_ = new VolCurveGridWidget(&impl_->state);
+    vol_layout->addWidget(vol_widget_);
+    vol_dock_->setWidget(vol_panel);
+    addDockWidget(Qt::RightDockWidgetArea, vol_dock_);
+    ensure_vol_window();
+
     auto* quick_dock = new QDockWidget("Quick Order / Strategy", this);
+    quick_dock->setFeatures(QDockWidget::DockWidgetMovable |
+                            QDockWidget::DockWidgetFloatable |
+                            QDockWidget::DockWidgetClosable);
     auto* quick_panel = new QWidget();
     auto* quick_layout = new QGridLayout(quick_panel);
     quick_layout->addWidget(new QLabel("Instrument"), 0, 0);
@@ -531,13 +708,42 @@ void TraderMainWindow::build_ui() {
     connect(start_button_, &QPushButton::clicked, this, [this] { start_strategy(true); });
     connect(stop_button_, &QPushButton::clicked, this, [this] { start_strategy(false); });
     connect(apply_params_button_, &QPushButton::clicked, this, [this] { apply_strategy_params(); });
-    connect(product_selector_, qOverload<int>(&QSpinBox::valueChanged), this, [this](int) {
+    connect(product_selector_, &QComboBox::currentIndexChanged, this, [this](int) {
+        const QVariant data = product_selector_->currentData();
+        if (data.isValid()) impl_->selected_product_index = data.toUInt();
         refresh_ui();
     });
+    connect(instrument_selector_, &QComboBox::currentIndexChanged, this, [this](int) {
+        const QVariant data = instrument_selector_->currentData();
+        if (data.isValid()) impl_->selected_instrument_id = data.toUInt();
+    });
+    connect(vol_dock_, &QDockWidget::topLevelChanged, this, [this](bool floating) {
+        if (!floating || vol_dock_ == nullptr) return;
+        QTimer::singleShot(0, this, [this] {
+            if (vol_dock_ == nullptr || !vol_dock_->isFloating()) return;
+            ensure_vol_window();
+            if (vol_window_ == nullptr) return;
+
+            const QRect floating_geometry = vol_dock_->frameGeometry();
+            {
+                QSignalBlocker blocker(vol_dock_);
+                vol_dock_->setFloating(false);
+            }
+            vol_dock_->hide();
+            vol_window_->setGeometry(floating_geometry);
+            vol_window_->show();
+            vol_window_->raise();
+            vol_window_->activateWindow();
+        });
+    });
     connect(t_table_, &QTableWidget::cellClicked, this, [this](int row, int col) {
-        auto* item = t_table_->item(row, 3);
+        auto* item = t_table_->item(row, col);
+        if (item == nullptr || !item->data(Qt::UserRole).isValid()) {
+            item = t_table_->item(row, 8);
+        }
         if (item == nullptr) return;
         const uint32_t instrument_id = item->data(Qt::UserRole).toUInt();
+        if (instrument_id == 0) return;
         const int combo_index = instrument_selector_->findData(QVariant::fromValue(instrument_id));
         if (combo_index >= 0) instrument_selector_->setCurrentIndex(combo_index);
 
@@ -545,14 +751,20 @@ void TraderMainWindow::build_ui() {
             auto* cell = t_table_->item(row, price_col);
             return cell != nullptr ? cell->text().toDouble() : 0.0;
         };
-        if (col <= 1) {
+        if (col == 3 || col == 5) {
+            side_selector_->setCurrentText(col == 3 ? "sell" : "buy");
+            price_editor_->setValue(parse_price(col));
+        } else if (col == 11 || col == 13) {
+            side_selector_->setCurrentText(col == 11 ? "sell" : "buy");
+            price_editor_->setValue(parse_price(col));
+        } else if (col < 7) {
             side_selector_->setCurrentText("sell");
-            price_editor_->setValue(parse_price(1));
-        } else if (col >= 4 && col <= 5) {
+            price_editor_->setValue(parse_price(3));
+        } else if (col > 9) {
             side_selector_->setCurrentText("buy");
-            price_editor_->setValue(parse_price(4));
+            price_editor_->setValue(parse_price(13));
         } else {
-            price_editor_->setValue(parse_price(2));
+            price_editor_->setValue(parse_price(4));
         }
     });
 
@@ -561,25 +773,88 @@ void TraderMainWindow::build_ui() {
     positions_tree_->setHeaderLabels({"Node", "Net", "Avg", "UPnL", "Delta", "Gamma", "Vega"});
     positions_tree_->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
     auto* positions_dock = new QDockWidget("Positions / Greeks", this);
+    positions_dock->setFeatures(QDockWidget::DockWidgetMovable |
+                                QDockWidget::DockWidgetFloatable |
+                                QDockWidget::DockWidgetClosable);
     positions_dock->setWidget(positions_tree_);
     addDockWidget(Qt::LeftDockWidgetArea, positions_dock);
 
-    orders_table_ = make_table({"Instrument", "Status", "FillPx", "FillQty", "Ts"});
+    orders_table_ = make_table({"OrderId", "Instrument", "Exchange", "Side", "Price", "Volume", "Status", "FillPx", "FillQty", "Ts"});
     auto* orders_dock = new QDockWidget("Orders", this);
+    orders_dock->setFeatures(QDockWidget::DockWidgetMovable |
+                             QDockWidget::DockWidgetFloatable |
+                             QDockWidget::DockWidgetClosable);
     orders_dock->setWidget(orders_table_);
     addDockWidget(Qt::BottomDockWidgetArea, orders_dock);
 
     quotes_table_ = make_table({"Instrument", "BidPx", "BidQty", "AskPx", "AskQty", "Status"});
     auto* quotes_dock = new QDockWidget("Quotes", this);
+    quotes_dock->setFeatures(QDockWidget::DockWidgetMovable |
+                             QDockWidget::DockWidgetFloatable |
+                             QDockWidget::DockWidgetClosable);
     quotes_dock->setWidget(quotes_table_);
     addDockWidget(Qt::BottomDockWidgetArea, quotes_dock);
 
-    trades_table_ = make_table({"Instrument", "Status", "FillPx", "FillQty", "Ts"});
+    trades_table_ = make_table({"TradeId", "OrderId", "Instrument", "Exchange", "Side", "Price", "Qty", "Ts"});
     auto* trades_dock = new QDockWidget("Trades", this);
+    trades_dock->setFeatures(QDockWidget::DockWidgetMovable |
+                             QDockWidget::DockWidgetFloatable |
+                             QDockWidget::DockWidgetClosable);
     trades_dock->setWidget(trades_table_);
     addDockWidget(Qt::BottomDockWidgetArea, trades_dock);
     tabifyDockWidget(orders_dock, quotes_dock);
     tabifyDockWidget(quotes_dock, trades_dock);
+    resizeDocks({vol_dock_}, {520}, Qt::Horizontal);
+}
+
+void TraderMainWindow::ensure_vol_window() {
+    if (vol_window_ != nullptr) return;
+
+    const Qt::WindowFlags flags = Qt::Window |
+                                  Qt::WindowTitleHint |
+                                  Qt::WindowSystemMenuHint |
+                                  Qt::WindowMinimizeButtonHint |
+                                  Qt::WindowMaximizeButtonHint |
+                                  Qt::WindowCloseButtonHint;
+    vol_window_ = new QMainWindow(nullptr, flags);
+    vol_window_->setAttribute(Qt::WA_DeleteOnClose, false);
+    vol_window_->setWindowTitle("ORC Wing / Vol Curves");
+    vol_window_->resize(1280, 900);
+
+    vol_window_widget_ = new VolCurveGridWidget(&impl_->state, vol_window_);
+    vol_window_->setCentralWidget(vol_window_widget_);
+}
+
+void TraderMainWindow::restore_ui_state() {
+    QSettings settings;
+    const QByteArray geometry = settings.value("main/geometry").toByteArray();
+    const QByteArray state = settings.value("main/state").toByteArray();
+    if (!geometry.isEmpty()) restoreGeometry(geometry);
+    if (!state.isEmpty()) restoreState(state);
+    impl_->selected_product_index = settings.value("selection/product", 0u).toUInt();
+    impl_->selected_instrument_id = settings.value("selection/instrument", 0u).toUInt();
+
+    ensure_vol_window();
+    const QByteArray vol_geometry = settings.value("vol/geometry").toByteArray();
+    if (!vol_geometry.isEmpty()) vol_window_->restoreGeometry(vol_geometry);
+    const bool vol_window_visible = settings.value("vol/window_visible", false).toBool();
+    if (vol_window_visible) {
+        vol_dock_->hide();
+        vol_window_->show();
+    }
+    impl_->ui_state_restored = true;
+}
+
+void TraderMainWindow::save_ui_state() const {
+    QSettings settings;
+    settings.setValue("main/geometry", saveGeometry());
+    settings.setValue("main/state", saveState());
+    settings.setValue("selection/product", impl_->selected_product_index);
+    settings.setValue("selection/instrument", impl_->selected_instrument_id);
+    if (vol_window_ != nullptr) {
+        settings.setValue("vol/geometry", vol_window_->saveGeometry());
+        settings.setValue("vol/window_visible", vol_window_->isVisible());
+    }
 }
 
 void TraderMainWindow::refresh_ui() {
@@ -587,31 +862,81 @@ void TraderMainWindow::refresh_ui() {
     status_label_->setText(impl_->state.connected ? "Live" : "Disconnected");
     status_label_->setStyleSheet(QString("font-weight: 700; color: %1;")
                                      .arg(impl_->state.connected ? "#007f5f" : "#a61b1b"));
+    const bool connected = impl_->state.connected;
+    buy_button_->setEnabled(connected);
+    sell_button_->setEnabled(connected);
+    start_button_->setEnabled(connected);
+    stop_button_->setEnabled(connected);
+    apply_params_button_->setEnabled(connected);
 
-    struct Row {
+    struct SideView {
         uint32_t instrument_id{0};
-        QString label;
+        QString code;
         double bid_px{0.0};
         int bid_qty{0};
         double theo{0.0};
         double ask_px{0.0};
         int ask_qty{0};
-        double delta{0.0};
         int pos{0};
+        QString mm_label{"OFF"};
+        QString status_label{"Off"};
+        QColor mm_color{"#e7e7e7"};
+        QColor status_color{"#ececec"};
+        QColor bid_color{"#fff2a8"};
+        QColor ask_color{"#ffd7b6"};
+    };
+    struct StrikeRow {
+        int expiry_date{0};
+        double strike{0.0};
+        int net_pos{0};
+        SideView call;
+        SideView put;
     };
 
-    std::vector<Row> rows;
-    const uint32_t selected_product = static_cast<uint32_t>(product_selector_->value());
-    uint32_t max_product = 0;
-    for (const auto& [_, meta] : impl_->state.instruments) {
-        max_product = std::max(max_product, meta.product_index);
-    }
-    product_selector_->setMaximum(static_cast<int>(std::max<uint32_t>(31, max_product)));
-
-    const QVariant selected_instrument_data = instrument_selector_->currentData();
+    std::vector<StrikeRow> rows;
+    const QVariant selected_product_data = QVariant::fromValue(impl_->selected_product_index);
+    std::vector<std::pair<QString, QVariant>> product_items;
     {
-        QSignalBlocker blocker(instrument_selector_);
-        instrument_selector_->clear();
+        std::map<uint32_t, QString> product_labels;
+        for (const auto& [_, meta] : impl_->state.instruments) {
+            QString label = QString("Product %1").arg(meta.product_index);
+            if (meta.kind == "Future" && !meta.code.empty()) {
+                label = QString::fromStdString(meta.code);
+            } else if (!meta.underlying_code.empty()) {
+                label = QString::fromStdString(meta.underlying_code);
+            }
+            auto it = product_labels.find(meta.product_index);
+            if (it == product_labels.end() || (it->second.startsWith("Product ") && !label.startsWith("Product "))) {
+                product_labels[meta.product_index] = label;
+            }
+        }
+        if (product_labels.empty()) product_labels.emplace(0u, "Product 0");
+        for (const auto& [product_index, label] : product_labels) {
+            product_items.push_back({label, QVariant::fromValue(product_index)});
+        }
+    }
+    if (!combo_matches(product_selector_, product_items)) {
+        QSignalBlocker blocker(product_selector_);
+        product_selector_->clear();
+        for (const auto& [label, data] : product_items) {
+            product_selector_->addItem(label, data);
+        }
+    }
+    {
+        QSignalBlocker blocker(product_selector_);
+        int restore_index = product_selector_->findData(selected_product_data);
+        if (restore_index >= 0) {
+            product_selector_->setCurrentIndex(restore_index);
+        } else if (product_selector_->count() > 0) {
+            product_selector_->setCurrentIndex(0);
+            impl_->selected_product_index = product_selector_->currentData().toUInt();
+        }
+    }
+    const uint32_t selected_product = impl_->selected_product_index;
+
+    const QVariant selected_instrument_data = QVariant::fromValue(impl_->selected_instrument_id);
+    std::vector<std::pair<QString, QVariant>> instrument_items;
+    {
         std::vector<const InstrumentMeta*> combo_items;
         combo_items.reserve(impl_->state.instruments.size());
         for (const auto& [_, meta] : impl_->state.instruments) {
@@ -620,24 +945,50 @@ void TraderMainWindow::refresh_ui() {
         }
         std::sort(combo_items.begin(), combo_items.end(), [](const InstrumentMeta* lhs, const InstrumentMeta* rhs) {
             if (lhs->kind != rhs->kind) return lhs->kind < rhs->kind;
+            if (lhs->expiry_date != rhs->expiry_date) return lhs->expiry_date < rhs->expiry_date;
             if (lhs->strike != rhs->strike) return lhs->strike < rhs->strike;
             return lhs->code < rhs->code;
         });
+        std::unordered_map<std::string, int> label_counts;
+        for (const InstrumentMeta* meta : combo_items) {
+            std::string base_label = meta->code;
+            if (meta->kind == "Future") base_label += "  Future";
+            ++label_counts[base_label];
+        }
         for (const InstrumentMeta* meta : combo_items) {
             QString label = QString::fromStdString(meta->code);
-            if (meta->kind == "Option") {
-                label = QString("%1  %2 %3")
-                    .arg(QString::fromStdString(meta->code))
-                    .arg(QString::number(meta->strike, 'f', 0))
-                    .arg(QString::fromStdString(meta->option_type));
+            if (meta->kind == "Future") {
+                label = QString("%1  Future").arg(QString::fromStdString(meta->code));
+            } else {
+                const std::string base_label = meta->code;
+                if (label_counts[base_label] > 1) {
+                    const QString expiry = format_expiry_date(meta->expiry_date);
+                    if (!expiry.isEmpty()) {
+                        label = QString("%1  %2").arg(label, expiry);
+                    } else {
+                        label = QString("%1  #%2").arg(label).arg(meta->instrument_id);
+                    }
+                }
             }
-            instrument_selector_->addItem(label, QVariant::fromValue(meta->instrument_id));
+            instrument_items.push_back({label, QVariant::fromValue(meta->instrument_id)});
         }
+    }
+    if (!combo_matches(instrument_selector_, instrument_items)) {
+        QSignalBlocker blocker(instrument_selector_);
+        instrument_selector_->clear();
+        for (const auto& [label, data] : instrument_items) {
+            instrument_selector_->addItem(label, data);
+        }
+    }
+    {
+        QSignalBlocker blocker(instrument_selector_);
         int restore_index = instrument_selector_->findData(selected_instrument_data);
         if (restore_index >= 0) {
             instrument_selector_->setCurrentIndex(restore_index);
+            impl_->selected_instrument_id = instrument_selector_->currentData().toUInt();
         } else if (instrument_selector_->count() > 0) {
             instrument_selector_->setCurrentIndex(0);
+            impl_->selected_instrument_id = instrument_selector_->currentData().toUInt();
         }
     }
 
@@ -652,52 +1003,134 @@ void TraderMainWindow::refresh_ui() {
         if (!quote_volume_editor_->hasFocus()) quote_volume_editor_->setValue(params.quote_volume());
         if (!max_position_editor_->hasFocus()) max_position_editor_->setValue(params.max_position());
     }
+    delta_label_->setText(QString("Delta %1").arg(QString::number(impl_->state.portfolio.total_delta(), 'f', 1)));
+    gamma_label_->setText(QString("Gamma %1").arg(QString::number(impl_->state.portfolio.total_gamma(), 'f', 1)));
+    vega_label_->setText(QString("Vega %1").arg(QString::number(impl_->state.portfolio.total_vega(), 'f', 1)));
+    delta_label_->setStyleSheet(QString("padding:2px 8px; border-radius:4px; background:%1;")
+        .arg(risk_color(impl_->state.portfolio.total_delta(), 500.0, 2500.0).name()));
+    gamma_label_->setStyleSheet(QString("padding:2px 8px; border-radius:4px; background:%1;")
+        .arg(risk_color(impl_->state.portfolio.total_gamma(), 250.0, 1200.0).name()));
+    vega_label_->setStyleSheet(QString("padding:2px 8px; border-radius:4px; background:%1;")
+        .arg(risk_color(impl_->state.portfolio.total_vega(), 5000.0, 25000.0).name()));
 
-    for (const auto& [instrument_id, greek] : impl_->state.greeks) {
-        auto meta_it = impl_->state.instruments.find(instrument_id);
-        if (meta_it == impl_->state.instruments.end()) continue;
-        const InstrumentMeta& meta = meta_it->second;
+    std::unordered_map<uint32_t, const omm::proto::QuoteUpdate*> latest_quotes;
+    for (auto it = impl_->state.quotes.rbegin(); it != impl_->state.quotes.rend(); ++it) {
+        latest_quotes.emplace(it->instrument_id(), &(*it));
+    }
+
+    auto fill_side = [&](SideView& side, const InstrumentMeta& meta) {
+        side.instrument_id = meta.instrument_id;
+        side.code = QString::fromStdString(meta.code);
+        if (auto greek_it = impl_->state.greeks.find(meta.instrument_id);
+            greek_it != impl_->state.greeks.end()) {
+            side.theo = greek_it->second.theo_price();
+        }
+        if (auto tick_it = impl_->state.ticks.find(meta.instrument_id);
+            tick_it != impl_->state.ticks.end()) {
+            side.bid_px = tick_it->second.bid_price();
+            side.bid_qty = tick_it->second.bid_volume();
+            side.ask_px = tick_it->second.ask_price();
+            side.ask_qty = tick_it->second.ask_volume();
+        }
+        if (auto pos_it = impl_->state.positions.find(meta.instrument_id);
+            pos_it != impl_->state.positions.end()) {
+            side.pos = pos_it->second.net_position();
+        }
+        if (auto quote_it = latest_quotes.find(meta.instrument_id); quote_it != latest_quotes.end()) {
+            const auto* quote = quote_it->second;
+            const bool has_bid = quote->bid_volume() > 0;
+            const bool has_ask = quote->ask_volume() > 0;
+            side.mm_label = has_bid && has_ask ? "2W" : has_bid ? "BID" : has_ask ? "ASK" : "OFF";
+            side.status_label = has_bid && has_ask ? "Live" : has_bid || has_ask ? "1-Way" : "Off";
+            side.mm_color = has_bid || has_ask ? QColor("#d7f0cf") : QColor("#ececec");
+            side.status_color = QColor("#dcefff");
+            if (quote->status().find("Ack") != std::string::npos) {
+                side.status_label = "Ack";
+                side.status_color = QColor("#cfeecf");
+            } else if (quote->status().find("Fill") != std::string::npos) {
+                side.status_label = "Fill";
+                side.status_color = QColor("#ffe3b3");
+            } else if (quote->status().find("Reject") != std::string::npos) {
+                side.status_label = "Reject";
+                side.status_color = QColor("#ffcccc");
+            } else if (quote->status().find("New") != std::string::npos) {
+                side.status_label = "New";
+                side.status_color = QColor("#dcefff");
+            }
+            if (has_bid) side.bid_color = QColor("#f3f8a6");
+            if (has_ask) side.ask_color = QColor("#ffddb7");
+        }
+    };
+
+    struct RowKey {
+        int expiry_date{0};
+        int strike_bp{0};
+        bool operator<(const RowKey& other) const noexcept {
+            if (expiry_date != other.expiry_date) return expiry_date < other.expiry_date;
+            return strike_bp < other.strike_bp;
+        }
+    };
+
+    std::map<RowKey, StrikeRow> grouped_rows;
+    for (const auto& [instrument_id, meta] : impl_->state.instruments) {
         if (meta.product_index != selected_product) continue;
         if (meta.kind != "Option") continue;
 
-        Row row;
-        row.instrument_id = instrument_id;
-        row.label = QString("%1 %2")
-            .arg(meta.strike > 0.0 ? QString::number(meta.strike, 'f', 0) : "-")
-            .arg(QString::fromStdString(meta.code));
-        row.theo = greek.theo_price();
-        row.delta = greek.delta();
-        auto tick_it = impl_->state.ticks.find(instrument_id);
-        if (tick_it != impl_->state.ticks.end()) {
-            row.bid_px = tick_it->second.bid_price();
-            row.bid_qty = tick_it->second.bid_volume();
-            row.ask_px = tick_it->second.ask_price();
-            row.ask_qty = tick_it->second.ask_volume();
+        RowKey key{meta.expiry_date, static_cast<int>(std::lround(meta.strike * 100.0))};
+        auto& row = grouped_rows[key];
+        row.expiry_date = meta.expiry_date;
+        row.strike = meta.strike;
+        if (meta.option_type == "Call") {
+            fill_side(row.call, meta);
+        } else if (meta.option_type == "Put") {
+            fill_side(row.put, meta);
         }
-        auto pos_it = impl_->state.positions.find(instrument_id);
-        if (pos_it != impl_->state.positions.end()) row.pos = pos_it->second.net_position();
+    }
+    rows.reserve(grouped_rows.size());
+    for (auto& [_, row] : grouped_rows) {
+        row.net_pos = row.call.pos + row.put.pos;
         rows.push_back(row);
     }
-    std::sort(rows.begin(), rows.end(), [&](const Row& a, const Row& b) {
-        const InstrumentMeta& ma = impl_->state.instruments.at(a.instrument_id);
-        const InstrumentMeta& mb = impl_->state.instruments.at(b.instrument_id);
-        if (ma.strike != mb.strike) return ma.strike < mb.strike;
-        return a.instrument_id < b.instrument_id;
-    });
     t_table_->setRowCount(static_cast<int>(rows.size()));
     for (int row = 0; row < static_cast<int>(rows.size()); ++row) {
-        const Row& item = rows[row];
-        set_cell(t_table_, row, 0, QString::number(item.bid_qty), QColor("#f6dc7d"));
-        set_cell(t_table_, row, 1, QString::number(item.bid_px, 'f', 2), QColor("#ffd88a"));
-        set_cell(t_table_, row, 2, QString::number(item.theo, 'f', 2), QColor("#c9f4d5"));
-        set_cell(t_table_, row, 3, item.label, QColor("#d7c4ff"));
-        if (auto* strike_item = t_table_->item(row, 3); strike_item != nullptr) {
-            strike_item->setData(Qt::UserRole, QVariant::fromValue(item.instrument_id));
+        const StrikeRow& item = rows[row];
+        set_cell(t_table_, row, 0, item.call.mm_label, item.call.mm_color);
+        set_cell(t_table_, row, 1, item.call.status_label, item.call.status_color);
+        set_cell(t_table_, row, 2, item.call.bid_qty > 0 ? QString::number(item.call.bid_qty) : "-", item.call.bid_color.darker(104));
+        set_cell(t_table_, row, 3, item.call.bid_px > 0.0 ? QString::number(item.call.bid_px, 'f', 2) : "-", item.call.bid_color);
+        set_cell(t_table_, row, 4, item.call.theo > 0.0 ? QString::number(item.call.theo, 'f', 2) : "-", QColor("#d5f0d9"));
+        set_cell(t_table_, row, 5, item.call.ask_px > 0.0 ? QString::number(item.call.ask_px, 'f', 2) : "-", item.call.ask_color);
+        set_cell(t_table_, row, 6, item.call.ask_qty > 0 ? QString::number(item.call.ask_qty) : "-", item.call.ask_color.darker(104));
+        set_cell(t_table_, row, 7, format_expiry_short(item.expiry_date), QColor("#ecf0f6"));
+        set_cell(t_table_, row, 8, item.strike > 0.0 ? QString::number(item.strike, 'f', 0) : "-", QColor("#e2d7ff"));
+        set_cell(t_table_, row, 9, QString::number(item.net_pos), QColor(item.net_pos != 0 ? "#ffb6b6" : "#eaeaea"));
+        set_cell(t_table_, row, 10, item.put.bid_qty > 0 ? QString::number(item.put.bid_qty) : "-", item.put.bid_color.darker(104));
+        set_cell(t_table_, row, 11, item.put.bid_px > 0.0 ? QString::number(item.put.bid_px, 'f', 2) : "-", item.put.bid_color);
+        set_cell(t_table_, row, 12, item.put.theo > 0.0 ? QString::number(item.put.theo, 'f', 2) : "-", QColor("#d5f0d9"));
+        set_cell(t_table_, row, 13, item.put.ask_px > 0.0 ? QString::number(item.put.ask_px, 'f', 2) : "-", item.put.ask_color);
+        set_cell(t_table_, row, 14, item.put.ask_qty > 0 ? QString::number(item.put.ask_qty) : "-", item.put.ask_color.darker(104));
+        set_cell(t_table_, row, 15, item.put.status_label, item.put.status_color);
+        set_cell(t_table_, row, 16, item.put.mm_label, item.put.mm_color);
+
+        for (int col : {0, 1, 2, 3, 4, 5, 6}) {
+            if (auto* cell = t_table_->item(row, col); cell != nullptr && item.call.instrument_id != 0) {
+                cell->setData(Qt::UserRole, QVariant::fromValue(item.call.instrument_id));
+                cell->setToolTip(item.call.code);
+            }
         }
-        set_cell(t_table_, row, 4, QString::number(item.ask_px, 'f', 2), QColor("#ffcc8a"));
-        set_cell(t_table_, row, 5, QString::number(item.ask_qty), QColor("#ffc16f"));
-        set_cell(t_table_, row, 6, QString::number(item.delta, 'f', 3), QColor("#cde8ff"));
-        set_cell(t_table_, row, 7, QString::number(item.pos), QColor(item.pos != 0 ? "#ffb6b6" : "#eaeaea"));
+        for (int col : {10, 11, 12, 13, 14, 15, 16}) {
+            if (auto* cell = t_table_->item(row, col); cell != nullptr && item.put.instrument_id != 0) {
+                cell->setData(Qt::UserRole, QVariant::fromValue(item.put.instrument_id));
+                cell->setToolTip(item.put.code);
+            }
+        }
+        if (auto* strike_item = t_table_->item(row, 8); strike_item != nullptr) {
+            const uint32_t focus_id = item.call.instrument_id != 0 ? item.call.instrument_id : item.put.instrument_id;
+            strike_item->setData(Qt::UserRole, QVariant::fromValue(focus_id));
+            strike_item->setToolTip(QString("Call: %1\nPut: %2")
+                .arg(item.call.code.isEmpty() ? "-" : item.call.code)
+                .arg(item.put.code.isEmpty() ? "-" : item.put.code));
+        }
     }
 
     struct GroupSummary {
@@ -722,11 +1155,14 @@ void TraderMainWindow::refresh_ui() {
 
     positions_tree_->clear();
     auto* root = new QTreeWidgetItem(positions_tree_);
-    root->setText(0, QString("Portfolio P%1").arg(selected_product));
+    root->setText(0, QString("Portfolio %1").arg(product_selector_->currentText()));
     root->setText(4, QString::number(impl_->state.portfolio.total_delta(), 'f', 2));
     root->setText(5, QString::number(impl_->state.portfolio.total_gamma(), 'f', 2));
     root->setText(6, QString::number(impl_->state.portfolio.total_vega(), 'f', 2));
     root->setBackground(0, QColor("#d7c4ff"));
+    root->setBackground(4, risk_color(impl_->state.portfolio.total_delta(), 500.0, 2500.0));
+    root->setBackground(5, risk_color(impl_->state.portfolio.total_gamma(), 250.0, 1200.0));
+    root->setBackground(6, risk_color(impl_->state.portfolio.total_vega(), 5000.0, 25000.0));
 
     for (auto& [group_name, instrument_ids] : grouped_positions) {
         std::sort(instrument_ids.begin(), instrument_ids.end(), [&](uint32_t lhs, uint32_t rhs) {
@@ -771,6 +1207,9 @@ void TraderMainWindow::refresh_ui() {
         parent->setText(5, QString::number(summary.gamma, 'f', 2));
         parent->setText(6, QString::number(summary.vega, 'f', 2));
         parent->setBackground(0, QColor("#f8d687"));
+        parent->setBackground(4, risk_color(summary.delta, 200.0, 1000.0));
+        parent->setBackground(5, risk_color(summary.gamma, 100.0, 600.0));
+        parent->setBackground(6, risk_color(summary.vega, 2000.0, 10000.0));
     }
     positions_tree_->expandAll();
 
@@ -779,14 +1218,77 @@ void TraderMainWindow::refresh_ui() {
         return meta_it != impl_->state.instruments.end() && meta_it->second.product_index == selected_product;
     };
 
-    std::vector<omm::proto::OrderUpdate> orders;
+    struct AggregatedOrder {
+        omm::proto::OrderUpdate latest;
+        int cumulative_fill_qty{0};
+        double cumulative_fill_notional{0.0};
+        bool seen_reject{false};
+        bool seen_cancel{false};
+        bool seen_new{false};
+    };
+
+    std::vector<AggregatedOrder> orders;
     orders.reserve(impl_->state.orders.size());
-    for (const auto& order : impl_->state.orders) {
-        if (in_selected_product(order.instrument_id())) orders.push_back(order);
+    std::unordered_map<uint64_t, std::size_t> latest_order_index;
+    for (auto it = impl_->state.orders.rbegin(); it != impl_->state.orders.rend(); ++it) {
+        const auto& order = *it;
+        if (!in_selected_product(order.instrument_id())) continue;
+
+        auto pos = latest_order_index.find(order.client_order_id());
+        if (pos == latest_order_index.end()) {
+            AggregatedOrder agg;
+            agg.latest = order;
+            if (order.status() == "Filled") {
+                agg.cumulative_fill_qty = order.fill_volume();
+                agg.cumulative_fill_notional = order.fill_price() * static_cast<double>(order.fill_volume());
+            }
+            agg.seen_reject = order.status() == "Rejected";
+            agg.seen_cancel = order.status() == "Cancelled";
+            agg.seen_new = order.status() == "New";
+            latest_order_index.emplace(order.client_order_id(), orders.size());
+            orders.push_back(std::move(agg));
+            continue;
+        }
+
+        auto& agg = orders[pos->second];
+        auto& merged = agg.latest;
+        if (merged.instrument_id() == 0 && order.instrument_id() != 0) merged.set_instrument_id(order.instrument_id());
+        if (merged.exchange_id().empty() && !order.exchange_id().empty()) merged.set_exchange_id(order.exchange_id());
+        if (merged.side().empty() && !order.side().empty()) merged.set_side(order.side());
+        if (merged.price() <= 0.0 && order.price() > 0.0) merged.set_price(order.price());
+        if (merged.volume() <= 0 && order.volume() > 0) merged.set_volume(order.volume());
+        if (order.ts_ns() > merged.ts_ns()) merged.set_ts_ns(order.ts_ns());
+
+        if (order.status() == "Filled") {
+            agg.cumulative_fill_qty += order.fill_volume();
+            agg.cumulative_fill_notional += order.fill_price() * static_cast<double>(order.fill_volume());
+        } else if (!order.status().empty()) {
+            merged.set_status(order.status());
+            agg.seen_reject = agg.seen_reject || order.status() == "Rejected";
+            agg.seen_cancel = agg.seen_cancel || order.status() == "Cancelled";
+            agg.seen_new = agg.seen_new || order.status() == "New";
+        }
     }
     orders_table_->setRowCount(static_cast<int>(orders.size()));
     for (int i = 0; i < static_cast<int>(orders.size()); ++i) {
-        const auto& order = orders[i];
+        auto& agg = orders[i];
+        auto& order = agg.latest;
+        if (agg.cumulative_fill_qty > 0) {
+            order.set_fill_volume(agg.cumulative_fill_qty);
+            order.set_fill_price(agg.cumulative_fill_notional / static_cast<double>(agg.cumulative_fill_qty));
+        }
+        if (agg.seen_reject) {
+            order.set_status("Rejected");
+        } else if (order.volume() > 0 && agg.cumulative_fill_qty >= order.volume()) {
+            order.set_status("Filled");
+        } else if (agg.cumulative_fill_qty > 0) {
+            order.set_status("PartialFilled");
+        } else if (agg.seen_cancel) {
+            order.set_status("Cancelled");
+        } else if (agg.seen_new) {
+            order.set_status("New");
+        }
+
         QString instrument_label = QString::number(order.instrument_id());
         if (auto meta_it = impl_->state.instruments.find(order.instrument_id());
             meta_it != impl_->state.instruments.end()) {
@@ -795,11 +1297,39 @@ void TraderMainWindow::refresh_ui() {
         QColor status_color = order.status().find("Reject") != std::string::npos ? QColor("#ffb6b6") :
                               order.status().find("Fill") != std::string::npos ? QColor("#c9f4d5") :
                               QColor("#fff0b3");
-        set_cell(orders_table_, i, 0, instrument_label, QColor("#eaeaea"));
-        set_cell(orders_table_, i, 1, QString::fromStdString(order.status()), status_color);
-        set_cell(orders_table_, i, 2, QString::number(order.fill_price(), 'f', 2), QColor("#f7f7f7"));
-        set_cell(orders_table_, i, 3, QString::number(order.fill_volume()), QColor("#f7f7f7"));
-        set_cell(orders_table_, i, 4, QString::number(order.ts_ns()), QColor("#f7f7f7"));
+        QString exchange_label = order.exchange_id().empty()
+            ? "-"
+            : QString::fromStdString(order.exchange_id());
+        if (exchange_label == "-") {
+            if (auto meta_it = impl_->state.instruments.find(order.instrument_id());
+                meta_it != impl_->state.instruments.end() && !meta_it->second.exchange_id.empty()) {
+                exchange_label = QString::fromStdString(meta_it->second.exchange_id);
+            } else if (auto meta_it = impl_->state.instruments.find(order.instrument_id());
+                       meta_it != impl_->state.instruments.end()) {
+                const QString inferred = infer_exchange_from_code(meta_it->second.code);
+                if (!inferred.isEmpty()) exchange_label = inferred;
+            }
+        }
+        const QString side_label = order.side().empty()
+            ? "-"
+            : QString::fromStdString(order.side());
+        const QString price_label = order.price() > 0.0
+            ? QString::number(order.price(), 'f', 2)
+            : "-";
+        const QString volume_label = order.volume() > 0
+            ? QString::number(order.volume())
+            : "-";
+        const QString ts_label = format_monotonic_ts(order.ts_ns());
+        set_cell(orders_table_, i, 0, QString::number(order.client_order_id()), QColor("#eaeaea"));
+        set_cell(orders_table_, i, 1, instrument_label, QColor("#eaeaea"));
+        set_cell(orders_table_, i, 2, exchange_label, QColor("#f7f7f7"));
+        set_cell(orders_table_, i, 3, side_label, QColor("#f7f7f7"));
+        set_cell(orders_table_, i, 4, price_label, QColor("#f7f7f7"));
+        set_cell(orders_table_, i, 5, volume_label, QColor("#f7f7f7"));
+        set_cell(orders_table_, i, 6, QString::fromStdString(order.status()), status_color);
+        set_cell(orders_table_, i, 7, QString::number(order.fill_price(), 'f', 2), QColor("#f7f7f7"));
+        set_cell(orders_table_, i, 8, QString::number(order.fill_volume()), QColor("#f7f7f7"));
+        set_cell(orders_table_, i, 9, ts_label, QColor("#f7f7f7"));
     }
 
     std::vector<omm::proto::QuoteUpdate> quotes;
@@ -836,14 +1366,33 @@ void TraderMainWindow::refresh_ui() {
             meta_it != impl_->state.instruments.end()) {
             instrument_label = QString::fromStdString(meta_it->second.code);
         }
-        set_cell(trades_table_, i, 0, instrument_label, QColor("#eaeaea"));
-        set_cell(trades_table_, i, 1, QString::fromStdString(trade.status()), QColor("#c9f4d5"));
-        set_cell(trades_table_, i, 2, QString::number(trade.fill_price(), 'f', 2), QColor("#f7f7f7"));
-        set_cell(trades_table_, i, 3, QString::number(trade.fill_volume()), QColor("#f7f7f7"));
-        set_cell(trades_table_, i, 4, QString::number(trade.ts_ns()), QColor("#f7f7f7"));
+        QString exchange_label = trade.exchange_id().empty() ? "-" : QString::fromStdString(trade.exchange_id());
+        if (exchange_label == "-") {
+            if (auto meta_it = impl_->state.instruments.find(trade.instrument_id());
+                meta_it != impl_->state.instruments.end() && !meta_it->second.exchange_id.empty()) {
+                exchange_label = QString::fromStdString(meta_it->second.exchange_id);
+            }
+        }
+        const QString side_label = trade.side().empty() ? "-" : QString::fromStdString(trade.side());
+        set_cell(trades_table_, i, 0, QString::number(trade.exchange_trade_id()), QColor("#e8f4ff"));
+        set_cell(trades_table_, i, 1, QString::number(trade.client_order_id()), QColor("#f1f1f1"));
+        set_cell(trades_table_, i, 2, instrument_label, QColor("#eaeaea"));
+        set_cell(trades_table_, i, 3, exchange_label, QColor("#f7f7f7"));
+        set_cell(trades_table_, i, 4, side_label, QColor(side_label == "Buy" ? "#dff4df" : "#ffd9d1"));
+        set_cell(trades_table_, i, 5, QString::number(trade.fill_price(), 'f', 2), QColor("#f7f7f7"));
+        set_cell(trades_table_, i, 6, QString::number(trade.fill_volume()), QColor("#f7f7f7"));
+        set_cell(trades_table_, i, 7, format_monotonic_ts(trade.ts_ns()), QColor("#f7f7f7"));
     }
 
-    vol_widget_->update();
+    if (vol_widget_ != nullptr && vol_dock_ != nullptr && vol_dock_->isVisible()) {
+        vol_widget_->update();
+    }
+    if (vol_window_ != nullptr && vol_window_->isVisible() && vol_window_widget_ != nullptr) {
+        vol_window_widget_->update();
+    }
+    if (vol_window_ != nullptr && !vol_window_->isVisible() && vol_dock_ != nullptr && !vol_dock_->isVisible()) {
+        vol_dock_->show();
+    }
 }
 
 void TraderMainWindow::send_manual_order() {
@@ -861,7 +1410,7 @@ void TraderMainWindow::send_manual_order() {
 }
 
 void TraderMainWindow::start_strategy(bool enabled) {
-    const bool ok = impl_->client->set_strategy_enabled(product_selector_->value(), enabled);
+    const bool ok = impl_->client->set_strategy_enabled(product_selector_->currentData().toInt(), enabled);
     status_label_->setText(ok
         ? (enabled ? "Strategy started" : "Strategy stopped")
         : "Strategy action failed");
@@ -876,7 +1425,7 @@ void TraderMainWindow::apply_strategy_params() {
     params.set_max_position(max_position_editor_->value());
     params.set_enabled(true);
     const bool ok = impl_->client->set_strategy_params(
-        static_cast<uint32_t>(product_selector_->value()), params);
+        product_selector_->currentData().toUInt(), params);
     status_label_->setText(ok ? "Params applied" : "Params update failed");
 }
 

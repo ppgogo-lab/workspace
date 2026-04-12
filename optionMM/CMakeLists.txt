@@ -103,6 +103,7 @@ set_target_properties(femas_md PROPERTIES
 add_library(common_lib STATIC
     src/common/config.cpp
     src/common/thread_utils.cpp
+    src/sim/sim_instruments.cpp
 )
 target_link_libraries(common_lib PUBLIC
     yaml-cpp
@@ -139,6 +140,7 @@ add_library(feed_lib STATIC
     src/feed/multicast_feed.cpp
     src/feed/fpga_feed.cpp
     src/feed/femas_feed.cpp
+    src/feed/sim_feed.cpp
 )
 target_include_directories(feed_lib PUBLIC
     ${CMAKE_SOURCE_DIR}/include

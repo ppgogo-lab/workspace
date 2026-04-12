@@ -1,0 +1,92 @@
+instance:
+  exchange_id: "SHFE"
+  account_id: "SIM001"
+
+feed:
+  type: sim
+
+gateway:
+  type: sim
+
+sim:
+  profile: calm
+  scenario: normal
+  random_seed: 42
+  tick_interval_ms: 150
+  strikes_per_side: 4
+  expiry_count: 2
+  future_wave_bps: 9.0
+  future_noise_bps: 1.8
+  option_spread_bps: 24.0
+  top_level_volume: 20
+  au_reference_price: 580.0
+  ag_reference_price: 7800.0
+  gateway_ack_latency_ms: 30
+  gateway_cancel_latency_ms: 40
+  gateway_fill_interval_ms: 180
+  gateway_order_fill_probability: 0.30
+  gateway_quote_cross_fill_probability: 0.10
+  gateway_quote_passive_fill_probability: 0.02
+  gateway_partial_fill_probability: 0.75
+  gateway_reject_probability: 0.005
+  gateway_max_fill_size: 1
+  gateway_slippage_ticks: 0
+  gateway_quote_near_touch_ticks: 0.3
+
+pricing:
+  risk_free_rate: 0.02
+  vol_surface:
+    method: orcWing
+    fit_interval_seconds: 10
+
+risk:
+  hard:
+    max_volume_per_order: 50
+  soft:
+    max_net_position: 200
+    max_delta: 5000.0
+    max_gamma: 2500.0
+    max_vega: 50000.0
+
+products:
+  - underlying_id: "au2406"
+    exchange_id: "SHFE"
+    strategy_core: 4
+    strategy_type: simple_mm
+    params:
+      bid_spread: 0.4
+      ask_spread: 0.4
+      quote_volume: 5
+      hedge_delta_threshold: 25.0
+      min_quote_interval_ms: 100.0
+      max_position: 80
+      enabled: true
+
+  - underlying_id: "ag2406"
+    exchange_id: "SHFE"
+    strategy_core: 5
+    strategy_type: simple_mm
+    params:
+      bid_spread: 6.0
+      ask_spread: 6.0
+      quote_volume: 3
+      hedge_delta_threshold: 40.0
+      min_quote_interval_ms: 100.0
+      max_position: 50
+      enabled: true
+
+timer:
+  hedge_check_interval_ms: 1000
+  quote_refresh_interval_ms: 500
+
+monitoring:
+  grpc_listen_addr: "0.0.0.0:50051"
+
+thread_affinity:
+  feed_core: 2
+  pricer_core: 3
+  gateway_dispatcher_core: 12
+  vol_fitter_core: 13
+  risk_monitor_core: 14
+  timer_core: 14
+  grpc_server_core: 15

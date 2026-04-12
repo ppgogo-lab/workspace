@@ -3206,11 +3206,16 @@ class OrderUpdate final : public ::google::protobuf::Message
   // accessors -------------------------------------------------------
   enum : int {
     kStatusFieldNumber = 3,
+    kExchangeIdFieldNumber = 7,
+    kSideFieldNumber = 8,
     kClientOrderIdFieldNumber = 1,
     kInstrumentIdFieldNumber = 2,
     kFillVolumeFieldNumber = 5,
     kFillPriceFieldNumber = 4,
     kTsNsFieldNumber = 6,
+    kPriceFieldNumber = 9,
+    kExchangeTradeIdFieldNumber = 11,
+    kVolumeFieldNumber = 10,
   };
   // string status = 3;
   void clear_status() ;
@@ -3225,6 +3230,36 @@ class OrderUpdate final : public ::google::protobuf::Message
   const ::std::string& _internal_status() const;
   PROTOBUF_ALWAYS_INLINE void _internal_set_status(const ::std::string& value);
   ::std::string* PROTOBUF_NONNULL _internal_mutable_status();
+
+  public:
+  // string exchange_id = 7;
+  void clear_exchange_id() ;
+  const ::std::string& exchange_id() const;
+  template <typename Arg_ = const ::std::string&, typename... Args_>
+  void set_exchange_id(Arg_&& arg, Args_... args);
+  ::std::string* PROTOBUF_NONNULL mutable_exchange_id();
+  [[nodiscard]] ::std::string* PROTOBUF_NULLABLE release_exchange_id();
+  void set_allocated_exchange_id(::std::string* PROTOBUF_NULLABLE value);
+
+  private:
+  const ::std::string& _internal_exchange_id() const;
+  PROTOBUF_ALWAYS_INLINE void _internal_set_exchange_id(const ::std::string& value);
+  ::std::string* PROTOBUF_NONNULL _internal_mutable_exchange_id();
+
+  public:
+  // string side = 8;
+  void clear_side() ;
+  const ::std::string& side() const;
+  template <typename Arg_ = const ::std::string&, typename... Args_>
+  void set_side(Arg_&& arg, Args_... args);
+  ::std::string* PROTOBUF_NONNULL mutable_side();
+  [[nodiscard]] ::std::string* PROTOBUF_NULLABLE release_side();
+  void set_allocated_side(::std::string* PROTOBUF_NULLABLE value);
+
+  private:
+  const ::std::string& _internal_side() const;
+  PROTOBUF_ALWAYS_INLINE void _internal_set_side(const ::std::string& value);
+  ::std::string* PROTOBUF_NONNULL _internal_mutable_side();
 
   public:
   // uint64 client_order_id = 1;
@@ -3277,12 +3312,42 @@ class OrderUpdate final : public ::google::protobuf::Message
   void _internal_set_ts_ns(::int64_t value);
 
   public:
+  // double price = 9;
+  void clear_price() ;
+  double price() const;
+  void set_price(double value);
+
+  private:
+  double _internal_price() const;
+  void _internal_set_price(double value);
+
+  public:
+  // uint64 exchange_trade_id = 11;
+  void clear_exchange_trade_id() ;
+  ::uint64_t exchange_trade_id() const;
+  void set_exchange_trade_id(::uint64_t value);
+
+  private:
+  ::uint64_t _internal_exchange_trade_id() const;
+  void _internal_set_exchange_trade_id(::uint64_t value);
+
+  public:
+  // int32 volume = 10;
+  void clear_volume() ;
+  ::int32_t volume() const;
+  void set_volume(::int32_t value);
+
+  private:
+  ::int32_t _internal_volume() const;
+  void _internal_set_volume(::int32_t value);
+
+  public:
   // @@protoc_insertion_point(class_scope:omm.proto.OrderUpdate)
  private:
   class _Internal;
   friend class ::google::protobuf::internal::TcParser;
-  static const ::google::protobuf::internal::TcParseTable<3, 6,
-                                   0, 36,
+  static const ::google::protobuf::internal::TcParseTable<4, 11,
+                                   0, 59,
                                    2>
       _table_;
 
@@ -3304,11 +3369,16 @@ class OrderUpdate final : public ::google::protobuf::Message
     ::google::protobuf::internal::HasBits<1> _has_bits_;
     ::google::protobuf::internal::CachedSize _cached_size_;
     ::google::protobuf::internal::ArenaStringPtr status_;
+    ::google::protobuf::internal::ArenaStringPtr exchange_id_;
+    ::google::protobuf::internal::ArenaStringPtr side_;
     ::uint64_t client_order_id_;
     ::uint32_t instrument_id_;
     ::int32_t fill_volume_;
     double fill_price_;
     ::int64_t ts_ns_;
+    double price_;
+    ::uint64_t exchange_trade_id_;
+    ::int32_t volume_;
     PROTOBUF_TSAN_DECLARE_MEMBER
   };
   union { Impl_ _impl_; };
@@ -4164,10 +4234,12 @@ class InstrumentInfo final : public ::google::protobuf::Message
     kUnderlyingCodeFieldNumber = 3,
     kKindFieldNumber = 4,
     kOptionTypeFieldNumber = 5,
+    kExchangeIdFieldNumber = 9,
     kInstrumentIdFieldNumber = 1,
     kProductIndexFieldNumber = 7,
     kStrikeFieldNumber = 6,
     kUnderlyingIdFieldNumber = 8,
+    kExpiryDateFieldNumber = 10,
   };
   // string code = 2;
   void clear_code() ;
@@ -4229,6 +4301,21 @@ class InstrumentInfo final : public ::google::protobuf::Message
   ::std::string* PROTOBUF_NONNULL _internal_mutable_option_type();
 
   public:
+  // string exchange_id = 9;
+  void clear_exchange_id() ;
+  const ::std::string& exchange_id() const;
+  template <typename Arg_ = const ::std::string&, typename... Args_>
+  void set_exchange_id(Arg_&& arg, Args_... args);
+  ::std::string* PROTOBUF_NONNULL mutable_exchange_id();
+  [[nodiscard]] ::std::string* PROTOBUF_NULLABLE release_exchange_id();
+  void set_allocated_exchange_id(::std::string* PROTOBUF_NULLABLE value);
+
+  private:
+  const ::std::string& _internal_exchange_id() const;
+  PROTOBUF_ALWAYS_INLINE void _internal_set_exchange_id(const ::std::string& value);
+  ::std::string* PROTOBUF_NONNULL _internal_mutable_exchange_id();
+
+  public:
   // uint32 instrument_id = 1;
   void clear_instrument_id() ;
   ::uint32_t instrument_id() const;
@@ -4269,12 +4356,22 @@ class InstrumentInfo final : public ::google::protobuf::Message
   void _internal_set_underlying_id(::uint32_t value);
 
   public:
+  // int32 expiry_date = 10;
+  void clear_expiry_date() ;
+  ::int32_t expiry_date() const;
+  void set_expiry_date(::int32_t value);
+
+  private:
+  ::int32_t _internal_expiry_date() const;
+  void _internal_set_expiry_date(::int32_t value);
+
+  public:
   // @@protoc_insertion_point(class_scope:omm.proto.InstrumentInfo)
  private:
   class _Internal;
   friend class ::google::protobuf::internal::TcParser;
-  static const ::google::protobuf::internal::TcParseTable<3, 8,
-                                   0, 75,
+  static const ::google::protobuf::internal::TcParseTable<4, 10,
+                                   0, 86,
                                    2>
       _table_;
 
@@ -4299,10 +4396,12 @@ class InstrumentInfo final : public ::google::protobuf::Message
     ::google::protobuf::internal::ArenaStringPtr underlying_code_;
     ::google::protobuf::internal::ArenaStringPtr kind_;
     ::google::protobuf::internal::ArenaStringPtr option_type_;
+    ::google::protobuf::internal::ArenaStringPtr exchange_id_;
     ::uint32_t instrument_id_;
     ::uint32_t product_index_;
     double strike_;
     ::uint32_t underlying_id_;
+    ::int32_t expiry_date_;
     PROTOBUF_TSAN_DECLARE_MEMBER
   };
   union { Impl_ _impl_; };
@@ -6743,7 +6842,7 @@ inline void OrderUpdate::clear_client_order_id() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.client_order_id_ = ::uint64_t{0u};
   ClearHasBit(_impl_._has_bits_[0],
-                  0x00000002U);
+                  0x00000008U);
 }
 inline ::uint64_t OrderUpdate::client_order_id() const {
   // @@protoc_insertion_point(field_get:omm.proto.OrderUpdate.client_order_id)
@@ -6751,7 +6850,7 @@ inline ::uint64_t OrderUpdate::client_order_id() const {
 }
 inline void OrderUpdate::set_client_order_id(::uint64_t value) {
   _internal_set_client_order_id(value);
-  SetHasBit(_impl_._has_bits_[0], 0x00000002U);
+  SetHasBit(_impl_._has_bits_[0], 0x00000008U);
   // @@protoc_insertion_point(field_set:omm.proto.OrderUpdate.client_order_id)
 }
 inline ::uint64_t OrderUpdate::_internal_client_order_id() const {
@@ -6768,7 +6867,7 @@ inline void OrderUpdate::clear_instrument_id() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.instrument_id_ = 0u;
   ClearHasBit(_impl_._has_bits_[0],
-                  0x00000004U);
+                  0x00000010U);
 }
 inline ::uint32_t OrderUpdate::instrument_id() const {
   // @@protoc_insertion_point(field_get:omm.proto.OrderUpdate.instrument_id)
@@ -6776,7 +6875,7 @@ inline ::uint32_t OrderUpdate::instrument_id() const {
 }
 inline void OrderUpdate::set_instrument_id(::uint32_t value) {
   _internal_set_instrument_id(value);
-  SetHasBit(_impl_._has_bits_[0], 0x00000004U);
+  SetHasBit(_impl_._has_bits_[0], 0x00000010U);
   // @@protoc_insertion_point(field_set:omm.proto.OrderUpdate.instrument_id)
 }
 inline ::uint32_t OrderUpdate::_internal_instrument_id() const {
@@ -6858,7 +6957,7 @@ inline void OrderUpdate::clear_fill_price() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.fill_price_ = 0;
   ClearHasBit(_impl_._has_bits_[0],
-                  0x00000010U);
+                  0x00000040U);
 }
 inline double OrderUpdate::fill_price() const {
   // @@protoc_insertion_point(field_get:omm.proto.OrderUpdate.fill_price)
@@ -6866,7 +6965,7 @@ inline double OrderUpdate::fill_price() const {
 }
 inline void OrderUpdate::set_fill_price(double value) {
   _internal_set_fill_price(value);
-  SetHasBit(_impl_._has_bits_[0], 0x00000010U);
+  SetHasBit(_impl_._has_bits_[0], 0x00000040U);
   // @@protoc_insertion_point(field_set:omm.proto.OrderUpdate.fill_price)
 }
 inline double OrderUpdate::_internal_fill_price() const {
@@ -6883,7 +6982,7 @@ inline void OrderUpdate::clear_fill_volume() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.fill_volume_ = 0;
   ClearHasBit(_impl_._has_bits_[0],
-                  0x00000008U);
+                  0x00000020U);
 }
 inline ::int32_t OrderUpdate::fill_volume() const {
   // @@protoc_insertion_point(field_get:omm.proto.OrderUpdate.fill_volume)
@@ -6891,7 +6990,7 @@ inline ::int32_t OrderUpdate::fill_volume() const {
 }
 inline void OrderUpdate::set_fill_volume(::int32_t value) {
   _internal_set_fill_volume(value);
-  SetHasBit(_impl_._has_bits_[0], 0x00000008U);
+  SetHasBit(_impl_._has_bits_[0], 0x00000020U);
   // @@protoc_insertion_point(field_set:omm.proto.OrderUpdate.fill_volume)
 }
 inline ::int32_t OrderUpdate::_internal_fill_volume() const {
@@ -6908,7 +7007,7 @@ inline void OrderUpdate::clear_ts_ns() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.ts_ns_ = ::int64_t{0};
   ClearHasBit(_impl_._has_bits_[0],
-                  0x00000020U);
+                  0x00000080U);
 }
 inline ::int64_t OrderUpdate::ts_ns() const {
   // @@protoc_insertion_point(field_get:omm.proto.OrderUpdate.ts_ns)
@@ -6916,7 +7015,7 @@ inline ::int64_t OrderUpdate::ts_ns() const {
 }
 inline void OrderUpdate::set_ts_ns(::int64_t value) {
   _internal_set_ts_ns(value);
-  SetHasBit(_impl_._has_bits_[0], 0x00000020U);
+  SetHasBit(_impl_._has_bits_[0], 0x00000080U);
   // @@protoc_insertion_point(field_set:omm.proto.OrderUpdate.ts_ns)
 }
 inline ::int64_t OrderUpdate::_internal_ts_ns() const {
@@ -6926,6 +7025,211 @@ inline ::int64_t OrderUpdate::_internal_ts_ns() const {
 inline void OrderUpdate::_internal_set_ts_ns(::int64_t value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.ts_ns_ = value;
+}
+
+// string exchange_id = 7;
+inline void OrderUpdate::clear_exchange_id() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.exchange_id_.ClearToEmpty();
+  ClearHasBit(_impl_._has_bits_[0],
+                  0x00000002U);
+}
+inline const ::std::string& OrderUpdate::exchange_id() const
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_get:omm.proto.OrderUpdate.exchange_id)
+  return _internal_exchange_id();
+}
+template <typename Arg_, typename... Args_>
+PROTOBUF_ALWAYS_INLINE void OrderUpdate::set_exchange_id(Arg_&& arg, Args_... args) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  SetHasBit(_impl_._has_bits_[0], 0x00000002U);
+  _impl_.exchange_id_.Set(static_cast<Arg_&&>(arg), args..., GetArena());
+  // @@protoc_insertion_point(field_set:omm.proto.OrderUpdate.exchange_id)
+}
+inline ::std::string* PROTOBUF_NONNULL OrderUpdate::mutable_exchange_id()
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  SetHasBit(_impl_._has_bits_[0], 0x00000002U);
+  ::std::string* _s = _internal_mutable_exchange_id();
+  // @@protoc_insertion_point(field_mutable:omm.proto.OrderUpdate.exchange_id)
+  return _s;
+}
+inline const ::std::string& OrderUpdate::_internal_exchange_id() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return _impl_.exchange_id_.Get();
+}
+inline void OrderUpdate::_internal_set_exchange_id(const ::std::string& value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.exchange_id_.Set(value, GetArena());
+}
+inline ::std::string* PROTOBUF_NONNULL OrderUpdate::_internal_mutable_exchange_id() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  return _impl_.exchange_id_.Mutable( GetArena());
+}
+inline ::std::string* PROTOBUF_NULLABLE OrderUpdate::release_exchange_id() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  // @@protoc_insertion_point(field_release:omm.proto.OrderUpdate.exchange_id)
+  if (!CheckHasBit(_impl_._has_bits_[0], 0x00000002U)) {
+    return nullptr;
+  }
+  ClearHasBit(_impl_._has_bits_[0], 0x00000002U);
+  auto* released = _impl_.exchange_id_.Release();
+  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString()) {
+    _impl_.exchange_id_.Set("", GetArena());
+  }
+  return released;
+}
+inline void OrderUpdate::set_allocated_exchange_id(::std::string* PROTOBUF_NULLABLE value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (value != nullptr) {
+    SetHasBit(_impl_._has_bits_[0], 0x00000002U);
+  } else {
+    ClearHasBit(_impl_._has_bits_[0], 0x00000002U);
+  }
+  _impl_.exchange_id_.SetAllocated(value, GetArena());
+  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString() && _impl_.exchange_id_.IsDefault()) {
+    _impl_.exchange_id_.Set("", GetArena());
+  }
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.OrderUpdate.exchange_id)
+}
+
+// string side = 8;
+inline void OrderUpdate::clear_side() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.side_.ClearToEmpty();
+  ClearHasBit(_impl_._has_bits_[0],
+                  0x00000004U);
+}
+inline const ::std::string& OrderUpdate::side() const
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_get:omm.proto.OrderUpdate.side)
+  return _internal_side();
+}
+template <typename Arg_, typename... Args_>
+PROTOBUF_ALWAYS_INLINE void OrderUpdate::set_side(Arg_&& arg, Args_... args) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  SetHasBit(_impl_._has_bits_[0], 0x00000004U);
+  _impl_.side_.Set(static_cast<Arg_&&>(arg), args..., GetArena());
+  // @@protoc_insertion_point(field_set:omm.proto.OrderUpdate.side)
+}
+inline ::std::string* PROTOBUF_NONNULL OrderUpdate::mutable_side()
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  SetHasBit(_impl_._has_bits_[0], 0x00000004U);
+  ::std::string* _s = _internal_mutable_side();
+  // @@protoc_insertion_point(field_mutable:omm.proto.OrderUpdate.side)
+  return _s;
+}
+inline const ::std::string& OrderUpdate::_internal_side() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return _impl_.side_.Get();
+}
+inline void OrderUpdate::_internal_set_side(const ::std::string& value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.side_.Set(value, GetArena());
+}
+inline ::std::string* PROTOBUF_NONNULL OrderUpdate::_internal_mutable_side() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  return _impl_.side_.Mutable( GetArena());
+}
+inline ::std::string* PROTOBUF_NULLABLE OrderUpdate::release_side() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  // @@protoc_insertion_point(field_release:omm.proto.OrderUpdate.side)
+  if (!CheckHasBit(_impl_._has_bits_[0], 0x00000004U)) {
+    return nullptr;
+  }
+  ClearHasBit(_impl_._has_bits_[0], 0x00000004U);
+  auto* released = _impl_.side_.Release();
+  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString()) {
+    _impl_.side_.Set("", GetArena());
+  }
+  return released;
+}
+inline void OrderUpdate::set_allocated_side(::std::string* PROTOBUF_NULLABLE value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (value != nullptr) {
+    SetHasBit(_impl_._has_bits_[0], 0x00000004U);
+  } else {
+    ClearHasBit(_impl_._has_bits_[0], 0x00000004U);
+  }
+  _impl_.side_.SetAllocated(value, GetArena());
+  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString() && _impl_.side_.IsDefault()) {
+    _impl_.side_.Set("", GetArena());
+  }
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.OrderUpdate.side)
+}
+
+// double price = 9;
+inline void OrderUpdate::clear_price() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.price_ = 0;
+  ClearHasBit(_impl_._has_bits_[0],
+                  0x00000100U);
+}
+inline double OrderUpdate::price() const {
+  // @@protoc_insertion_point(field_get:omm.proto.OrderUpdate.price)
+  return _internal_price();
+}
+inline void OrderUpdate::set_price(double value) {
+  _internal_set_price(value);
+  SetHasBit(_impl_._has_bits_[0], 0x00000100U);
+  // @@protoc_insertion_point(field_set:omm.proto.OrderUpdate.price)
+}
+inline double OrderUpdate::_internal_price() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return _impl_.price_;
+}
+inline void OrderUpdate::_internal_set_price(double value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.price_ = value;
+}
+
+// int32 volume = 10;
+inline void OrderUpdate::clear_volume() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.volume_ = 0;
+  ClearHasBit(_impl_._has_bits_[0],
+                  0x00000400U);
+}
+inline ::int32_t OrderUpdate::volume() const {
+  // @@protoc_insertion_point(field_get:omm.proto.OrderUpdate.volume)
+  return _internal_volume();
+}
+inline void OrderUpdate::set_volume(::int32_t value) {
+  _internal_set_volume(value);
+  SetHasBit(_impl_._has_bits_[0], 0x00000400U);
+  // @@protoc_insertion_point(field_set:omm.proto.OrderUpdate.volume)
+}
+inline ::int32_t OrderUpdate::_internal_volume() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return _impl_.volume_;
+}
+inline void OrderUpdate::_internal_set_volume(::int32_t value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.volume_ = value;
+}
+
+// uint64 exchange_trade_id = 11;
+inline void OrderUpdate::clear_exchange_trade_id() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.exchange_trade_id_ = ::uint64_t{0u};
+  ClearHasBit(_impl_._has_bits_[0],
+                  0x00000200U);
+}
+inline ::uint64_t OrderUpdate::exchange_trade_id() const {
+  // @@protoc_insertion_point(field_get:omm.proto.OrderUpdate.exchange_trade_id)
+  return _internal_exchange_trade_id();
+}
+inline void OrderUpdate::set_exchange_trade_id(::uint64_t value) {
+  _internal_set_exchange_trade_id(value);
+  SetHasBit(_impl_._has_bits_[0], 0x00000200U);
+  // @@protoc_insertion_point(field_set:omm.proto.OrderUpdate.exchange_trade_id)
+}
+inline ::uint64_t OrderUpdate::_internal_exchange_trade_id() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return _impl_.exchange_trade_id_;
+}
+inline void OrderUpdate::_internal_set_exchange_trade_id(::uint64_t value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.exchange_trade_id_ = value;
 }
 
 // -------------------------------------------------------------------
@@ -7181,7 +7485,7 @@ inline void InstrumentInfo::clear_instrument_id() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.instrument_id_ = 0u;
   ClearHasBit(_impl_._has_bits_[0],
-                  0x00000010U);
+                  0x00000020U);
 }
 inline ::uint32_t InstrumentInfo::instrument_id() const {
   // @@protoc_insertion_point(field_get:omm.proto.InstrumentInfo.instrument_id)
@@ -7189,7 +7493,7 @@ inline ::uint32_t InstrumentInfo::instrument_id() const {
 }
 inline void InstrumentInfo::set_instrument_id(::uint32_t value) {
   _internal_set_instrument_id(value);
-  SetHasBit(_impl_._has_bits_[0], 0x00000010U);
+  SetHasBit(_impl_._has_bits_[0], 0x00000020U);
   // @@protoc_insertion_point(field_set:omm.proto.InstrumentInfo.instrument_id)
 }
 inline ::uint32_t InstrumentInfo::_internal_instrument_id() const {
@@ -7466,7 +7770,7 @@ inline void InstrumentInfo::clear_strike() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.strike_ = 0;
   ClearHasBit(_impl_._has_bits_[0],
-                  0x00000040U);
+                  0x00000080U);
 }
 inline double InstrumentInfo::strike() const {
   // @@protoc_insertion_point(field_get:omm.proto.InstrumentInfo.strike)
@@ -7474,7 +7778,7 @@ inline double InstrumentInfo::strike() const {
 }
 inline void InstrumentInfo::set_strike(double value) {
   _internal_set_strike(value);
-  SetHasBit(_impl_._has_bits_[0], 0x00000040U);
+  SetHasBit(_impl_._has_bits_[0], 0x00000080U);
   // @@protoc_insertion_point(field_set:omm.proto.InstrumentInfo.strike)
 }
 inline double InstrumentInfo::_internal_strike() const {
@@ -7491,7 +7795,7 @@ inline void InstrumentInfo::clear_product_index() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.product_index_ = 0u;
   ClearHasBit(_impl_._has_bits_[0],
-                  0x00000020U);
+                  0x00000040U);
 }
 inline ::uint32_t InstrumentInfo::product_index() const {
   // @@protoc_insertion_point(field_get:omm.proto.InstrumentInfo.product_index)
@@ -7499,7 +7803,7 @@ inline ::uint32_t InstrumentInfo::product_index() const {
 }
 inline void InstrumentInfo::set_product_index(::uint32_t value) {
   _internal_set_product_index(value);
-  SetHasBit(_impl_._has_bits_[0], 0x00000020U);
+  SetHasBit(_impl_._has_bits_[0], 0x00000040U);
   // @@protoc_insertion_point(field_set:omm.proto.InstrumentInfo.product_index)
 }
 inline ::uint32_t InstrumentInfo::_internal_product_index() const {
@@ -7516,7 +7820,7 @@ inline void InstrumentInfo::clear_underlying_id() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.underlying_id_ = 0u;
   ClearHasBit(_impl_._has_bits_[0],
-                  0x00000080U);
+                  0x00000100U);
 }
 inline ::uint32_t InstrumentInfo::underlying_id() const {
   // @@protoc_insertion_point(field_get:omm.proto.InstrumentInfo.underlying_id)
@@ -7524,7 +7828,7 @@ inline ::uint32_t InstrumentInfo::underlying_id() const {
 }
 inline void InstrumentInfo::set_underlying_id(::uint32_t value) {
   _internal_set_underlying_id(value);
-  SetHasBit(_impl_._has_bits_[0], 0x00000080U);
+  SetHasBit(_impl_._has_bits_[0], 0x00000100U);
   // @@protoc_insertion_point(field_set:omm.proto.InstrumentInfo.underlying_id)
 }
 inline ::uint32_t InstrumentInfo::_internal_underlying_id() const {
@@ -7534,6 +7838,96 @@ inline ::uint32_t InstrumentInfo::_internal_underlying_id() const {
 inline void InstrumentInfo::_internal_set_underlying_id(::uint32_t value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.underlying_id_ = value;
+}
+
+// string exchange_id = 9;
+inline void InstrumentInfo::clear_exchange_id() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.exchange_id_.ClearToEmpty();
+  ClearHasBit(_impl_._has_bits_[0],
+                  0x00000010U);
+}
+inline const ::std::string& InstrumentInfo::exchange_id() const
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_get:omm.proto.InstrumentInfo.exchange_id)
+  return _internal_exchange_id();
+}
+template <typename Arg_, typename... Args_>
+PROTOBUF_ALWAYS_INLINE void InstrumentInfo::set_exchange_id(Arg_&& arg, Args_... args) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  SetHasBit(_impl_._has_bits_[0], 0x00000010U);
+  _impl_.exchange_id_.Set(static_cast<Arg_&&>(arg), args..., GetArena());
+  // @@protoc_insertion_point(field_set:omm.proto.InstrumentInfo.exchange_id)
+}
+inline ::std::string* PROTOBUF_NONNULL InstrumentInfo::mutable_exchange_id()
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  SetHasBit(_impl_._has_bits_[0], 0x00000010U);
+  ::std::string* _s = _internal_mutable_exchange_id();
+  // @@protoc_insertion_point(field_mutable:omm.proto.InstrumentInfo.exchange_id)
+  return _s;
+}
+inline const ::std::string& InstrumentInfo::_internal_exchange_id() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return _impl_.exchange_id_.Get();
+}
+inline void InstrumentInfo::_internal_set_exchange_id(const ::std::string& value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.exchange_id_.Set(value, GetArena());
+}
+inline ::std::string* PROTOBUF_NONNULL InstrumentInfo::_internal_mutable_exchange_id() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  return _impl_.exchange_id_.Mutable( GetArena());
+}
+inline ::std::string* PROTOBUF_NULLABLE InstrumentInfo::release_exchange_id() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  // @@protoc_insertion_point(field_release:omm.proto.InstrumentInfo.exchange_id)
+  if (!CheckHasBit(_impl_._has_bits_[0], 0x00000010U)) {
+    return nullptr;
+  }
+  ClearHasBit(_impl_._has_bits_[0], 0x00000010U);
+  auto* released = _impl_.exchange_id_.Release();
+  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString()) {
+    _impl_.exchange_id_.Set("", GetArena());
+  }
+  return released;
+}
+inline void InstrumentInfo::set_allocated_exchange_id(::std::string* PROTOBUF_NULLABLE value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (value != nullptr) {
+    SetHasBit(_impl_._has_bits_[0], 0x00000010U);
+  } else {
+    ClearHasBit(_impl_._has_bits_[0], 0x00000010U);
+  }
+  _impl_.exchange_id_.SetAllocated(value, GetArena());
+  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString() && _impl_.exchange_id_.IsDefault()) {
+    _impl_.exchange_id_.Set("", GetArena());
+  }
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.InstrumentInfo.exchange_id)
+}
+
+// int32 expiry_date = 10;
+inline void InstrumentInfo::clear_expiry_date() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.expiry_date_ = 0;
+  ClearHasBit(_impl_._has_bits_[0],
+                  0x00000200U);
+}
+inline ::int32_t InstrumentInfo::expiry_date() const {
+  // @@protoc_insertion_point(field_get:omm.proto.InstrumentInfo.expiry_date)
+  return _internal_expiry_date();
+}
+inline void InstrumentInfo::set_expiry_date(::int32_t value) {
+  _internal_set_expiry_date(value);
+  SetHasBit(_impl_._has_bits_[0], 0x00000200U);
+  // @@protoc_insertion_point(field_set:omm.proto.InstrumentInfo.expiry_date)
+}
+inline ::int32_t InstrumentInfo::_internal_expiry_date() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return _impl_.expiry_date_;
+}
+inline void InstrumentInfo::_internal_set_expiry_date(::int32_t value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.expiry_date_ = value;
 }
 
 // -------------------------------------------------------------------
