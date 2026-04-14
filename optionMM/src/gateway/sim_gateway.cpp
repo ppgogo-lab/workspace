@@ -71,10 +71,37 @@ bool SimGateway::send_quote(const Quote& quote) noexcept {
 
     quotes_sent_.fetch_add(1, std::memory_order_relaxed);
     const Timestamp now_ns = get_monotonic_ns();
-    const uint64_t exch_id = exchange_order_id_seq_.fetch_add(1, std::memory_order_relaxed);
 
     std::lock_guard<std::mutex> lock(state_mutex_);
     ActiveQuote& slot = active_quotes_[quote.instrument_id];
+
+    if (quote.bid_volume == 0 && quote.ask_volume == 0) {
+        GatewayEvent cancel{};
+        cancel.type = GatewayEventType::QuoteCancel;
+        cancel.product_index = quote.product_index;
+        cancel.quote = slot.used ? slot.quote : quote;
+        cancel.quote.client_quote_id = quote.client_quote_id;
+        cancel.quote.bid_volume = 0;
+        cancel.quote.ask_volume = 0;
+        cancel.quote.ack_ts = now_ns;
+        (void)callback_buf.try_push(cancel);
+        slot = ActiveQuote{};
+        return true;
+    }
+
+    if ((quote.bid_volume > 0 && quote.bid_price <= 0.0)
+        || (quote.ask_volume > 0 && quote.ask_price <= 0.0)
+        || (quote.bid_volume > 0 && quote.ask_volume > 0 && quote.ask_price <= quote.bid_price)) {
+        GatewayEvent reject{};
+        reject.type = GatewayEventType::QuoteReject;
+        reject.product_index = quote.product_index;
+        reject.quote = quote;
+        reject.quote.ack_ts = now_ns;
+        (void)callback_buf.try_push(reject);
+        return false;
+    }
+
+    const uint64_t exch_id = exchange_order_id_seq_.fetch_add(1, std::memory_order_relaxed);
     slot = ActiveQuote{};
     slot.used = true;
     slot.quote = quote;

@@ -240,7 +240,11 @@ TEST(LatencyTest, TickToQuoteLatency) {
 
     constexpr int N = 5000;
     std::vector<int64_t> latencies;
+    std::vector<int64_t> latencies_by_product[2];
+    size_t quotes_by_product[2]{};
     latencies.reserve(N * 12);  // each future tick → 6 option quotes per product
+    latencies_by_product[0].reserve(N * 6);
+    latencies_by_product[1].reserve(N * 6);
 
     for (int i = 0; i < N; ++i) {
         int slot = i % 2;  // alternate cu/rb
@@ -271,7 +275,11 @@ TEST(LatencyTest, TickToQuoteLatency) {
             Quote q{};
             if (engine->quote_buf(prod).try_pop(q)) {
                 int64_t latency = q.send_ts - t0;
-                if (latency > 0) latencies.push_back(latency);
+                if (latency > 0) {
+                    latencies.push_back(latency);
+                    latencies_by_product[prod].push_back(latency);
+                    quotes_by_product[prod]++;
+                }
                 quotes_collected++;
             }
         }
@@ -291,6 +299,8 @@ TEST(LatencyTest, TickToQuoteLatency) {
               << " future ticks, 2 products (cu/rb), 12 option quotes per cycle\n"
               << "[LATENCY] Quotes captured: " << n
               << " (" << (100.0 * n / expected_total_quotes) << "%)\n";
+    std::cout << "[LATENCY] Product 0 quotes: " << quotes_by_product[0] << "\n"
+              << "[LATENCY] Product 1 quotes: " << quotes_by_product[1] << "\n";
 
     if (n > 0) {
         std::cout << "[LATENCY] min:   " << latencies.front()          << " ns\n"
@@ -300,10 +310,23 @@ TEST(LatencyTest, TickToQuoteLatency) {
                   << "[LATENCY] p99.9: " << percentile(latencies, 0.999)<< " ns\n"
                   << "[LATENCY] max:   " << latencies.back()            << " ns\n";
     }
+    for (int prod = 0; prod < 2; ++prod) {
+        auto& prod_lat = latencies_by_product[prod];
+        if (prod_lat.empty()) continue;
+        std::sort(prod_lat.begin(), prod_lat.end());
+        std::cout << "[LATENCY] product " << prod
+                  << " p50=" << percentile(prod_lat, 0.50)
+                  << " ns p99=" << percentile(prod_lat, 0.99)
+                  << " ns count=" << prod_lat.size() << "\n";
+    }
 
     // Correctness assertions (not SLA — WSL/dev environment has high jitter)
     EXPECT_GT(n, static_cast<size_t>(expected_total_quotes * 0.80))
         << "Expected at least 80% of option quotes to be captured";
+    EXPECT_GT(quotes_by_product[0], static_cast<size_t>(N * 4))
+        << "Expected product 0 to receive quotes under fair rotation";
+    EXPECT_GT(quotes_by_product[1], static_cast<size_t>(N * 4))
+        << "Expected product 1 to receive quotes under fair rotation";
     if (n > 0) {
         EXPECT_GT(latencies.front(), 0LL) << "Latency must be positive";
         // Sanity: p99 < 100ms (even under heavy WSL load)

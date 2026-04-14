@@ -41,18 +41,24 @@ Instrument make_option(uint16_t id, uint16_t underlying_id, uint8_t product_idx,
     return instr;
 }
 
-PricingSignal make_signal(uint16_t instrument_id, double theo, double delta = 0.4) {
+PricingSignal make_signal(uint16_t instrument_id,
+                          double theo_bid,
+                          double theo_ask,
+                          double delta = 0.4,
+                          double vega = 0.2,
+                          float underlying_bid = 99.0F,
+                          float underlying_ask = 101.0F) {
     PricingSignal sig{};
     sig.instrument_id = instrument_id;
     sig.underlying_id = 0;
     sig.flags = PricingFlagHasUnderlyingRef;
-    sig.theo_bid = theo;
-    sig.theo_ask = theo;
+    sig.theo_bid = theo_bid;
+    sig.theo_ask = theo_ask;
     sig.delta = static_cast<float>(delta);
-    sig.vega = 0.2F;
+    sig.vega = static_cast<float>(vega);
     sig.calc_ts_ns = get_monotonic_ns();
-    sig.underlying_ref_bid = 99.0F;
-    sig.underlying_ref_ask = 101.0F;
+    sig.underlying_ref_bid = underlying_bid;
+    sig.underlying_ref_ask = underlying_ask;
     return sig;
 }
 
@@ -98,6 +104,11 @@ protected:
         instruments[0] = make_future(0, PROD, "cu2501");
         instruments[1] = make_option(1, 0, PROD, OptionType::Call, 100.0);
 
+        tick_snapshot[0].instrument_id = 0;
+        tick_snapshot[0].recv_ts_ns = get_monotonic_ns();
+        tick_snapshot[0].bid_price[0] = 99.0;
+        tick_snapshot[0].ask_price[0] = 101.0;
+        tick_snapshot[0].last_price = 100.0;
         tick_snapshot[1].instrument_id = 1;
         tick_snapshot[1].recv_ts_ns = get_monotonic_ns();
         tick_snapshot[1].bid_price[0] = 9.5;
@@ -111,7 +122,7 @@ protected:
 };
 
 TEST_F(OptionMmCoreTest, GeneratesQuoteFromValidSignal) {
-    strat.on_signal(make_signal(1, 10.0));
+    strat.on_signal(make_signal(1, 9.8, 10.2));
 
     Quote quote{};
     ASSERT_TRUE(quote_buf.try_pop(quote));
@@ -131,10 +142,85 @@ TEST_F(OptionMmCoreTest, SwitchesToOneSidedQuoteNearWarningPosition) {
         strat.on_fill(trade);
     }
 
-    strat.on_signal(make_signal(1, 10.0));
+    strat.on_signal(make_signal(1, 9.8, 10.2));
 
     Quote quote{};
     ASSERT_TRUE(quote_buf.try_pop(quote));
     EXPECT_EQ(quote.bid_volume, 0);
     EXPECT_EQ(quote.ask_volume, 5);
+}
+
+TEST_F(OptionMmCoreTest, SuppressesWholeProductAndTriggersHedgeOnDeltaBreach) {
+    params.hedge_delta_threshold.store(1.0, std::memory_order_relaxed);
+    params.quote_volume.store(3, std::memory_order_relaxed);
+
+    strat.on_signal(make_signal(1, 9.8, 10.2, 0.5));
+
+    Quote initial{};
+    ASSERT_TRUE(quote_buf.try_pop(initial));
+
+    Trade fill{};
+    fill.instrument_id = 1;
+    fill.product_index = PROD;
+    fill.side = Side::Buy;
+    fill.fill_volume = 4;
+    strat.on_fill(fill);
+
+    Quote cancel{};
+    ASSERT_TRUE(quote_buf.try_pop(cancel));
+    EXPECT_EQ(cancel.bid_volume, 0);
+    EXPECT_EQ(cancel.ask_volume, 0);
+
+    Order hedge{};
+    ASSERT_TRUE(order_buf.try_pop(hedge));
+    EXPECT_EQ(hedge.instrument_id, 0);
+    EXPECT_EQ(hedge.side, Side::Sell);
+    EXPECT_TRUE(hedge.is_hedge);
+}
+
+TEST_F(OptionMmCoreTest, SuppressesQuotesBrieflyOnUnderlyingShock) {
+    params.underlying_move_widen_threshold_ticks.store(1.0, std::memory_order_relaxed);
+    params.min_quote_interval_ms.store(0.0, std::memory_order_relaxed);
+
+    strat.on_signal(make_signal(1, 9.8, 10.2, 0.4, 0.2, 99.0F, 101.0F));
+    Quote initial{};
+    ASSERT_TRUE(quote_buf.try_pop(initial));
+
+    Quote ack = initial;
+    strat.on_quote_ack(ack);
+
+    strat.on_signal(make_signal(1, 9.8, 10.2, 0.4, 0.2, 103.0F, 105.0F));
+
+    Quote cancel{};
+    ASSERT_TRUE(quote_buf.try_pop(cancel));
+    EXPECT_EQ(cancel.bid_volume, 0);
+    EXPECT_EQ(cancel.ask_volume, 0);
+}
+
+TEST_F(OptionMmCoreTest, CancelsBeforeReplacingLiveQuote) {
+    strat.on_signal(make_signal(1, 9.8, 10.2));
+
+    Quote initial{};
+    ASSERT_TRUE(quote_buf.try_pop(initial));
+    strat.on_quote_ack(initial);
+
+    strat.on_signal(make_signal(1, 11.8, 12.2));
+
+    Quote cancel{};
+    ASSERT_TRUE(quote_buf.try_pop(cancel));
+    EXPECT_EQ(cancel.bid_volume, 0);
+    EXPECT_EQ(cancel.ask_volume, 0);
+
+    Quote cancel_ack = initial;
+    cancel_ack.client_quote_id = cancel.client_quote_id;
+    cancel_ack.bid_volume = 0;
+    cancel_ack.ask_volume = 0;
+    strat.on_quote_cancel(cancel_ack);
+
+    Quote replacement{};
+    ASSERT_TRUE(quote_buf.try_pop(replacement));
+    EXPECT_GT(replacement.bid_volume, 0);
+    EXPECT_GT(replacement.ask_volume, 0);
+    EXPECT_GT(replacement.bid_price, initial.bid_price);
+    EXPECT_GT(replacement.ask_price, initial.ask_price);
 }

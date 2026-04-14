@@ -96,6 +96,16 @@ void SimpleMMStrategy::on_order_ack(const Order& order) noexcept {
 
 void SimpleMMStrategy::on_quote_ack(const Quote&) noexcept {}
 
+void SimpleMMStrategy::on_quote_cancel(const Quote& quote) noexcept {
+    if (quote.instrument_id >= MAX_INSTRUMENTS) return;
+    last_quote_[quote.instrument_id].live = false;
+}
+
+void SimpleMMStrategy::on_quote_reject(const Quote& quote) noexcept {
+    if (quote.instrument_id >= MAX_INSTRUMENTS) return;
+    last_quote_[quote.instrument_id].live = false;
+}
+
 void SimpleMMStrategy::on_order_cancel(OrderId id) noexcept {
     pre_risk_->on_order_cancel(id);
     // Mark quote as no longer live

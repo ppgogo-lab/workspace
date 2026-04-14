@@ -45,6 +45,8 @@ public:
     void on_fill(const Trade& trade) noexcept override;
     void on_order_ack(const Order& order) noexcept override;
     void on_quote_ack(const Quote& quote) noexcept override;
+    void on_quote_cancel(const Quote& quote) noexcept override;
+    void on_quote_reject(const Quote& quote) noexcept override;
     void on_order_cancel(OrderId id) noexcept override;
     void on_order_reject(const Order& order) noexcept override;
     void on_timer(const TimerEvent& event) noexcept override;

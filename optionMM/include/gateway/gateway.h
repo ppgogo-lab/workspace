@@ -27,6 +27,8 @@ enum class GatewayEventType : uint8_t {
     OrderCancel,
     OrderReject,
     QuoteAck,
+    QuoteCancel,
+    QuoteReject,
     QuoteFill,
     Connected,
     Disconnected,

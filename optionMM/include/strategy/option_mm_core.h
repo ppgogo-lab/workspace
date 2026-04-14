@@ -21,6 +21,8 @@ public:
     void on_fill(const Trade& trade) noexcept override;
     void on_order_ack(const Order& order) noexcept override;
     void on_quote_ack(const Quote& quote) noexcept override;
+    void on_quote_cancel(const Quote& quote) noexcept override;
+    void on_quote_reject(const Quote& quote) noexcept override;
     void on_order_cancel(OrderId id) noexcept override;
     void on_order_reject(const Order& order) noexcept override;
     void on_timer(const TimerEvent& event) noexcept override;
@@ -37,12 +39,15 @@ private:
         SuppressRisk = 1u << 3,
         SuppressSession = 1u << 4,
         SuppressThrottle = 1u << 5,
+        SuppressUnderlyingShock = 1u << 6,
+        SuppressProductExposure = 1u << 7,
     };
 
     enum class QuoteState : uint8_t {
         Idle,
         Live,
         ReplacePending,
+        CancelPending,
         Suppressed,
     };
 
@@ -62,6 +67,7 @@ private:
         Volume live_bid_vol{0};
         Volume live_ask_vol{0};
         QuoteId live_quote_id{0};
+        QuoteId pending_quote_id{0};
         int64_t last_quote_ts{0};
         QuoteState quote_state{QuoteState::Idle};
         uint32_t suppress_flags{SuppressNone};
@@ -85,17 +91,28 @@ private:
     uint16_t option_ids_[MAX_INSTRUMENTS]{};
     uint16_t option_count_{0};
     bool session_open_{true};
+    uint16_t underlying_id_{INVALID_INSTRUMENT_ID};
+    int32_t underlying_net_position_{0};
     double product_net_delta_{0.0};
     double product_net_vega_{0.0};
+    double last_underlying_mid_{0.0};
+    int64_t suppress_until_ns_{0};
+    int64_t last_hedge_ts_ns_{0};
+    OrderId live_hedge_order_id_{0};
+    Volume live_hedge_remaining_{0};
 
     void reevaluate_all() noexcept;
+    void cancel_all_live(int64_t now_ns) noexcept;
     void maybe_quote(uint16_t instrument_id) noexcept;
     QuoteDecision build_decision(OptionState& state, int64_t now_ns) const noexcept;
     void send_quote(OptionState& state, const QuoteDecision& decision, int64_t now_ns) noexcept;
     void send_cancel(OptionState& state, int64_t now_ns) noexcept;
+    void maybe_trigger_hedge(int64_t now_ns) noexcept;
     void update_product_exposure(OptionState& state,
                                  double old_delta,
                                  double old_vega) noexcept;
+    [[nodiscard]] bool product_exposure_breached() const noexcept;
+    [[nodiscard]] bool product_temporarily_suppressed(int64_t now_ns) const noexcept;
     [[nodiscard]] bool is_material_change(const OptionState& state,
                                           const QuoteDecision& decision,
                                           double epsilon_px,

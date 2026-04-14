@@ -11,6 +11,7 @@
 #include <cstring>
 #include <mutex>
 #include <condition_variable>
+#include <array>
 
 namespace omm {
 
@@ -76,6 +77,19 @@ private:
     uint16_t*               qry_count_{nullptr};
     uint16_t                qry_max_{0};
     bool                    qry_done_{false};
+
+    struct SyntheticQuoteState {
+        bool used{false};
+        bool cancel_pending{false};
+        bool reject_pending{false};
+        Quote quote{};
+        OrderId bid_order_id{0};
+        OrderId ask_order_id{0};
+        bool bid_active{false};
+        bool ask_active{false};
+    };
+    std::mutex quote_state_mutex_;
+    std::array<SyntheticQuoteState, MAX_INSTRUMENTS> synthetic_quotes_{};
 
     // ── OrderRef ↔ client_order_id mapping ───────────────────────────────────
     // CTP uses a string OrderRef. We encode our uint64 into 12 decimal digits.

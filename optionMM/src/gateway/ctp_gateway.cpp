@@ -8,6 +8,12 @@
 
 namespace omm {
 
+namespace {
+
+constexpr uint64_t kSyntheticAskLegBit = 1ULL << 47;
+
+} // namespace
+
 // ─── connect / disconnect ─────────────────────────────────────────────────────
 
 bool CTPGateway::connect(const GatewayConfig& cfg) {
@@ -88,30 +94,124 @@ bool CTPGateway::send_order(const Order& order) noexcept {
 bool CTPGateway::send_quote(const Quote& quote) noexcept {
     if (!api_ || !trading_ready_.load(std::memory_order_relaxed)) return false;
 
+    if (quote.instrument_id >= MAX_INSTRUMENTS) return false;
+
+    if (quote.bid_volume == 0 && quote.ask_volume == 0) {
+        Quote active_quote{};
+        OrderId bid_order_id = 0;
+        OrderId ask_order_id = 0;
+        bool bid_active = false;
+        bool ask_active = false;
+        {
+            std::lock_guard<std::mutex> lk(quote_state_mutex_);
+            auto& state = synthetic_quotes_[quote.instrument_id];
+            if (!state.used) {
+                GatewayEvent ev{};
+                ev.type = GatewayEventType::QuoteCancel;
+                ev.product_index = quote.product_index;
+                ev.quote = quote;
+                (void)callback_buf.try_push(ev);
+                return true;
+            }
+            state.cancel_pending = true;
+            active_quote = state.quote;
+            bid_order_id = state.bid_order_id;
+            ask_order_id = state.ask_order_id;
+            bid_active = state.bid_active;
+            ask_active = state.ask_active;
+        }
+
+        bool ok = true;
+        if (bid_active) ok &= cancel_order(bid_order_id, quote.instrument_id);
+        if (ask_active) ok &= cancel_order(ask_order_id, quote.instrument_id);
+        if (!bid_active && !ask_active) {
+            std::lock_guard<std::mutex> lk(quote_state_mutex_);
+            synthetic_quotes_[quote.instrument_id] = SyntheticQuoteState{};
+            GatewayEvent ev{};
+            ev.type = GatewayEventType::QuoteCancel;
+            ev.product_index = active_quote.product_index;
+            ev.quote = active_quote;
+            ev.quote.client_quote_id = quote.client_quote_id;
+            ev.quote.bid_volume = 0;
+            ev.quote.ask_volume = 0;
+            (void)callback_buf.try_push(ev);
+        }
+        return ok;
+    }
+
     bool ok = true;
+    bool bid_submitted = false;
+    bool ask_submitted = false;
+    const OrderId bid_order_id = quote.client_quote_id;
+    const OrderId ask_order_id = quote.client_quote_id | kSyntheticAskLegBit;
+
+    {
+        std::lock_guard<std::mutex> lk(quote_state_mutex_);
+        auto& state = synthetic_quotes_[quote.instrument_id];
+        if (state.used && (state.bid_active || state.ask_active || state.cancel_pending)) {
+            return false;
+        }
+        state = SyntheticQuoteState{};
+        state.used = true;
+        state.quote = quote;
+        state.bid_order_id = bid_order_id;
+        state.ask_order_id = ask_order_id;
+        state.bid_active = quote.bid_volume > 0;
+        state.ask_active = quote.ask_volume > 0;
+    }
 
     if (quote.bid_volume > 0) {
         Order bid{};
-        bid.client_order_id = quote.client_quote_id;
+        bid.client_order_id = bid_order_id;
         bid.instrument_id   = quote.instrument_id;
         bid.product_index   = quote.product_index;
         bid.side            = Side::Buy;
         bid.order_type      = OrderType::Limit;
         bid.price           = quote.bid_price;
         bid.volume          = quote.bid_volume;
-        ok &= send_order(bid);
+        bid_submitted = send_order(bid);
+        ok &= bid_submitted;
     }
 
     if (quote.ask_volume > 0) {
         Order ask{};
-        ask.client_order_id = quote.client_quote_id | (1ULL << 32);  // distinguish ask leg
+        ask.client_order_id = ask_order_id;  // distinguish ask leg
         ask.instrument_id   = quote.instrument_id;
         ask.product_index   = quote.product_index;
         ask.side            = Side::Sell;
         ask.order_type      = OrderType::Limit;
         ask.price           = quote.ask_price;
         ask.volume          = quote.ask_volume;
-        ok &= send_order(ask);
+        ask_submitted = send_order(ask);
+        ok &= ask_submitted;
+    }
+
+    if (!ok) {
+        Quote reject_quote = quote;
+        bool needs_cancel = false;
+        {
+            std::lock_guard<std::mutex> lk(quote_state_mutex_);
+            auto& state = synthetic_quotes_[quote.instrument_id];
+            state.reject_pending = true;
+            state.cancel_pending = bid_submitted || ask_submitted;
+            state.bid_active = bid_submitted;
+            state.ask_active = ask_submitted;
+            needs_cancel = state.cancel_pending;
+        }
+
+        GatewayEvent reject{};
+        reject.type = GatewayEventType::QuoteReject;
+        reject.product_index = quote.product_index;
+        reject.quote = reject_quote;
+        (void)callback_buf.try_push(reject);
+
+        if (bid_submitted) ok &= cancel_order(bid_order_id, quote.instrument_id);
+        if (ask_submitted) ok &= cancel_order(ask_order_id, quote.instrument_id);
+        if (!needs_cancel) {
+            std::lock_guard<std::mutex> lk(quote_state_mutex_);
+            synthetic_quotes_[quote.instrument_id] = SyntheticQuoteState{};
+        }
+        return ok;
     }
 
     // Push QuoteAck immediately (CTP acks each leg separately via OnRtnOrder)
@@ -232,9 +332,55 @@ void CTPGateway::OnRspOrderInsert(CThostFtdcInputOrderField* pOrder,
                  pRspInfo ? pRspInfo->ErrorID : -1,
                  pRspInfo ? pRspInfo->ErrorMsg : "");
 
+    const OrderId oid = decode_order_ref(pOrder->OrderRef);
+    const uint16_t instrument_id = static_cast<uint16_t>(std::strtoul(pOrder->InstrumentID, nullptr, 10));
+    bool is_quote_leg = false;
+    bool cancel_other_leg = false;
+    OrderId other_leg_id = 0;
+    Quote quote_snapshot{};
+    {
+        if (instrument_id < MAX_INSTRUMENTS) {
+            std::lock_guard<std::mutex> lk(quote_state_mutex_);
+            auto& state = synthetic_quotes_[instrument_id];
+            if (state.used && (state.bid_order_id == oid || state.ask_order_id == oid)) {
+                is_quote_leg = true;
+                quote_snapshot = state.quote;
+                state.reject_pending = true;
+                if (state.bid_order_id == oid) state.bid_active = false;
+                if (state.ask_order_id == oid) state.ask_active = false;
+                if (state.bid_active) {
+                    cancel_other_leg = true;
+                    other_leg_id = state.bid_order_id;
+                }
+                if (state.ask_active) {
+                    cancel_other_leg = true;
+                    other_leg_id = state.ask_order_id;
+                }
+                state.cancel_pending = cancel_other_leg;
+                if (!cancel_other_leg) {
+                    state = SyntheticQuoteState{};
+                }
+            }
+        }
+    }
+
+    if (is_quote_leg) {
+        GatewayEvent qev{};
+        qev.type = GatewayEventType::QuoteReject;
+        qev.product_index = quote_snapshot.product_index;
+        qev.quote = quote_snapshot;
+        (void)callback_buf.try_push(qev);
+        if (cancel_other_leg) {
+            (void)cancel_order(other_leg_id, instrument_id);
+        }
+        return;
+    }
+
     GatewayEvent ev{};
     ev.type = GatewayEventType::OrderReject;
-    ev.order.client_order_id = decode_order_ref(pOrder->OrderRef);
+    ev.order.client_order_id = oid;
+    ev.order.product_index = static_cast<uint8_t>((ev.order.client_order_id >> 32) & 0xFF);
+    ev.order.instrument_id = instrument_id;
     (void)callback_buf.try_push(ev);
 }
 
@@ -242,18 +388,48 @@ void CTPGateway::OnRtnOrder(CThostFtdcOrderField* pOrder) {
     if (!pOrder) return;
 
     OrderId oid = decode_order_ref(pOrder->OrderRef);
+    const uint16_t instrument_id = static_cast<uint16_t>(std::strtoul(pOrder->InstrumentID, nullptr, 10));
+    const uint8_t product_index = static_cast<uint8_t>((oid >> 32) & 0xFF);
+
+    auto handle_quote_leg_cancel = [&](OrderId order_id, uint16_t instr_id) {
+        if (instr_id >= MAX_INSTRUMENTS) return;
+        std::lock_guard<std::mutex> lk(quote_state_mutex_);
+        auto& state = synthetic_quotes_[instr_id];
+        if (!state.used) return;
+        if (state.bid_order_id == order_id) state.bid_active = false;
+        if (state.ask_order_id == order_id) state.ask_active = false;
+        if (state.cancel_pending && !state.reject_pending && !state.bid_active && !state.ask_active) {
+            GatewayEvent qev{};
+            qev.type = GatewayEventType::QuoteCancel;
+            qev.product_index = state.quote.product_index;
+            qev.quote = state.quote;
+            qev.quote.bid_volume = 0;
+            qev.quote.ask_volume = 0;
+            (void)callback_buf.try_push(qev);
+            state = SyntheticQuoteState{};
+        } else if (state.reject_pending && !state.bid_active && !state.ask_active) {
+            state = SyntheticQuoteState{};
+        }
+    };
 
     if (pOrder->OrderStatus == THOST_FTDC_OST_Canceled) {
         GatewayEvent ev{};
         ev.type = GatewayEventType::OrderCancel;
+        ev.product_index = product_index;
         ev.order.client_order_id = oid;
+        ev.order.instrument_id = instrument_id;
+        ev.order.product_index = product_index;
         (void)callback_buf.try_push(ev);
+        handle_quote_leg_cancel(oid, instrument_id);
     } else if (pOrder->OrderSubmitStatus == THOST_FTDC_OSS_InsertSubmitted ||
                pOrder->OrderSubmitStatus == THOST_FTDC_OSS_Accepted) {
         GatewayEvent ev{};
         ev.type = GatewayEventType::OrderAck;
+        ev.product_index = product_index;
         ev.order.client_order_id    = oid;
         ev.order.exchange_order_id  = std::strtoull(pOrder->OrderSysID, nullptr, 10);
+        ev.order.instrument_id      = instrument_id;
+        ev.order.product_index      = product_index;
         ev.order.status             = OrderStatus::New;
         (void)callback_buf.try_push(ev);
     }
@@ -262,21 +438,37 @@ void CTPGateway::OnRtnOrder(CThostFtdcOrderField* pOrder) {
 void CTPGateway::OnRtnTrade(CThostFtdcTradeField* pTrade) {
     if (!pTrade) return;
 
+    const uint16_t instrument_id = static_cast<uint16_t>(std::strtoul(pTrade->InstrumentID, nullptr, 10));
     GatewayEvent ev{};
     ev.type = GatewayEventType::OrderFill;
     ev.trade.client_order_id = decode_order_ref(pTrade->OrderRef);
+    ev.product_index         = static_cast<uint8_t>((ev.trade.client_order_id >> 32) & 0xFF);
     ev.trade.fill_price      = pTrade->Price;
     ev.trade.fill_volume     = pTrade->Volume;
     ev.trade.side            = (pTrade->Direction == THOST_FTDC_D_Buy)
                                ? Side::Buy : Side::Sell;
     ev.trade.offset          = (pTrade->OffsetFlag == THOST_FTDC_OF_Open)
                                ? OffsetFlag::Open : OffsetFlag::Close;
+    ev.trade.instrument_id   = instrument_id;
+    ev.trade.product_index   = ev.product_index;
     (void)callback_buf.try_push(ev);
 
     OMM_LOG_INFO("ctp", "fill order_id={} side={} qty={} price={:.4f}",
                  ev.trade.client_order_id,
                  pTrade->Direction == THOST_FTDC_D_Buy ? "buy" : "sell",
                  pTrade->Volume, pTrade->Price);
+
+    if (instrument_id < MAX_INSTRUMENTS) {
+        std::lock_guard<std::mutex> lk(quote_state_mutex_);
+        auto& state = synthetic_quotes_[instrument_id];
+        if (state.used) {
+            if (state.bid_order_id == ev.trade.client_order_id) state.bid_active = false;
+            if (state.ask_order_id == ev.trade.client_order_id) state.ask_active = false;
+            if (!state.cancel_pending && !state.bid_active && !state.ask_active) {
+                state = SyntheticQuoteState{};
+            }
+        }
+    }
 }
 
 void CTPGateway::OnErrRtnOrderInsert(CThostFtdcInputOrderField* pOrder,
@@ -286,9 +478,55 @@ void CTPGateway::OnErrRtnOrderInsert(CThostFtdcInputOrderField* pOrder,
                  pRspInfo ? pRspInfo->ErrorID : -1,
                  pRspInfo ? pRspInfo->ErrorMsg : "");
 
+    const OrderId oid = decode_order_ref(pOrder->OrderRef);
+    const uint16_t instrument_id = static_cast<uint16_t>(std::strtoul(pOrder->InstrumentID, nullptr, 10));
+    bool is_quote_leg = false;
+    bool cancel_other_leg = false;
+    OrderId other_leg_id = 0;
+    Quote quote_snapshot{};
+    {
+        if (instrument_id < MAX_INSTRUMENTS) {
+            std::lock_guard<std::mutex> lk(quote_state_mutex_);
+            auto& state = synthetic_quotes_[instrument_id];
+            if (state.used && (state.bid_order_id == oid || state.ask_order_id == oid)) {
+                is_quote_leg = true;
+                quote_snapshot = state.quote;
+                state.reject_pending = true;
+                if (state.bid_order_id == oid) state.bid_active = false;
+                if (state.ask_order_id == oid) state.ask_active = false;
+                if (state.bid_active) {
+                    cancel_other_leg = true;
+                    other_leg_id = state.bid_order_id;
+                }
+                if (state.ask_active) {
+                    cancel_other_leg = true;
+                    other_leg_id = state.ask_order_id;
+                }
+                state.cancel_pending = cancel_other_leg;
+                if (!cancel_other_leg) {
+                    state = SyntheticQuoteState{};
+                }
+            }
+        }
+    }
+
+    if (is_quote_leg) {
+        GatewayEvent qev{};
+        qev.type = GatewayEventType::QuoteReject;
+        qev.product_index = quote_snapshot.product_index;
+        qev.quote = quote_snapshot;
+        (void)callback_buf.try_push(qev);
+        if (cancel_other_leg) {
+            (void)cancel_order(other_leg_id, instrument_id);
+        }
+        return;
+    }
+
     GatewayEvent ev{};
     ev.type = GatewayEventType::OrderReject;
-    ev.order.client_order_id = decode_order_ref(pOrder->OrderRef);
+    ev.order.client_order_id = oid;
+    ev.order.product_index = static_cast<uint8_t>((ev.order.client_order_id >> 32) & 0xFF);
+    ev.order.instrument_id = instrument_id;
     (void)callback_buf.try_push(ev);
 }
 

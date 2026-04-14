@@ -25,6 +25,7 @@ struct alignas(64) AtomicMMParams {
     std::atomic<double>  bid_spread{0.5};
     std::atomic<double>  ask_spread{0.5};
     std::atomic<double>  hedge_delta_threshold{50.0};
+    std::atomic<double>  product_vega_threshold{1000.0};
     std::atomic<double>  min_quote_interval_ms{100.0};
     std::atomic<int32_t> quote_volume{10};
     std::atomic<int32_t> max_position{500};
@@ -46,6 +47,7 @@ struct alignas(64) AtomicMMParams {
         s.bid_spread              = bid_spread.load(std::memory_order_relaxed);
         s.ask_spread              = ask_spread.load(std::memory_order_relaxed);
         s.hedge_delta_threshold   = hedge_delta_threshold.load(std::memory_order_relaxed);
+        s.product_vega_threshold  = product_vega_threshold.load(std::memory_order_relaxed);
         s.min_quote_interval_ms   = min_quote_interval_ms.load(std::memory_order_relaxed);
         s.quote_volume            = quote_volume.load(std::memory_order_relaxed);
         s.max_position            = max_position.load(std::memory_order_relaxed);
@@ -70,6 +72,7 @@ struct alignas(64) AtomicMMParams {
         bid_spread.store(c.bid_spread,                     std::memory_order_release);
         ask_spread.store(c.ask_spread,                     std::memory_order_release);
         hedge_delta_threshold.store(c.hedge_delta_threshold, std::memory_order_release);
+        product_vega_threshold.store(c.product_vega_threshold, std::memory_order_release);
         min_quote_interval_ms.store(c.min_quote_interval_ms, std::memory_order_release);
         quote_volume.store(c.quote_volume,                 std::memory_order_release);
         max_position.store(c.max_position,                 std::memory_order_release);

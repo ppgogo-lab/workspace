@@ -32,20 +32,47 @@ V1 excludes:
 
 Risk reduction in V1 is done through quote shaping, reducing-side-only quoting, and suppression.
 
+## Implemented Design Changes
+
+The current `optionMM` code now reflects these major design changes:
+
+- added `option_mm_core` as the main low-latency per-product strategy
+- moved gateway and timer callbacks onto the owning strategy thread through per-product SPSC queues
+- reduced hot-path `PricingSignal` to a compact 64-byte contract
+- kept full `Greeks` snapshots only for supervisory risk and monitoring
+- made local strategy state the owner of quote lifecycle and immediate inventory reaction
+- reduced `PreTradeRisk::check_quote()` to hard validation instead of quote lifecycle ownership
+- added direct tests for `option_mm_core`, compact-signal handling, and the revised risk boundary
+
+## Current Design Decisions
+
+The next implementation pass should follow these decisions:
+
+1. pricer must generate real asymmetric `theo_bid` and `theo_ask`
+2. product-level aggregate `delta + vega` breach must fully suppress the whole product
+3. product-level risk gating should use `delta + vega`, not gamma
+4. quote lifecycle should use stricter state handling with explicit replace/cancel intent
+5. requote policy should prioritize minimum churn
+6. rapid underlying move should suppress quoting briefly
+7. `hedge_delta_threshold` should trigger immediate hedge orders
+8. large-product repricing should rotate fairly across products
+
 ## Non-Negotiable Design Corrections
 
-The current engine has three issues that must be corrected before the new strategy is implemented:
+The original engine had three issues that needed correction:
 
 1. Single-thread strategy ownership is currently violated.
    `IMarketMaker` says all `on_*` methods run on the strategy thread, but the gateway dispatcher and timer threads call strategy methods directly today.
-   This must be fixed first.
+   Status: fixed. Gateway and timer events are now routed into per-product strategy queues.
 
 2. Quote lifecycle is not represented in pre-trade risk state.
    `PreTradeRisk::check_quote()` validates quotes, but quote acknowledgements and quote cancellations are not fed back into `PreTradeRisk`.
-   That means open-quote state, self-trade checks, and open-order counting are not reliable for production MM.
+   That meant quote lifecycle and hard-risk state were mixed.
+   Status: partially corrected. Quote lifecycle now lives in strategy state, while `PreTradeRisk` remains a hard-check module.
 
 3. The pricer silently limits repricing to 128 options per product.
-   That is not acceptable for a production option book. Repricing must cover the full configured product set in bounded chunks, never by silent truncation.
+   That is not acceptable for a production option book.
+   Status: fixed. Repricing now iterates the full product option set in bounded batches.
 
 ## Core Architecture
 
@@ -112,7 +139,7 @@ Per product:
 - active option count
 - session state
 - quote-enable flag
-- local aggregate delta, vega, gamma, net position
+- local aggregate delta, vega, net position
 - supervisory risk flags snapshot
 - refresh timestamps
 
@@ -122,7 +149,7 @@ Per option:
 
 - `instrument_id`
 - `underlying_id`
-- last theo and Greeks used by strategy
+- last theo bid/ask and core Greeks used by strategy
 - latest known option market top-of-book snapshot
 - local net position and traded volume counters
 - live bid/ask quote price and volume
@@ -166,21 +193,28 @@ Bitmask:
 
 ## Signal Contract
 
-The current `PricingSignal` is too large for a production hot path because it embeds a full `MarketTick`.
-Shrink it to the minimum strategy contract:
+`PricingSignal` is now a compact strategy-facing payload rather than an embedded full `Greeks` or `MarketTick` object.
+
+Current signal contract:
 
 - `instrument_id`
-- `theo_price`
-- `delta`
-- `gamma`
-- `vega`
-- `theta`
-- `iv`
+- `underlying_id`
+- `flags`
+- `sequence_no`
 - `calc_ts_ns`
-- optional underlying reference price or sequence
+- `theo_bid`
+- `theo_ask`
+- `delta`
+- `vega`
+- `underlying_ref_bid`
+- `underlying_ref_ask`
 
-The strategy should read option top-of-book from a read-only shared snapshot table maintained by the pricer/feed side.
-Do not copy a full market tick into every pricing signal.
+Current design rules:
+
+- full `Greeks` remain in `greeks_snapshot_` for `PostTradeRisk` and monitoring only
+- option top-of-book is read from shared `tick_snapshot_` on the strategy side
+- no full market tick is copied into the strategy queue
+- the current implementation uses equal `theo_bid` and `theo_ask` from the pricer, leaving room for later separate bid/ask theo logic without changing the queue contract
 
 ## Quote Decision Logic
 
@@ -191,7 +225,7 @@ Quote center is derived from:
 1. theo from pricer
 2. market-follow adjustment from current option top of book
 3. instrument-level inventory skew
-4. product-level inventory/risk skew
+4. product-level suppression gate, not quote-center skew
 
 The strategy must not recompute pricing models or vol fits.
 
@@ -201,11 +235,11 @@ Width starts from configured base spread and is widened by:
 
 - market width
 - stale or unstable option market
-- rapid underlying movement
 - near-limit inventory
-- product-level supervisory risk pressure
 
 Width is clamped between configured min and max.
+
+Product-level aggregate `delta + vega` breach should not just widen quotes. It should suppress the whole product and cancel live quotes.
 
 ### Quote Eligibility
 
@@ -215,9 +249,16 @@ Suppress or reject quoting when:
 - option market is stale or unusable
 - session is closed
 - position limit is breached
-- supervisory risk kill-switch is active
+- product-level aggregate `delta + vega` breach is active
+
+On aggregate product `delta + vega` breach, the strategy should cancel live quotes and suppress the whole product until recovery conditions are met.
 
 Near limits, switch to reducing-side-only quoting before full suppression.
+
+### Underlying Shock Handling
+
+Rapid underlying movement should not just widen quotes in v1.
+It should suppress quoting briefly for the affected product, then allow quoting to resume after a short cooldown if the market stabilizes.
 
 ### Requote Policy
 
@@ -240,7 +281,7 @@ Split risk into two layers.
 Used for immediate quote decisions:
 
 - per-option local position
-- product-local aggregate exposure
+- product-local aggregate delta + vega exposure
 - quote suppression thresholds
 
 This state is updated immediately on the owning strategy thread from routed fills.
@@ -251,6 +292,7 @@ Handled by `PostTradeRisk`:
 
 - independent portfolio check
 - breach flags for product/global suppression
+- product-level `delta + vega` breach should suppress the whole product, not just widen quotes
 - operator and monitoring visibility
 
 Supervisory risk is not the source of truth for the next quote on the hot path.
@@ -267,6 +309,13 @@ Split responsibilities cleanly:
   strategy-owned lifecycle state for active quotes and orders
 
 This avoids coupling production quote semantics to the current order-only `PreTradeRisk` implementation.
+
+Current implementation status:
+
+- strategy state owns live quote id, live prices, live sizes, suppress state, and requote timing
+- `PreTradeRisk::check_quote()` now performs hard validation only
+- `PreTradeRisk` still tracks open orders for order-side checks
+- a later cleanup can rename or split `PreTradeRisk` more explicitly, but the ownership boundary is already improved
 
 The strategy must explicitly track:
 
@@ -351,13 +400,25 @@ These remain atomically readable by the strategy thread.
 
 ## Engine Changes Required
 
-1. Add `gateway_event_buf_[MAX_PRODUCTS]`
-2. Add `timer_buf_[MAX_PRODUCTS]`
-3. Route gateway callbacks into product queues instead of direct strategy calls
-4. Route timer events into product queues instead of direct strategy calls
-5. Chunk pricer batch output across all product options, never truncate at 128 silently
-6. Shrink `PricingSignal`
-7. Add strategy type `option_mm_core`
+Completed:
+
+1. Added `gateway_event_buf_[MAX_PRODUCTS]`
+2. Added `timer_buf_[MAX_PRODUCTS]`
+3. Routed gateway callbacks into product queues instead of direct strategy calls
+4. Routed timer events into product queues instead of direct strategy calls
+5. Chunked pricer batch output across all product options
+6. Shrunk `PricingSignal`
+7. Added strategy type `option_mm_core`
+
+Next engine changes:
+
+1. derive separate `theo_bid` / `theo_ask` instead of using a single pricer mid
+2. reduce strategy-loop wakeup overhead further under idle conditions
+3. add explicit quote-ack / cancel-ack event types for stricter lifecycle modeling
+4. implement product-level `delta + vega` whole-product suppression
+5. add brief underlying-shock suppression windows
+6. add immediate hedge behavior on threshold breach
+7. rotate repricing fairly across products
 
 ## Test And Benchmark Plan
 
@@ -367,7 +428,7 @@ These remain atomically readable by the strategy thread.
 - invalid or stale state suppresses quote
 - inventory skew changes quote center correctly
 - reducing-side-only quoting activates near limits
-- product-level supervisory breach suppresses quotes
+- product-level delta + vega breach suppresses the whole product
 - quote lifecycle transitions are correct on ack, fill, cancel, reject
 
 ### Concurrency
@@ -395,14 +456,27 @@ These remain atomically readable by the strategy thread.
 
 ## Rollout Order
 
-1. fix event ownership and queue topology
-2. shrink pricing signal and clean state boundaries
-3. implement `option_mm_core` with flat state arrays
-4. split hard-risk checks from lifecycle state
-5. add product-level quote shaping and suppression
-6. benchmark and tune before adding new strategy features
+Completed:
+
+1. fixed event ownership and queue topology
+2. shrank pricing signal and cleaned state boundaries
+3. implemented `option_mm_core` with flat state arrays
+4. split hard-risk checks from quote lifecycle state
+5. added product-level quote shaping and suppression
+
+Next:
+
+1. implement asymmetric `theo_bid` / `theo_ask` generation in the pricer
+2. tighten lifecycle modeling for quote replace and cancel acknowledgements
+3. implement product-level `delta + vega` whole-product suppression
+4. add brief underlying-shock suppression windows
+5. add immediate hedge behavior on threshold breach
+6. rotate repricing fairly across products
+7. benchmark tail latency under full-product repricing bursts
+8. only after that, consider adding new strategy features
 
 ## Final Principle
 
 For this project, the best production design is not the most feature-rich and not the most abstract.
 It is a flat, single-owner, array-based strategy with explicit state transitions, minimal hot-path data movement, and slow-path controls kept outside the quoting loop.
+

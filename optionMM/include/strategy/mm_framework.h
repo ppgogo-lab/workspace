@@ -32,6 +32,12 @@ public:
     // Called when a quote ack arrives (exchange accepted or replaced our quote).
     virtual void on_quote_ack(const Quote& quote) noexcept = 0;
 
+    // Called when a quote is cancelled or fully withdrawn.
+    virtual void on_quote_cancel(const Quote& quote) noexcept = 0;
+
+    // Called when a quote is rejected by the gateway/exchange.
+    virtual void on_quote_reject(const Quote& quote) noexcept = 0;
+
     // Called when an order is cancelled.
     virtual void on_order_cancel(OrderId id) noexcept = 0;
 

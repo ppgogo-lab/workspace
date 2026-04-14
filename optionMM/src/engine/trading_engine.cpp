@@ -253,26 +253,62 @@ void TradingEngine::pricer_loop() noexcept {
     set_thread_name("omm-pricer");
 
     MarketTick tick{};
+    MarketTick pending_future_tick[MAX_PRODUCTS]{};
+    bool pending_product[MAX_PRODUCTS]{};
+    uint16_t next_option_offset[MAX_PRODUCTS]{};
+    int rr_cursor = 0;
+
     while (!stop_flag_.load(std::memory_order_relaxed)) {
-        if (!tick_buf_.try_pop(tick)) { spin_pause(); continue; }
+        bool did_work = false;
+        if (tick_buf_.try_pop(tick)) {
+            did_work = true;
 
-        const uint16_t id = tick.instrument_id;
-        if (id >= MAX_INSTRUMENTS) continue;
+            const uint16_t id = tick.instrument_id;
+            if (id < MAX_INSTRUMENTS) {
+                const Instrument& instr = instruments_[id];
+                if (instr.instrument_id != INVALID_INSTRUMENT_ID) {
+                    tick_snapshot_[id] = tick;
+                    monitor_ticks_.publish(tick);
 
-        const Instrument& instr = instruments_[id];
-        if (instr.instrument_id == INVALID_INSTRUMENT_ID) continue;
+                    if (instr.kind == InstrumentKind::Future) {
+                        const uint8_t prod = instr_to_product_[id];
+                        if (prod < MAX_PRODUCTS && tick.last_price > 1e-10) {
+                            pending_future_tick[prod] = tick;
+                            pending_product[prod] = true;
+                            next_option_offset[prod] = 0;
+                        }
+                    }
+                }
+            }
+        }
 
-        // Always update tick snapshot (used by vol fitter for IV inversion)
-        tick_snapshot_[id] = tick;
-        monitor_ticks_.publish(tick);
+        const int product_count = std::max(1, std::min(cfg_.product_count, static_cast<int>(MAX_PRODUCTS)));
+        int selected_prod = -1;
+        for (int scan = 0; scan < product_count; ++scan) {
+            const int p = (rr_cursor + scan) % product_count;
+            if (pending_product[p]) {
+                selected_prod = p;
+                rr_cursor = (p + 1) % product_count;
+                break;
+            }
+        }
 
-        // Only future ticks trigger a full option repricing pass
-        if (instr.kind != InstrumentKind::Future) continue;
+        if (selected_prod < 0) {
+            if (!did_work) spin_pause();
+            continue;
+        }
 
-        const uint8_t prod  = instr_to_product_[id];
-        if (prod >= MAX_PRODUCTS) continue;
-        const double  F     = tick.last_price;
-        if (F < 1e-10) continue;  // no valid forward yet
+        const uint8_t prod = static_cast<uint8_t>(selected_prod);
+        const MarketTick& future_tick = pending_future_tick[prod];
+        const double F_mid = future_tick.last_price;
+        const double F_bid = future_tick.bid_price[0] > 0.0 ? future_tick.bid_price[0] : F_mid;
+        const double F_ask = future_tick.ask_price[0] > F_bid ? future_tick.ask_price[0] : F_mid;
+        const uint16_t n = option_count_[prod];
+        if (n == 0 || F_mid < 1e-10) {
+            pending_product[prod] = false;
+            next_option_offset[prod] = 0;
+            continue;
+        }
 
         const IVolSurface* surf = nullptr;
         if (cfg_.pricing.vol_method == VolMethod::Wing) {
@@ -282,88 +318,99 @@ void TradingEngine::pricer_loop() noexcept {
         } else {
             surf = vol_surfaces_[prod].get();
         }
-        const int64_t      now  = get_monotonic_ns();
-        const uint16_t     n    = option_count_[prod];
-        if (n == 0) continue;
 
-        // ── Batch Black-76 computation (AVX2 SIMD) ───────────────────────────
-        // Allocate aligned stack arrays for batch pricing (max 128 options/product)
+        const int64_t now = get_monotonic_ns();
         constexpr uint16_t MAX_BATCH = 128;
-        alignas(32) double     F_arr[MAX_BATCH];
-        alignas(32) double     K_arr[MAX_BATCH];
-        alignas(32) double     T_arr[MAX_BATCH];
-        alignas(32) double     sqrt_T_arr[MAX_BATCH];
-        alignas(32) double     disc_arr[MAX_BATCH];
-        alignas(32) double     sigma_arr[MAX_BATCH];
-        alignas(32) uint8_t    is_call_arr[MAX_BATCH];
-        alignas(32) Black76Result results[MAX_BATCH];
+        alignas(32) double F_mid_arr[MAX_BATCH];
+        alignas(32) double F_bid_arr[MAX_BATCH];
+        alignas(32) double F_ask_arr[MAX_BATCH];
+        alignas(32) double K_arr[MAX_BATCH];
+        alignas(32) double T_arr[MAX_BATCH];
+        alignas(32) double sqrt_T_arr[MAX_BATCH];
+        alignas(32) double disc_arr[MAX_BATCH];
+        alignas(32) double sigma_arr[MAX_BATCH];
+        alignas(32) uint8_t is_call_arr[MAX_BATCH];
+        alignas(32) Black76Result mid_results[MAX_BATCH];
+        alignas(32) Black76Result bid_results[MAX_BATCH];
+        alignas(32) Black76Result ask_results[MAX_BATCH];
         alignas(64) PricingSignal sigs[MAX_BATCH];
 
-        const double log_F = std::log(F);  // computed once per future tick
+        const uint16_t start = next_option_offset[prod];
+        const uint16_t batch_n = std::min<uint16_t>(MAX_BATCH, n - start);
+        const double log_F_mid = std::log(F_mid);
 
-        for (uint16_t start = 0; start < n; start += MAX_BATCH) {
-            const uint16_t batch_n = std::min<uint16_t>(MAX_BATCH, n - start);
-            for (uint16_t bi = 0; bi < batch_n; ++bi) {
-                const uint16_t oi = start + bi;
-                const uint16_t opt_id = option_ids_[prod][oi];
-                const Instrument& opt = instruments_[opt_id];
+        for (uint16_t bi = 0; bi < batch_n; ++bi) {
+            const uint16_t oi = start + bi;
+            const uint16_t opt_id = option_ids_[prod][oi];
+            const Instrument& opt = instruments_[opt_id];
 
-                F_arr[bi]        = F;
-                K_arr[bi]        = opt.strike;
-                T_arr[bi]        = option_T_[prod][oi];
-                sqrt_T_arr[bi]   = option_sqrt_T_[prod][oi];
-                disc_arr[bi]     = option_disc_[prod][oi];
-                sigma_arr[bi]    = (cfg_.pricing.vol_method == VolMethod::OrcWing)
-                    ? surf->get_vol_by_strike(F, opt.strike, T_arr[bi])
-                    : surf->get_vol(option_log_K_[prod][oi] - log_F, T_arr[bi]);
-                is_call_arr[bi]  = (opt.option_type == OptionType::Call) ? 1 : 0;
-            }
+            F_mid_arr[bi] = F_mid;
+            F_bid_arr[bi] = F_bid;
+            F_ask_arr[bi] = F_ask;
+            K_arr[bi] = opt.strike;
+            T_arr[bi] = option_T_[prod][oi];
+            sqrt_T_arr[bi] = option_sqrt_T_[prod][oi];
+            disc_arr[bi] = option_disc_[prod][oi];
+            sigma_arr[bi] = (cfg_.pricing.vol_method == VolMethod::OrcWing)
+                ? surf->get_vol_by_strike(F_mid, opt.strike, T_arr[bi])
+                : surf->get_vol(option_log_K_[prod][oi] - log_F_mid, T_arr[bi]);
+            is_call_arr[bi] = (opt.option_type == OptionType::Call) ? 1 : 0;
+        }
 
-            compute_batch_precomputed(F_arr, K_arr, T_arr, sqrt_T_arr, disc_arr,
-                                      sigma_arr, is_call_arr, results, batch_n);
+        compute_batch_precomputed(F_mid_arr, K_arr, T_arr, sqrt_T_arr, disc_arr,
+                                  sigma_arr, is_call_arr, mid_results, batch_n);
+        compute_batch_precomputed(F_bid_arr, K_arr, T_arr, sqrt_T_arr, disc_arr,
+                                  sigma_arr, is_call_arr, bid_results, batch_n);
+        compute_batch_precomputed(F_ask_arr, K_arr, T_arr, sqrt_T_arr, disc_arr,
+                                  sigma_arr, is_call_arr, ask_results, batch_n);
 
-            for (uint16_t bi = 0; bi < batch_n; ++bi) {
-                const uint16_t oi = start + bi;
-                const uint16_t opt_id = option_ids_[prod][oi];
-                const Black76Result& res = results[bi];
-                const Instrument& opt = instruments_[opt_id];
+        for (uint16_t bi = 0; bi < batch_n; ++bi) {
+            const uint16_t oi = start + bi;
+            const uint16_t opt_id = option_ids_[prod][oi];
+            const Instrument& opt = instruments_[opt_id];
+            const Black76Result& mid_res = mid_results[bi];
 
-                PricingSignal& sig = sigs[bi];
-                sig.instrument_id        = opt_id;
-                sig.underlying_id        = opt.underlying_id;
-                sig.flags                = PricingFlagHasUnderlyingRef;
-                sig.sequence_no          = tick.sequence_no;
-                sig.calc_ts_ns           = now;
-                sig.theo_bid             = res.price;
-                sig.theo_ask             = res.price;
-                sig.delta                = static_cast<float>(res.delta);
-                sig.vega                 = static_cast<float>(res.vega);
-                sig.underlying_ref_bid   = static_cast<float>(tick.bid_price[0]);
-                sig.underlying_ref_ask   = static_cast<float>(tick.ask_price[0]);
+            PricingSignal& sig = sigs[bi];
+            sig.instrument_id = opt_id;
+            sig.underlying_id = opt.underlying_id;
+            sig.flags = PricingFlagHasUnderlyingRef;
+            sig.sequence_no = future_tick.sequence_no;
+            sig.calc_ts_ns = now;
+            sig.theo_bid = std::min(bid_results[bi].price, ask_results[bi].price);
+            sig.theo_ask = std::max(bid_results[bi].price, ask_results[bi].price);
+            sig.delta = static_cast<float>(mid_res.delta);
+            sig.vega = static_cast<float>(mid_res.vega);
+            sig.underlying_ref_bid = static_cast<float>(future_tick.bid_price[0]);
+            sig.underlying_ref_ask = static_cast<float>(future_tick.ask_price[0]);
 
-                Greeks greek{};
-                greek.instrument_id = opt_id;
-                greek.theo_price    = res.price;
-                greek.delta         = res.delta;
-                greek.gamma         = res.gamma;
-                greek.vega          = res.vega;
-                greek.theta         = res.theta;
-                greek.rho           = res.rho;
-                greek.iv            = sigma_arr[bi];
-                greek.T             = T_arr[bi];
-                greek.calc_ts_ns    = now;
-                greeks_snapshot_[opt_id] = greek;
-            }
+            Greeks greek{};
+            greek.instrument_id = opt_id;
+            greek.theo_price = mid_res.price;
+            greek.delta = mid_res.delta;
+            greek.gamma = mid_res.gamma;
+            greek.vega = mid_res.vega;
+            greek.theta = mid_res.theta;
+            greek.rho = mid_res.rho;
+            greek.iv = sigma_arr[bi];
+            greek.T = T_arr[bi];
+            greek.calc_ts_ns = now;
+            greeks_snapshot_[opt_id] = greek;
+        }
 
-            while (!stop_flag_.load(std::memory_order_relaxed)
-                && !signal_buf_[prod].try_push_batch(sigs, batch_n)) {
-                spin_pause();
-            }
+        while (!stop_flag_.load(std::memory_order_relaxed)
+            && !signal_buf_[prod].try_push_batch(sigs, batch_n)) {
+            spin_pause();
+        }
+
+        next_option_offset[prod] = static_cast<uint16_t>(start + batch_n);
+        if (next_option_offset[prod] >= n) {
+            pending_product[prod] = false;
+            next_option_offset[prod] = 0;
         }
     }
 }
 
-// ─── Strategy thread ──────────────────────────────────────────────────────────
+// Strategy thread ──────────────────────────────────────────────────────────
 
 void TradingEngine::strategy_loop(int idx) noexcept {
     set_thread_name("omm-strat");
@@ -380,6 +427,12 @@ void TradingEngine::strategy_loop(int idx) noexcept {
                 break;
             case GatewayEventType::QuoteAck:
                 strategies_[idx]->on_quote_ack(ev.quote);
+                break;
+            case GatewayEventType::QuoteCancel:
+                strategies_[idx]->on_quote_cancel(ev.quote);
+                break;
+            case GatewayEventType::QuoteReject:
+                strategies_[idx]->on_quote_reject(ev.quote);
                 break;
             case GatewayEventType::OrderFill:
             case GatewayEventType::QuoteFill:
@@ -438,6 +491,12 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                 monitor_orders_.publish(ev.order);
                 break;
             case GatewayEventType::QuoteAck:
+                monitor_quotes_.publish(ev.quote);
+                break;
+            case GatewayEventType::QuoteCancel:
+                monitor_quotes_.publish(ev.quote);
+                break;
+            case GatewayEventType::QuoteReject:
                 monitor_quotes_.publish(ev.quote);
                 break;
             case GatewayEventType::OrderFill:

@@ -613,12 +613,10 @@ void FEMASGateway::OnRspQuoteInsert(CUstpFtdcInputQuoteField* pQuote,
                      pRspInfo->ErrorID, pRspInfo->ErrorMsg, state->quote.client_quote_id);
 
         GatewayEvent ev{};
-        ev.type = GatewayEventType::OrderReject;
+        ev.type = GatewayEventType::QuoteReject;
         ev.product_index = state->quote.product_index;
-        ev.order.client_order_id = state->quote.client_quote_id;
-        ev.order.instrument_id = state->quote.instrument_id;
-        ev.order.product_index = state->quote.product_index;
-        ev.order.status = OrderStatus::Rejected;
+        ev.quote = state->quote;
+        ev.quote.ack_ts = get_monotonic_ns();
         (void)callback_buf.try_push(ev);
 
         clear_quote_state(state->quote.client_quote_id);
@@ -661,7 +659,17 @@ void FEMASGateway::OnRtnQuote(CUstpFtdcRtnQuoteField* pQuote) {
         (void)callback_buf.try_push(ev);
     }
 
-    if (pQuote->CancelTime[0] || pQuote->TradeTime[0]) {
+    if (pQuote->CancelTime[0]) {
+        GatewayEvent ev{};
+        ev.type = GatewayEventType::QuoteCancel;
+        ev.product_index = state->quote.product_index;
+        ev.quote = state->quote;
+        ev.quote.bid_volume = 0;
+        ev.quote.ask_volume = 0;
+        ev.quote.ack_ts = get_monotonic_ns();
+        (void)callback_buf.try_push(ev);
+        clear_quote_state(state->quote.client_quote_id);
+    } else if (pQuote->TradeTime[0]) {
         clear_quote_state(state->quote.client_quote_id);
     }
 }
@@ -680,12 +688,10 @@ void FEMASGateway::OnErrRtnQuoteInsert(CUstpFtdcInputQuoteField* pQuote,
                  state->quote.client_quote_id);
 
     GatewayEvent ev{};
-    ev.type = GatewayEventType::OrderReject;
+    ev.type = GatewayEventType::QuoteReject;
     ev.product_index = state->quote.product_index;
-    ev.order.client_order_id = state->quote.client_quote_id;
-    ev.order.instrument_id = state->quote.instrument_id;
-    ev.order.product_index = state->quote.product_index;
-    ev.order.status = OrderStatus::Rejected;
+    ev.quote = state->quote;
+    ev.quote.ack_ts = get_monotonic_ns();
     (void)callback_buf.try_push(ev);
 
     clear_quote_state(state->quote.client_quote_id);

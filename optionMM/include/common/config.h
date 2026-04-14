@@ -124,6 +124,7 @@ struct MMParamsConfig {
     double  ask_spread{0.5};
     Volume  quote_volume{10};
     double  hedge_delta_threshold{50.0};
+    double  product_vega_threshold{1000.0};
     double  min_quote_interval_ms{100.0};  // minimum time between quote updates
     int32_t max_position{500};
     int32_t warning_position{250};
