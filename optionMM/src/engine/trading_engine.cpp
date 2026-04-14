@@ -11,6 +11,19 @@
 
 namespace omm {
 
+namespace {
+
+void pin_if_configured(int core_id) noexcept {
+    if (core_id < 0) return;
+
+    const int hw_threads = static_cast<int>(std::thread::hardware_concurrency());
+    if (hw_threads > 0 && core_id >= hw_threads) return;
+
+    pin_thread_to_core(core_id);
+}
+
+} // namespace
+
 // ─── Construction / destruction ───────────────────────────────────────────────
 
 TradingEngine::TradingEngine(const SystemConfig& cfg,
@@ -251,6 +264,7 @@ void TradingEngine::stop() noexcept {
 
 void TradingEngine::pricer_loop() noexcept {
     set_thread_name("omm-pricer");
+    pin_if_configured(cfg_.affinity.pricer_core);
 
     MarketTick tick{};
     MarketTick pending_future_tick[MAX_PRODUCTS]{};
@@ -414,13 +428,19 @@ void TradingEngine::pricer_loop() noexcept {
 
 void TradingEngine::strategy_loop(int idx) noexcept {
     set_thread_name("omm-strat");
+    if (idx >= 0 && idx < cfg_.product_count && idx < MAX_PRODUCTS) {
+        pin_if_configured(cfg_.products[idx].strategy_core);
+    }
 
     GatewayEvent ev{};
     TimerEvent timer_ev{};
     PricingSignal sig{};
 
     while (!stop_flag_.load(std::memory_order_relaxed)) {
+        bool did_work = false;
+
         while (gateway_event_buf_[idx].try_pop(ev)) {
+            did_work = true;
             switch (ev.type) {
             case GatewayEventType::OrderAck:
                 strategies_[idx]->on_order_ack(ev.order);
@@ -450,12 +470,19 @@ void TradingEngine::strategy_loop(int idx) noexcept {
         }
 
         while (timer_buf_[idx].try_pop(timer_ev)) {
+            did_work = true;
             strategies_[idx]->on_timer(timer_ev);
         }
 
-        if (signal_buf_[idx].try_pop(sig))
+        constexpr int MAX_SIGNAL_BURST = 128;
+        for (int drained = 0;
+             drained < MAX_SIGNAL_BURST && signal_buf_[idx].try_pop(sig);
+             ++drained) {
+            did_work = true;
             strategies_[idx]->on_signal(sig);
-        spin_pause();
+        }
+
+        if (!did_work) spin_pause();
     }
 }
 
@@ -463,18 +490,29 @@ void TradingEngine::strategy_loop(int idx) noexcept {
 
 void TradingEngine::gateway_dispatcher_loop() noexcept {
     set_thread_name("omm-gw-disp");
+    pin_if_configured(cfg_.affinity.gateway_dispatcher_core);
 
     while (!stop_flag_.load(std::memory_order_relaxed)) {
+        bool did_work = false;
+
         // Round-robin over all strategy output buffers
         for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i) {
             Order order{};
-            if (order_buf_[i].try_pop(order)) {
+            constexpr int MAX_ORDER_BURST = 64;
+            for (int drained = 0;
+                 drained < MAX_ORDER_BURST && order_buf_[i].try_pop(order);
+                 ++drained) {
+                did_work = true;
                 gateway_->send_order(order);
                 monitor_orders_.publish(order);
             }
 
             Quote quote{};
-            if (quote_buf_[i].try_pop(quote)) {
+            constexpr int MAX_QUOTE_BURST = 128;
+            for (int drained = 0;
+                 drained < MAX_QUOTE_BURST && quote_buf_[i].try_pop(quote);
+                 ++drained) {
+                did_work = true;
                 gateway_->send_quote(quote);
                 monitor_quotes_.publish(quote);
             }
@@ -483,6 +521,7 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
         // Drain gateway callbacks and route to strategy threads
         GatewayEvent ev{};
         while (gateway_->callback_buf.try_pop(ev)) {
+            did_work = true;
             int p = ev.product_index;
             if (p >= MAX_PRODUCTS || !strategies_[p]) continue;
 
@@ -539,7 +578,7 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                 spin_pause();
             }
         }
-        spin_pause();
+        if (!did_work) spin_pause();
     }
 }
 
@@ -556,6 +595,7 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
 
 void TradingEngine::vol_fitter_loop() noexcept {
     set_thread_name("omm-volfitter");
+    pin_if_configured(cfg_.affinity.vol_fitter_core);
 
     // Working buffers (stack-allocated, reused each iteration)
     double  strikes[MAX_STRIKES];
@@ -823,6 +863,7 @@ void TradingEngine::vol_fitter_loop() noexcept {
 
 void TradingEngine::risk_monitor_loop() noexcept {
     set_thread_name("omm-risk");
+    pin_if_configured(cfg_.affinity.risk_monitor_core);
 
     while (!stop_flag_.load(std::memory_order_relaxed)) {
         // Process fills from risk_buf_
@@ -850,6 +891,7 @@ void TradingEngine::risk_monitor_loop() noexcept {
 
 void TradingEngine::timer_loop() noexcept {
     set_thread_name("omm-timer");
+    pin_if_configured(cfg_.affinity.timer_core);
 
     int64_t last_hedge_ns   = get_monotonic_ns();
     int64_t last_quote_refresh_ns = last_hedge_ns;

@@ -128,7 +128,7 @@ void OptionMMCoreStrategy::on_signal(const PricingSignal& signal) noexcept {
         cancel_all_live(now_ns);
     }
     maybe_trigger_hedge(now_ns);
-    maybe_quote(id);
+    maybe_quote(id, now_ns);
 }
 
 void OptionMMCoreStrategy::on_fill(const Trade& trade) noexcept {
@@ -151,7 +151,7 @@ void OptionMMCoreStrategy::on_fill(const Trade& trade) noexcept {
         if (product_exposure_breached() || product_temporarily_suppressed(now_ns)) {
             cancel_all_live(now_ns);
         }
-        reevaluate_all();
+        reevaluate_all(now_ns);
         return;
     }
 
@@ -173,7 +173,7 @@ void OptionMMCoreStrategy::on_fill(const Trade& trade) noexcept {
         cancel_all_live(now_ns);
     }
     maybe_trigger_hedge(now_ns);
-    reevaluate_all();
+    reevaluate_all(now_ns);
 }
 
 void OptionMMCoreStrategy::on_order_ack(const Order& order) noexcept {
@@ -213,7 +213,7 @@ void OptionMMCoreStrategy::on_quote_cancel(const Quote& quote) noexcept {
     state.live_ask_vol = 0;
     state.quote_state = QuoteState::Suppressed;
 
-    maybe_quote(quote.instrument_id);
+    maybe_quote(quote.instrument_id, get_monotonic_ns());
 }
 
 void OptionMMCoreStrategy::on_quote_reject(const Quote& quote) noexcept {
@@ -253,18 +253,18 @@ void OptionMMCoreStrategy::on_timer(const TimerEvent& event) noexcept {
             cancel_all_live(event.trigger_ts_ns);
             break;
         }
-        reevaluate_all();
+        reevaluate_all(event.trigger_ts_ns);
         break;
     case TimerEventType::HedgeCheck:
         maybe_trigger_hedge(event.trigger_ts_ns);
         if (product_exposure_breached() || product_temporarily_suppressed(event.trigger_ts_ns)) {
             cancel_all_live(event.trigger_ts_ns);
         }
-        reevaluate_all();
+        reevaluate_all(event.trigger_ts_ns);
         break;
     case TimerEventType::SessionOpen:
         session_open_ = true;
-        reevaluate_all();
+        reevaluate_all(event.trigger_ts_ns);
         break;
     case TimerEventType::SessionClose:
         session_open_ = false;
@@ -275,15 +275,14 @@ void OptionMMCoreStrategy::on_timer(const TimerEvent& event) noexcept {
     }
 }
 
-void OptionMMCoreStrategy::reevaluate_all() noexcept {
-    const int64_t now_ns = get_monotonic_ns();
+void OptionMMCoreStrategy::reevaluate_all(int64_t now_ns) noexcept {
     if (product_exposure_breached() || product_temporarily_suppressed(now_ns)) {
         cancel_all_live(now_ns);
         return;
     }
 
     for (uint16_t i = 0; i < option_count_; ++i) {
-        maybe_quote(option_ids_[i]);
+        maybe_quote(option_ids_[i], now_ns);
     }
 }
 
@@ -293,12 +292,11 @@ void OptionMMCoreStrategy::cancel_all_live(int64_t now_ns) noexcept {
     }
 }
 
-void OptionMMCoreStrategy::maybe_quote(uint16_t instrument_id) noexcept {
+void OptionMMCoreStrategy::maybe_quote(uint16_t instrument_id, int64_t now_ns) noexcept {
     if (instrument_id >= MAX_INSTRUMENTS) return;
     OptionState& state = option_state_[instrument_id];
     if (!state.active) return;
 
-    const int64_t now_ns = get_monotonic_ns();
     QuoteDecision decision = build_decision(state, now_ns);
     state.suppress_flags = decision.suppress_flags;
     if (decision.cancel_only) {

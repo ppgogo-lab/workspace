@@ -101,9 +101,9 @@ private:
     OrderId live_hedge_order_id_{0};
     Volume live_hedge_remaining_{0};
 
-    void reevaluate_all() noexcept;
+    void reevaluate_all(int64_t now_ns) noexcept;
     void cancel_all_live(int64_t now_ns) noexcept;
-    void maybe_quote(uint16_t instrument_id) noexcept;
+    void maybe_quote(uint16_t instrument_id, int64_t now_ns) noexcept;
     QuoteDecision build_decision(OptionState& state, int64_t now_ns) const noexcept;
     void send_quote(OptionState& state, const QuoteDecision& decision, int64_t now_ns) noexcept;
     void send_cancel(OptionState& state, int64_t now_ns) noexcept;

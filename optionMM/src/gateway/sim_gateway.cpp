@@ -9,7 +9,8 @@ namespace omm {
 
 namespace {
 
-constexpr int kWorkerSleepMs = 5;
+constexpr int kDefaultWorkerSleepMs = 5;
+constexpr int kFastWorkerSleepUs = 50;
 
 double clamp_probability(double value) noexcept {
     return std::clamp(value, 0.0, 1.0);
@@ -145,12 +146,21 @@ void SimGateway::stop_worker() {
 }
 
 void SimGateway::worker_loop() noexcept {
+    set_thread_name("omm-sim-gw");
+
     std::mt19937 rng(settings_.random_seed);
+    const bool low_latency_poll =
+        settings_.ack_latency_ms == 0 || settings_.cancel_latency_ms == 0;
+
     while (worker_running_.load(std::memory_order_acquire)) {
         const Timestamp now_ns = get_monotonic_ns();
         process_orders(now_ns, rng);
         process_quotes(now_ns, rng);
-        std::this_thread::sleep_for(std::chrono::milliseconds(kWorkerSleepMs));
+        if (low_latency_poll) {
+            std::this_thread::sleep_for(std::chrono::microseconds(kFastWorkerSleepUs));
+        } else {
+            std::this_thread::sleep_for(std::chrono::milliseconds(kDefaultWorkerSleepMs));
+        }
     }
 }
 
