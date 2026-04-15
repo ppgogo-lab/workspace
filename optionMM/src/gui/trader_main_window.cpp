@@ -7,6 +7,7 @@
 #include <grpcpp/client_context.h>
 
 #include <QApplication>
+#include <QCheckBox>
 #include <QColor>
 #include <QComboBox>
 #include <QDockWidget>
@@ -668,31 +669,105 @@ void TraderMainWindow::build_ui() {
     quick_layout->addWidget(stop_button_, 7, 0, 1, 3);
     auto* params_box = new QGroupBox("Strategy Params");
     auto* params_layout = new QGridLayout(params_box);
+
+    auto configure_double = [](QDoubleSpinBox* box,
+                               int decimals,
+                               double min_value,
+                               double max_value,
+                               double step) {
+        box->setDecimals(decimals);
+        box->setRange(min_value, max_value);
+        box->setSingleStep(step);
+    };
+    auto configure_int = [](QSpinBox* box, int min_value, int max_value) {
+        box->setRange(min_value, max_value);
+    };
+
     params_layout->addWidget(new QLabel("Bid Spread"), 0, 0);
     bid_spread_editor_ = new QDoubleSpinBox();
-    bid_spread_editor_->setDecimals(4);
-    bid_spread_editor_->setMaximum(9999.0);
+    configure_double(bid_spread_editor_, 4, 0.0, 9999.0, 0.1);
     params_layout->addWidget(bid_spread_editor_, 0, 1);
-    params_layout->addWidget(new QLabel("Ask Spread"), 1, 0);
+
+    params_layout->addWidget(new QLabel("Ask Spread"), 0, 2);
     ask_spread_editor_ = new QDoubleSpinBox();
-    ask_spread_editor_->setDecimals(4);
-    ask_spread_editor_->setMaximum(9999.0);
-    params_layout->addWidget(ask_spread_editor_, 1, 1);
-    params_layout->addWidget(new QLabel("Hedge Delta"), 2, 0);
+    configure_double(ask_spread_editor_, 4, 0.0, 9999.0, 0.1);
+    params_layout->addWidget(ask_spread_editor_, 0, 3);
+
+    params_layout->addWidget(new QLabel("Base Half"), 1, 0);
+    base_half_spread_editor_ = new QDoubleSpinBox();
+    configure_double(base_half_spread_editor_, 4, 0.0, 9999.0, 0.1);
+    params_layout->addWidget(base_half_spread_editor_, 1, 1);
+
+    params_layout->addWidget(new QLabel("Min Half"), 1, 2);
+    min_half_spread_editor_ = new QDoubleSpinBox();
+    configure_double(min_half_spread_editor_, 4, 0.0, 9999.0, 0.1);
+    params_layout->addWidget(min_half_spread_editor_, 1, 3);
+
+    params_layout->addWidget(new QLabel("Max Half"), 2, 0);
+    max_half_spread_editor_ = new QDoubleSpinBox();
+    configure_double(max_half_spread_editor_, 4, 0.0, 9999.0, 0.1);
+    params_layout->addWidget(max_half_spread_editor_, 2, 1);
+
+    params_layout->addWidget(new QLabel("Follow Weight"), 2, 2);
+    follow_weight_editor_ = new QDoubleSpinBox();
+    configure_double(follow_weight_editor_, 4, 0.0, 1.0, 0.05);
+    params_layout->addWidget(follow_weight_editor_, 2, 3);
+
+    params_layout->addWidget(new QLabel("Inv Skew / Lot"), 3, 0);
+    inventory_skew_editor_ = new QDoubleSpinBox();
+    configure_double(inventory_skew_editor_, 4, -9999.0, 9999.0, 0.01);
+    params_layout->addWidget(inventory_skew_editor_, 3, 1);
+
+    params_layout->addWidget(new QLabel("Mkt Width Widen"), 3, 2);
+    market_width_widen_editor_ = new QDoubleSpinBox();
+    configure_double(market_width_widen_editor_, 4, 0.0, 9999.0, 0.1);
+    params_layout->addWidget(market_width_widen_editor_, 3, 3);
+
+    params_layout->addWidget(new QLabel("Hedge Delta"), 4, 0);
     hedge_threshold_editor_ = new QDoubleSpinBox();
-    hedge_threshold_editor_->setDecimals(4);
-    hedge_threshold_editor_->setMaximum(999999.0);
-    params_layout->addWidget(hedge_threshold_editor_, 2, 1);
-    params_layout->addWidget(new QLabel("Quote Volume"), 3, 0);
+    configure_double(hedge_threshold_editor_, 4, 0.0, 999999.0, 1.0);
+    params_layout->addWidget(hedge_threshold_editor_, 4, 1);
+
+    params_layout->addWidget(new QLabel("Product Vega"), 4, 2);
+    product_vega_threshold_editor_ = new QDoubleSpinBox();
+    configure_double(product_vega_threshold_editor_, 4, 0.0, 99999999.0, 10.0);
+    params_layout->addWidget(product_vega_threshold_editor_, 4, 3);
+
+    params_layout->addWidget(new QLabel("Quote Volume"), 5, 0);
     quote_volume_editor_ = new QSpinBox();
-    quote_volume_editor_->setRange(1, 100000);
-    params_layout->addWidget(quote_volume_editor_, 3, 1);
-    params_layout->addWidget(new QLabel("Max Position"), 4, 0);
+    configure_int(quote_volume_editor_, 0, 100000);
+    params_layout->addWidget(quote_volume_editor_, 5, 1);
+
+    params_layout->addWidget(new QLabel("Warning Pos"), 5, 2);
+    warning_position_editor_ = new QSpinBox();
+    configure_int(warning_position_editor_, 1, 1000000);
+    params_layout->addWidget(warning_position_editor_, 5, 3);
+
+    params_layout->addWidget(new QLabel("Max Position"), 6, 0);
     max_position_editor_ = new QSpinBox();
-    max_position_editor_->setRange(1, 1000000);
-    params_layout->addWidget(max_position_editor_, 4, 1);
+    configure_int(max_position_editor_, 1, 1000000);
+    params_layout->addWidget(max_position_editor_, 6, 1);
+
+    params_layout->addWidget(new QLabel("Requote Eps"), 6, 2);
+    requote_epsilon_editor_ = new QDoubleSpinBox();
+    configure_double(requote_epsilon_editor_, 4, 0.0, 9999.0, 0.1);
+    params_layout->addWidget(requote_epsilon_editor_, 6, 3);
+
+    params_layout->addWidget(new QLabel("Min Quote ms"), 7, 0);
+    min_quote_interval_editor_ = new QDoubleSpinBox();
+    configure_double(min_quote_interval_editor_, 3, 0.0, 60000.0, 1.0);
+    params_layout->addWidget(min_quote_interval_editor_, 7, 1);
+
+    params_layout->addWidget(new QLabel("Underly Shock"), 7, 2);
+    underlying_move_widen_editor_ = new QDoubleSpinBox();
+    configure_double(underlying_move_widen_editor_, 4, 0.0, 9999.0, 0.1);
+    params_layout->addWidget(underlying_move_widen_editor_, 7, 3);
+
+    use_one_sided_editor_ = new QCheckBox("One-Sided At Limits");
+    params_layout->addWidget(use_one_sided_editor_, 8, 0, 1, 2);
+
     apply_params_button_ = new QPushButton("Apply Params");
-    params_layout->addWidget(apply_params_button_, 5, 0, 1, 2);
+    params_layout->addWidget(apply_params_button_, 8, 2, 1, 2);
     quick_layout->addWidget(params_box, 8, 0, 1, 3);
     quick_dock->setWidget(quick_panel);
     addDockWidget(Qt::RightDockWidgetArea, quick_dock);
@@ -995,13 +1070,33 @@ void TraderMainWindow::refresh_ui() {
     if (auto params_it = impl_->state.mm_params.find(selected_product);
         params_it != impl_->state.mm_params.end()) {
         const auto& params = params_it->second;
-        if (!bid_spread_editor_->hasFocus()) bid_spread_editor_->setValue(params.bid_spread());
-        if (!ask_spread_editor_->hasFocus()) ask_spread_editor_->setValue(params.ask_spread());
-        if (!hedge_threshold_editor_->hasFocus()) {
-            hedge_threshold_editor_->setValue(params.hedge_delta_threshold());
-        }
-        if (!quote_volume_editor_->hasFocus()) quote_volume_editor_->setValue(params.quote_volume());
-        if (!max_position_editor_->hasFocus()) max_position_editor_->setValue(params.max_position());
+        auto sync_double = [](QDoubleSpinBox* editor, double value) {
+            if (editor != nullptr && !editor->hasFocus()) editor->setValue(value);
+        };
+        auto sync_int = [](QSpinBox* editor, int value) {
+            if (editor != nullptr && !editor->hasFocus()) editor->setValue(value);
+        };
+        auto sync_check = [](QCheckBox* editor, bool value) {
+            if (editor != nullptr && !editor->hasFocus()) editor->setChecked(value);
+        };
+
+        sync_double(bid_spread_editor_, params.bid_spread());
+        sync_double(ask_spread_editor_, params.ask_spread());
+        sync_double(base_half_spread_editor_, params.base_half_spread_ticks());
+        sync_double(min_half_spread_editor_, params.min_half_spread_ticks());
+        sync_double(max_half_spread_editor_, params.max_half_spread_ticks());
+        sync_double(follow_weight_editor_, params.follow_weight());
+        sync_double(inventory_skew_editor_, params.inventory_skew_per_lot_ticks());
+        sync_double(market_width_widen_editor_, params.market_width_widen_threshold_ticks());
+        sync_double(hedge_threshold_editor_, params.hedge_delta_threshold());
+        sync_double(product_vega_threshold_editor_, params.product_vega_threshold());
+        sync_double(requote_epsilon_editor_, params.requote_price_epsilon_ticks());
+        sync_double(min_quote_interval_editor_, params.min_quote_interval_ms());
+        sync_double(underlying_move_widen_editor_, params.underlying_move_widen_threshold_ticks());
+        sync_int(quote_volume_editor_, params.quote_volume());
+        sync_int(warning_position_editor_, params.warning_position());
+        sync_int(max_position_editor_, params.max_position());
+        sync_check(use_one_sided_editor_, params.use_one_sided_at_limits());
     }
     delta_label_->setText(QString("Delta %1").arg(QString::number(impl_->state.portfolio.total_delta(), 'f', 1)));
     gamma_label_->setText(QString("Gamma %1").arg(QString::number(impl_->state.portfolio.total_gamma(), 'f', 1)));
@@ -1420,10 +1515,21 @@ void TraderMainWindow::apply_strategy_params() {
     omm::proto::MMParams params;
     params.set_bid_spread(bid_spread_editor_->value());
     params.set_ask_spread(ask_spread_editor_->value());
+    params.set_base_half_spread_ticks(base_half_spread_editor_->value());
+    params.set_min_half_spread_ticks(min_half_spread_editor_->value());
+    params.set_max_half_spread_ticks(max_half_spread_editor_->value());
+    params.set_follow_weight(follow_weight_editor_->value());
+    params.set_inventory_skew_per_lot_ticks(inventory_skew_editor_->value());
+    params.set_market_width_widen_threshold_ticks(market_width_widen_editor_->value());
     params.set_hedge_delta_threshold(hedge_threshold_editor_->value());
+    params.set_product_vega_threshold(product_vega_threshold_editor_->value());
     params.set_quote_volume(quote_volume_editor_->value());
+    params.set_warning_position(warning_position_editor_->value());
     params.set_max_position(max_position_editor_->value());
-    params.set_enabled(true);
+    params.set_requote_price_epsilon_ticks(requote_epsilon_editor_->value());
+    params.set_min_quote_interval_ms(min_quote_interval_editor_->value());
+    params.set_underlying_move_widen_threshold_ticks(underlying_move_widen_editor_->value());
+    params.set_use_one_sided_at_limits(use_one_sided_editor_->isChecked());
     const bool ok = impl_->client->set_strategy_params(
         product_selector_->currentData().toUInt(), params);
     status_label_->setText(ok ? "Params applied" : "Params update failed");

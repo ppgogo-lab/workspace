@@ -152,16 +152,47 @@ public:
             return grpc::Status::OK;
         }
         const auto& p = req->params();
-        MMParamsConfig snap{};
-        snap.bid_spread            = p.bid_spread();
-        snap.ask_spread            = p.ask_spread();
-        snap.hedge_delta_threshold = p.hedge_delta_threshold();
-        snap.quote_volume          = p.quote_volume();
-        snap.max_position          = p.max_position();
-        snap.enabled               = p.enabled();
+        MMParamsConfig snap = engine_.mm_params(idx).snapshot();
+        if (p.has_bid_spread()) snap.bid_spread = p.bid_spread();
+        if (p.has_ask_spread()) snap.ask_spread = p.ask_spread();
+        if (p.has_hedge_delta_threshold()) snap.hedge_delta_threshold = p.hedge_delta_threshold();
+        if (p.has_quote_volume()) snap.quote_volume = p.quote_volume();
+        if (p.has_max_position()) snap.max_position = p.max_position();
+        if (p.has_enabled()) snap.enabled = p.enabled();
+        if (p.has_product_vega_threshold()) snap.product_vega_threshold = p.product_vega_threshold();
+        if (p.has_min_quote_interval_ms()) snap.min_quote_interval_ms = p.min_quote_interval_ms();
+        if (p.has_warning_position()) snap.warning_position = p.warning_position();
+        if (p.has_base_half_spread_ticks()) snap.base_half_spread_ticks = p.base_half_spread_ticks();
+        if (p.has_min_half_spread_ticks()) snap.min_half_spread_ticks = p.min_half_spread_ticks();
+        if (p.has_max_half_spread_ticks()) snap.max_half_spread_ticks = p.max_half_spread_ticks();
+        if (p.has_inventory_skew_per_lot_ticks()) {
+            snap.inventory_skew_per_lot_ticks = p.inventory_skew_per_lot_ticks();
+        }
+        if (p.has_follow_weight()) snap.follow_weight = p.follow_weight();
+        if (p.has_requote_price_epsilon_ticks()) {
+            snap.requote_price_epsilon_ticks = p.requote_price_epsilon_ticks();
+        }
+        if (p.has_market_width_widen_threshold_ticks()) {
+            snap.market_width_widen_threshold_ticks = p.market_width_widen_threshold_ticks();
+        }
+        if (p.has_underlying_move_widen_threshold_ticks()) {
+            snap.underlying_move_widen_threshold_ticks = p.underlying_move_widen_threshold_ticks();
+        }
+        if (p.has_use_one_sided_at_limits()) {
+            snap.use_one_sided_at_limits = p.use_one_sided_at_limits();
+        }
         engine_.mm_params(idx).apply(snap);
-        OMM_LOG_INFO("grpc", "SetStrategyParams product={} bid={} ask={} enabled={}",
-                     idx, snap.bid_spread, snap.ask_spread, (int)snap.enabled);
+        OMM_LOG_INFO(
+            "grpc",
+            "SetStrategyParams product={} qv={} max_pos={} warn_pos={} base_half={} hedge_delta={} vega={} enabled={}",
+            idx,
+            snap.quote_volume,
+            snap.max_position,
+            snap.warning_position,
+            snap.base_half_spread_ticks,
+            snap.hedge_delta_threshold,
+            snap.product_vega_threshold,
+            (int)snap.enabled);
         resp->set_ok(true);
         return grpc::Status::OK;
     }
@@ -291,6 +322,19 @@ public:
             mp->set_hedge_delta_threshold(snap.hedge_delta_threshold);
             mp->set_quote_volume(snap.quote_volume);
             mp->set_max_position(snap.max_position);
+            mp->set_product_vega_threshold(snap.product_vega_threshold);
+            mp->set_min_quote_interval_ms(snap.min_quote_interval_ms);
+            mp->set_warning_position(snap.warning_position);
+            mp->set_base_half_spread_ticks(snap.base_half_spread_ticks);
+            mp->set_min_half_spread_ticks(snap.min_half_spread_ticks);
+            mp->set_max_half_spread_ticks(snap.max_half_spread_ticks);
+            mp->set_inventory_skew_per_lot_ticks(snap.inventory_skew_per_lot_ticks);
+            mp->set_follow_weight(snap.follow_weight);
+            mp->set_requote_price_epsilon_ticks(snap.requote_price_epsilon_ticks);
+            mp->set_market_width_widen_threshold_ticks(snap.market_width_widen_threshold_ticks);
+            mp->set_underlying_move_widen_threshold_ticks(
+                snap.underlying_move_widen_threshold_ticks);
+            mp->set_use_one_sided_at_limits(snap.use_one_sided_at_limits);
             mp->set_enabled(snap.enabled);
         }
 

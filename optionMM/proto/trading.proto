@@ -108,12 +108,24 @@ message VolSurface {
 // ─── Control request/response ─────────────────────────────────────────────────
 
 message MMParams {
-    double bid_spread            = 1;
-    double ask_spread            = 2;
-    double hedge_delta_threshold = 3;
-    int32  quote_volume          = 4;
-    int32  max_position          = 5;
-    bool   enabled               = 6;
+    optional double bid_spread                          = 1;
+    optional double ask_spread                          = 2;
+    optional double hedge_delta_threshold               = 3;
+    optional int32  quote_volume                        = 4;
+    optional int32  max_position                        = 5;
+    optional bool   enabled                             = 6;
+    optional double product_vega_threshold              = 7;
+    optional double min_quote_interval_ms               = 8;
+    optional int32  warning_position                    = 9;
+    optional double base_half_spread_ticks              = 10;
+    optional double min_half_spread_ticks               = 11;
+    optional double max_half_spread_ticks               = 12;
+    optional double inventory_skew_per_lot_ticks        = 13;
+    optional double follow_weight                       = 14;
+    optional double requote_price_epsilon_ticks         = 15;
+    optional double market_width_widen_threshold_ticks  = 16;
+    optional double underlying_move_widen_threshold_ticks = 17;
+    optional bool   use_one_sided_at_limits             = 18;
 }
 
 message SetStrategyParamsRequest {
