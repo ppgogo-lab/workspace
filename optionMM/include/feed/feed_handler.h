@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common/instrument_lookup.h"
 #include "common/types.h"
 #include "common/ring_buffer.h"
 #include <atomic>
@@ -49,13 +50,12 @@ protected:
     // For now a simple linear scan; replace with hash map in production.
     const Instrument* instruments_{nullptr};
     uint16_t          n_instruments_{0};
+    InstrumentLookup  instrument_lookup_{};
 
     // Map an exchange instrument code string to an internal instrument_id.
     // Returns INVALID_INSTRUMENT_ID if not found.
     [[nodiscard]] uint16_t resolve_instrument(const char* code) const noexcept {
-        for (uint16_t i = 0; i < n_instruments_; ++i)
-            if (instruments_[i].code == code) return i;
-        return INVALID_INSTRUMENT_ID;
+        return instrument_lookup_.find(code ? std::string_view(code) : std::string_view{});
     }
 
 public:
@@ -63,6 +63,7 @@ public:
                          uint16_t n) noexcept {
         instruments_  = instruments;
         n_instruments_ = n;
+        instrument_lookup_.build(instruments_, n_instruments_);
     }
 
     // Called by TradingEngine after it takes ownership of the feed,

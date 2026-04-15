@@ -302,6 +302,11 @@ add_executable(test_monitoring_topic tests/test_monitoring_topic.cpp)
 target_link_libraries(test_monitoring_topic PRIVATE GTest::gtest_main Threads::Threads)
 add_test(NAME test_monitoring_topic COMMAND test_monitoring_topic)
 
+# test_instrument_lookup
+add_executable(test_instrument_lookup tests/test_instrument_lookup.cpp)
+target_link_libraries(test_instrument_lookup PRIVATE GTest::gtest_main Threads::Threads)
+add_test(NAME test_instrument_lookup COMMAND test_instrument_lookup)
+
 # test_simple_mm (strategy + gateway + engine integration)
 # Uses engine_lib_test which does not pull in CTP/FEMAS SDK shared libraries.
 add_executable(test_simple_mm tests/test_simple_mm.cpp)

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common/instrument_lookup.h"
 #include "common/types.h"
 #include "common/config.h"
 #include "common/ring_buffer.h"
@@ -70,6 +71,7 @@ public:
                                  uint16_t n) noexcept {
         instruments_ = instruments;
         n_instruments_ = n;
+        instrument_lookup_.build(instruments_, n_instruments_);
     }
 
     // ── Callback ring buffer ──────────────────────────────────────────────────
@@ -86,15 +88,12 @@ protected:
     }
 
     [[nodiscard]] uint16_t find_instrument_id(std::string_view code) const noexcept {
-        if (!instruments_) return INVALID_INSTRUMENT_ID;
-        for (uint16_t i = 0; i < n_instruments_; ++i) {
-            if (instruments_[i].code == code) return i;
-        }
-        return INVALID_INSTRUMENT_ID;
+        return instrument_lookup_.find(code);
     }
 
     const Instrument* instruments_{nullptr};
     uint16_t          n_instruments_{0};
+    InstrumentLookup  instrument_lookup_{};
 };
 
 } // namespace omm
