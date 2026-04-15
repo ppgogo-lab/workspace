@@ -271,4 +271,16 @@ inline void setup_fp_environment() noexcept {
     _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
 }
 
+enum class SystemAlertType : uint8_t {
+    QuoteCancelGiveUp = 0,
+};
+
+struct SystemAlert {
+    Timestamp       ts_ns{0};
+    uint16_t        instrument_id{INVALID_INSTRUMENT_ID};
+    uint8_t         product_index{0xFF};
+    SystemAlertType type{SystemAlertType::QuoteCancelGiveUp};
+    char            message[128]{};
+};
+
 } // namespace omm

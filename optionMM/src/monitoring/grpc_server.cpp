@@ -12,6 +12,7 @@
 #include <grpcpp/server_builder.h>
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <map>
 #include <string>
@@ -132,6 +133,14 @@ void populate_tick(const MarketTick& tick, omm::proto::Tick* msg) {
 double current_expiry_t(const Instrument& opt) noexcept {
     double T = (opt.expiry_epoch_ns - get_monotonic_ns()) / kNsPerYear;
     return std::max(1e-4, T);
+}
+
+omm::proto::RiskAlert::AlertType alert_type_to_proto(SystemAlertType type) noexcept {
+    switch (type) {
+    case SystemAlertType::QuoteCancelGiveUp:
+        return omm::proto::RiskAlert::QUOTE_CANCEL_GIVE_UP;
+    }
+    return omm::proto::RiskAlert::QUOTE_CANCEL_GIVE_UP;
 }
 
 } // namespace
@@ -411,9 +420,13 @@ public:
 
     grpc::Status StreamRiskAlerts(
             grpc::ServerContext* ctx,
-            const omm::proto::StreamRequest*,
+            const omm::proto::StreamRequest* req,
             grpc::ServerWriter<omm::proto::RiskAlert>* writer) override
     {
+        std::array<uint64_t, MAX_PRODUCTS> cursors{};
+        for (int i = 0; i < engine_.product_count() && i < static_cast<int>(MAX_PRODUCTS); ++i) {
+            cursors[i] = engine_.monitor_alerts(i).latest_seq();
+        }
         while (!ctx->IsCancelled()) {
             const auto& pr = engine_.post_risk();
             auto send = [&](omm::proto::RiskAlert::AlertType t, const char* msg) {
@@ -421,12 +434,42 @@ public:
                 alert.set_type(t);
                 alert.set_message(msg);
                 alert.set_ts_ns(get_monotonic_ns());
-                (void)writer->Write(alert);
+                return writer->Write(alert);
             };
-            if (pr.position_breach()) send(omm::proto::RiskAlert::POSITION_BREACH, "position limit breached");
-            if (pr.delta_breach())    send(omm::proto::RiskAlert::DELTA_BREACH,    "delta limit breached");
-            if (pr.gamma_breach())    send(omm::proto::RiskAlert::GAMMA_BREACH,    "gamma limit breached");
-            if (pr.vega_breach())     send(omm::proto::RiskAlert::VEGA_BREACH,     "vega limit breached");
+            if (pr.position_breach()
+                && !send(omm::proto::RiskAlert::POSITION_BREACH, "position limit breached")) {
+                return grpc::Status::OK;
+            }
+            if (pr.delta_breach()
+                && !send(omm::proto::RiskAlert::DELTA_BREACH, "delta limit breached")) {
+                return grpc::Status::OK;
+            }
+            if (pr.gamma_breach()
+                && !send(omm::proto::RiskAlert::GAMMA_BREACH, "gamma limit breached")) {
+                return grpc::Status::OK;
+            }
+            if (pr.vega_breach()
+                && !send(omm::proto::RiskAlert::VEGA_BREACH, "vega limit breached")) {
+                return grpc::Status::OK;
+            }
+
+            bool wrote_custom_alert = false;
+            for (int i = 0; i < engine_.product_count() && i < static_cast<int>(MAX_PRODUCTS); ++i) {
+                SystemAlert alert{};
+                while (engine_.monitor_alerts(i).read_next(cursors[i], alert)) {
+                    if (!product_in_scope(req->product_index(), alert.product_index)) continue;
+                    omm::proto::RiskAlert msg;
+                    msg.set_type(alert_type_to_proto(alert.type));
+                    msg.set_message(alert.message);
+                    msg.set_ts_ns(alert.ts_ns);
+                    if (!writer->Write(msg)) return grpc::Status::OK;
+                    wrote_custom_alert = true;
+                }
+            }
+            if (!wrote_custom_alert && !pr.any_breach()) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                continue;
+            }
             std::this_thread::sleep_for(std::chrono::milliseconds(200));
         }
         return grpc::Status::OK;

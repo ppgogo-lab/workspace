@@ -2,6 +2,7 @@
 
 #include "strategy/mm_framework.h"
 #include "common/thread_utils.h"
+#include "monitoring/topic.h"
 #include "risk/post_trade_risk.h"
 
 namespace omm {
@@ -15,7 +16,8 @@ public:
               AtomicMMParams* params,
               const Instrument* instruments,
               const MarketTick* tick_snapshot,
-              const PostTradeRisk* post_risk) noexcept;
+              const PostTradeRisk* post_risk,
+              MonitoringTopic<SystemAlert, 256>* alert_topic) noexcept;
 
     void on_signal(const PricingSignal& signal) noexcept override;
     void on_fill(const Trade& trade) noexcept override;
@@ -41,6 +43,7 @@ private:
         SuppressThrottle = 1u << 5,
         SuppressUnderlyingShock = 1u << 6,
         SuppressProductExposure = 1u << 7,
+        SuppressCancelStuck = 1u << 8,
     };
 
     enum class QuoteState : uint8_t {
@@ -48,6 +51,7 @@ private:
         Live,
         ReplacePending,
         CancelPending,
+        CancelFailed,
         Suppressed,
     };
 
@@ -68,7 +72,12 @@ private:
         Volume live_ask_vol{0};
         QuoteId live_quote_id{0};
         QuoteId pending_quote_id{0};
+        QuoteId cancel_target_quote_id{0};
         int64_t last_quote_ts{0};
+        int64_t live_since_ts{0};
+        int64_t cancel_last_send_ts{0};
+        uint8_t cancel_attempts{0};
+        uint8_t _pad0[7]{};
         QuoteState quote_state{QuoteState::Idle};
         uint32_t suppress_flags{SuppressNone};
     };
@@ -84,9 +93,13 @@ private:
     };
 
     static constexpr int64_t STALE_NS = 100'000'000LL;
+    static constexpr int64_t QUOTE_MAX_LIVE_NS = 3'000'000'000LL;
+    static constexpr int64_t CANCEL_RETRY_NS = 1'000'000'000LL;
+    static constexpr uint8_t MAX_CANCEL_ATTEMPTS = 3;
 
     const MarketTick* tick_snapshot_{nullptr};
     const PostTradeRisk* post_risk_{nullptr};
+    MonitoringTopic<SystemAlert, 256>* alert_topic_{nullptr};
     OptionState option_state_[MAX_INSTRUMENTS]{};
     uint16_t option_ids_[MAX_INSTRUMENTS]{};
     uint16_t option_count_{0};
@@ -107,6 +120,10 @@ private:
     QuoteDecision build_decision(OptionState& state, int64_t now_ns) const noexcept;
     void send_quote(OptionState& state, const QuoteDecision& decision, int64_t now_ns) noexcept;
     void send_cancel(OptionState& state, int64_t now_ns) noexcept;
+    [[nodiscard]] bool manage_quote_lifecycle(OptionState& state, int64_t now_ns) noexcept;
+    void reset_quote_tracking(OptionState& state, QuoteState next_state) noexcept;
+    void publish_cancel_failed_alert(const OptionState& state, int64_t now_ns) noexcept;
+    [[nodiscard]] bool quote_fully_filled(const OptionState& state) const noexcept;
     void maybe_trigger_hedge(int64_t now_ns) noexcept;
     void update_product_exposure(OptionState& state,
                                  double old_delta,

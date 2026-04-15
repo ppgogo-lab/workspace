@@ -6,8 +6,10 @@
 #include "risk/post_trade_risk.h"
 #include "common/ring_buffer.h"
 #include "common/types.h"
+#include "monitoring/topic.h"
 
 #include <cstring>
+#include <string>
 
 using namespace omm;
 
@@ -75,6 +77,7 @@ protected:
     AtomicMMParams params{};
     SPSCRingBuffer<Quote, 512> quote_buf;
     SPSCRingBuffer<Order, 512> order_buf;
+    MonitoringTopic<SystemAlert, 256> alert_topic;
     Instrument instruments[MAX_INSTRUMENTS]{};
     MarketTick tick_snapshot[MAX_INSTRUMENTS]{};
     OptionMMCoreStrategy strat;
@@ -117,7 +120,7 @@ protected:
         tick_snapshot[1].ask_volume[0] = 10;
 
         strat.init(PROD, &quote_buf, &order_buf, &pre_risk, &params,
-                   instruments, tick_snapshot, &post_risk);
+                   instruments, tick_snapshot, &post_risk, &alert_topic);
     }
 };
 
@@ -223,4 +226,122 @@ TEST_F(OptionMmCoreTest, CancelsBeforeReplacingLiveQuote) {
     EXPECT_GT(replacement.ask_volume, 0);
     EXPECT_GT(replacement.bid_price, initial.bid_price);
     EXPECT_GT(replacement.ask_price, initial.ask_price);
+}
+
+TEST_F(OptionMmCoreTest, CancelsLiveQuoteAfterThreeSecondsAlive) {
+    strat.on_signal(make_signal(1, 9.8, 10.2));
+
+    Quote initial{};
+    ASSERT_TRUE(quote_buf.try_pop(initial));
+
+    Quote ack = initial;
+    ack.ack_ts = get_monotonic_ns() - 3'100'000'000LL;
+    strat.on_quote_ack(ack);
+
+    TimerEvent refresh{};
+    refresh.type = TimerEventType::QuoteRefresh;
+    refresh.trigger_ts_ns = get_monotonic_ns();
+    strat.on_timer(refresh);
+
+    Quote cancel{};
+    ASSERT_TRUE(quote_buf.try_pop(cancel));
+    EXPECT_EQ(cancel.client_quote_id, initial.client_quote_id);
+    EXPECT_EQ(cancel.bid_volume, 0);
+    EXPECT_EQ(cancel.ask_volume, 0);
+}
+
+TEST_F(OptionMmCoreTest, RetriesCancelAndAlertsAfterThreeFailures) {
+    strat.on_signal(make_signal(1, 9.8, 10.2));
+
+    Quote initial{};
+    ASSERT_TRUE(quote_buf.try_pop(initial));
+
+    const int64_t base_ns = get_monotonic_ns();
+    Quote ack = initial;
+    ack.ack_ts = base_ns - 3'500'000'000LL;
+    strat.on_quote_ack(ack);
+
+    TimerEvent refresh{};
+    refresh.type = TimerEventType::QuoteRefresh;
+
+    refresh.trigger_ts_ns = base_ns;
+    strat.on_timer(refresh);
+    Quote cancel1{};
+    ASSERT_TRUE(quote_buf.try_pop(cancel1));
+    EXPECT_EQ(cancel1.client_quote_id, initial.client_quote_id);
+
+    refresh.trigger_ts_ns = base_ns + 1'100'000'000LL;
+    strat.on_timer(refresh);
+    Quote cancel2{};
+    ASSERT_TRUE(quote_buf.try_pop(cancel2));
+    EXPECT_EQ(cancel2.client_quote_id, initial.client_quote_id);
+
+    refresh.trigger_ts_ns = base_ns + 2'200'000'000LL;
+    strat.on_timer(refresh);
+    Quote cancel3{};
+    ASSERT_TRUE(quote_buf.try_pop(cancel3));
+    EXPECT_EQ(cancel3.client_quote_id, initial.client_quote_id);
+
+    refresh.trigger_ts_ns = base_ns + 3'300'000'000LL;
+    strat.on_timer(refresh);
+
+    Quote extra{};
+    EXPECT_FALSE(quote_buf.try_pop(extra));
+
+    uint64_t cursor = 0;
+    SystemAlert alert{};
+    ASSERT_TRUE(alert_topic.read_next(cursor, alert));
+    EXPECT_EQ(alert.type, SystemAlertType::QuoteCancelGiveUp);
+    EXPECT_EQ(alert.instrument_id, 1);
+    EXPECT_EQ(alert.product_index, PROD);
+    EXPECT_NE(std::string(alert.message).find("cancel failed"), std::string::npos);
+}
+
+TEST_F(OptionMmCoreTest, StopsCancelRetryOnceQuoteFullyFilled) {
+    strat.on_signal(make_signal(1, 9.8, 10.2));
+
+    Quote initial{};
+    ASSERT_TRUE(quote_buf.try_pop(initial));
+
+    const int64_t base_ns = get_monotonic_ns();
+    Quote ack = initial;
+    ack.ack_ts = base_ns - 3'500'000'000LL;
+    strat.on_quote_ack(ack);
+
+    TimerEvent refresh{};
+    refresh.type = TimerEventType::QuoteRefresh;
+    refresh.trigger_ts_ns = base_ns;
+    strat.on_timer(refresh);
+
+    Quote cancel{};
+    ASSERT_TRUE(quote_buf.try_pop(cancel));
+    EXPECT_EQ(cancel.client_quote_id, initial.client_quote_id);
+
+    params.enabled.store(false, std::memory_order_relaxed);
+
+    Trade bid_fill{};
+    bid_fill.client_order_id = initial.client_quote_id;
+    bid_fill.instrument_id = 1;
+    bid_fill.product_index = PROD;
+    bid_fill.side = Side::Buy;
+    bid_fill.fill_volume = initial.bid_volume;
+    strat.on_fill(bid_fill);
+
+    Trade ask_fill{};
+    ask_fill.client_order_id = initial.client_quote_id;
+    ask_fill.instrument_id = 1;
+    ask_fill.product_index = PROD;
+    ask_fill.side = Side::Sell;
+    ask_fill.fill_volume = initial.ask_volume;
+    strat.on_fill(ask_fill);
+
+    refresh.trigger_ts_ns = base_ns + 1'100'000'000LL;
+    strat.on_timer(refresh);
+
+    Quote retry{};
+    EXPECT_FALSE(quote_buf.try_pop(retry));
+
+    uint64_t cursor = 0;
+    SystemAlert alert{};
+    EXPECT_FALSE(alert_topic.read_next(cursor, alert));
 }

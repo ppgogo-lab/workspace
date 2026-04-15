@@ -144,7 +144,8 @@ void TradingEngine::init_strategies() noexcept {
                     &mm_params_[i],
                     instruments_,
                     tick_snapshot_,
-                    &post_risk_);
+                    &post_risk_,
+                    &monitor_alerts_[i]);
             strategies_[i].reset(s);
         } else {
             auto* s = new SimpleMMStrategy();

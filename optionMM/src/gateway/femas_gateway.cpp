@@ -279,6 +279,9 @@ bool FEMASGateway::send_order(const Order& order) noexcept {
 
 bool FEMASGateway::send_quote(const Quote& quote) noexcept {
     if (!api_ || !trading_ready_.load(std::memory_order_relaxed)) return false;
+    if (quote.bid_volume == 0 && quote.ask_volume == 0) {
+        return cancel_order(quote.client_quote_id, quote.instrument_id);
+    }
 
     const Instrument* instr = instrument_by_id(quote.instrument_id);
     if (!instr) {

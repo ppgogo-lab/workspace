@@ -38,6 +38,7 @@ message RiskAlert {
         DELTA_BREACH    = 1;
         GAMMA_BREACH    = 2;
         VEGA_BREACH     = 3;
+        QUOTE_CANCEL_GIVE_UP = 4;
     }
     AlertType type       = 1;
     string    message    = 2;

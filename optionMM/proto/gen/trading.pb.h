@@ -160,12 +160,13 @@ enum RiskAlert_AlertType : int {
   RiskAlert_AlertType_DELTA_BREACH = 1,
   RiskAlert_AlertType_GAMMA_BREACH = 2,
   RiskAlert_AlertType_VEGA_BREACH = 3,
+  RiskAlert_AlertType_QUOTE_CANCEL_GIVE_UP = 4,
   RiskAlert_AlertType_RiskAlert_AlertType_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
   RiskAlert_AlertType_RiskAlert_AlertType_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
 };
 bool RiskAlert_AlertType_IsValid(int value);
 constexpr RiskAlert_AlertType RiskAlert_AlertType_AlertType_MIN = RiskAlert_AlertType_POSITION_BREACH;
-constexpr RiskAlert_AlertType RiskAlert_AlertType_AlertType_MAX = RiskAlert_AlertType_VEGA_BREACH;
+constexpr RiskAlert_AlertType RiskAlert_AlertType_AlertType_MAX = RiskAlert_AlertType_QUOTE_CANCEL_GIVE_UP;
 constexpr int RiskAlert_AlertType_AlertType_ARRAYSIZE = RiskAlert_AlertType_AlertType_MAX + 1;
 
 const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* RiskAlert_AlertType_descriptor();
@@ -931,6 +932,8 @@ class RiskAlert final :
     RiskAlert_AlertType_GAMMA_BREACH;
   static constexpr AlertType VEGA_BREACH =
     RiskAlert_AlertType_VEGA_BREACH;
+  static constexpr AlertType QUOTE_CANCEL_GIVE_UP =
+    RiskAlert_AlertType_QUOTE_CANCEL_GIVE_UP;
   static inline bool AlertType_IsValid(int value) {
     return RiskAlert_AlertType_IsValid(value);
   }

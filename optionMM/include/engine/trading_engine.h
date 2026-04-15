@@ -90,6 +90,9 @@ public:
     [[nodiscard]] const MonitoringTopic<Trade, 4096>& monitor_trades() const noexcept {
         return monitor_trades_;
     }
+    [[nodiscard]] const MonitoringTopic<SystemAlert, 256>& monitor_alerts(int i) const noexcept {
+        return monitor_alerts_[i];
+    }
 
     // Manual order submission from gRPC (bypasses strategy, goes direct to gateway dispatcher)
     [[nodiscard]] OrderId next_manual_order_id() noexcept {
@@ -177,6 +180,7 @@ private:
     MonitoringTopic<Order, 4096>      monitor_orders_;
     MonitoringTopic<Quote, 4096>      monitor_quotes_;
     MonitoringTopic<Trade, 4096>      monitor_trades_;
+    std::array<MonitoringTopic<SystemAlert, 256>, MAX_PRODUCTS> monitor_alerts_;
 
     // ── Threads ───────────────────────────────────────────────────────────────
     std::atomic<bool> stop_flag_{false};
