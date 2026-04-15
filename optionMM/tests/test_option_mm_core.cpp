@@ -153,6 +153,25 @@ TEST_F(OptionMmCoreTest, SwitchesToOneSidedQuoteNearWarningPosition) {
     EXPECT_EQ(quote.ask_volume, 5);
 }
 
+TEST_F(OptionMmCoreTest, TapersRiskySideVolumeBeforeWarningPosition) {
+    for (int i = 0; i < 3; ++i) {
+        Trade trade{};
+        trade.instrument_id = 1;
+        trade.product_index = PROD;
+        trade.side = Side::Buy;
+        trade.fill_volume = 1;
+        strat.on_fill(trade);
+    }
+
+    strat.on_signal(make_signal(1, 9.8, 10.2));
+
+    Quote quote{};
+    ASSERT_TRUE(quote_buf.try_pop(quote));
+    EXPECT_GT(quote.bid_volume, 0);
+    EXPECT_LT(quote.bid_volume, quote.ask_volume);
+    EXPECT_EQ(quote.ask_volume, 5);
+}
+
 TEST_F(OptionMmCoreTest, SuppressesWholeProductAndTriggersHedgeOnDeltaBreach) {
     params.hedge_delta_threshold.store(1.0, std::memory_order_relaxed);
     params.quote_volume.store(3, std::memory_order_relaxed);
@@ -198,6 +217,38 @@ TEST_F(OptionMmCoreTest, SuppressesQuotesBrieflyOnUnderlyingShock) {
     ASSERT_TRUE(quote_buf.try_pop(cancel));
     EXPECT_EQ(cancel.bid_volume, 0);
     EXPECT_EQ(cancel.ask_volume, 0);
+}
+
+TEST_F(OptionMmCoreTest, DoesNotQuoteThroughTheoWhenFollowingMarketHigher) {
+    params.follow_weight.store(1.0, std::memory_order_relaxed);
+    tick_snapshot[1].recv_ts_ns = get_monotonic_ns();
+    tick_snapshot[1].bid_price[0] = 11.0;
+    tick_snapshot[1].ask_price[0] = 12.0;
+    tick_snapshot[1].bid_volume[0] = 12;
+    tick_snapshot[1].ask_volume[0] = 8;
+
+    strat.on_signal(make_signal(1, 9.8, 10.2));
+
+    Quote quote{};
+    ASSERT_TRUE(quote_buf.try_pop(quote));
+    EXPECT_LE(quote.bid_price, 9.5);
+    EXPECT_GE(quote.ask_price, 10.5);
+}
+
+TEST_F(OptionMmCoreTest, DoesNotQuoteThroughTheoWhenFollowingMarketLower) {
+    params.follow_weight.store(1.0, std::memory_order_relaxed);
+    tick_snapshot[1].recv_ts_ns = get_monotonic_ns();
+    tick_snapshot[1].bid_price[0] = 8.0;
+    tick_snapshot[1].ask_price[0] = 9.0;
+    tick_snapshot[1].bid_volume[0] = 8;
+    tick_snapshot[1].ask_volume[0] = 12;
+
+    strat.on_signal(make_signal(1, 9.8, 10.2));
+
+    Quote quote{};
+    ASSERT_TRUE(quote_buf.try_pop(quote));
+    EXPECT_LE(quote.bid_price, 9.5);
+    EXPECT_GE(quote.ask_price, 10.5);
 }
 
 TEST_F(OptionMmCoreTest, CancelsBeforeReplacingLiveQuote) {

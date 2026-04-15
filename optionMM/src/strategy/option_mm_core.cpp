@@ -13,12 +13,38 @@ double clamp01(double value) noexcept {
     return std::clamp(value, 0.0, 1.0);
 }
 
+double microprice_from_market(const MarketTick& md) noexcept {
+    if (md.bid_price[0] <= 0.0 || md.ask_price[0] <= md.bid_price[0]) {
+        return 0.0;
+    }
+
+    const int64_t bid_vol = std::max<int64_t>(0, md.bid_volume[0]);
+    const int64_t ask_vol = std::max<int64_t>(0, md.ask_volume[0]);
+    const int64_t total_vol = bid_vol + ask_vol;
+    if (total_vol <= 0) {
+        return 0.5 * (md.bid_price[0] + md.ask_price[0]);
+    }
+
+    return (md.ask_price[0] * static_cast<double>(bid_vol)
+          + md.bid_price[0] * static_cast<double>(ask_vol))
+         / static_cast<double>(total_vol);
+}
+
 double round_down_to_tick(double price, double tick) noexcept {
     return std::floor(price / tick) * tick;
 }
 
 double round_up_to_tick(double price, double tick) noexcept {
     return std::ceil(price / tick) * tick;
+}
+
+Volume scale_volume(Volume base, double scale) noexcept {
+    if (base <= 0 || scale <= 0.0) return 0;
+
+    const double clipped = std::clamp(scale, 0.0, 1.0);
+    return std::max<Volume>(
+        1,
+        static_cast<Volume>(std::lround(static_cast<double>(base) * clipped)));
 }
 
 } // namespace
@@ -404,7 +430,7 @@ OptionMMCoreStrategy::build_decision(OptionState& state, int64_t now_ns) const n
 
     const int32_t max_pos = params_->max_position.load(std::memory_order_relaxed);
     const int32_t warning_pos = std::max<int32_t>(
-        1, params_->warning_position.load(std::memory_order_relaxed));
+        1, std::min(max_pos, params_->warning_position.load(std::memory_order_relaxed)));
     if (std::abs(state.net_position) >= max_pos) {
         decision.cancel_only = state.quote_state == QuoteState::Live
             || state.quote_state == QuoteState::ReplacePending
@@ -417,18 +443,18 @@ OptionMMCoreStrategy::build_decision(OptionState& state, int64_t now_ns) const n
     const double tick = instr.tick_size > 0.0 ? instr.tick_size : 0.01;
     const double follow_weight = clamp01(params_->follow_weight.load(std::memory_order_relaxed));
     const double theo_width_ticks = std::max(0.0, (theo_ask - theo_bid) / (2.0 * tick));
-
-    const double blended_bid =
-        theo_bid * (1.0 - follow_weight) + md.bid_price[0] * follow_weight;
-    const double blended_ask =
-        theo_ask * (1.0 - follow_weight) + md.ask_price[0] * follow_weight;
+    const double theo_mid = 0.5 * (theo_bid + theo_ask);
+    const double market_ref = microprice_from_market(md);
+    const double center_ref =
+        theo_mid * (1.0 - follow_weight) + market_ref * follow_weight;
 
     double half_spread_ticks = params_->base_half_spread_ticks.load(std::memory_order_relaxed);
+    const double max_half_spread_ticks =
+        params_->max_half_spread_ticks.load(std::memory_order_relaxed);
     half_spread_ticks = std::max(half_spread_ticks,
                                  params_->min_half_spread_ticks.load(std::memory_order_relaxed));
     half_spread_ticks = std::max(half_spread_ticks, theo_width_ticks);
-    half_spread_ticks = std::min(half_spread_ticks,
-                                 params_->max_half_spread_ticks.load(std::memory_order_relaxed));
+    half_spread_ticks = std::min(half_spread_ticks, max_half_spread_ticks);
 
     const double market_width_ticks = (md.ask_price[0] - md.bid_price[0]) / tick;
     const double widen_threshold =
@@ -439,18 +465,41 @@ OptionMMCoreStrategy::build_decision(OptionState& state, int64_t now_ns) const n
 
     const double inventory_pressure =
         std::min(1.0, std::abs(static_cast<double>(state.net_position)) / warning_pos);
+    double product_pressure = 0.0;
+    const double total_delta = product_net_delta_ + static_cast<double>(underlying_net_position_);
+    const double delta_threshold = params_->hedge_delta_threshold.load(std::memory_order_relaxed);
+    if (delta_threshold > 0.0) {
+        product_pressure = std::max(product_pressure, std::fabs(total_delta) / delta_threshold);
+    }
+    const double vega_threshold = params_->product_vega_threshold.load(std::memory_order_relaxed);
+    if (vega_threshold > 0.0) {
+        product_pressure = std::max(product_pressure, std::fabs(product_net_vega_) / vega_threshold);
+    }
+    product_pressure = std::clamp(product_pressure, 0.0, 1.0);
     half_spread_ticks = std::min(
-        half_spread_ticks * (1.0 + inventory_pressure),
-        params_->max_half_spread_ticks.load(std::memory_order_relaxed));
+        half_spread_ticks * (1.0 + inventory_pressure + 0.75 * product_pressure),
+        max_half_spread_ticks);
 
     const double inv_skew_ticks =
         params_->inventory_skew_per_lot_ticks.load(std::memory_order_relaxed) * state.net_position;
-    const double center = 0.5 * (blended_bid + blended_ask) - inv_skew_ticks * tick;
+    const double center = center_ref - inv_skew_ticks * tick;
 
-    Volume bid_vol = params_->quote_volume.load(std::memory_order_relaxed);
-    Volume ask_vol = bid_vol;
-    if (params_->use_one_sided_at_limits.load(std::memory_order_relaxed)
-        && std::abs(state.net_position) >= warning_pos) {
+    const bool use_one_sided = params_->use_one_sided_at_limits.load(std::memory_order_relaxed);
+    const Volume base_quote_vol = std::max<Volume>(
+        0, params_->quote_volume.load(std::memory_order_relaxed));
+    const Volume scaled_base_vol = scale_volume(
+        base_quote_vol,
+        std::max(0.35, 1.0 - 0.5 * product_pressure));
+    Volume bid_vol = scaled_base_vol;
+    Volume ask_vol = scaled_base_vol;
+    if (state.net_position > 0 && bid_vol > 0) {
+        bid_vol = scale_volume(scaled_base_vol, 1.0 - inventory_pressure);
+        if (bid_vol == 0 && !use_one_sided) bid_vol = 1;
+    } else if (state.net_position < 0 && ask_vol > 0) {
+        ask_vol = scale_volume(scaled_base_vol, 1.0 - inventory_pressure);
+        if (ask_vol == 0 && !use_one_sided) ask_vol = 1;
+    }
+    if (use_one_sided && std::abs(state.net_position) >= warning_pos) {
         if (state.net_position > 0) bid_vol = 0;
         if (state.net_position < 0) ask_vol = 0;
     }
@@ -467,8 +516,12 @@ OptionMMCoreStrategy::build_decision(OptionState& state, int64_t now_ns) const n
 
     const double max_passive_bid = round_down_to_tick(std::max(0.0, md.ask_price[0] - tick), tick);
     const double min_passive_ask = round_up_to_tick(md.bid_price[0] + tick, tick);
+    const double max_theo_bid = round_down_to_tick(theo_bid, tick);
+    const double min_theo_ask = round_up_to_tick(theo_ask, tick);
     if (bid_vol > 0) bid = std::min(bid, max_passive_bid);
     if (ask_vol > 0) ask = std::max(ask, min_passive_ask);
+    if (bid_vol > 0) bid = std::min(bid, max_theo_bid);
+    if (ask_vol > 0) ask = std::max(ask, min_theo_ask);
     if (bid_vol == 0) bid = 0.0;
     if (ask_vol == 0) ask = 0.0;
 
