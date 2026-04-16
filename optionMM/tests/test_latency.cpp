@@ -346,6 +346,14 @@ TEST(LatencyTest, TickToQuoteLatency) {
     }
 
     drain_quote_callback_latencies();
+
+    const uint64_t coalesced_signal_writes = engine->total_coalesced_signal_writes();
+    const uint64_t coalesced_signal_overwrites = engine->total_coalesced_signal_overwrites();
+    const uint64_t coalesced_timer_writes = engine->total_coalesced_timer_writes();
+    const uint64_t coalesced_timer_overwrites = engine->total_coalesced_timer_overwrites();
+    const uint32_t max_signal_queue_depth = engine->max_signal_queue_depth();
+    const uint32_t max_signal_mailbox_depth = engine->max_signal_mailbox_depth();
+    const uint32_t max_timer_queue_depth = engine->max_timer_queue_depth();
     engine->stop();
 
     std::sort(latencies.begin(), latencies.end());
@@ -409,6 +417,13 @@ TEST(LatencyTest, TickToQuoteLatency) {
                   << " ns p99=" << percentile(prod_lat, 0.99)
                   << " ns count=" << prod_lat.size() << "\n";
     }
+    std::cout << "[COALESCE] signal mailbox writes: " << coalesced_signal_writes
+              << " overwrites: " << coalesced_signal_overwrites << "\n"
+              << "[COALESCE] timer mailbox writes: " << coalesced_timer_writes
+              << " overwrites: " << coalesced_timer_overwrites << "\n"
+              << "[QUEUE] max signal ring depth: " << max_signal_queue_depth << "\n"
+              << "[QUEUE] max signal mailbox depth: " << max_signal_mailbox_depth << "\n"
+              << "[QUEUE] max timer ring depth: " << max_timer_queue_depth << "\n";
 
     // The synthetic alternating market does not force every option to emit a
     // fresh outbound message on every future tick, but it should still drive a

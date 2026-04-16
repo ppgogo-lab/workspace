@@ -21,6 +21,7 @@ constexpr int kDispatcherCallbackLeadBurstCap = 16;
 constexpr int kDispatcherCallbackInterleaveBurstCap = 8;
 constexpr int kDispatcherOrderBurstCap = 64;
 constexpr int kDispatcherQuoteBurstCap = 128;
+constexpr int kCoalescedTimerSlotCount = 2;
 
 void pin_if_configured(int core_id) noexcept {
     if (core_id < 0) return;
@@ -29,6 +30,59 @@ void pin_if_configured(int core_id) noexcept {
     if (hw_threads > 0 && core_id >= hw_threads) return;
 
     pin_thread_to_core(core_id);
+}
+
+void update_max(std::atomic<uint32_t>& metric, uint32_t candidate) noexcept {
+    uint32_t prev = metric.load(std::memory_order_relaxed);
+    while (prev < candidate
+           && !metric.compare_exchange_weak(prev, candidate,
+                                            std::memory_order_relaxed,
+                                            std::memory_order_relaxed)) {
+    }
+}
+
+template<typename T>
+void publish_latest(std::atomic<uint64_t>& version, T& slot, const T& value) noexcept {
+    const uint64_t cur = version.load(std::memory_order_relaxed);
+    version.store(cur + 1, std::memory_order_release);
+    slot = value;
+    version.store(cur + 2, std::memory_order_release);
+}
+
+template<typename T>
+bool read_latest(const std::atomic<uint64_t>& version,
+                 const T& slot,
+                 uint64_t seen_version,
+                 T* out,
+                 uint64_t* published_version) noexcept {
+    for (int attempt = 0; attempt < 4; ++attempt) {
+        const uint64_t v1 = version.load(std::memory_order_acquire);
+        if (v1 == 0 || (v1 & 1u) != 0) {
+            spin_pause();
+            continue;
+        }
+
+        const T snapshot = slot;
+        const uint64_t v2 = version.load(std::memory_order_acquire);
+        if (v1 == v2 && (v2 & 1u) == 0) {
+            if (v2 == seen_version) return false;
+            *out = snapshot;
+            *published_version = v2;
+            return true;
+        }
+    }
+    return false;
+}
+
+int timer_mailbox_slot(TimerEventType type) noexcept {
+    switch (type) {
+    case TimerEventType::HedgeCheck:
+        return 0;
+    case TimerEventType::QuoteRefresh:
+        return 1;
+    default:
+        return -1;
+    }
 }
 
 } // namespace
@@ -266,6 +320,173 @@ void TradingEngine::stop() noexcept {
     if (gateway_) gateway_->disconnect();
 }
 
+uint64_t TradingEngine::total_coalesced_signal_writes() const noexcept {
+    uint64_t total = 0;
+    for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i)
+        total += coalesced_signal_writes_[i].load(std::memory_order_relaxed);
+    return total;
+}
+
+uint64_t TradingEngine::total_coalesced_signal_overwrites() const noexcept {
+    uint64_t total = 0;
+    for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i)
+        total += coalesced_signal_overwrites_[i].load(std::memory_order_relaxed);
+    return total;
+}
+
+uint64_t TradingEngine::total_coalesced_timer_writes() const noexcept {
+    uint64_t total = 0;
+    for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i)
+        total += coalesced_timer_writes_[i].load(std::memory_order_relaxed);
+    return total;
+}
+
+uint64_t TradingEngine::total_coalesced_timer_overwrites() const noexcept {
+    uint64_t total = 0;
+    for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i)
+        total += coalesced_timer_overwrites_[i].load(std::memory_order_relaxed);
+    return total;
+}
+
+uint32_t TradingEngine::max_signal_queue_depth() const noexcept {
+    uint32_t max_depth = 0;
+    for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i) {
+        max_depth = std::max(max_depth,
+            max_signal_queue_depth_[i].load(std::memory_order_relaxed));
+    }
+    return max_depth;
+}
+
+uint32_t TradingEngine::max_signal_mailbox_depth() const noexcept {
+    uint32_t max_depth = 0;
+    for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i) {
+        max_depth = std::max(max_depth,
+            max_signal_mailbox_depth_[i].load(std::memory_order_relaxed));
+    }
+    return max_depth;
+}
+
+uint32_t TradingEngine::max_timer_queue_depth() const noexcept {
+    uint32_t max_depth = 0;
+    for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i) {
+        max_depth = std::max(max_depth,
+            max_timer_queue_depth_[i].load(std::memory_order_relaxed));
+    }
+    return max_depth;
+}
+
+void TradingEngine::coalesce_signal(uint8_t product_idx,
+                                    uint16_t option_slot,
+                                    const PricingSignal& sig) noexcept {
+    publish_latest(coalesced_signal_versions_[product_idx][option_slot],
+                   coalesced_signal_mailbox_[product_idx][option_slot],
+                   sig);
+    coalesced_signal_writes_[product_idx].fetch_add(1, std::memory_order_relaxed);
+
+    if (!coalesced_signal_index_buf_[product_idx].try_push(option_slot)) {
+        coalesced_signal_rescan_needed_[product_idx].store(true,
+                                                           std::memory_order_release);
+        update_max(max_signal_mailbox_depth_[product_idx],
+                   static_cast<uint32_t>(coalesced_signal_index_buf_[product_idx].capacity()));
+        return;
+    }
+
+    update_max(max_signal_mailbox_depth_[product_idx],
+               static_cast<uint32_t>(coalesced_signal_index_buf_[product_idx].size_approx()));
+}
+
+int TradingEngine::drain_coalesced_signals(int product_idx,
+                                           uint64_t* seen_versions,
+                                           int budget) noexcept {
+    if (budget <= 0) return 0;
+
+    int drained = 0;
+    PricingSignal sig{};
+    uint16_t option_slot = 0;
+    uint64_t published_version = 0;
+
+    auto consume_slot = [&](uint16_t slot) {
+        if (slot >= option_count_[product_idx]) return false;
+
+        const uint64_t seen = seen_versions[slot];
+        if (!read_latest(coalesced_signal_versions_[product_idx][slot],
+                         coalesced_signal_mailbox_[product_idx][slot],
+                         seen,
+                         &sig,
+                         &published_version)) {
+            return false;
+        }
+
+        const uint64_t writes_since_last = (published_version - seen) / 2u;
+        if (writes_since_last > 1) {
+            coalesced_signal_overwrites_[product_idx].fetch_add(writes_since_last - 1,
+                                                                std::memory_order_relaxed);
+        }
+        seen_versions[slot] = published_version;
+        strategies_[product_idx]->on_signal(sig);
+        return true;
+    };
+
+    while (drained < budget
+           && coalesced_signal_index_buf_[product_idx].try_pop(option_slot)) {
+        if (consume_slot(option_slot)) ++drained;
+    }
+
+    if (drained < budget
+        && coalesced_signal_rescan_needed_[product_idx].exchange(false,
+                                                                 std::memory_order_acquire)) {
+        for (uint16_t slot = 0;
+             slot < option_count_[product_idx] && drained < budget;
+             ++slot) {
+            if (consume_slot(slot)) ++drained;
+        }
+    }
+
+    return drained;
+}
+
+void TradingEngine::coalesce_timer_event(int product_idx, const TimerEvent& ev) noexcept {
+    const int slot = timer_mailbox_slot(ev.type);
+    if (slot < 0 || slot >= kCoalescedTimerSlotCount) return;
+
+    publish_latest(coalesced_timer_versions_[product_idx][slot],
+                   coalesced_timer_mailbox_[product_idx][slot],
+                   ev);
+    coalesced_timer_writes_[product_idx].fetch_add(1, std::memory_order_relaxed);
+}
+
+int TradingEngine::drain_coalesced_timers(int product_idx,
+                                          uint64_t* seen_versions,
+                                          int budget) noexcept {
+    if (budget <= 0) return 0;
+
+    int drained = 0;
+    TimerEvent ev{};
+    uint64_t published_version = 0;
+
+    for (int slot = 0; slot < kCoalescedTimerSlotCount && drained < budget; ++slot) {
+        const uint64_t seen = seen_versions[slot];
+        if (!read_latest(coalesced_timer_versions_[product_idx][slot],
+                         coalesced_timer_mailbox_[product_idx][slot],
+                         seen,
+                         &ev,
+                         &published_version)) {
+            continue;
+        }
+
+        const uint64_t writes_since_last = (published_version - seen) / 2u;
+        if (writes_since_last > 1) {
+            coalesced_timer_overwrites_[product_idx].fetch_add(writes_since_last - 1,
+                                                               std::memory_order_relaxed);
+        }
+        seen_versions[slot] = published_version;
+        strategies_[product_idx]->on_timer(ev);
+        ++drained;
+    }
+
+    return drained;
+}
+
 void TradingEngine::publish_monitor_order(const Order& order) noexcept {
     switch (cfg_.monitoring.hot_path_publish_mode) {
     case MonitoringPublishMode::Full:
@@ -465,9 +686,20 @@ void TradingEngine::pricer_loop() noexcept {
             greeks_snapshot_[opt_id] = greek;
         }
 
-        while (!stop_flag_.load(std::memory_order_relaxed)
-            && !signal_buf_[prod].try_push_batch(sigs, batch_n)) {
-            spin_pause();
+        update_max(max_signal_queue_depth_[prod],
+                   static_cast<uint32_t>(signal_buf_[prod].size_approx()));
+        if (!signal_buf_[prod].try_push_batch(sigs, batch_n)) {
+            // Phase 5: if the bounded signal ring is saturated, collapse this
+            // batch into latest-only per-option mailboxes instead of spinning.
+            // The strategy drains the mailbox within its normal signal budget,
+            // so stale theo work is overwritten rather than backpressuring the
+            // pricer thread indefinitely.
+            update_max(max_signal_queue_depth_[prod],
+                       static_cast<uint32_t>(signal_buf_[prod].capacity()));
+            for (uint16_t bi = 0; bi < batch_n; ++bi) {
+                const uint16_t option_slot = static_cast<uint16_t>(start + bi);
+                coalesce_signal(prod, option_slot, sigs[bi]);
+            }
         }
 
         next_option_offset[prod] = static_cast<uint16_t>(start + batch_n);
@@ -489,9 +721,13 @@ void TradingEngine::strategy_loop(int idx) noexcept {
     GatewayEvent ev{};
     TimerEvent timer_ev{};
     PricingSignal sig{};
+    uint64_t coalesced_signal_seen_versions[MAX_INSTRUMENTS]{};
+    uint64_t coalesced_timer_seen_versions[kCoalescedTimerSlotCount]{};
 
     while (!stop_flag_.load(std::memory_order_relaxed)) {
         bool did_work = false;
+        update_max(max_timer_queue_depth_[idx],
+                   static_cast<uint32_t>(timer_buf_[idx].size_approx()));
 
         // Fairness policy: gateway events still have top priority, followed by
         // timers, but each outer-loop pass is bounded so callback or timer
@@ -530,19 +766,23 @@ void TradingEngine::strategy_loop(int idx) noexcept {
             }
         }
 
-        for (int drained = 0;
-             drained < kStrategyTimerBurstCap && timer_buf_[idx].try_pop(timer_ev);
-             ++drained) {
+        int timer_budget = kStrategyTimerBurstCap;
+        for (; timer_budget > 0 && timer_buf_[idx].try_pop(timer_ev); --timer_budget) {
             did_work = true;
             strategies_[idx]->on_timer(timer_ev);
         }
+        const int coalesced_timers =
+            drain_coalesced_timers(idx, coalesced_timer_seen_versions, timer_budget);
+        if (coalesced_timers > 0) did_work = true;
 
-        for (int drained = 0;
-             drained < kStrategySignalBurstCap && signal_buf_[idx].try_pop(sig);
-             ++drained) {
+        int signal_budget = kStrategySignalBurstCap;
+        for (; signal_budget > 0 && signal_buf_[idx].try_pop(sig); --signal_budget) {
             did_work = true;
             strategies_[idx]->on_signal(sig);
         }
+        const int coalesced_signals =
+            drain_coalesced_signals(idx, coalesced_signal_seen_versions, signal_budget);
+        if (coalesced_signals > 0) did_work = true;
 
         if (!did_work) spin_pause();
     }
@@ -1036,10 +1276,9 @@ void TradingEngine::timer_loop() noexcept {
 
             for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i) {
                 if (!strategies_[i]) continue;
-                while (!stop_flag_.load(std::memory_order_relaxed)
-                    && !timer_buf_[i].try_push(ev)) {
-                    spin_pause();
-                }
+                // Duplicate hedge checks are idempotent; keep only the latest
+                // one outstanding per product instead of spinning on timer_buf_.
+                coalesce_timer_event(i, ev);
             }
             last_hedge_ns = now;
         }
@@ -1050,10 +1289,9 @@ void TradingEngine::timer_loop() noexcept {
             ev.type = TimerEventType::QuoteRefresh;
             for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i) {
                 if (!strategies_[i]) continue;
-                while (!stop_flag_.load(std::memory_order_relaxed)
-                    && !timer_buf_[i].try_push(ev)) {
-                    spin_pause();
-                }
+                // Quote refresh is also latest-only safe: if the strategy is
+                // behind, a newer refresh supersedes an older pending refresh.
+                coalesce_timer_event(i, ev);
             }
             last_quote_refresh_ns = now;
         }

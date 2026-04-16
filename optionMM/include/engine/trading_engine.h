@@ -93,6 +93,13 @@ public:
     [[nodiscard]] const MonitoringTopic<SystemAlert, 256>& monitor_alerts(int i) const noexcept {
         return monitor_alerts_[i];
     }
+    [[nodiscard]] uint64_t total_coalesced_signal_writes() const noexcept;
+    [[nodiscard]] uint64_t total_coalesced_signal_overwrites() const noexcept;
+    [[nodiscard]] uint64_t total_coalesced_timer_writes() const noexcept;
+    [[nodiscard]] uint64_t total_coalesced_timer_overwrites() const noexcept;
+    [[nodiscard]] uint32_t max_signal_queue_depth() const noexcept;
+    [[nodiscard]] uint32_t max_signal_mailbox_depth() const noexcept;
+    [[nodiscard]] uint32_t max_timer_queue_depth() const noexcept;
 
     // Manual order submission from gRPC (bypasses strategy, goes direct to gateway dispatcher)
     [[nodiscard]] OrderId next_manual_order_id() noexcept {
@@ -128,6 +135,22 @@ private:
     alignas(64) SPSCRingBuffer<Order,         4096> deferred_monitor_orders_;
     alignas(64) SPSCRingBuffer<Quote,         4096> deferred_monitor_quotes_;
     alignas(64) SPSCRingBuffer<Trade,         4096> deferred_monitor_trades_;
+    alignas(64) SPSCRingBuffer<uint16_t,      2048> coalesced_signal_index_buf_[MAX_PRODUCTS];
+
+    alignas(64) PricingSignal coalesced_signal_mailbox_[MAX_PRODUCTS][MAX_INSTRUMENTS]{};
+    alignas(64) std::atomic<uint64_t> coalesced_signal_versions_[MAX_PRODUCTS][MAX_INSTRUMENTS]{};
+    alignas(64) std::atomic<bool> coalesced_signal_rescan_needed_[MAX_PRODUCTS]{};
+
+    alignas(64) TimerEvent coalesced_timer_mailbox_[MAX_PRODUCTS][2]{};
+    alignas(64) std::atomic<uint64_t> coalesced_timer_versions_[MAX_PRODUCTS][2]{};
+
+    alignas(64) std::atomic<uint64_t> coalesced_signal_writes_[MAX_PRODUCTS]{};
+    alignas(64) std::atomic<uint64_t> coalesced_signal_overwrites_[MAX_PRODUCTS]{};
+    alignas(64) std::atomic<uint64_t> coalesced_timer_writes_[MAX_PRODUCTS]{};
+    alignas(64) std::atomic<uint64_t> coalesced_timer_overwrites_[MAX_PRODUCTS]{};
+    alignas(64) std::atomic<uint32_t> max_signal_queue_depth_[MAX_PRODUCTS]{};
+    alignas(64) std::atomic<uint32_t> max_signal_mailbox_depth_[MAX_PRODUCTS]{};
+    alignas(64) std::atomic<uint32_t> max_timer_queue_depth_[MAX_PRODUCTS]{};
 
     // ── Components ───────────────────────────────────────────────────────────
     std::unique_ptr<IGateway>      gateway_;
@@ -216,6 +239,15 @@ private:
     [[nodiscard]] bool monitoring_deferred_mode() const noexcept {
         return cfg_.monitoring.hot_path_publish_mode == MonitoringPublishMode::Deferred;
     }
+    void coalesce_signal(uint8_t product_idx, uint16_t option_slot,
+                         const PricingSignal& sig) noexcept;
+    int drain_coalesced_signals(int product_idx,
+                                uint64_t* seen_versions,
+                                int budget) noexcept;
+    void coalesce_timer_event(int product_idx, const TimerEvent& ev) noexcept;
+    int drain_coalesced_timers(int product_idx,
+                               uint64_t* seen_versions,
+                               int budget) noexcept;
     void publish_monitor_order(const Order& order) noexcept;
     void publish_monitor_quote(const Quote& quote) noexcept;
     void publish_monitor_trade(const Trade& trade) noexcept;
