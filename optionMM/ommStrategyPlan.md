@@ -6,9 +6,7 @@ Build a production-grade core option market making strategy for `optionMM` that 
 
 - ultra-low latency on the hot path
 - safe and predictable in real trading
-- maintainable without recreating the old `optionMMStrategy` class complexity
 
-This is a behavioral rewrite informed by `optionMMStrategy`, not a class-by-class port.
 
 ## Scope
 
