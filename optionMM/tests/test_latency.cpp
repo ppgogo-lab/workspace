@@ -259,10 +259,32 @@ TEST(LatencyTest, TickToQuoteLatency) {
 
     std::vector<int64_t> latencies;
     std::vector<int64_t> latencies_by_product[2];
+    std::vector<int64_t> quote_ack_callback_latencies;
+    std::vector<int64_t> quote_cancel_callback_latencies;
     size_t quotes_by_product[2]{};
     latencies.reserve(N * EXPECTED_QUOTES);
     latencies_by_product[0].reserve((N / 2 + 1) * EXPECTED_QUOTES);
     latencies_by_product[1].reserve((N / 2 + 1) * EXPECTED_QUOTES);
+    quote_ack_callback_latencies.reserve(N * EXPECTED_QUOTES);
+    quote_cancel_callback_latencies.reserve(N * EXPECTED_QUOTES);
+    uint64_t quote_monitor_cursor = engine->monitor_quotes().latest_seq();
+
+    auto drain_quote_callback_latencies = [&]() {
+        Quote monitored{};
+        while (engine->monitor_quotes().read_next(quote_monitor_cursor, monitored)) {
+            if (monitored.ack_ts <= 0) continue;
+
+            const int64_t now_ns = get_monotonic_ns();
+            const int64_t callback_latency = now_ns - monitored.ack_ts;
+            if (callback_latency <= 0) continue;
+
+            if (monitored.bid_volume == 0 && monitored.ask_volume == 0) {
+                quote_cancel_callback_latencies.push_back(callback_latency);
+            } else {
+                quote_ack_callback_latencies.push_back(callback_latency);
+            }
+        }
+    };
 
     for (int i = 0; i < N; ++i) {
         const int slot = i % 2;
@@ -300,6 +322,7 @@ TEST(LatencyTest, TickToQuoteLatency) {
         int quotes_collected = 0;
 
         while (get_monotonic_ns() < deadline && quotes_collected < EXPECTED_QUOTES) {
+            drain_quote_callback_latencies();
             for (int qi = 0; qi < EXPECTED_QUOTES; ++qi) {
                 if (seen[qi]) continue;
                 const uint16_t option_id = PRODUCT_OPTION_QUOTES[slot][qi].id;
@@ -318,12 +341,16 @@ TEST(LatencyTest, TickToQuoteLatency) {
             if (quotes_collected < EXPECTED_QUOTES) spin_pause();
         }
 
+        drain_quote_callback_latencies();
         std::this_thread::sleep_for(std::chrono::microseconds(200));
     }
 
+    drain_quote_callback_latencies();
     engine->stop();
 
     std::sort(latencies.begin(), latencies.end());
+    std::sort(quote_ack_callback_latencies.begin(), quote_ack_callback_latencies.end());
+    std::sort(quote_cancel_callback_latencies.begin(), quote_cancel_callback_latencies.end());
     const size_t n = latencies.size();
     const size_t expected_total_quotes = static_cast<size_t>(N) * EXPECTED_QUOTES;
     const size_t expected_quotes_by_product[2] = {
@@ -351,6 +378,28 @@ TEST(LatencyTest, TickToQuoteLatency) {
                   << "[LATENCY] p99.9: " << percentile(latencies, 0.999) << " ns\n"
                   << "[LATENCY] max:   " << latencies.back()             << " ns\n";
     }
+    if (!quote_ack_callback_latencies.empty()) {
+        std::cout << "[CALLBACK] QuoteAck captured: " << quote_ack_callback_latencies.size() << "\n"
+                  << "[CALLBACK] QuoteAck p50:   "
+                  << percentile(quote_ack_callback_latencies, 0.50) << " ns\n"
+                  << "[CALLBACK] QuoteAck p95:   "
+                  << percentile(quote_ack_callback_latencies, 0.95) << " ns\n"
+                  << "[CALLBACK] QuoteAck p99:   "
+                  << percentile(quote_ack_callback_latencies, 0.99) << " ns\n"
+                  << "[CALLBACK] QuoteAck p99.9: "
+                  << percentile(quote_ack_callback_latencies, 0.999) << " ns\n";
+    }
+    if (!quote_cancel_callback_latencies.empty()) {
+        std::cout << "[CALLBACK] QuoteCancel captured: " << quote_cancel_callback_latencies.size() << "\n"
+                  << "[CALLBACK] QuoteCancel p50:   "
+                  << percentile(quote_cancel_callback_latencies, 0.50) << " ns\n"
+                  << "[CALLBACK] QuoteCancel p95:   "
+                  << percentile(quote_cancel_callback_latencies, 0.95) << " ns\n"
+                  << "[CALLBACK] QuoteCancel p99:   "
+                  << percentile(quote_cancel_callback_latencies, 0.99) << " ns\n"
+                  << "[CALLBACK] QuoteCancel p99.9: "
+                  << percentile(quote_cancel_callback_latencies, 0.999) << " ns\n";
+    }
     for (int prod = 0; prod < 2; ++prod) {
         auto& prod_lat = latencies_by_product[prod];
         if (prod_lat.empty()) continue;
@@ -374,5 +423,11 @@ TEST(LatencyTest, TickToQuoteLatency) {
         EXPECT_GT(latencies.front(), 0LL) << "Latency must be positive";
         EXPECT_LT(percentile(latencies, 0.99), 100'000'000LL)
             << "p99 latency exceeded 100ms, something is very wrong";
+    }
+    EXPECT_GT(quote_ack_callback_latencies.size(), 0u)
+        << "Expected to capture quote ack callback routing latency";
+    if (!quote_ack_callback_latencies.empty()) {
+        EXPECT_LT(percentile(quote_ack_callback_latencies, 0.99), 100'000'000LL)
+            << "Quote ack callback routing p99 exceeded 100ms";
     }
 }

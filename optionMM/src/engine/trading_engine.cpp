@@ -16,6 +16,10 @@ namespace {
 constexpr int kStrategyGatewayBurstCap = 32;
 constexpr int kStrategyTimerBurstCap = 8;
 constexpr int kStrategySignalBurstCap = 128;
+constexpr int kDispatcherCallbackLeadBurstCap = 16;
+constexpr int kDispatcherCallbackInterleaveBurstCap = 8;
+constexpr int kDispatcherOrderBurstCap = 64;
+constexpr int kDispatcherQuoteBurstCap = 128;
 
 void pin_if_configured(int core_id) noexcept {
     if (core_id < 0) return;
@@ -507,13 +511,81 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
 
     while (!stop_flag_.load(std::memory_order_relaxed)) {
         bool did_work = false;
+        auto drain_callbacks = [&](int burst_cap) {
+            GatewayEvent ev{};
+            for (int drained = 0;
+                 drained < burst_cap && gateway_->callback_buf.try_pop(ev);
+                 ++drained) {
+                did_work = true;
+                const int p = ev.product_index;
+                if (p >= MAX_PRODUCTS || !strategies_[p]) continue;
+
+                switch (ev.type) {
+                case GatewayEventType::OrderAck:
+                    monitor_orders_.publish(ev.order);
+                    break;
+                case GatewayEventType::QuoteAck:
+                    monitor_quotes_.publish(ev.quote);
+                    break;
+                case GatewayEventType::QuoteCancel:
+                    monitor_quotes_.publish(ev.quote);
+                    break;
+                case GatewayEventType::QuoteReject:
+                    monitor_quotes_.publish(ev.quote);
+                    break;
+                case GatewayEventType::OrderFill:
+                case GatewayEventType::QuoteFill:
+                    monitor_trades_.publish(ev.trade);
+                    {
+                        Order filled{};
+                        filled.client_order_id = ev.trade.client_order_id;
+                        filled.instrument_id   = ev.trade.instrument_id;
+                        filled.product_index   = ev.trade.product_index;
+                        filled.exchange_id     = ev.trade.exchange_id;
+                        filled.side            = ev.trade.side;
+                        filled.status          = OrderStatus::Filled;
+                        filled.price           = ev.trade.fill_price;
+                        filled.volume          = ev.trade.fill_volume;
+                        filled.avg_fill_price  = ev.trade.fill_price;
+                        filled.filled_volume   = ev.trade.fill_volume;
+                        filled.ack_ts          = ev.trade.fill_ts;
+                        monitor_orders_.publish(filled);
+                    }
+                    (void)risk_buf_.try_push(ev.trade);  // forward to risk monitor
+                    OMM_LOG_INFO("fill", "instr={} side={} qty={} price={:.4f} order_id={}",
+                                 ev.trade.instrument_id,
+                                 ev.trade.side == Side::Buy ? "buy" : "sell",
+                                 ev.trade.fill_volume,
+                                 ev.trade.fill_price,
+                                 ev.trade.client_order_id);
+                    break;
+                case GatewayEventType::OrderCancel:
+                    monitor_orders_.publish(ev.order);
+                    break;
+                case GatewayEventType::OrderReject:
+                    monitor_orders_.publish(ev.order);
+                    break;
+                default:
+                    break;
+                }
+                while (!stop_flag_.load(std::memory_order_relaxed)
+                    && !gateway_event_buf_[p].try_push(ev)) {
+                    spin_pause();
+                }
+            }
+        };
+
+        // Phase 3 fairness policy: give callbacks a bounded head start so acks
+        // and fills reach the strategy sooner, then interleave smaller callback
+        // slices between per-product send bursts so the send path is not
+        // starved in the other direction.
+        drain_callbacks(kDispatcherCallbackLeadBurstCap);
 
         // Round-robin over all strategy output buffers
         for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i) {
             Order order{};
-            constexpr int MAX_ORDER_BURST = 64;
             for (int drained = 0;
-                 drained < MAX_ORDER_BURST && order_buf_[i].try_pop(order);
+                 drained < kDispatcherOrderBurstCap && order_buf_[i].try_pop(order);
                  ++drained) {
                 did_work = true;
                 gateway_->send_order(order);
@@ -521,75 +593,14 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
             }
 
             Quote quote{};
-            constexpr int MAX_QUOTE_BURST = 128;
             for (int drained = 0;
-                 drained < MAX_QUOTE_BURST && quote_buf_[i].try_pop(quote);
+                 drained < kDispatcherQuoteBurstCap && quote_buf_[i].try_pop(quote);
                  ++drained) {
                 did_work = true;
                 gateway_->send_quote(quote);
                 monitor_quotes_.publish(quote);
             }
-        }
-
-        // Drain gateway callbacks and route to strategy threads
-        GatewayEvent ev{};
-        while (gateway_->callback_buf.try_pop(ev)) {
-            did_work = true;
-            int p = ev.product_index;
-            if (p >= MAX_PRODUCTS || !strategies_[p]) continue;
-
-            switch (ev.type) {
-            case GatewayEventType::OrderAck:
-                monitor_orders_.publish(ev.order);
-                break;
-            case GatewayEventType::QuoteAck:
-                monitor_quotes_.publish(ev.quote);
-                break;
-            case GatewayEventType::QuoteCancel:
-                monitor_quotes_.publish(ev.quote);
-                break;
-            case GatewayEventType::QuoteReject:
-                monitor_quotes_.publish(ev.quote);
-                break;
-            case GatewayEventType::OrderFill:
-            case GatewayEventType::QuoteFill:
-                monitor_trades_.publish(ev.trade);
-                {
-                    Order filled{};
-                    filled.client_order_id = ev.trade.client_order_id;
-                    filled.instrument_id   = ev.trade.instrument_id;
-                    filled.product_index   = ev.trade.product_index;
-                    filled.exchange_id     = ev.trade.exchange_id;
-                    filled.side            = ev.trade.side;
-                    filled.status          = OrderStatus::Filled;
-                    filled.price           = ev.trade.fill_price;
-                    filled.volume          = ev.trade.fill_volume;
-                    filled.avg_fill_price  = ev.trade.fill_price;
-                    filled.filled_volume   = ev.trade.fill_volume;
-                    filled.ack_ts          = ev.trade.fill_ts;
-                    monitor_orders_.publish(filled);
-                }
-                (void)risk_buf_.try_push(ev.trade);  // forward to risk monitor
-                OMM_LOG_INFO("fill", "instr={} side={} qty={} price={:.4f} order_id={}",
-                             ev.trade.instrument_id,
-                             ev.trade.side == Side::Buy ? "buy" : "sell",
-                             ev.trade.fill_volume,
-                             ev.trade.fill_price,
-                             ev.trade.client_order_id);
-                break;
-            case GatewayEventType::OrderCancel:
-                monitor_orders_.publish(ev.order);
-                break;
-            case GatewayEventType::OrderReject:
-                monitor_orders_.publish(ev.order);
-                break;
-            default:
-                break;
-            }
-            while (!stop_flag_.load(std::memory_order_relaxed)
-                && !gateway_event_buf_[p].try_push(ev)) {
-                spin_pause();
-            }
+            drain_callbacks(kDispatcherCallbackInterleaveBurstCap);
         }
         if (!did_work) spin_pause();
     }
