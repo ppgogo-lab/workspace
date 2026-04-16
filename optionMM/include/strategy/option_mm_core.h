@@ -92,6 +92,12 @@ private:
         uint32_t suppress_flags{SuppressNone};
     };
 
+    struct ProductRegime {
+        bool product_suppressed{false};
+        bool exposure_breached{false};
+        bool underlying_shock_suppressed{false};
+    };
+
     static constexpr int64_t STALE_NS = 100'000'000LL;
     static constexpr int64_t QUOTE_MAX_LIVE_NS = 3'000'000'000LL;
     static constexpr int64_t CANCEL_RETRY_NS = 1'000'000'000LL;
@@ -113,6 +119,7 @@ private:
     int64_t last_hedge_ts_ns_{0};
     OrderId live_hedge_order_id_{0};
     Volume live_hedge_remaining_{0};
+    ProductRegime regime_state_{};
 
     void reevaluate_all(int64_t now_ns) noexcept;
     void cancel_all_live(int64_t now_ns) noexcept;
@@ -128,6 +135,8 @@ private:
     void update_product_exposure(OptionState& state,
                                  double old_delta,
                                  double old_vega) noexcept;
+    [[nodiscard]] ProductRegime capture_product_regime(int64_t now_ns) const noexcept;
+    [[nodiscard]] bool handle_product_regime_transition(int64_t now_ns) noexcept;
     [[nodiscard]] bool product_exposure_breached() const noexcept;
     [[nodiscard]] bool product_temporarily_suppressed(int64_t now_ns) const noexcept;
     [[nodiscard]] bool is_material_change(const OptionState& state,

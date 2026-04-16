@@ -106,6 +106,7 @@ protected:
 
         instruments[0] = make_future(0, PROD, "cu2501");
         instruments[1] = make_option(1, 0, PROD, OptionType::Call, 100.0);
+        instruments[2] = make_option(2, 0, PROD, OptionType::Put, 100.0);
 
         tick_snapshot[0].instrument_id = 0;
         tick_snapshot[0].recv_ts_ns = get_monotonic_ns();
@@ -118,6 +119,12 @@ protected:
         tick_snapshot[1].ask_price[0] = 10.5;
         tick_snapshot[1].bid_volume[0] = 10;
         tick_snapshot[1].ask_volume[0] = 10;
+        tick_snapshot[2].instrument_id = 2;
+        tick_snapshot[2].recv_ts_ns = get_monotonic_ns();
+        tick_snapshot[2].bid_price[0] = 7.5;
+        tick_snapshot[2].ask_price[0] = 8.5;
+        tick_snapshot[2].bid_volume[0] = 12;
+        tick_snapshot[2].ask_volume[0] = 12;
 
         strat.init(PROD, &quote_buf, &order_buf, &pre_risk, &params,
                    instruments, tick_snapshot, &post_risk, &alert_topic);
@@ -172,6 +179,37 @@ TEST_F(OptionMmCoreTest, TapersRiskySideVolumeBeforeWarningPosition) {
     EXPECT_EQ(quote.ask_volume, 5);
 }
 
+TEST_F(OptionMmCoreTest, LocalFillOnlyTouchesFilledInstrument) {
+    params.inventory_skew_per_lot_ticks.store(1.0, std::memory_order_relaxed);
+    params.requote_price_epsilon_ticks.store(0.0, std::memory_order_relaxed);
+
+    strat.on_signal(make_signal(1, 9.8, 10.2));
+    strat.on_signal(make_signal(2, 7.8, 8.2));
+
+    Quote quote1{};
+    Quote quote2{};
+    ASSERT_TRUE(quote_buf.try_pop(quote1));
+    ASSERT_TRUE(quote_buf.try_pop(quote2));
+    strat.on_quote_ack(quote1);
+    strat.on_quote_ack(quote2);
+
+    Trade fill{};
+    fill.instrument_id = 1;
+    fill.product_index = PROD;
+    fill.side = Side::Buy;
+    fill.fill_volume = 1;
+    strat.on_fill(fill);
+
+    Quote cancel{};
+    ASSERT_TRUE(quote_buf.try_pop(cancel));
+    EXPECT_EQ(cancel.instrument_id, 1);
+    EXPECT_EQ(cancel.bid_volume, 0);
+    EXPECT_EQ(cancel.ask_volume, 0);
+
+    Quote extra{};
+    EXPECT_FALSE(quote_buf.try_pop(extra));
+}
+
 TEST_F(OptionMmCoreTest, SuppressesWholeProductAndTriggersHedgeOnDeltaBreach) {
     params.hedge_delta_threshold.store(1.0, std::memory_order_relaxed);
     params.quote_volume.store(3, std::memory_order_relaxed);
@@ -198,6 +236,70 @@ TEST_F(OptionMmCoreTest, SuppressesWholeProductAndTriggersHedgeOnDeltaBreach) {
     EXPECT_EQ(hedge.instrument_id, 0);
     EXPECT_EQ(hedge.side, Side::Sell);
     EXPECT_TRUE(hedge.is_hedge);
+}
+
+TEST_F(OptionMmCoreTest, ExposureRecoveryRequotesWholeProduct) {
+    params.hedge_delta_threshold.store(1.0, std::memory_order_relaxed);
+    params.quote_volume.store(3, std::memory_order_relaxed);
+
+    strat.on_signal(make_signal(1, 9.8, 10.2, 0.5));
+    strat.on_signal(make_signal(2, 7.8, 8.2, 0.3));
+
+    Quote initial1{};
+    Quote initial2{};
+    ASSERT_TRUE(quote_buf.try_pop(initial1));
+    ASSERT_TRUE(quote_buf.try_pop(initial2));
+    strat.on_quote_ack(initial1);
+    strat.on_quote_ack(initial2);
+
+    Trade option_fill{};
+    option_fill.instrument_id = 1;
+    option_fill.product_index = PROD;
+    option_fill.side = Side::Buy;
+    option_fill.fill_volume = 4;
+    strat.on_fill(option_fill);
+
+    Quote cancel1{};
+    Quote cancel2{};
+    ASSERT_TRUE(quote_buf.try_pop(cancel1));
+    ASSERT_TRUE(quote_buf.try_pop(cancel2));
+    EXPECT_EQ(cancel1.bid_volume, 0);
+    EXPECT_EQ(cancel1.ask_volume, 0);
+    EXPECT_EQ(cancel2.bid_volume, 0);
+    EXPECT_EQ(cancel2.ask_volume, 0);
+
+    Order hedge{};
+    ASSERT_TRUE(order_buf.try_pop(hedge));
+    EXPECT_EQ(hedge.instrument_id, 0);
+    EXPECT_TRUE(hedge.is_hedge);
+
+    strat.on_quote_cancel(cancel1);
+    strat.on_quote_cancel(cancel2);
+
+    Quote none{};
+    EXPECT_FALSE(quote_buf.try_pop(none));
+
+    Trade hedge_fill{};
+    hedge_fill.client_order_id = hedge.client_order_id;
+    hedge_fill.instrument_id = hedge.instrument_id;
+    hedge_fill.product_index = PROD;
+    hedge_fill.side = hedge.side;
+    hedge_fill.fill_volume = hedge.volume;
+    strat.on_fill(hedge_fill);
+
+    Quote reprice1{};
+    Quote reprice2{};
+    ASSERT_TRUE(quote_buf.try_pop(reprice1));
+    ASSERT_TRUE(quote_buf.try_pop(reprice2));
+
+    const bool saw_first =
+        reprice1.instrument_id == 1 || reprice2.instrument_id == 1;
+    const bool saw_second =
+        reprice1.instrument_id == 2 || reprice2.instrument_id == 2;
+    EXPECT_TRUE(saw_first);
+    EXPECT_TRUE(saw_second);
+    EXPECT_GT(reprice1.bid_volume + reprice1.ask_volume, 0);
+    EXPECT_GT(reprice2.bid_volume + reprice2.ask_volume, 0);
 }
 
 TEST_F(OptionMmCoreTest, SuppressesQuotesBrieflyOnUnderlyingShock) {

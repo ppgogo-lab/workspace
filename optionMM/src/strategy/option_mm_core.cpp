@@ -79,6 +79,7 @@ void OptionMMCoreStrategy::init(uint8_t product_idx,
     last_hedge_ts_ns_ = 0;
     live_hedge_order_id_ = 0;
     live_hedge_remaining_ = 0;
+    regime_state_ = ProductRegime{};
     for (auto& state : option_state_) state = OptionState{};
 
     for (uint16_t id = 0; id < MAX_INSTRUMENTS; ++id) {
@@ -100,6 +101,8 @@ void OptionMMCoreStrategy::init(uint8_t product_idx,
         state.instrument_id = id;
         state.underlying_id = instr.underlying_id;
     }
+
+    regime_state_ = capture_product_regime(get_monotonic_ns());
 }
 
 bool OptionMMCoreStrategy::is_enabled() const noexcept {
@@ -154,10 +157,10 @@ void OptionMMCoreStrategy::on_signal(const PricingSignal& signal) noexcept {
     update_product_exposure(state, old_delta, old_vega);
 
     const int64_t now_ns = get_monotonic_ns();
-    if (product_exposure_breached() || product_temporarily_suppressed(now_ns)) {
-        cancel_all_live(now_ns);
-    }
     maybe_trigger_hedge(now_ns);
+    if (handle_product_regime_transition(now_ns) || regime_state_.product_suppressed) {
+        return;
+    }
     maybe_quote(id, now_ns);
 }
 
@@ -178,10 +181,7 @@ void OptionMMCoreStrategy::on_fill(const Trade& trade) noexcept {
             live_hedge_order_id_ = 0;
         }
         const int64_t now_ns = get_monotonic_ns();
-        if (product_exposure_breached() || product_temporarily_suppressed(now_ns)) {
-            cancel_all_live(now_ns);
-        }
-        reevaluate_all(now_ns);
+        (void)handle_product_regime_transition(now_ns);
         return;
     }
 
@@ -220,11 +220,11 @@ void OptionMMCoreStrategy::on_fill(const Trade& trade) noexcept {
     }
 
     const int64_t now_ns = get_monotonic_ns();
-    if (product_exposure_breached() || product_temporarily_suppressed(now_ns)) {
-        cancel_all_live(now_ns);
-    }
     maybe_trigger_hedge(now_ns);
-    reevaluate_all(now_ns);
+    if (handle_product_regime_transition(now_ns) || regime_state_.product_suppressed) {
+        return;
+    }
+    maybe_quote(trade.instrument_id, now_ns);
 }
 
 void OptionMMCoreStrategy::on_order_ack(const Order& order) noexcept {
@@ -305,7 +305,8 @@ void OptionMMCoreStrategy::on_order_reject(const Order& order) noexcept {
 void OptionMMCoreStrategy::on_timer(const TimerEvent& event) noexcept {
     switch (event.type) {
     case TimerEventType::QuoteRefresh:
-        if (product_exposure_breached() || product_temporarily_suppressed(event.trigger_ts_ns)) {
+        regime_state_ = capture_product_regime(event.trigger_ts_ns);
+        if (regime_state_.product_suppressed) {
             cancel_all_live(event.trigger_ts_ns);
             break;
         }
@@ -313,17 +314,16 @@ void OptionMMCoreStrategy::on_timer(const TimerEvent& event) noexcept {
         break;
     case TimerEventType::HedgeCheck:
         maybe_trigger_hedge(event.trigger_ts_ns);
-        if (product_exposure_breached() || product_temporarily_suppressed(event.trigger_ts_ns)) {
-            cancel_all_live(event.trigger_ts_ns);
-        }
-        reevaluate_all(event.trigger_ts_ns);
+        (void)handle_product_regime_transition(event.trigger_ts_ns);
         break;
     case TimerEventType::SessionOpen:
         session_open_ = true;
+        regime_state_ = capture_product_regime(event.trigger_ts_ns);
         reevaluate_all(event.trigger_ts_ns);
         break;
     case TimerEventType::SessionClose:
         session_open_ = false;
+        regime_state_ = capture_product_regime(event.trigger_ts_ns);
         cancel_all_live(event.trigger_ts_ns);
         break;
     default:
@@ -778,6 +778,44 @@ void OptionMMCoreStrategy::update_product_exposure(OptionState& state,
     const double pos = static_cast<double>(state.net_position);
     product_net_delta_ += (state.last_delta - old_delta) * pos;
     product_net_vega_ += (state.last_vega - old_vega) * pos;
+}
+
+OptionMMCoreStrategy::ProductRegime
+OptionMMCoreStrategy::capture_product_regime(int64_t now_ns) const noexcept {
+    ProductRegime regime{};
+    regime.exposure_breached = product_exposure_breached();
+    regime.underlying_shock_suppressed = product_temporarily_suppressed(now_ns);
+    regime.product_suppressed =
+        !params_
+        || !session_open_
+        || !params_->enabled.load(std::memory_order_relaxed)
+        || regime.exposure_breached
+        || regime.underlying_shock_suppressed
+        || (post_risk_ && post_risk_->any_breach());
+    return regime;
+}
+
+bool OptionMMCoreStrategy::handle_product_regime_transition(int64_t now_ns) noexcept {
+    const ProductRegime next = capture_product_regime(now_ns);
+    const bool product_changed =
+        next.product_suppressed != regime_state_.product_suppressed;
+    const bool exposure_changed =
+        next.exposure_breached != regime_state_.exposure_breached;
+    const bool shock_changed =
+        next.underlying_shock_suppressed != regime_state_.underlying_shock_suppressed;
+
+    regime_state_ = next;
+    if (!product_changed && !exposure_changed && !shock_changed) {
+        return false;
+    }
+
+    // Full-book work is reserved for actual product-wide gating transitions.
+    if (next.product_suppressed) {
+        cancel_all_live(now_ns);
+    } else {
+        reevaluate_all(now_ns);
+    }
+    return true;
 }
 
 bool OptionMMCoreStrategy::product_exposure_breached() const noexcept {
