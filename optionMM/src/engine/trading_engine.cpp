@@ -13,6 +13,10 @@ namespace omm {
 
 namespace {
 
+constexpr int kStrategyGatewayBurstCap = 32;
+constexpr int kStrategyTimerBurstCap = 8;
+constexpr int kStrategySignalBurstCap = 128;
+
 void pin_if_configured(int core_id) noexcept {
     if (core_id < 0) return;
 
@@ -440,7 +444,14 @@ void TradingEngine::strategy_loop(int idx) noexcept {
     while (!stop_flag_.load(std::memory_order_relaxed)) {
         bool did_work = false;
 
-        while (gateway_event_buf_[idx].try_pop(ev)) {
+        // Fairness policy: gateway events still have top priority, followed by
+        // timers, but each outer-loop pass is bounded so callback or timer
+        // bursts cannot monopolize the strategy thread. Every pass reserves a
+        // pricing-signal slice before polling again, which prevents fresh theo
+        // updates from being starved behind an unbounded backlog.
+        for (int drained = 0;
+             drained < kStrategyGatewayBurstCap && gateway_event_buf_[idx].try_pop(ev);
+             ++drained) {
             did_work = true;
             switch (ev.type) {
             case GatewayEventType::OrderAck:
@@ -470,14 +481,15 @@ void TradingEngine::strategy_loop(int idx) noexcept {
             }
         }
 
-        while (timer_buf_[idx].try_pop(timer_ev)) {
+        for (int drained = 0;
+             drained < kStrategyTimerBurstCap && timer_buf_[idx].try_pop(timer_ev);
+             ++drained) {
             did_work = true;
             strategies_[idx]->on_timer(timer_ev);
         }
 
-        constexpr int MAX_SIGNAL_BURST = 128;
         for (int drained = 0;
-             drained < MAX_SIGNAL_BURST && signal_buf_[idx].try_pop(sig);
+             drained < kStrategySignalBurstCap && signal_buf_[idx].try_pop(sig);
              ++drained) {
             did_work = true;
             strategies_[idx]->on_signal(sig);
