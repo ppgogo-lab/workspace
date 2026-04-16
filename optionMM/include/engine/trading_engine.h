@@ -125,6 +125,9 @@ private:
     alignas(64) SPSCRingBuffer<Order,          512> order_buf_ [MAX_PRODUCTS];
     alignas(64) SPSCRingBuffer<Quote,          512> quote_buf_ [MAX_PRODUCTS];
     alignas(64) SPSCRingBuffer<Trade,          256> risk_buf_;
+    alignas(64) SPSCRingBuffer<Order,         4096> deferred_monitor_orders_;
+    alignas(64) SPSCRingBuffer<Quote,         4096> deferred_monitor_quotes_;
+    alignas(64) SPSCRingBuffer<Trade,         4096> deferred_monitor_trades_;
 
     // ── Components ───────────────────────────────────────────────────────────
     std::unique_ptr<IGateway>      gateway_;
@@ -184,10 +187,12 @@ private:
 
     // ── Threads ───────────────────────────────────────────────────────────────
     std::atomic<bool> stop_flag_{false};
+    std::atomic<bool> gateway_dispatcher_running_{false};
     std::thread feed_thread_;
     std::thread pricer_thread_;
     std::thread strategy_threads_[MAX_PRODUCTS];
     std::thread gateway_dispatcher_thread_;
+    std::thread monitor_publisher_thread_;
     std::thread vol_fitter_thread_;
     std::thread risk_monitor_thread_;
     std::thread timer_thread_;
@@ -196,6 +201,7 @@ private:
     void pricer_loop() noexcept;
     void strategy_loop(int product_idx) noexcept;
     void gateway_dispatcher_loop() noexcept;
+    void monitor_publish_loop() noexcept;
     void vol_fitter_loop() noexcept;
     void risk_monitor_loop() noexcept;
     void timer_loop() noexcept;
@@ -207,6 +213,12 @@ private:
     // Recomputes option_T_ for all products using current monotonic time.
     // Called once at startup and then every second from timer_loop.
     void refresh_option_T() noexcept;
+    [[nodiscard]] bool monitoring_deferred_mode() const noexcept {
+        return cfg_.monitoring.hot_path_publish_mode == MonitoringPublishMode::Deferred;
+    }
+    void publish_monitor_order(const Order& order) noexcept;
+    void publish_monitor_quote(const Quote& quote) noexcept;
+    void publish_monitor_trade(const Trade& trade) noexcept;
 };
 
 } // namespace omm

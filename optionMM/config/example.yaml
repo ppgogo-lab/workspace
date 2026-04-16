@@ -101,6 +101,7 @@ products:
 
 monitoring:
   grpc_listen_addr: "0.0.0.0:50051"
+  hot_path_publish_mode: deferred
 
 thread_affinity:
   feed_core: 2

@@ -178,8 +178,11 @@ struct ThreadAffinityConfig {
 };
 
 // ─── Monitoring configuration ─────────────────────────────────────────────────
+enum class MonitoringPublishMode : uint8_t { Full, Deferred, Off };
+
 struct MonitoringConfig {
     char grpc_listen_addr[64]{"0.0.0.0:50051"};
+    MonitoringPublishMode hot_path_publish_mode{MonitoringPublishMode::Full};
 };
 
 // ─── Instance configuration ───────────────────────────────────────────────────

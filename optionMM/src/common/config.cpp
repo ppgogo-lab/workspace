@@ -295,6 +295,29 @@ static ThreadAffinityConfig parse_affinity(const YAML::Node& n) {
     return c;
 }
 
+static MonitoringConfig parse_monitoring(const YAML::Node& n) {
+    MonitoringConfig c;
+    if (!n) return c;
+
+    str_copy(c.grpc_listen_addr,
+             sizeof(c.grpc_listen_addr),
+             n["grpc_listen_addr"], "monitoring.grpc_listen_addr", "0.0.0.0:50051");
+
+    const std::string mode = get<std::string>(
+        n["hot_path_publish_mode"], "monitoring.hot_path_publish_mode", "full");
+    if (mode == "full") {
+        c.hot_path_publish_mode = MonitoringPublishMode::Full;
+    } else if (mode == "deferred") {
+        c.hot_path_publish_mode = MonitoringPublishMode::Deferred;
+    } else if (mode == "off") {
+        c.hot_path_publish_mode = MonitoringPublishMode::Off;
+    } else {
+        throw std::runtime_error(
+            "config: monitoring.hot_path_publish_mode must be full/deferred/off");
+    }
+    return c;
+}
+
 // ─── Main loader ──────────────────────────────────────────────────────────────
 SystemConfig load_config(std::string_view path) {
     YAML::Node root;
@@ -313,11 +336,7 @@ SystemConfig load_config(std::string_view path) {
     cfg.pricing   = parse_pricing(root["pricing"]);
     cfg.risk      = parse_risk(root["risk"]);
     cfg.timer     = parse_timer(root["timer"]);
-    cfg.monitoring.grpc_listen_addr[0] = '\0';
-    if (auto mon = root["monitoring"])
-        str_copy(cfg.monitoring.grpc_listen_addr,
-                 sizeof(cfg.monitoring.grpc_listen_addr),
-                 mon["grpc_listen_addr"], "monitoring.grpc_listen_addr", "0.0.0.0:50051");
+    cfg.monitoring = parse_monitoring(root["monitoring"]);
     cfg.affinity  = parse_affinity(root["thread_affinity"]);
 
     // Products (underlying option series)

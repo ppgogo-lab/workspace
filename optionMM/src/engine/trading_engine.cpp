@@ -8,6 +8,7 @@
 #include <cstring>
 #include <cmath>
 #include <algorithm>
+#include <chrono>
 
 namespace omm {
 
@@ -223,6 +224,7 @@ void TradingEngine::start() {
     init_vol_surfaces();
 
     stop_flag_.store(false, std::memory_order_relaxed);
+    gateway_dispatcher_running_.store(true, std::memory_order_relaxed);
 
     OMM_LOG_INFO("startup", "TradingEngine starting: {} products, {} instruments",
                  cfg_.product_count, n_instruments_);
@@ -236,6 +238,9 @@ void TradingEngine::start() {
         strategy_threads_[i] = std::thread([this, i] { strategy_loop(i); });
     }
 
+    if (monitoring_deferred_mode()) {
+        monitor_publisher_thread_ = std::thread([this] { monitor_publish_loop(); });
+    }
     vol_fitter_thread_    = std::thread([this] { vol_fitter_loop(); });
     risk_monitor_thread_  = std::thread([this] { risk_monitor_loop(); });
     timer_thread_         = std::thread([this] { timer_loop(); });
@@ -253,11 +258,51 @@ void TradingEngine::stop() noexcept {
     join(pricer_thread_);
     for (auto& t : strategy_threads_) join(t);
     join(gateway_dispatcher_thread_);
+    join(monitor_publisher_thread_);
     join(vol_fitter_thread_);
     join(risk_monitor_thread_);
     join(timer_thread_);
 
     if (gateway_) gateway_->disconnect();
+}
+
+void TradingEngine::publish_monitor_order(const Order& order) noexcept {
+    switch (cfg_.monitoring.hot_path_publish_mode) {
+    case MonitoringPublishMode::Full:
+        monitor_orders_.publish(order);
+        break;
+    case MonitoringPublishMode::Deferred:
+        (void)deferred_monitor_orders_.try_push(order);
+        break;
+    case MonitoringPublishMode::Off:
+        break;
+    }
+}
+
+void TradingEngine::publish_monitor_quote(const Quote& quote) noexcept {
+    switch (cfg_.monitoring.hot_path_publish_mode) {
+    case MonitoringPublishMode::Full:
+        monitor_quotes_.publish(quote);
+        break;
+    case MonitoringPublishMode::Deferred:
+        (void)deferred_monitor_quotes_.try_push(quote);
+        break;
+    case MonitoringPublishMode::Off:
+        break;
+    }
+}
+
+void TradingEngine::publish_monitor_trade(const Trade& trade) noexcept {
+    switch (cfg_.monitoring.hot_path_publish_mode) {
+    case MonitoringPublishMode::Full:
+        monitor_trades_.publish(trade);
+        break;
+    case MonitoringPublishMode::Deferred:
+        (void)deferred_monitor_trades_.try_push(trade);
+        break;
+    case MonitoringPublishMode::Off:
+        break;
+    }
 }
 
 // ─── Pricer thread ────────────────────────────────────────────────────────────
@@ -522,20 +567,20 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
 
                 switch (ev.type) {
                 case GatewayEventType::OrderAck:
-                    monitor_orders_.publish(ev.order);
+                    publish_monitor_order(ev.order);
                     break;
                 case GatewayEventType::QuoteAck:
-                    monitor_quotes_.publish(ev.quote);
+                    publish_monitor_quote(ev.quote);
                     break;
                 case GatewayEventType::QuoteCancel:
-                    monitor_quotes_.publish(ev.quote);
+                    publish_monitor_quote(ev.quote);
                     break;
                 case GatewayEventType::QuoteReject:
-                    monitor_quotes_.publish(ev.quote);
+                    publish_monitor_quote(ev.quote);
                     break;
                 case GatewayEventType::OrderFill:
                 case GatewayEventType::QuoteFill:
-                    monitor_trades_.publish(ev.trade);
+                    publish_monitor_trade(ev.trade);
                     {
                         Order filled{};
                         filled.client_order_id = ev.trade.client_order_id;
@@ -549,7 +594,7 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                         filled.avg_fill_price  = ev.trade.fill_price;
                         filled.filled_volume   = ev.trade.fill_volume;
                         filled.ack_ts          = ev.trade.fill_ts;
-                        monitor_orders_.publish(filled);
+                        publish_monitor_order(filled);
                     }
                     (void)risk_buf_.try_push(ev.trade);  // forward to risk monitor
                     OMM_LOG_INFO("fill", "instr={} side={} qty={} price={:.4f} order_id={}",
@@ -560,10 +605,10 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                                  ev.trade.client_order_id);
                     break;
                 case GatewayEventType::OrderCancel:
-                    monitor_orders_.publish(ev.order);
+                    publish_monitor_order(ev.order);
                     break;
                 case GatewayEventType::OrderReject:
-                    monitor_orders_.publish(ev.order);
+                    publish_monitor_order(ev.order);
                     break;
                 default:
                     break;
@@ -589,7 +634,7 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                  ++drained) {
                 did_work = true;
                 gateway_->send_order(order);
-                monitor_orders_.publish(order);
+                publish_monitor_order(order);
             }
 
             Quote quote{};
@@ -598,11 +643,53 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                  ++drained) {
                 did_work = true;
                 gateway_->send_quote(quote);
-                monitor_quotes_.publish(quote);
+                publish_monitor_quote(quote);
             }
             drain_callbacks(kDispatcherCallbackInterleaveBurstCap);
         }
         if (!did_work) spin_pause();
+    }
+    gateway_dispatcher_running_.store(false, std::memory_order_release);
+}
+
+void TradingEngine::monitor_publish_loop() noexcept {
+    set_thread_name("omm-monitor");
+
+    constexpr int kMonitorPublishBurstCap = 128;
+
+    while (gateway_dispatcher_running_.load(std::memory_order_acquire)
+           || !deferred_monitor_orders_.empty_approx()
+           || !deferred_monitor_quotes_.empty_approx()
+           || !deferred_monitor_trades_.empty_approx()) {
+        bool did_work = false;
+
+        Order order{};
+        for (int drained = 0;
+             drained < kMonitorPublishBurstCap && deferred_monitor_orders_.try_pop(order);
+             ++drained) {
+            did_work = true;
+            monitor_orders_.publish(order);
+        }
+
+        Quote quote{};
+        for (int drained = 0;
+             drained < kMonitorPublishBurstCap && deferred_monitor_quotes_.try_pop(quote);
+             ++drained) {
+            did_work = true;
+            monitor_quotes_.publish(quote);
+        }
+
+        Trade trade{};
+        for (int drained = 0;
+             drained < kMonitorPublishBurstCap && deferred_monitor_trades_.try_pop(trade);
+             ++drained) {
+            did_work = true;
+            monitor_trades_.publish(trade);
+        }
+
+        if (!did_work) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
     }
 }
 

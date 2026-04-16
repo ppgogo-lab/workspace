@@ -71,6 +71,18 @@ static bool wait_for_gateway_event(SimGateway& gw,
     return false;
 }
 
+static bool wait_for_monitored_quote(const TradingEngine& engine,
+                                     Quote* out,
+                                     std::chrono::milliseconds timeout = std::chrono::milliseconds(200)) {
+    uint64_t cursor = 0;
+    const auto deadline = std::chrono::steady_clock::now() + timeout;
+    while (std::chrono::steady_clock::now() < deadline) {
+        if (engine.monitor_quotes().read_next(cursor, *out)) return true;
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    return false;
+}
+
 // ─── SimpleMMStrategy unit tests ─────────────────────────────────────────────
 
 class SimpleMmTest : public ::testing::Test {
@@ -426,4 +438,53 @@ TEST(TradingEngineIntegration, TickToQuote) {
     engine->stop();
 
     EXPECT_GT(quotes_sent, 0u) << "Expected SimGateway to receive at least one quote";
+}
+
+TEST(TradingEngineIntegration, DeferredMonitoringStillStreamsQuotes) {
+    SystemConfig cfg{};
+    cfg.product_count = 1;
+    cfg.products[0].params.bid_spread = 0.01;
+    cfg.products[0].params.ask_spread = 0.01;
+    cfg.products[0].params.quote_volume = 5;
+    cfg.products[0].params.max_position = 100;
+    cfg.products[0].params.enabled = true;
+    cfg.monitoring.hot_path_publish_mode = MonitoringPublishMode::Deferred;
+    std::strncpy(cfg.products[0].underlying_id.data, "cu2501", 31);
+    cfg.pricing.risk_free_rate = 0.025;
+    cfg.pricing.fit_interval_seconds = 60;
+    cfg.timer.hedge_check_interval_ms = 10000;
+    cfg.risk.hard.max_volume_per_order = 100;
+    cfg.risk.soft.max_net_position = 500;
+
+    auto gw = std::make_unique<SimGateway>();
+    Instrument fut = make_future(1, 0, "cu2501", 0.01);
+    Instrument opt = make_option(0, 1, 0, 5.0, OptionType::Call, 0.01);
+    std::memcpy(opt.underlying_code.data, "cu2501", 7);
+    gw->add_instrument(fut);
+    gw->add_instrument(opt);
+    gw->set_last_price(0, 5.0);
+    gw->set_last_price(1, 5.0);
+    gw->connect(cfg.gateway);
+
+    auto engine = std::make_unique<TradingEngine>(cfg, std::move(gw), nullptr);
+    engine->start();
+
+    MarketTick tick{};
+    tick.instrument_id  = 0;
+    tick.last_price     = 5.0;
+    tick.bid_price[0]   = 4.99;
+    tick.ask_price[0]   = 5.01;
+    tick.recv_ts_ns     = get_monotonic_ns();
+    tick.exchange_ts_ns = tick.recv_ts_ns;
+    (void)engine->tick_buf().try_push(tick);
+
+    Quote monitored{};
+    const bool saw_monitored_quote = wait_for_monitored_quote(*engine, &monitored);
+
+    engine->stop();
+
+    ASSERT_TRUE(saw_monitored_quote)
+        << "Expected deferred monitoring mode to publish quote flow";
+    EXPECT_EQ(monitored.product_index, 0);
+    EXPECT_GT(monitored.bid_volume + monitored.ask_volume, 0);
 }
