@@ -93,6 +93,19 @@ public:
     [[nodiscard]] const MonitoringTopic<SystemAlert, 256>& monitor_alerts(int i) const noexcept {
         return monitor_alerts_[i];
     }
+    [[nodiscard]] bool product_monitor_state(int product_idx,
+                                             ProductMonitorState* out) const noexcept {
+        if (product_idx < 0 || product_idx >= product_count()) return false;
+        if (!strategies_[product_idx]) return false;
+        return strategies_[product_idx]->read_product_monitor_state(out);
+    }
+    [[nodiscard]] int instrument_monitor_states(int product_idx,
+                                                InstrumentMonitorState* out,
+                                                int max_count) const noexcept {
+        if (product_idx < 0 || product_idx >= product_count()) return 0;
+        if (!strategies_[product_idx]) return 0;
+        return strategies_[product_idx]->read_instrument_monitor_states(out, max_count);
+    }
     [[nodiscard]] uint64_t total_coalesced_signal_writes() const noexcept;
     [[nodiscard]] uint64_t total_coalesced_signal_overwrites() const noexcept;
     [[nodiscard]] uint64_t total_coalesced_timer_writes() const noexcept;

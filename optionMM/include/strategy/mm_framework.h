@@ -7,6 +7,35 @@
 
 namespace omm {
 
+enum class StrategyQuoteMonitorState : uint8_t {
+    Idle = 0,
+    Live,
+    ReplacePending,
+    CancelPending,
+    CancelFailed,
+    Suppressed,
+};
+
+struct ProductMonitorState {
+    uint8_t product_index{0xFF};
+    bool strategy_enabled{false};
+    bool session_open{true};
+    bool product_suppressed{false};
+    bool exposure_breached{false};
+    bool underlying_shock_suppressed{false};
+    bool risk_breach{false};
+};
+
+struct InstrumentMonitorState {
+    uint16_t instrument_id{INVALID_INSTRUMENT_ID};
+    uint8_t product_index{0xFF};
+    StrategyQuoteMonitorState quote_state{StrategyQuoteMonitorState::Idle};
+    uint8_t cancel_attempts{0};
+    int32_t net_position{0};
+    uint32_t suppress_flags{0};
+    Timestamp last_quote_ts_ns{0};
+};
+
 // ─── IMarketMaker ─────────────────────────────────────────────────────────────
 // Abstract interface for a per-product market making strategy.
 // One instance per product, running on a dedicated strategy thread.
@@ -52,6 +81,18 @@ public:
 
     // Return the product index (strategy slot index).
     [[nodiscard]] virtual uint8_t product_index() const noexcept = 0;
+
+    [[nodiscard]] virtual bool read_product_monitor_state(ProductMonitorState* out) const noexcept {
+        if (out != nullptr) *out = ProductMonitorState{};
+        return false;
+    }
+
+    [[nodiscard]] virtual int read_instrument_monitor_states(InstrumentMonitorState* out,
+                                                             int max_count) const noexcept {
+        (void)out;
+        (void)max_count;
+        return 0;
+    }
 
     virtual ~IMarketMaker() = default;
 

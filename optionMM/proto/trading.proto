@@ -155,6 +155,55 @@ message RiskThreshold {
     double max_vega         = 4;
 }
 
+message RiskState {
+    RiskThreshold threshold      = 1;
+    bool position_breach         = 2;
+    bool delta_breach            = 3;
+    bool gamma_breach            = 4;
+    bool vega_breach             = 5;
+}
+
+enum MMQuoteState {
+    MM_QUOTE_IDLE            = 0;
+    MM_QUOTE_LIVE            = 1;
+    MM_QUOTE_REPLACE_PENDING = 2;
+    MM_QUOTE_CANCEL_PENDING  = 3;
+    MM_QUOTE_CANCEL_FAILED   = 4;
+    MM_QUOTE_SUPPRESSED      = 5;
+}
+
+enum MMSuppressReason {
+    MM_REASON_NONE              = 0;
+    MM_REASON_DISABLED          = 1;
+    MM_REASON_SESSION_CLOSED    = 2;
+    MM_REASON_STALE_THEO        = 3;
+    MM_REASON_INVALID_MARKET    = 4;
+    MM_REASON_POSITION_LIMIT    = 5;
+    MM_REASON_RISK_LIMIT        = 6;
+    MM_REASON_THROTTLE          = 7;
+    MM_REASON_UNDERLYING_SHOCK  = 8;
+    MM_REASON_PRODUCT_EXPOSURE  = 9;
+    MM_REASON_CANCEL_STUCK      = 10;
+}
+
+message ProductMMState {
+    uint32 product_index      = 1;
+    bool strategy_enabled     = 2;
+    bool session_open         = 3;
+    bool product_suppressed   = 4;
+    repeated MMSuppressReason reasons = 5;
+}
+
+message InstrumentMMState {
+    uint32 instrument_id      = 1;
+    uint32 product_index      = 2;
+    MMQuoteState quote_state  = 3;
+    repeated MMSuppressReason reasons = 4;
+    int32  net_position       = 5;
+    uint32 cancel_attempts    = 6;
+    int64  last_quote_ts_ns   = 7;
+}
+
 message SetRiskThresholdRequest  { RiskThreshold threshold = 1; }
 message SetRiskThresholdResponse { bool ok = 1; string message = 2; }
 
@@ -176,6 +225,9 @@ message SnapshotResponse {
     PortfolioGreeks         portfolio   = 3;
     repeated MMParams       mm_params   = 4;
     repeated InstrumentInfo instruments = 5;
+    RiskState               risk_state  = 6;
+    repeated ProductMMState product_states = 7;
+    repeated InstrumentMMState instrument_states = 8;
 }
 
 message StreamRequest { uint32 product_index = 1; }  // 0xFF = all

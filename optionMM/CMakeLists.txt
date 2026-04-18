@@ -5,6 +5,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 option(OMM_BUILD_TRADER_GUI "Build the optional Qt trader viewer" OFF)
+set(OMM_PROTO_FILE "${CMAKE_SOURCE_DIR}/proto/trading.proto")
+set(OMM_PROTO_GEN_DIR "${CMAKE_CURRENT_BINARY_DIR}/proto/gen")
+file(MAKE_DIRECTORY "${OMM_PROTO_GEN_DIR}")
 
 if(WIN32)
   if(NOT OMM_BUILD_TRADER_GUI)
@@ -15,9 +18,36 @@ if(WIN32)
   find_package(gRPC CONFIG REQUIRED)
   find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 
+  if(TARGET protobuf::protoc)
+    set(OMM_PROTOC_EXECUTABLE $<TARGET_FILE:protobuf::protoc>)
+  else()
+    find_program(OMM_PROTOC_EXECUTABLE protoc REQUIRED)
+  endif()
+  if(TARGET gRPC::grpc_cpp_plugin)
+    set(OMM_GRPC_CPP_PLUGIN_EXECUTABLE $<TARGET_FILE:gRPC::grpc_cpp_plugin>)
+  else()
+    find_program(OMM_GRPC_CPP_PLUGIN_EXECUTABLE grpc_cpp_plugin REQUIRED)
+  endif()
+
+  add_custom_command(
+      OUTPUT
+          "${OMM_PROTO_GEN_DIR}/trading.pb.cc"
+          "${OMM_PROTO_GEN_DIR}/trading.pb.h"
+          "${OMM_PROTO_GEN_DIR}/trading.grpc.pb.cc"
+          "${OMM_PROTO_GEN_DIR}/trading.grpc.pb.h"
+      COMMAND ${OMM_PROTOC_EXECUTABLE}
+      ARGS
+          --proto_path=${CMAKE_SOURCE_DIR}/proto
+          --cpp_out=${OMM_PROTO_GEN_DIR}
+          --grpc_out=${OMM_PROTO_GEN_DIR}
+          --plugin=protoc-gen-grpc=${OMM_GRPC_CPP_PLUGIN_EXECUTABLE}
+          ${OMM_PROTO_FILE}
+      DEPENDS ${OMM_PROTO_FILE}
+      VERBATIM)
+
   add_executable(optionmm_trader_gui
-      proto/gen/trading.pb.cc
-      proto/gen/trading.grpc.pb.cc
+      "${OMM_PROTO_GEN_DIR}/trading.pb.cc"
+      "${OMM_PROTO_GEN_DIR}/trading.grpc.pb.cc"
       src/gui/main.cpp
       src/gui/trader_main_window.cpp
   )
@@ -25,6 +55,7 @@ if(WIN32)
     target_compile_options(optionmm_trader_gui PRIVATE /EHsc)
   endif()
   target_include_directories(optionmm_trader_gui PRIVATE
+      ${OMM_PROTO_GEN_DIR}
       ${CMAKE_SOURCE_DIR}/include
       ${CMAKE_SOURCE_DIR}
   )
@@ -74,6 +105,24 @@ find_package(Ceres REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GRPC REQUIRED grpc++)
 pkg_check_modules(GRPCPP REQUIRED grpc++)
+find_program(OMM_PROTOC_EXECUTABLE protoc REQUIRED)
+find_program(OMM_GRPC_CPP_PLUGIN_EXECUTABLE grpc_cpp_plugin REQUIRED)
+
+add_custom_command(
+    OUTPUT
+        "${OMM_PROTO_GEN_DIR}/trading.pb.cc"
+        "${OMM_PROTO_GEN_DIR}/trading.pb.h"
+        "${OMM_PROTO_GEN_DIR}/trading.grpc.pb.cc"
+        "${OMM_PROTO_GEN_DIR}/trading.grpc.pb.h"
+    COMMAND ${OMM_PROTOC_EXECUTABLE}
+    ARGS
+        --proto_path=${CMAKE_SOURCE_DIR}/proto
+        --cpp_out=${OMM_PROTO_GEN_DIR}
+        --grpc_out=${OMM_PROTO_GEN_DIR}
+        --plugin=protoc-gen-grpc=${OMM_GRPC_CPP_PLUGIN_EXECUTABLE}
+        ${OMM_PROTO_FILE}
+    DEPENDS ${OMM_PROTO_FILE}
+    VERBATIM)
 
 # Exchange SDK paths
 set(CTP_SDK_DIR   "${CMAKE_SOURCE_DIR}/third_party/ctp")
@@ -227,11 +276,12 @@ target_link_libraries(engine_lib_test PUBLIC
 
 # ─── monitoring_lib (gRPC server) ─────────────────────────────────────────────
 add_library(monitoring_lib STATIC
-    proto/gen/trading.pb.cc
-    proto/gen/trading.grpc.pb.cc
+    "${OMM_PROTO_GEN_DIR}/trading.pb.cc"
+    "${OMM_PROTO_GEN_DIR}/trading.grpc.pb.cc"
     src/monitoring/grpc_server.cpp
 )
 target_include_directories(monitoring_lib PUBLIC
+    ${OMM_PROTO_GEN_DIR}
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}
     ${Protobuf_INCLUDE_DIRS}
@@ -256,6 +306,7 @@ if(OMM_BUILD_TRADER_GUI)
       src/gui/trader_main_window.cpp
   )
   target_include_directories(optionmm_trader_gui PRIVATE
+      ${OMM_PROTO_GEN_DIR}
       ${CMAKE_SOURCE_DIR}/include
       ${CMAKE_SOURCE_DIR}
       ${Protobuf_INCLUDE_DIRS}

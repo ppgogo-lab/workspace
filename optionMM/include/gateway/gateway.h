@@ -59,6 +59,9 @@ public:
     [[nodiscard]] virtual bool send_quote (const Quote& quote) noexcept = 0;
     [[nodiscard]] virtual bool cancel_order(OrderId id,
                                             uint16_t instrument_id) noexcept = 0;
+    [[nodiscard]] virtual bool supports_quote_replace() const noexcept {
+        return false;
+    }
 
     // ── Startup queries ───────────────────────────────────────────────────────
     // Populates instruments[] with all tradeable instruments for this exchange.

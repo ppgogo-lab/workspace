@@ -15,8 +15,13 @@ class QComboBox;
 class QMainWindow;
 class QPushButton;
 class QTableWidget;
+class QTabWidget;
 class QTreeWidget;
 class QWidget;
+
+namespace omm::proto {
+class MMParams;
+}
 
 namespace omm::gui {
 
@@ -32,16 +37,27 @@ private:
     void send_manual_order();
     void start_strategy(bool enabled);
     void apply_strategy_params();
+    void reset_strategy_params_to_defaults();
+    void revert_strategy_params_to_live();
+    void apply_risk_thresholds();
+    void cancel_selected_order();
+    void cancel_selected_product_orders();
     void ensure_vol_window();
     void restore_ui_state();
     void save_ui_state() const;
+    void load_strategy_params_into_editors(const omm::proto::MMParams& params);
+    omm::proto::MMParams collect_strategy_params_from_editors() const;
 
     std::string grpc_endpoint_;
 
     struct Impl;
     std::unique_ptr<Impl> impl_;
 
+    QLabel* connection_label_{nullptr};
     QLabel* status_label_{nullptr};
+    QLabel* desk_state_label_{nullptr};
+    QLabel* global_risk_label_{nullptr};
+    QLabel* alert_banner_label_{nullptr};
     QComboBox* product_selector_{nullptr};
     QComboBox* instrument_selector_{nullptr};
     QComboBox* side_selector_{nullptr};
@@ -70,17 +86,47 @@ private:
     QSpinBox* quote_volume_editor_{nullptr};
     QSpinBox* warning_position_editor_{nullptr};
     QSpinBox* max_position_editor_{nullptr};
+    QCheckBox* strategy_enabled_editor_{nullptr};
     QCheckBox* use_one_sided_editor_{nullptr};
+    QLabel* strategy_status_label_{nullptr};
+    QLabel* product_gate_label_{nullptr};
+    QLabel* params_state_label_{nullptr};
+    QTabWidget* params_tabs_{nullptr};
     QPushButton* apply_params_button_{nullptr};
+    QPushButton* reset_params_button_{nullptr};
+    QPushButton* revert_params_button_{nullptr};
+    QSpinBox* soft_position_limit_editor_{nullptr};
+    QDoubleSpinBox* soft_delta_limit_editor_{nullptr};
+    QDoubleSpinBox* soft_gamma_limit_editor_{nullptr};
+    QDoubleSpinBox* soft_vega_limit_editor_{nullptr};
+    QPushButton* apply_risk_button_{nullptr};
+    QLabel* risk_action_label_{nullptr};
+    QPushButton* cancel_selected_order_button_{nullptr};
+    QPushButton* cancel_product_orders_button_{nullptr};
+    QLabel* execution_status_label_{nullptr};
+    QLabel* pms_gate_label_{nullptr};
+    QLabel* pms_greeks_label_{nullptr};
+    QLabel* pms_limits_label_{nullptr};
+    QLabel* pms_counts_label_{nullptr};
+    QLabel* pms_alert_label_{nullptr};
     QTableWidget* t_table_{nullptr};
     QTreeWidget* positions_tree_{nullptr};
     QTableWidget* orders_table_{nullptr};
     QTableWidget* quotes_table_{nullptr};
     QTableWidget* trades_table_{nullptr};
+    QTableWidget* alerts_table_{nullptr};
     QWidget* vol_widget_{nullptr};
     QDockWidget* vol_dock_{nullptr};
     QMainWindow* vol_window_{nullptr};
     QWidget* vol_window_widget_{nullptr};
+    QWidget* secondary_vol_widget_{nullptr};
+    QLabel* secondary_gate_label_{nullptr};
+    QLabel* secondary_greeks_label_{nullptr};
+    QLabel* secondary_limits_label_{nullptr};
+    QLabel* secondary_counts_label_{nullptr};
+    QLabel* secondary_alert_label_{nullptr};
+    QTableWidget* secondary_risk_table_{nullptr};
+    QTableWidget* secondary_alerts_table_{nullptr};
 };
 
 } // namespace omm::gui

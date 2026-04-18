@@ -5,11 +5,13 @@
 #include "common/thread_utils.h"
 #include "logger/logger.h"
 
-#include "proto/gen/trading.grpc.pb.h"
-#include "proto/gen/trading.pb.h"
+#include "trading.grpc.pb.h"
+#include "trading.pb.h"
 
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/server_builder.h>
+
+#include <google/protobuf/repeated_field.h>
 
 #include <algorithm>
 #include <array>
@@ -18,6 +20,7 @@
 #include <string>
 #include <string_view>
 #include <thread>
+#include <vector>
 
 namespace omm {
 
@@ -25,6 +28,14 @@ namespace {
 
 constexpr uint32_t kAllProducts = 0xFFu;
 constexpr double kNsPerYear = 365.0 * 24.0 * 3600.0 * 1e9;
+constexpr uint32_t kSuppressStaleTheo = 1u << 0;
+constexpr uint32_t kSuppressInvalidMarket = 1u << 1;
+constexpr uint32_t kSuppressPosition = 1u << 2;
+constexpr uint32_t kSuppressRisk = 1u << 3;
+constexpr uint32_t kSuppressThrottle = 1u << 5;
+constexpr uint32_t kSuppressUnderlyingShock = 1u << 6;
+constexpr uint32_t kSuppressProductExposure = 1u << 7;
+constexpr uint32_t kSuppressCancelStuck = 1u << 8;
 
 bool all_products(uint32_t product_index) noexcept {
     return product_index == kAllProducts;
@@ -141,6 +152,80 @@ omm::proto::RiskAlert::AlertType alert_type_to_proto(SystemAlertType type) noexc
         return omm::proto::RiskAlert::QUOTE_CANCEL_GIVE_UP;
     }
     return omm::proto::RiskAlert::QUOTE_CANCEL_GIVE_UP;
+}
+
+omm::proto::MMQuoteState quote_state_to_proto(StrategyQuoteMonitorState state) noexcept {
+    switch (state) {
+    case StrategyQuoteMonitorState::Idle:
+        return omm::proto::MM_QUOTE_IDLE;
+    case StrategyQuoteMonitorState::Live:
+        return omm::proto::MM_QUOTE_LIVE;
+    case StrategyQuoteMonitorState::ReplacePending:
+        return omm::proto::MM_QUOTE_REPLACE_PENDING;
+    case StrategyQuoteMonitorState::CancelPending:
+        return omm::proto::MM_QUOTE_CANCEL_PENDING;
+    case StrategyQuoteMonitorState::CancelFailed:
+        return omm::proto::MM_QUOTE_CANCEL_FAILED;
+    case StrategyQuoteMonitorState::Suppressed:
+        return omm::proto::MM_QUOTE_SUPPRESSED;
+    }
+    return omm::proto::MM_QUOTE_IDLE;
+}
+
+void add_reason_unique(google::protobuf::RepeatedField<int>* reasons,
+                       omm::proto::MMSuppressReason reason) {
+    if (reasons == nullptr) return;
+    for (const int existing : *reasons) {
+        if (existing == static_cast<int>(reason)) return;
+    }
+    reasons->Add(static_cast<int>(reason));
+}
+
+void append_product_reasons(const ProductMonitorState& state,
+                            google::protobuf::RepeatedField<int>* reasons) {
+    if (!state.strategy_enabled) {
+        add_reason_unique(reasons, omm::proto::MM_REASON_DISABLED);
+    }
+    if (!state.session_open) {
+        add_reason_unique(reasons, omm::proto::MM_REASON_SESSION_CLOSED);
+    }
+    if (state.risk_breach) {
+        add_reason_unique(reasons, omm::proto::MM_REASON_RISK_LIMIT);
+    }
+    if (state.exposure_breached) {
+        add_reason_unique(reasons, omm::proto::MM_REASON_PRODUCT_EXPOSURE);
+    }
+    if (state.underlying_shock_suppressed) {
+        add_reason_unique(reasons, omm::proto::MM_REASON_UNDERLYING_SHOCK);
+    }
+}
+
+void append_instrument_reasons(uint32_t suppress_flags,
+                               google::protobuf::RepeatedField<int>* reasons) {
+    if (suppress_flags & kSuppressStaleTheo) {
+        add_reason_unique(reasons, omm::proto::MM_REASON_STALE_THEO);
+    }
+    if (suppress_flags & kSuppressInvalidMarket) {
+        add_reason_unique(reasons, omm::proto::MM_REASON_INVALID_MARKET);
+    }
+    if (suppress_flags & kSuppressPosition) {
+        add_reason_unique(reasons, omm::proto::MM_REASON_POSITION_LIMIT);
+    }
+    if (suppress_flags & kSuppressRisk) {
+        add_reason_unique(reasons, omm::proto::MM_REASON_RISK_LIMIT);
+    }
+    if (suppress_flags & kSuppressThrottle) {
+        add_reason_unique(reasons, omm::proto::MM_REASON_THROTTLE);
+    }
+    if (suppress_flags & kSuppressUnderlyingShock) {
+        add_reason_unique(reasons, omm::proto::MM_REASON_UNDERLYING_SHOCK);
+    }
+    if (suppress_flags & kSuppressProductExposure) {
+        add_reason_unique(reasons, omm::proto::MM_REASON_PRODUCT_EXPOSURE);
+    }
+    if (suppress_flags & kSuppressCancelStuck) {
+        add_reason_unique(reasons, omm::proto::MM_REASON_CANCEL_STUCK);
+    }
 }
 
 } // namespace
@@ -323,6 +408,18 @@ public:
         pg->set_total_vega(port.net_vega);
         pg->set_total_theta(port.net_theta);
 
+        const auto& soft_limits = engine_.post_risk().limits();
+        auto* risk_state = resp->mutable_risk_state();
+        auto* threshold = risk_state->mutable_threshold();
+        threshold->set_max_net_position(soft_limits.max_net_position);
+        threshold->set_max_delta(soft_limits.max_delta);
+        threshold->set_max_gamma(soft_limits.max_gamma);
+        threshold->set_max_vega(soft_limits.max_vega);
+        risk_state->set_position_breach(engine_.post_risk().position_breach());
+        risk_state->set_delta_breach(engine_.post_risk().delta_breach());
+        risk_state->set_gamma_breach(engine_.post_risk().gamma_breach());
+        risk_state->set_vega_breach(engine_.post_risk().vega_breach());
+
         for (int i = 0; i < engine_.product_count(); ++i) {
             MMParamsConfig snap = engine_.mm_params(i).snapshot();
             auto* mp = resp->add_mm_params();
@@ -345,6 +442,34 @@ public:
                 snap.underlying_move_widen_threshold_ticks);
             mp->set_use_one_sided_at_limits(snap.use_one_sided_at_limits);
             mp->set_enabled(snap.enabled);
+        }
+
+        for (int i = 0; i < engine_.product_count(); ++i) {
+            ProductMonitorState product_state{};
+            if (!engine_.product_monitor_state(i, &product_state)) continue;
+
+            auto* ps = resp->add_product_states();
+            ps->set_product_index(product_state.product_index);
+            ps->set_strategy_enabled(product_state.strategy_enabled);
+            ps->set_session_open(product_state.session_open);
+            ps->set_product_suppressed(product_state.product_suppressed);
+            append_product_reasons(product_state, ps->mutable_reasons());
+
+            std::array<InstrumentMonitorState, MAX_INSTRUMENTS> instrument_states{};
+            const int instrument_count =
+                engine_.instrument_monitor_states(i, instrument_states.data(), MAX_INSTRUMENTS);
+            for (int j = 0; j < instrument_count; ++j) {
+                const auto& state = instrument_states[static_cast<std::size_t>(j)];
+                auto* is = resp->add_instrument_states();
+                is->set_instrument_id(state.instrument_id);
+                is->set_product_index(state.product_index);
+                is->set_quote_state(quote_state_to_proto(state.quote_state));
+                is->set_net_position(state.net_position);
+                is->set_cancel_attempts(state.cancel_attempts);
+                is->set_last_quote_ts_ns(state.last_quote_ts_ns);
+                append_instrument_reasons(state.suppress_flags, is->mutable_reasons());
+                append_product_reasons(product_state, is->mutable_reasons());
+            }
         }
 
         for (int i = 0; i < engine_.n_instruments(); ++i) {
@@ -427,6 +552,10 @@ public:
         for (int i = 0; i < engine_.product_count() && i < static_cast<int>(MAX_PRODUCTS); ++i) {
             cursors[i] = engine_.monitor_alerts(i).latest_seq();
         }
+        bool sent_position_breach = false;
+        bool sent_delta_breach = false;
+        bool sent_gamma_breach = false;
+        bool sent_vega_breach = false;
         while (!ctx->IsCancelled()) {
             const auto& pr = engine_.post_risk();
             auto send = [&](omm::proto::RiskAlert::AlertType t, const char* msg) {
@@ -436,22 +565,31 @@ public:
                 alert.set_ts_ns(get_monotonic_ns());
                 return writer->Write(alert);
             };
-            if (pr.position_breach()
+            const bool position_breach = pr.position_breach();
+            const bool delta_breach = pr.delta_breach();
+            const bool gamma_breach = pr.gamma_breach();
+            const bool vega_breach = pr.vega_breach();
+
+            if (position_breach && !sent_position_breach
                 && !send(omm::proto::RiskAlert::POSITION_BREACH, "position limit breached")) {
                 return grpc::Status::OK;
             }
-            if (pr.delta_breach()
+            if (delta_breach && !sent_delta_breach
                 && !send(omm::proto::RiskAlert::DELTA_BREACH, "delta limit breached")) {
                 return grpc::Status::OK;
             }
-            if (pr.gamma_breach()
+            if (gamma_breach && !sent_gamma_breach
                 && !send(omm::proto::RiskAlert::GAMMA_BREACH, "gamma limit breached")) {
                 return grpc::Status::OK;
             }
-            if (pr.vega_breach()
+            if (vega_breach && !sent_vega_breach
                 && !send(omm::proto::RiskAlert::VEGA_BREACH, "vega limit breached")) {
                 return grpc::Status::OK;
             }
+            sent_position_breach = position_breach;
+            sent_delta_breach = delta_breach;
+            sent_gamma_breach = gamma_breach;
+            sent_vega_breach = vega_breach;
 
             bool wrote_custom_alert = false;
             for (int i = 0; i < engine_.product_count() && i < static_cast<int>(MAX_PRODUCTS); ++i) {
@@ -466,7 +604,8 @@ public:
                     wrote_custom_alert = true;
                 }
             }
-            if (!wrote_custom_alert && !pr.any_breach()) {
+            if (!wrote_custom_alert
+                && !position_breach && !delta_breach && !gamma_breach && !vega_breach) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(200));
                 continue;
             }

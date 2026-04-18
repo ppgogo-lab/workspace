@@ -57,6 +57,7 @@ public:
     [[nodiscard]] bool send_quote(const Quote& quote) noexcept override;
     [[nodiscard]] bool cancel_order(OrderId id,
                                      uint16_t instrument_id) noexcept override;
+    [[nodiscard]] bool supports_quote_replace() const noexcept override { return true; }
 
     bool query_instruments(Instrument* out, uint16_t* count,
                             uint16_t max_count) override {

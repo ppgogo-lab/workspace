@@ -5,6 +5,8 @@
 #include "monitoring/topic.h"
 #include "risk/post_trade_risk.h"
 
+#include <atomic>
+
 namespace omm {
 
 class OptionMMCoreStrategy : public IMarketMaker {
@@ -17,7 +19,8 @@ public:
               const Instrument* instruments,
               const MarketTick* tick_snapshot,
               const PostTradeRisk* post_risk,
-              MonitoringTopic<SystemAlert, 256>* alert_topic) noexcept;
+              MonitoringTopic<SystemAlert, 256>* alert_topic,
+              bool supports_quote_replace = false) noexcept;
 
     void on_signal(const PricingSignal& signal) noexcept override;
     void on_fill(const Trade& trade) noexcept override;
@@ -31,6 +34,9 @@ public:
 
     [[nodiscard]] bool is_enabled() const noexcept override;
     [[nodiscard]] uint8_t product_index() const noexcept override { return product_idx_; }
+    [[nodiscard]] bool read_product_monitor_state(ProductMonitorState* out) const noexcept override;
+    [[nodiscard]] int read_instrument_monitor_states(InstrumentMonitorState* out,
+                                                     int max_count) const noexcept override;
 
 private:
     enum SuppressFlags : uint32_t {
@@ -55,6 +61,16 @@ private:
         Suppressed,
     };
 
+    struct QuoteDecision {
+        bool valid{false};
+        bool cancel_only{false};
+        double bid{0.0};
+        double ask{0.0};
+        Volume bid_vol{0};
+        Volume ask_vol{0};
+        uint32_t suppress_flags{SuppressNone};
+    };
+
     struct OptionState {
         bool active{false};
         uint16_t instrument_id{INVALID_INSTRUMENT_ID};
@@ -73,22 +89,14 @@ private:
         QuoteId live_quote_id{0};
         QuoteId pending_quote_id{0};
         QuoteId cancel_target_quote_id{0};
+        QuoteDecision pending_quote{};
         int64_t last_quote_ts{0};
         int64_t live_since_ts{0};
         int64_t cancel_last_send_ts{0};
         uint8_t cancel_attempts{0};
-        uint8_t _pad0[7]{};
+        bool reevaluate_after_quote_update{false};
+        uint8_t _pad0[6]{};
         QuoteState quote_state{QuoteState::Idle};
-        uint32_t suppress_flags{SuppressNone};
-    };
-
-    struct QuoteDecision {
-        bool valid{false};
-        bool cancel_only{false};
-        double bid{0.0};
-        double ask{0.0};
-        Volume bid_vol{0};
-        Volume ask_vol{0};
         uint32_t suppress_flags{SuppressNone};
     };
 
@@ -120,6 +128,16 @@ private:
     OrderId live_hedge_order_id_{0};
     Volume live_hedge_remaining_{0};
     ProductRegime regime_state_{};
+    bool supports_quote_replace_{false};
+    std::atomic<bool> monitor_session_open_{true};
+    std::atomic<bool> monitor_product_suppressed_{false};
+    std::atomic<bool> monitor_exposure_breached_{false};
+    std::atomic<bool> monitor_underlying_shock_suppressed_{false};
+    std::array<std::atomic<uint8_t>, MAX_INSTRUMENTS> monitor_quote_state_{};
+    std::array<std::atomic<uint8_t>, MAX_INSTRUMENTS> monitor_cancel_attempts_{};
+    std::array<std::atomic<int32_t>, MAX_INSTRUMENTS> monitor_net_position_{};
+    std::array<std::atomic<uint32_t>, MAX_INSTRUMENTS> monitor_suppress_flags_{};
+    std::array<std::atomic<int64_t>, MAX_INSTRUMENTS> monitor_last_quote_ts_ns_{};
 
     void reevaluate_all(int64_t now_ns) noexcept;
     void cancel_all_live(int64_t now_ns) noexcept;
@@ -129,6 +147,10 @@ private:
     void send_cancel(OptionState& state, int64_t now_ns) noexcept;
     [[nodiscard]] bool manage_quote_lifecycle(OptionState& state, int64_t now_ns) noexcept;
     void reset_quote_tracking(OptionState& state, QuoteState next_state) noexcept;
+    void clear_live_quote(OptionState& state) noexcept;
+    void clear_pending_quote(OptionState& state) noexcept;
+    void promote_pending_quote_to_live(OptionState& state, int64_t ack_ts) noexcept;
+    void maybe_requote_after_quote_update(OptionState& state, int64_t now_ns) noexcept;
     void publish_cancel_failed_alert(const OptionState& state, int64_t now_ns) noexcept;
     [[nodiscard]] bool quote_fully_filled(const OptionState& state) const noexcept;
     void maybe_trigger_hedge(int64_t now_ns) noexcept;
@@ -144,6 +166,9 @@ private:
                                           double epsilon_px,
                                           int64_t min_interval_ns,
                                           int64_t now_ns) const noexcept;
+    void update_monitor_state(const OptionState& state) noexcept;
+    void update_monitor_product_state() noexcept;
+    void update_all_monitor_states() noexcept;
 };
 
 } // namespace omm

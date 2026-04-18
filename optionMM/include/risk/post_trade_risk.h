@@ -64,6 +64,10 @@ public:
         return portfolio_;
     }
 
+    [[nodiscard]] const SoftRiskConfig& limits() const noexcept {
+        return cfg_;
+    }
+
     // Update soft risk thresholds at runtime (called from gRPC server thread)
     void set_limits(const SoftRiskConfig& cfg) noexcept { cfg_ = cfg; }
 
