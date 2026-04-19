@@ -141,6 +141,10 @@ public:
     [[nodiscard]] bool arbitrage_strategy_state(int product_idx,
                                                 ArbitrageStrategyType type,
                                                 ArbStrategyMonitorState* out) const noexcept;
+    [[nodiscard]] int arbitrage_pcp_monitor_states(int product_idx,
+                                                   ArbitrageStrategyType type,
+                                                   PCPPairMonitorState* out,
+                                                   int max_count) const noexcept;
     [[nodiscard]] bool arbitrage_params_snapshot(int product_idx,
                                                  ArbitrageStrategyType type,
                                                  ArbParamsConfig* out) const noexcept;

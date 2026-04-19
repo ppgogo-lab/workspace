@@ -84,6 +84,31 @@ bool PCPArbitrageStrategy::read_monitor_state(ArbStrategyMonitorState* out) cons
     return true;
 }
 
+int PCPArbitrageStrategy::read_pcp_monitor_states(PCPPairMonitorState* out,
+                                                  int max_count) const noexcept {
+    if (out == nullptr || max_count <= 0) return 0;
+
+    for (int attempt = 0; attempt < 4; ++attempt) {
+        const uint64_t v1 = monitor_pair_snapshot_version_.load(std::memory_order_acquire);
+        if ((v1 & 1u) != 0) {
+            spin_pause();
+            continue;
+        }
+
+        const uint16_t count = monitor_pair_count_;
+        const int to_copy = std::min<int>(count, max_count);
+        for (int i = 0; i < to_copy; ++i) {
+            out[i] = monitor_pairs_[static_cast<std::size_t>(i)];
+        }
+
+        const uint64_t v2 = monitor_pair_snapshot_version_.load(std::memory_order_acquire);
+        if (v1 == v2 && (v2 & 1u) == 0) {
+            return to_copy;
+        }
+    }
+    return 0;
+}
+
 void PCPArbitrageStrategy::build_pairs() noexcept {
     // PCP is intra-product in v1. We first locate the product future, then
     // pair every call with the matching put on:
@@ -260,6 +285,99 @@ bool PCPArbitrageStrategy::scan_best_opportunity(Timestamp now_ns,
         return false;
     }
     return *best_dir != Direction::None;
+}
+
+void PCPArbitrageStrategy::publish_pair_monitor_states(Timestamp now_ns,
+                                                       uint16_t selected_pair_index,
+                                                       Direction selected_dir,
+                                                       double selected_edge_ticks) noexcept {
+    const uint64_t cur = monitor_pair_snapshot_version_.load(std::memory_order_relaxed);
+    monitor_pair_snapshot_version_.store(cur + 1, std::memory_order_release);
+
+    monitor_pair_count_ = pair_count_;
+    for (uint16_t i = 0; i < pair_count_; ++i) {
+        const Pair& pair = pairs_[i];
+        PCPPairMonitorState row{};
+        row.product_index = product_idx_;
+        row.strategy_type = strategy_type();
+        row.call_id = pair.call_id;
+        row.put_id = pair.put_id;
+        row.future_id = pair.future_id;
+        row.expiry_date = pair.expiry_date;
+        row.strike = pair.strike;
+        row.selected = i == selected_pair_index;
+        row.eval_ts_ns = now_ns;
+
+        if (!pair.active || pair.call_id >= MAX_INSTRUMENTS || pair.put_id >= MAX_INSTRUMENTS
+            || pair.future_id >= MAX_INSTRUMENTS) {
+            monitor_pairs_[i] = row;
+            continue;
+        }
+
+        const MarketTick& call_tick = tick_snapshot_[pair.call_id];
+        const MarketTick& put_tick = tick_snapshot_[pair.put_id];
+        const MarketTick& future_tick = tick_snapshot_[pair.future_id];
+        const bool valid_call = market_valid(call_tick, now_ns);
+        const bool valid_put = market_valid(put_tick, now_ns);
+        const bool valid_future = market_valid(future_tick, now_ns);
+        row.market_valid = valid_call && valid_put && valid_future;
+
+        row.discount_factor = discount_factor(pair, now_ns);
+        row.future_bid = future_tick.bid_price[0];
+        row.future_ask = future_tick.ask_price[0];
+
+        if (row.discount_factor > 1e-12
+            && call_tick.bid_price[0] > 0.0 && call_tick.ask_price[0] > 0.0
+            && put_tick.bid_price[0] > 0.0 && put_tick.ask_price[0] > 0.0) {
+            row.synthetic_bid = pair.strike
+                + (call_tick.bid_price[0] - put_tick.ask_price[0]) / row.discount_factor;
+            row.synthetic_ask = pair.strike
+                + (call_tick.ask_price[0] - put_tick.bid_price[0]) / row.discount_factor;
+        }
+
+        const double future_tick_size =
+            instruments_[pair.future_id].tick_size > 0.0 ? instruments_[pair.future_id].tick_size : 1.0;
+        row.long_synth_edge_ticks =
+            (row.discount_factor * (future_tick.bid_price[0] - pair.strike)
+             - (call_tick.ask_price[0] - put_tick.bid_price[0])) / future_tick_size;
+        row.short_synth_edge_ticks =
+            ((call_tick.bid_price[0] - put_tick.ask_price[0])
+             - row.discount_factor * (future_tick.ask_price[0] - pair.strike)) / future_tick_size;
+
+        const Volume long_volume =
+            executable_volume(pair, Direction::LongSyntheticShortFuture,
+                              params_->max_order_volume.load(std::memory_order_relaxed));
+        const Volume short_volume =
+            executable_volume(pair, Direction::ShortSyntheticLongFuture,
+                              params_->max_order_volume.load(std::memory_order_relaxed));
+        if (row.selected) {
+            row.best_direction = selected_dir == Direction::LongSyntheticShortFuture
+                ? PCPMonitorDirection::LongSyntheticShortFuture
+                : (selected_dir == Direction::ShortSyntheticLongFuture
+                    ? PCPMonitorDirection::ShortSyntheticLongFuture
+                    : PCPMonitorDirection::None);
+            row.best_edge_ticks = selected_edge_ticks;
+            row.best_volume = (selected_dir == Direction::LongSyntheticShortFuture)
+                ? long_volume
+                : (selected_dir == Direction::ShortSyntheticLongFuture ? short_volume : 0);
+        } else if (short_volume > 0 && row.short_synth_edge_ticks >= row.long_synth_edge_ticks) {
+            row.best_direction = PCPMonitorDirection::ShortSyntheticLongFuture;
+            row.best_edge_ticks = row.short_synth_edge_ticks;
+            row.best_volume = short_volume;
+        } else if (long_volume > 0) {
+            row.best_direction = PCPMonitorDirection::LongSyntheticShortFuture;
+            row.best_edge_ticks = row.long_synth_edge_ticks;
+            row.best_volume = long_volume;
+        } else {
+            row.best_direction = PCPMonitorDirection::None;
+            row.best_edge_ticks = std::max(row.long_synth_edge_ticks, row.short_synth_edge_ticks);
+            row.best_volume = 0;
+        }
+
+        monitor_pairs_[i] = row;
+    }
+
+    monitor_pair_snapshot_version_.store(cur + 2, std::memory_order_release);
 }
 
 bool PCPArbitrageStrategy::enqueue_order(uint16_t instrument_id,
@@ -577,11 +695,6 @@ void PCPArbitrageStrategy::evaluate(Timestamp now_ns) noexcept {
         refresh_monitor_state(suppress_flags, now_ns);
         return;
     }
-    if (!params_->enabled.load(std::memory_order_relaxed)) {
-        suppress_flags |= ArbSuppressDisabled;
-        refresh_monitor_state(suppress_flags, now_ns);
-        return;
-    }
 
     if (pair_count_ == 0) {
         suppress_flags |= ArbSuppressNoPairs;
@@ -595,6 +708,7 @@ void PCPArbitrageStrategy::evaluate(Timestamp now_ns) noexcept {
     const int64_t cleanup_timeout_ns = std::max<int64_t>(
         1'000'000LL,
         static_cast<int64_t>(params_->cleanup_timeout_ms.load(std::memory_order_relaxed) * 1'000'000.0));
+    const bool enabled = params_->enabled.load(std::memory_order_relaxed);
 
     cancel_stale_orders(now_ns, cleanup_timeout_ns);
     maybe_finalize_attempt(now_ns);
@@ -621,10 +735,28 @@ void PCPArbitrageStrategy::evaluate(Timestamp now_ns) noexcept {
                                 &best_volume,
                                 &best_edge_ticks,
                                 &suppress_flags);
+    uint16_t selected_pair_index = static_cast<uint16_t>(pair_count_);
+    for (uint16_t i = 0; i < pair_count_; ++i) {
+        const Pair& pair = pairs_[i];
+        if (pair.call_id == best_pair.call_id
+            && pair.put_id == best_pair.put_id
+            && pair.future_id == best_pair.future_id
+            && pair.expiry_date == best_pair.expiry_date
+            && std::fabs(pair.strike - best_pair.strike) <= 1e-9) {
+            selected_pair_index = i;
+            break;
+        }
+    }
+    publish_pair_monitor_states(now_ns, selected_pair_index, best_dir, best_edge_ticks);
     monitor_last_edge_ticks_.store(best_edge_ticks, std::memory_order_relaxed);
 
     if (cleanup_active_) suppress_flags |= ArbSuppressCleanupPending;
     if (attempt_active_ || live_order_count() > 0) {
+        refresh_monitor_state(suppress_flags, now_ns);
+        return;
+    }
+    if (!enabled) {
+        suppress_flags |= ArbSuppressDisabled;
         refresh_monitor_state(suppress_flags, now_ns);
         return;
     }

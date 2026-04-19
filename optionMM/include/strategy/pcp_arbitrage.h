@@ -59,6 +59,8 @@ public:
         return ArbitrageStrategyType::PCP;
     }
     [[nodiscard]] bool read_monitor_state(ArbStrategyMonitorState* out) const noexcept override;
+    [[nodiscard]] int read_pcp_monitor_states(PCPPairMonitorState* out,
+                                              int max_count) const noexcept override;
 
 private:
     // The two executable PCP directions. "Synthetic" refers to the call/put
@@ -107,6 +109,10 @@ private:
                                              Volume* best_volume,
                                              double* best_edge_ticks,
                                              uint32_t* suppress_flags) noexcept;
+    void publish_pair_monitor_states(Timestamp now_ns,
+                                     uint16_t selected_pair_index,
+                                     Direction selected_dir,
+                                     double selected_edge_ticks) noexcept;
     [[nodiscard]] bool enqueue_order(uint16_t instrument_id,
                                      Side side,
                                      double price,
@@ -156,6 +162,9 @@ private:
     std::atomic<double> monitor_last_trigger_edge_ticks_{0.0};
     std::atomic<Timestamp> monitor_last_eval_ts_ns_{0};
     std::atomic<Timestamp> monitor_last_trigger_ts_ns_{0};
+    std::atomic<uint64_t> monitor_pair_snapshot_version_{0};
+    std::array<PCPPairMonitorState, kMaxPairs> monitor_pairs_{};
+    uint16_t monitor_pair_count_{0};
 };
 
 } // namespace omm

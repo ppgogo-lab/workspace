@@ -157,6 +157,33 @@ TEST_F(PCPArbitrageTest, EmitsThreeOrdersForPositiveParityEdge) {
     EXPECT_EQ(sell_count, 2);
 }
 
+TEST_F(PCPArbitrageTest, PublishesOpportunityMonitorRows) {
+    strategy_.evaluate(get_monotonic_ns());
+
+    std::array<PCPPairMonitorState, 4> rows{};
+    const int count = strategy_.read_pcp_monitor_states(rows.data(), static_cast<int>(rows.size()));
+    ASSERT_EQ(count, 1);
+
+    const auto& row = rows[0];
+    EXPECT_EQ(row.product_index, kProduct);
+    EXPECT_EQ(row.strategy_type, ArbitrageStrategyType::PCP);
+    EXPECT_EQ(row.call_id, 1);
+    EXPECT_EQ(row.put_id, 2);
+    EXPECT_EQ(row.future_id, 0);
+    EXPECT_TRUE(row.market_valid);
+    EXPECT_TRUE(row.selected);
+    EXPECT_DOUBLE_EQ(row.discount_factor, 1.0);
+    EXPECT_DOUBLE_EQ(row.synthetic_bid, 100.3);
+    EXPECT_DOUBLE_EQ(row.synthetic_ask, 100.9);
+    EXPECT_DOUBLE_EQ(row.future_bid, 105.0);
+    EXPECT_DOUBLE_EQ(row.future_ask, 106.0);
+    EXPECT_DOUBLE_EQ(row.long_synth_edge_ticks, 4.1);
+    EXPECT_DOUBLE_EQ(row.short_synth_edge_ticks, -5.7);
+    EXPECT_EQ(row.best_direction, PCPMonitorDirection::LongSyntheticShortFuture);
+    EXPECT_DOUBLE_EQ(row.best_edge_ticks, 4.1);
+    EXPECT_EQ(row.best_volume, 1);
+}
+
 TEST_F(PCPArbitrageTest, FullBasketFillDoesNotTriggerCleanup) {
     strategy_.evaluate(get_monotonic_ns());
 

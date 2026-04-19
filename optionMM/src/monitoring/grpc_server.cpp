@@ -109,6 +109,18 @@ bool arb_strategy_type_from_proto(omm::proto::ArbitrageStrategyType type,
     }
 }
 
+omm::proto::PcpOpportunityDirection pcp_direction_to_proto(PCPMonitorDirection dir) noexcept {
+    switch (dir) {
+    case PCPMonitorDirection::LongSyntheticShortFuture:
+        return omm::proto::PCP_DIR_LONG_SYNTH_SHORT_FUTURE;
+    case PCPMonitorDirection::ShortSyntheticLongFuture:
+        return omm::proto::PCP_DIR_SHORT_SYNTH_LONG_FUTURE;
+    case PCPMonitorDirection::None:
+    default:
+        return omm::proto::PCP_DIR_NONE;
+    }
+}
+
 void populate_order_update(const TradingEngine& engine, const Order& order, omm::proto::OrderUpdate* msg) {
     msg->set_client_order_id(order.client_order_id);
     msg->set_instrument_id(order.instrument_id);
@@ -632,6 +644,36 @@ public:
                     state->set_last_eval_ts_ns(arb_state.last_eval_ts_ns);
                     state->set_last_trigger_ts_ns(arb_state.last_trigger_ts_ns);
                     append_arb_reasons(arb_state.suppress_flags, state->mutable_reasons());
+                }
+
+                if (type == ArbitrageStrategyType::PCP) {
+                    std::array<PCPPairMonitorState, MAX_INSTRUMENTS> pcp_rows{};
+                    const int pcp_count = engine_.arbitrage_pcp_monitor_states(
+                        i, type, pcp_rows.data(), MAX_INSTRUMENTS);
+                    for (int row_idx = 0; row_idx < pcp_count; ++row_idx) {
+                        const auto& row = pcp_rows[static_cast<std::size_t>(row_idx)];
+                        auto* msg = resp->add_pcp_opportunities();
+                        msg->set_product_index(row.product_index);
+                        msg->set_strategy_type(arb_strategy_type_to_proto(row.strategy_type));
+                        msg->set_call_id(row.call_id);
+                        msg->set_put_id(row.put_id);
+                        msg->set_future_id(row.future_id);
+                        msg->set_expiry_date(row.expiry_date);
+                        msg->set_strike(row.strike);
+                        msg->set_market_valid(row.market_valid);
+                        msg->set_selected(row.selected);
+                        msg->set_discount_factor(row.discount_factor);
+                        msg->set_synthetic_bid(row.synthetic_bid);
+                        msg->set_synthetic_ask(row.synthetic_ask);
+                        msg->set_future_bid(row.future_bid);
+                        msg->set_future_ask(row.future_ask);
+                        msg->set_long_synth_edge_ticks(row.long_synth_edge_ticks);
+                        msg->set_short_synth_edge_ticks(row.short_synth_edge_ticks);
+                        msg->set_best_edge_ticks(row.best_edge_ticks);
+                        msg->set_best_direction(pcp_direction_to_proto(row.best_direction));
+                        msg->set_best_volume(row.best_volume);
+                        msg->set_eval_ts_ns(row.eval_ts_ns);
+                    }
                 }
             }
         }

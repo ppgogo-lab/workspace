@@ -75,6 +75,9 @@ private:
     QPushButton* arb_stop_button_{nullptr};
     QLabel* arb_status_label_{nullptr};
     QLabel* arb_details_label_{nullptr};
+    QLabel* arb_summary_label_{nullptr};
+    QLabel* arb_legend_label_{nullptr};
+    QTableWidget* arb_opportunity_table_{nullptr};
     QLabel* delta_label_{nullptr};
     QLabel* gamma_label_{nullptr};
     QLabel* vega_label_{nullptr};

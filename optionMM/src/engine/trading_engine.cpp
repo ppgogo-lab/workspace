@@ -493,6 +493,19 @@ bool TradingEngine::arbitrage_strategy_state(int product_idx,
     return strategy->read_monitor_state(out);
 }
 
+int TradingEngine::arbitrage_pcp_monitor_states(int product_idx,
+                                                ArbitrageStrategyType type,
+                                                PCPPairMonitorState* out,
+                                                int max_count) const noexcept {
+    if (out == nullptr || max_count <= 0) return 0;
+    if (product_idx < 0 || product_idx >= product_count()) return 0;
+    const int slot = find_arbitrage_slot(product_idx, type);
+    if (slot < 0) return 0;
+    const auto& strategy = arbitrage_strategies_[product_idx][slot];
+    if (!strategy) return 0;
+    return strategy->read_pcp_monitor_states(out, max_count);
+}
+
 bool TradingEngine::arbitrage_params_snapshot(int product_idx,
                                               ArbitrageStrategyType type,
                                               ArbParamsConfig* out) const noexcept {

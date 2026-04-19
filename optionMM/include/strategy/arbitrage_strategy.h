@@ -36,6 +36,35 @@ struct ArbStrategyMonitorState {
     Timestamp             last_trigger_ts_ns{0};
 };
 
+enum class PCPMonitorDirection : uint8_t {
+    None = 0,
+    LongSyntheticShortFuture,
+    ShortSyntheticLongFuture,
+};
+
+struct PCPPairMonitorState {
+    uint8_t               product_index{0xFF};
+    ArbitrageStrategyType strategy_type{ArbitrageStrategyType::None};
+    uint16_t              call_id{INVALID_INSTRUMENT_ID};
+    uint16_t              put_id{INVALID_INSTRUMENT_ID};
+    uint16_t              future_id{INVALID_INSTRUMENT_ID};
+    int32_t               expiry_date{0};
+    double                strike{0.0};
+    bool                  market_valid{false};
+    bool                  selected{false};
+    double                discount_factor{0.0};
+    double                synthetic_bid{0.0};
+    double                synthetic_ask{0.0};
+    double                future_bid{0.0};
+    double                future_ask{0.0};
+    double                long_synth_edge_ticks{0.0};
+    double                short_synth_edge_ticks{0.0};
+    double                best_edge_ticks{0.0};
+    PCPMonitorDirection   best_direction{PCPMonitorDirection::None};
+    Volume                best_volume{0};
+    Timestamp             eval_ts_ns{0};
+};
+
 constexpr uint8_t kArbOrderTag = 0xAEu;
 
 [[nodiscard]] inline OrderId make_arb_order_id(uint8_t product_idx,
@@ -73,6 +102,12 @@ public:
     [[nodiscard]] virtual bool is_enabled() const noexcept = 0;
     [[nodiscard]] virtual ArbitrageStrategyType strategy_type() const noexcept = 0;
     [[nodiscard]] virtual bool read_monitor_state(ArbStrategyMonitorState* out) const noexcept = 0;
+    [[nodiscard]] virtual int read_pcp_monitor_states(PCPPairMonitorState* out,
+                                                      int max_count) const noexcept {
+        (void)out;
+        (void)max_count;
+        return 0;
+    }
 
 protected:
     uint8_t                        product_idx_{0};

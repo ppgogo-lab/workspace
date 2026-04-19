@@ -39,6 +39,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <cmath>
 #include <deque>
 #include <cctype>
 #include <map>
@@ -54,6 +55,9 @@ namespace omm::gui {
 namespace {
 
 constexpr int kWorkspaceStateVersion = 1;
+
+uint64_t make_arb_key(uint32_t product_index,
+                      omm::proto::ArbitrageStrategyType strategy_type);
 
 struct VolCurveSnapshot {
     uint32_t curve_id{0};
@@ -94,6 +98,7 @@ struct SharedState {
     std::unordered_map<uint32_t, omm::proto::ProductMMState> product_states;
     std::unordered_map<uint32_t, omm::proto::InstrumentMMState> instrument_states;
     std::map<uint64_t, omm::proto::ArbStrategyState> arb_strategy_states;
+    std::vector<omm::proto::PcpOpportunityState> pcp_opportunities;
     std::map<uint32_t, VolCurveSnapshot> curves;
 };
 
@@ -446,6 +451,11 @@ private:
                         state_->arb_strategy_states[make_arb_key(
                             arb_state.product_index(), arb_state.strategy_type())] = arb_state;
                     }
+                    state_->pcp_opportunities.clear();
+                    state_->pcp_opportunities.reserve(resp.pcp_opportunities_size());
+                    for (const auto& row : resp.pcp_opportunities()) {
+                        state_->pcp_opportunities.push_back(row);
+                    }
                 }
             }
             for (int i = 0; i < 2 && !stop_requested_; ++i) {
@@ -689,6 +699,63 @@ QString arb_strategy_type_text(omm::proto::ArbitrageStrategyType type) {
     }
 }
 
+QString pcp_direction_text(omm::proto::PcpOpportunityDirection dir) {
+    switch (dir) {
+    case omm::proto::PCP_DIR_LONG_SYNTH_SHORT_FUTURE:
+        return "LONG SYN / SHORT FUT";
+    case omm::proto::PCP_DIR_SHORT_SYNTH_LONG_FUTURE:
+        return "SHORT SYN / LONG FUT";
+    case omm::proto::PCP_DIR_NONE:
+    default:
+        return "-";
+    }
+}
+
+QColor pcp_direction_color(omm::proto::PcpOpportunityDirection dir, double edge_ticks) {
+    if (edge_ticks <= 0.0 || dir == omm::proto::PCP_DIR_NONE) return QColor("#ececec");
+    switch (dir) {
+    case omm::proto::PCP_DIR_LONG_SYNTH_SHORT_FUTURE:
+        return QColor("#cfe7ff");
+    case omm::proto::PCP_DIR_SHORT_SYNTH_LONG_FUTURE:
+        return QColor("#d6f0d5");
+    case omm::proto::PCP_DIR_NONE:
+    default:
+        return QColor("#ececec");
+    }
+}
+
+QColor blend_colors(const QColor& base, const QColor& overlay, double overlay_weight) {
+    const double weight = std::clamp(overlay_weight, 0.0, 1.0);
+    const auto mix = [weight](int base_channel, int overlay_channel) {
+        return static_cast<int>(std::lround(
+            static_cast<double>(base_channel) * (1.0 - weight)
+            + static_cast<double>(overlay_channel) * weight));
+    };
+    return QColor(mix(base.red(), overlay.red()),
+                  mix(base.green(), overlay.green()),
+                  mix(base.blue(), overlay.blue()));
+}
+
+QColor pcp_row_highlight_color(omm::proto::PcpOpportunityDirection dir) {
+    switch (dir) {
+    case omm::proto::PCP_DIR_LONG_SYNTH_SHORT_FUTURE:
+        return QColor("#cfe7ff");
+    case omm::proto::PCP_DIR_SHORT_SYNTH_LONG_FUTURE:
+        return QColor("#d6f0d5");
+    case omm::proto::PCP_DIR_NONE:
+    default:
+        return QColor("#ffe39b");
+    }
+}
+
+bool pcp_row_is_actionable(const omm::proto::PcpOpportunityState& row, double min_edge_ticks) {
+    return row.market_valid()
+        && row.best_volume() > 0
+        && row.best_direction() != omm::proto::PCP_DIR_NONE
+        && min_edge_ticks > 0.0
+        && row.best_edge_ticks() >= min_edge_ticks;
+}
+
 QString risk_alert_type_text(omm::proto::RiskAlert::AlertType type) {
     switch (type) {
     case omm::proto::RiskAlert::POSITION_BREACH:
@@ -917,6 +984,9 @@ struct TraderMainWindow::Impl {
     uint32_t selected_product_index{0};
     uint32_t selected_instrument_id{0};
     int selected_arb_strategy_type{static_cast<int>(omm::proto::ARB_STRATEGY_NONE)};
+    uint32_t selected_pcp_call_id{0};
+    uint32_t selected_pcp_put_id{0};
+    uint32_t selected_pcp_future_id{0};
     bool ui_state_restored{false};
     uint32_t params_editor_product_index{0xFFFFFFFFu};
     QString last_risk_action_text{"Risk thresholds not updated yet"};
@@ -1383,6 +1453,40 @@ void TraderMainWindow::build_ui() {
     controls_dock->setWidget(controls_panel);
     addDockWidget(Qt::RightDockWidgetArea, controls_dock);
 
+    auto* arb_monitor_dock = new QDockWidget("Arbitrage Monitor", this);
+    arb_monitor_dock->setObjectName("arbitrageMonitorDock");
+    arb_monitor_dock->setFeatures(QDockWidget::DockWidgetMovable |
+                                  QDockWidget::DockWidgetFloatable |
+                                  QDockWidget::DockWidgetClosable);
+    auto* arb_panel = new QWidget();
+    auto* arb_layout = new QVBoxLayout(arb_panel);
+    arb_layout->setContentsMargins(8, 8, 8, 8);
+    arb_layout->setSpacing(6);
+    arb_summary_label_ = new QLabel("Select a PCP strategy to inspect synthetic vs future opportunities.");
+    arb_summary_label_->setWordWrap(true);
+    arb_summary_label_->setStyleSheet(
+        "padding:4px 8px; border-radius:8px; background:#f3f0e7; color:#4a4032;");
+    arb_layout->addWidget(arb_summary_label_);
+    arb_legend_label_ = new QLabel(
+        "Rows highlight when the best executable edge meets the PCP trigger threshold. Left wing: synthetic bid vs future ask. Right wing: future bid vs synthetic ask.");
+    arb_legend_label_->setWordWrap(true);
+    arb_legend_label_->setStyleSheet(
+        "padding:4px 8px; border-radius:8px; background:#eef6ff; color:#29415f;");
+    arb_layout->addWidget(arb_legend_label_);
+    arb_opportunity_table_ = make_table({
+        "Synth Bid", "Fut Ask", "Syn Rich", "Exp", "Strike",
+        "Fut Bid", "Synth Ask", "Fut Rich", "Best Dir", "Best Edge", "Qty", "State"
+    });
+    arb_opportunity_table_->setAlternatingRowColors(true);
+    arb_opportunity_table_->setSelectionMode(QAbstractItemView::SingleSelection);
+    arb_opportunity_table_->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    arb_opportunity_table_->horizontalHeader()->setSectionResizeMode(8, QHeaderView::Stretch);
+    arb_opportunity_table_->horizontalHeader()->setSectionResizeMode(11, QHeaderView::Stretch);
+    arb_opportunity_table_->setMinimumHeight(220);
+    arb_layout->addWidget(arb_opportunity_table_, 1);
+    arb_monitor_dock->setWidget(arb_panel);
+    addDockWidget(Qt::BottomDockWidgetArea, arb_monitor_dock);
+
     connect(buy_button_, &QPushButton::clicked, this, [this] {
         side_selector_->setCurrentText("buy");
         send_manual_order();
@@ -1553,7 +1657,19 @@ void TraderMainWindow::build_ui() {
                 .arg(instrument_item->text(),
                      state_item != nullptr ? state_item->text() : QString("-")));
     });
+    connect(arb_opportunity_table_, &QTableWidget::cellClicked, this, [this](int row, int) {
+        auto* row_item = arb_opportunity_table_->item(row, 0);
+        if (row_item == nullptr) return;
+        impl_->selected_pcp_call_id = row_item->data(Qt::UserRole).toUInt();
+        impl_->selected_pcp_put_id = row_item->data(Qt::UserRole + 1).toUInt();
+        impl_->selected_pcp_future_id = row_item->data(Qt::UserRole + 2).toUInt();
+        if (impl_->selected_pcp_call_id != 0) {
+            const int idx = instrument_selector_->findData(QVariant::fromValue(impl_->selected_pcp_call_id));
+            if (idx >= 0) instrument_selector_->setCurrentIndex(idx);
+        }
+    });
     resizeDocks({positions_dock, controls_dock, vol_dock_}, {350, 430, 520}, Qt::Horizontal);
+    resizeDocks({arb_monitor_dock}, {280}, Qt::Vertical);
 }
 
 void TraderMainWindow::ensure_vol_window() {
@@ -2057,6 +2173,18 @@ void TraderMainWindow::refresh_ui() {
         }
     }
 
+    if (selected_arb_type == omm::proto::ARB_STRATEGY_PCP) {
+        const double edge_threshold = have_arb_params ? std::max(0.0, arb_params.min_edge_ticks()) : 0.0;
+        arb_legend_label_->setText(
+            edge_threshold > 0.0
+                ? QString("Rows highlight when best edge >= %1 ticks. Left wing: synthetic bid vs future ask. Right wing: future bid vs synthetic ask.")
+                      .arg(QString::number(edge_threshold, 'f', 2))
+                : QString("Rows highlight when the best executable edge meets the PCP trigger threshold. Left wing: synthetic bid vs future ask. Right wing: future bid vs synthetic ask."));
+    } else {
+        arb_legend_label_->setText(
+            "Select PCP to view the synthetic-vs-future T-table. Highlighting follows the live PCP trigger threshold.");
+    }
+
     if (!have_arb_selection) {
         arb_strategy_selector_->setEnabled(connected && !arb_items.empty());
         arb_start_button_->setEnabled(false);
@@ -2124,6 +2252,174 @@ void TraderMainWindow::refresh_ui() {
                 .arg(last_trigger)
                 .arg(eval_ts)
                 .arg(arb_reason));
+    }
+
+    std::vector<omm::proto::PcpOpportunityState> pcp_rows;
+    if (selected_arb_type == omm::proto::ARB_STRATEGY_PCP) {
+        for (const auto& row : impl_->state.pcp_opportunities) {
+            if (row.product_index() != selected_product) continue;
+            if (row.strategy_type() != selected_arb_type) continue;
+            pcp_rows.push_back(row);
+        }
+        std::sort(pcp_rows.begin(), pcp_rows.end(),
+                  [](const auto& lhs, const auto& rhs) {
+                      if (lhs.expiry_date() != rhs.expiry_date()) {
+                          return lhs.expiry_date() < rhs.expiry_date();
+                      }
+                      return lhs.strike() < rhs.strike();
+                  });
+    }
+
+    if (selected_arb_type != omm::proto::ARB_STRATEGY_PCP || pcp_rows.empty()) {
+        arb_opportunity_table_->setRowCount(0);
+        arb_summary_label_->setText(
+            selected_arb_type == omm::proto::ARB_STRATEGY_PCP
+                ? QString("No live PCP opportunities are available for %1.").arg(product_selector_->currentText())
+                : QString("Opportunity monitor activates when PCP is selected on %1.").arg(product_selector_->currentText()));
+    } else {
+        const double edge_highlight_threshold = have_arb_params
+            ? std::max(0.0, arb_params.min_edge_ticks())
+            : 0.0;
+        int selected_pcp_row = -1;
+        arb_opportunity_table_->setRowCount(static_cast<int>(pcp_rows.size()));
+        for (int row = 0; row < static_cast<int>(pcp_rows.size()); ++row) {
+            const auto& item = pcp_rows[static_cast<std::size_t>(row)];
+            const bool actionable = pcp_row_is_actionable(item, edge_highlight_threshold);
+            const QColor row_overlay = pcp_row_highlight_color(
+                actionable ? item.best_direction() : omm::proto::PCP_DIR_NONE);
+            const double row_tint_weight = actionable ? (item.selected() ? 0.54 : 0.34)
+                                                      : (item.selected() ? 0.22 : 0.0);
+            const auto tint_row = [&](const QColor& base) {
+                return row_tint_weight > 0.0 ? blend_colors(base, row_overlay, row_tint_weight) : base;
+            };
+
+            const QColor future_rich_bg = tint_row(
+                item.long_synth_edge_ticks() > 0.0 ? QColor("#d8ecff") : QColor("#ececec"));
+            const QColor synth_rich_bg = tint_row(
+                item.short_synth_edge_ticks() > 0.0 ? QColor("#dff4df") : QColor("#ececec"));
+            const QColor dir_bg = tint_row(pcp_direction_color(item.best_direction(), item.best_edge_ticks()));
+            QColor state_bg = item.market_valid() ? QColor("#ececec") : QColor("#ffd7a8");
+            QString state_text = item.market_valid() ? "LIVE" : "MARKET";
+            if (item.selected()) {
+                state_text = "SELECTED";
+                state_bg = QColor("#ffe39b");
+            } else if (actionable) {
+                state_text = "EDGE";
+                state_bg = pcp_row_highlight_color(item.best_direction());
+            }
+
+            set_cell(arb_opportunity_table_, row, 0,
+                     item.synthetic_bid() > 0.0 ? QString::number(item.synthetic_bid(), 'f', 2) : "-",
+                     tint_row(QColor("#f4fbf4")));
+            set_cell(arb_opportunity_table_, row, 1,
+                     item.future_ask() > 0.0 ? QString::number(item.future_ask(), 'f', 2) : "-",
+                     tint_row(QColor("#f7f7f7")));
+            set_cell(arb_opportunity_table_, row, 2,
+                     QString::number(item.short_synth_edge_ticks(), 'f', 2),
+                     synth_rich_bg);
+            set_cell(arb_opportunity_table_, row, 3,
+                     format_expiry_short(item.expiry_date()),
+                     tint_row(QColor("#ecf0f6")));
+            set_cell(arb_opportunity_table_, row, 4,
+                     QString::number(item.strike(), 'f', 0),
+                     tint_row(QColor("#e2d7ff")));
+            set_cell(arb_opportunity_table_, row, 5,
+                     item.future_bid() > 0.0 ? QString::number(item.future_bid(), 'f', 2) : "-",
+                     tint_row(QColor("#f7f7f7")));
+            set_cell(arb_opportunity_table_, row, 6,
+                     item.synthetic_ask() > 0.0 ? QString::number(item.synthetic_ask(), 'f', 2) : "-",
+                     tint_row(QColor("#f4fbf4")));
+            set_cell(arb_opportunity_table_, row, 7,
+                     QString::number(item.long_synth_edge_ticks(), 'f', 2),
+                     future_rich_bg);
+            set_cell(arb_opportunity_table_, row, 8,
+                     pcp_direction_text(item.best_direction()),
+                     dir_bg);
+            set_cell(arb_opportunity_table_, row, 9,
+                     QString::number(item.best_edge_ticks(), 'f', 2),
+                     dir_bg);
+            set_cell(arb_opportunity_table_, row, 10,
+                     item.best_volume() > 0 ? QString::number(item.best_volume()) : "-",
+                     QColor("#f3f0e7"));
+            set_cell(arb_opportunity_table_, row, 11, state_text, state_bg);
+
+            const auto call_it = impl_->state.instruments.find(item.call_id());
+            const auto put_it = impl_->state.instruments.find(item.put_id());
+            const auto fut_it = impl_->state.instruments.find(item.future_id());
+            const QString call_code = call_it != impl_->state.instruments.end()
+                ? QString::fromStdString(call_it->second.code) : QString("-");
+            const QString put_code = put_it != impl_->state.instruments.end()
+                ? QString::fromStdString(put_it->second.code) : QString("-");
+            const QString fut_code = fut_it != impl_->state.instruments.end()
+                ? QString::fromStdString(fut_it->second.code) : QString("-");
+            const QString tooltip = QString(
+                "Call %1\nPut %2\nFuture %3\nDF %4\nBest edge %5 ticks\nTrigger %6 ticks\nEval %7")
+                .arg(call_code)
+                .arg(put_code)
+                .arg(fut_code)
+                .arg(QString::number(item.discount_factor(), 'f', 6))
+                .arg(QString::number(item.best_edge_ticks(), 'f', 2))
+                .arg(QString::number(edge_highlight_threshold, 'f', 2))
+                .arg(format_monotonic_ts(item.eval_ts_ns()));
+            for (int col = 0; col < arb_opportunity_table_->columnCount(); ++col) {
+                if (auto* cell = arb_opportunity_table_->item(row, col); cell != nullptr) {
+                    cell->setData(Qt::UserRole, QVariant::fromValue(item.call_id()));
+                    cell->setData(Qt::UserRole + 1, QVariant::fromValue(item.put_id()));
+                    cell->setData(Qt::UserRole + 2, QVariant::fromValue(item.future_id()));
+                    cell->setToolTip(tooltip);
+                    QFont font = cell->font();
+                    font.setBold(actionable || item.selected());
+                    cell->setFont(font);
+                }
+            }
+
+            const bool restore_match =
+                impl_->selected_pcp_call_id == item.call_id()
+                && impl_->selected_pcp_put_id == item.put_id()
+                && impl_->selected_pcp_future_id == item.future_id();
+            if (restore_match || (selected_pcp_row < 0 && item.selected())) {
+                selected_pcp_row = row;
+            }
+        }
+
+        if (selected_pcp_row >= 0) {
+            arb_opportunity_table_->setCurrentCell(selected_pcp_row, 8);
+            const auto& selected_row = pcp_rows[static_cast<std::size_t>(selected_pcp_row)];
+            impl_->selected_pcp_call_id = selected_row.call_id();
+            impl_->selected_pcp_put_id = selected_row.put_id();
+            impl_->selected_pcp_future_id = selected_row.future_id();
+
+            const auto call_it = impl_->state.instruments.find(selected_row.call_id());
+            const auto put_it = impl_->state.instruments.find(selected_row.put_id());
+            const auto fut_it = impl_->state.instruments.find(selected_row.future_id());
+            const QString call_code = call_it != impl_->state.instruments.end()
+                ? QString::fromStdString(call_it->second.code) : QString("-");
+            const QString put_code = put_it != impl_->state.instruments.end()
+                ? QString::fromStdString(put_it->second.code) : QString("-");
+            const QString fut_code = fut_it != impl_->state.instruments.end()
+                ? QString::fromStdString(fut_it->second.code) : QString("-");
+
+            arb_summary_label_->setText(
+                QString("%1 | %2 / %3 / %4 | synth bid %5 vs fut ask %6 (%7t) | fut bid %8 vs synth ask %9 (%10t) | best %11 %12t qty %13")
+                    .arg(product_selector_->currentText())
+                    .arg(call_code)
+                    .arg(put_code)
+                    .arg(fut_code)
+                    .arg(selected_row.synthetic_bid() > 0.0 ? QString::number(selected_row.synthetic_bid(), 'f', 2) : QString("-"))
+                    .arg(selected_row.future_ask() > 0.0 ? QString::number(selected_row.future_ask(), 'f', 2) : QString("-"))
+                    .arg(QString::number(selected_row.short_synth_edge_ticks(), 'f', 2))
+                    .arg(selected_row.future_bid() > 0.0 ? QString::number(selected_row.future_bid(), 'f', 2) : QString("-"))
+                    .arg(selected_row.synthetic_ask() > 0.0 ? QString::number(selected_row.synthetic_ask(), 'f', 2) : QString("-"))
+                    .arg(QString::number(selected_row.long_synth_edge_ticks(), 'f', 2))
+                    .arg(pcp_direction_text(selected_row.best_direction()))
+                    .arg(QString::number(selected_row.best_edge_ticks(), 'f', 2))
+                    .arg(selected_row.best_volume() > 0 ? QString::number(selected_row.best_volume()) : QString("-")));
+        } else {
+            arb_summary_label_->setText(
+                QString("%1 PCP monitor loaded with %2 pairs.")
+                    .arg(product_selector_->currentText())
+                    .arg(pcp_rows.size()));
+        }
     }
 
     if (!impl_->state.alerts.empty()) {

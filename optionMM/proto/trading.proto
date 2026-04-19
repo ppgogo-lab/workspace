@@ -279,6 +279,35 @@ message ArbStrategyState {
     int64  last_trigger_ts_ns            = 15;
 }
 
+enum PcpOpportunityDirection {
+    PCP_DIR_NONE = 0;
+    PCP_DIR_LONG_SYNTH_SHORT_FUTURE = 1;
+    PCP_DIR_SHORT_SYNTH_LONG_FUTURE = 2;
+}
+
+message PcpOpportunityState {
+    uint32 product_index                 = 1;
+    ArbitrageStrategyType strategy_type  = 2;
+    uint32 call_id                       = 3;
+    uint32 put_id                        = 4;
+    uint32 future_id                     = 5;
+    int32  expiry_date                   = 6;
+    double strike                        = 7;
+    bool   market_valid                  = 8;
+    bool   selected                      = 9;
+    double discount_factor               = 10;
+    double synthetic_bid                 = 11;
+    double synthetic_ask                 = 12;
+    double future_bid                    = 13;
+    double future_ask                    = 14;
+    double long_synth_edge_ticks         = 15;
+    double short_synth_edge_ticks        = 16;
+    double best_edge_ticks               = 17;
+    PcpOpportunityDirection best_direction = 18;
+    int32  best_volume                   = 19;
+    int64  eval_ts_ns                    = 20;
+}
+
 message SetRiskThresholdRequest  { RiskThreshold threshold = 1; }
 message SetRiskThresholdResponse { bool ok = 1; string message = 2; }
 
@@ -307,6 +336,7 @@ message SnapshotResponse {
     repeated InstrumentMMState instrument_states = 8;
     repeated ArbStrategyParamsEntry arb_params = 9;
     repeated ArbStrategyState arb_strategy_states = 10;
+    repeated PcpOpportunityState pcp_opportunities = 11;
 }
 
 message StreamRequest { uint32 product_index = 1; }  // 0xFF = all
