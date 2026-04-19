@@ -134,6 +134,22 @@ bool SimGateway::cancel_order(OrderId id, uint16_t instrument_id) noexcept {
     return false;
 }
 
+bool SimGateway::cancel_quote(QuoteId id, uint16_t instrument_id) noexcept {
+    if (!connected_.load(std::memory_order_relaxed)) return false;
+    if (instrument_id >= MAX_INSTRUMENTS) return false;
+
+    const Timestamp now_ns = get_monotonic_ns();
+    std::lock_guard<std::mutex> lock(state_mutex_);
+    ActiveQuote& quote = active_quotes_[instrument_id];
+    if (!quote.used) return false;
+    if (quote.quote.client_quote_id != id) return false;
+    if (quote.cancel_pending) return true;
+    if (quote.remaining_bid <= 0 && quote.remaining_ask <= 0) return false;
+    quote.cancel_pending = true;
+    quote.cancel_due_ns = now_ns + static_cast<Timestamp>(settings_.cancel_latency_ms) * 1'000'000LL;
+    return true;
+}
+
 void SimGateway::start_worker() {
     stop_worker();
     worker_running_.store(true, std::memory_order_release);
@@ -273,6 +289,21 @@ void SimGateway::process_quotes(Timestamp now_ns, std::mt19937& rng) noexcept {
             ack.quote.ask_status = active.remaining_ask > 0 ? OrderStatus::New : OrderStatus::Filled;
             (void)callback_buf.try_push(ack);
             active.ack_sent = true;
+        }
+
+        if (active.cancel_pending && now_ns >= active.cancel_due_ns) {
+            GatewayEvent cancel{};
+            cancel.type = GatewayEventType::QuoteCancel;
+            cancel.product_index = active.quote.product_index;
+            cancel.quote = active.quote;
+            cancel.quote.ack_ts = now_ns;
+            cancel.quote.bid_volume = 0;
+            cancel.quote.ask_volume = 0;
+            cancel.quote.bid_status = OrderStatus::Cancelled;
+            cancel.quote.ask_status = OrderStatus::Cancelled;
+            (void)callback_buf.try_push(cancel);
+            active = ActiveQuote{};
+            continue;
         }
 
         if (!active.ack_sent || now_ns < active.next_fill_due_ns) continue;

@@ -42,7 +42,7 @@ products:
       bid_spread: 0.4
       ask_spread: 0.4
       quote_volume: 5
-      hedge_delta_threshold: 25.0
+      product_delta_threshold: 25.0
       min_quote_interval_ms: 100.0
       max_position: 80
       enabled: true
@@ -55,7 +55,7 @@ products:
       bid_spread: 6.0
       ask_spread: 6.0
       quote_volume: 3
-      hedge_delta_threshold: 40.0
+      product_delta_threshold: 40.0
       min_quote_interval_ms: 100.0
       max_position: 50
       enabled: true

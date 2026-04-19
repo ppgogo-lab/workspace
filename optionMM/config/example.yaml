@@ -61,7 +61,7 @@ products:
       bid_spread: 10.0        # RMB per tonne (copper option tick is 10)
       ask_spread: 10.0
       quote_volume: 5
-      hedge_delta_threshold: 50.0
+      product_delta_threshold: 50.0
       min_quote_interval_ms: 100.0
       warning_position: 60
       max_position: 100
@@ -84,7 +84,7 @@ products:
       bid_spread: 2.0         # RMB per tonne (rebar option tick is 1)
       ask_spread: 2.0
       quote_volume: 10
-      hedge_delta_threshold: 100.0
+      product_delta_threshold: 100.0
       min_quote_interval_ms: 100.0
       warning_position: 120
       max_position: 200

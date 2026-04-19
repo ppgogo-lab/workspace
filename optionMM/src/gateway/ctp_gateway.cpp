@@ -245,6 +245,51 @@ bool CTPGateway::cancel_order(OrderId id, uint16_t instrument_id) noexcept {
 
 // ─── query_instruments ────────────────────────────────────────────────────────
 
+bool CTPGateway::cancel_quote(QuoteId id, uint16_t instrument_id) noexcept {
+    if (!api_ || !trading_ready_.load(std::memory_order_relaxed)) return false;
+    if (instrument_id >= MAX_INSTRUMENTS) return false;
+
+    Quote active_quote{};
+    OrderId bid_order_id = 0;
+    OrderId ask_order_id = 0;
+    bool bid_active = false;
+    bool ask_active = false;
+    {
+        std::lock_guard<std::mutex> lk(quote_state_mutex_);
+        auto& state = synthetic_quotes_[instrument_id];
+        if (!state.used || state.quote.client_quote_id != id) {
+            OMM_LOG_WARN("ctp", "cancel_quote missing state quote_id={} instrument_id={}",
+                         id, instrument_id);
+            return false;
+        }
+        if (state.cancel_pending) return true;
+        state.cancel_pending = true;
+        active_quote = state.quote;
+        bid_order_id = state.bid_order_id;
+        ask_order_id = state.ask_order_id;
+        bid_active = state.bid_active;
+        ask_active = state.ask_active;
+    }
+
+    bool ok = true;
+    if (bid_active) ok &= cancel_order(bid_order_id, instrument_id);
+    if (ask_active) ok &= cancel_order(ask_order_id, instrument_id);
+    if (!bid_active && !ask_active) {
+        std::lock_guard<std::mutex> lk(quote_state_mutex_);
+        synthetic_quotes_[instrument_id] = SyntheticQuoteState{};
+        GatewayEvent ev{};
+        ev.type = GatewayEventType::QuoteCancel;
+        ev.product_index = active_quote.product_index;
+        ev.quote = active_quote;
+        ev.quote.client_quote_id = id;
+        ev.quote.bid_volume = 0;
+        ev.quote.ask_volume = 0;
+        ev.quote.ack_ts = get_monotonic_ns();
+        (void)callback_buf.try_push(ev);
+    }
+    return ok;
+}
+
 bool CTPGateway::query_instruments(Instrument* out, uint16_t* count,
                                     uint16_t max_count) {
     if (!api_ || !trading_ready_.load(std::memory_order_relaxed)) {

@@ -249,7 +249,7 @@ public:
         MMParamsConfig snap = engine_.mm_params(idx).snapshot();
         if (p.has_bid_spread()) snap.bid_spread = p.bid_spread();
         if (p.has_ask_spread()) snap.ask_spread = p.ask_spread();
-        if (p.has_hedge_delta_threshold()) snap.hedge_delta_threshold = p.hedge_delta_threshold();
+        if (p.has_product_delta_threshold()) snap.product_delta_threshold = p.product_delta_threshold();
         if (p.has_quote_volume()) snap.quote_volume = p.quote_volume();
         if (p.has_max_position()) snap.max_position = p.max_position();
         if (p.has_enabled()) snap.enabled = p.enabled();
@@ -278,13 +278,13 @@ public:
         engine_.mm_params(idx).apply(snap);
         OMM_LOG_INFO(
             "grpc",
-            "SetStrategyParams product={} qv={} max_pos={} warn_pos={} base_half={} hedge_delta={} vega={} enabled={}",
+            "SetStrategyParams product={} qv={} max_pos={} warn_pos={} base_half={} product_delta={} vega={} enabled={}",
             idx,
             snap.quote_volume,
             snap.max_position,
             snap.warning_position,
             snap.base_half_spread_ticks,
-            snap.hedge_delta_threshold,
+            snap.product_delta_threshold,
             snap.product_vega_threshold,
             (int)snap.enabled);
         resp->set_ok(true);
@@ -368,6 +368,18 @@ public:
         return grpc::Status::OK;
     }
 
+    grpc::Status CancelQuote(
+            grpc::ServerContext*,
+            const omm::proto::CancelQuoteRequest* req,
+            omm::proto::CancelQuoteResponse* resp) override
+    {
+        bool ok = engine_.cancel_quote(req->quote_id(),
+                                       static_cast<uint16_t>(req->instrument_id()));
+        OMM_LOG_INFO("grpc", "CancelQuote quote_id={} ok={}", req->quote_id(), (int)ok);
+        resp->set_ok(ok);
+        return grpc::Status::OK;
+    }
+
     grpc::Status GetSnapshot(
             grpc::ServerContext*,
             const omm::proto::SnapshotRequest*,
@@ -425,7 +437,7 @@ public:
             auto* mp = resp->add_mm_params();
             mp->set_bid_spread(snap.bid_spread);
             mp->set_ask_spread(snap.ask_spread);
-            mp->set_hedge_delta_threshold(snap.hedge_delta_threshold);
+            mp->set_product_delta_threshold(snap.product_delta_threshold);
             mp->set_quote_volume(snap.quote_volume);
             mp->set_max_position(snap.max_position);
             mp->set_product_vega_threshold(snap.product_vega_threshold);

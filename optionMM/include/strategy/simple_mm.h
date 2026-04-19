@@ -18,7 +18,7 @@ namespace omm {
 //     5. If |net_position| >= max_position, lean (only quote the reducing side)
 //
 //   on_timer(HedgeCheck):
-//     If |portfolio_delta| > hedge_delta_threshold, send a hedge order
+//     If |portfolio_delta| > product_delta_threshold, send a hedge order
 //     on the underlying future (instrument with kind == Future).
 //
 //   on_timer(SessionClose):

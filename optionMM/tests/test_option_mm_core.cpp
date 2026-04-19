@@ -211,7 +211,7 @@ TEST_F(OptionMmCoreTest, LocalFillOnlyTouchesFilledInstrument) {
 }
 
 TEST_F(OptionMmCoreTest, SuppressesWholeProductAndTriggersHedgeOnDeltaBreach) {
-    params.hedge_delta_threshold.store(1.0, std::memory_order_relaxed);
+    params.product_delta_threshold.store(1.0, std::memory_order_relaxed);
     params.quote_volume.store(3, std::memory_order_relaxed);
 
     strat.on_signal(make_signal(1, 9.8, 10.2, 0.5));
@@ -239,7 +239,7 @@ TEST_F(OptionMmCoreTest, SuppressesWholeProductAndTriggersHedgeOnDeltaBreach) {
 }
 
 TEST_F(OptionMmCoreTest, ExposureRecoveryRequotesWholeProduct) {
-    params.hedge_delta_threshold.store(1.0, std::memory_order_relaxed);
+    params.product_delta_threshold.store(1.0, std::memory_order_relaxed);
     params.quote_volume.store(3, std::memory_order_relaxed);
 
     strat.on_signal(make_signal(1, 9.8, 10.2, 0.5));

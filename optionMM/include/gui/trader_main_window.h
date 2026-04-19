@@ -42,6 +42,8 @@ private:
     void apply_risk_thresholds();
     void cancel_selected_order();
     void cancel_selected_product_orders();
+    void cancel_selected_quote();
+    void cancel_selected_product_quotes();
     void ensure_vol_window();
     void restore_ui_state();
     void save_ui_state() const;
@@ -78,7 +80,7 @@ private:
     QDoubleSpinBox* follow_weight_editor_{nullptr};
     QDoubleSpinBox* inventory_skew_editor_{nullptr};
     QDoubleSpinBox* market_width_widen_editor_{nullptr};
-    QDoubleSpinBox* hedge_threshold_editor_{nullptr};
+    QDoubleSpinBox* product_delta_threshold_editor_{nullptr};
     QDoubleSpinBox* product_vega_threshold_editor_{nullptr};
     QDoubleSpinBox* requote_epsilon_editor_{nullptr};
     QDoubleSpinBox* min_quote_interval_editor_{nullptr};
@@ -103,6 +105,8 @@ private:
     QLabel* risk_action_label_{nullptr};
     QPushButton* cancel_selected_order_button_{nullptr};
     QPushButton* cancel_product_orders_button_{nullptr};
+    QPushButton* cancel_selected_quote_button_{nullptr};
+    QPushButton* cancel_product_quotes_button_{nullptr};
     QLabel* execution_status_label_{nullptr};
     QLabel* pms_gate_label_{nullptr};
     QLabel* pms_greeks_label_{nullptr};

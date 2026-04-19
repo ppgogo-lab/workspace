@@ -121,6 +121,7 @@ public:
     }
     bool submit_manual_order(const Order& o) noexcept;
     bool cancel_order(OrderId id, uint16_t instrument_id) noexcept;
+    bool cancel_quote(QuoteId id, uint16_t instrument_id) noexcept;
 
     // Allow tests to push ticks directly
     [[nodiscard]] SPSCRingBuffer<MarketTick, 1024>& tick_buf() noexcept {

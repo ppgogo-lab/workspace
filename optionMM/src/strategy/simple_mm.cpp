@@ -119,7 +119,7 @@ void SimpleMMStrategy::on_timer(const TimerEvent& event) noexcept {
     switch (event.type) {
     case TimerEventType::HedgeCheck: {
         if (!params_) break;
-        double threshold = params_->hedge_delta_threshold.load(std::memory_order_relaxed);
+        double threshold = params_->product_delta_threshold.load(std::memory_order_relaxed);
         if (std::fabs(portfolio_delta_) < threshold) break;
 
         // Find the underlying future instrument for this product

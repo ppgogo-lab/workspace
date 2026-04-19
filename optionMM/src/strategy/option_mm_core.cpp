@@ -496,6 +496,8 @@ void OptionMMCoreStrategy::maybe_quote(uint16_t instrument_id, int64_t now_ns) n
     if (instrument_id >= MAX_INSTRUMENTS) return;
     OptionState& state = option_state_[instrument_id];
     if (!state.active) return;
+    // Replace/cancel acks are asynchronous. Mark the instrument for a second pass once
+    // the in-flight update resolves so we do not lose a fresh signal while waiting.
     if (state.quote_state == QuoteState::ReplacePending
         || state.quote_state == QuoteState::CancelPending) {
         state.reevaluate_after_quote_update = true;
@@ -601,6 +603,8 @@ OptionMMCoreStrategy::build_decision(OptionState& state, int64_t now_ns) const n
     const double center_ref =
         theo_mid * (1.0 - follow_weight) + market_ref * follow_weight;
 
+    // Spread starts from configured baseline, then widens for theo uncertainty,
+    // wide markets, inventory pressure, and product-level delta/vega pressure.
     double half_spread_ticks = params_->base_half_spread_ticks.load(std::memory_order_relaxed);
     const double max_half_spread_ticks =
         params_->max_half_spread_ticks.load(std::memory_order_relaxed);
@@ -620,7 +624,7 @@ OptionMMCoreStrategy::build_decision(OptionState& state, int64_t now_ns) const n
         std::min(1.0, std::abs(static_cast<double>(state.net_position)) / warning_pos);
     double product_pressure = 0.0;
     const double total_delta = product_net_delta_ + static_cast<double>(underlying_net_position_);
-    const double delta_threshold = params_->hedge_delta_threshold.load(std::memory_order_relaxed);
+    const double delta_threshold = params_->product_delta_threshold.load(std::memory_order_relaxed);
     if (delta_threshold > 0.0) {
         product_pressure = std::max(product_pressure, std::fabs(total_delta) / delta_threshold);
     }
@@ -637,6 +641,8 @@ OptionMMCoreStrategy::build_decision(OptionState& state, int64_t now_ns) const n
         params_->inventory_skew_per_lot_ticks.load(std::memory_order_relaxed) * state.net_position;
     const double center = center_ref - inv_skew_ticks * tick;
 
+    // Size is reduced as the instrument/product gets riskier, and can become one-sided
+    // near position limits so the strategy only quotes the risk-reducing side.
     const bool use_one_sided = params_->use_one_sided_at_limits.load(std::memory_order_relaxed);
     const Volume base_quote_vol = std::max<Volume>(
         0, params_->quote_volume.load(std::memory_order_relaxed));
@@ -699,6 +705,8 @@ OptionMMCoreStrategy::build_decision(OptionState& state, int64_t now_ns) const n
 void OptionMMCoreStrategy::send_quote(OptionState& state,
                                       const QuoteDecision& decision,
                                       int64_t now_ns) noexcept {
+    // Some gateways cannot replace a live quote in one step; cancel first, then re-enter
+    // when the cancel ack arrives.
     if (!supports_quote_replace_
         && state.quote_state == QuoteState::Live
         && state.live_quote_id != 0) {
@@ -796,6 +804,8 @@ void OptionMMCoreStrategy::send_cancel(OptionState& state, int64_t now_ns) noexc
 }
 
 bool OptionMMCoreStrategy::manage_quote_lifecycle(OptionState& state, int64_t now_ns) noexcept {
+    // Lifecycle management runs before quote generation so stuck cancels, retry pacing,
+    // and quote timeouts are handled consistently in one place.
     if (state.quote_state == QuoteState::CancelFailed) {
         if (quote_fully_filled(state)) {
             reset_quote_tracking(state, QuoteState::Idle);
@@ -916,7 +926,9 @@ void OptionMMCoreStrategy::maybe_trigger_hedge(int64_t now_ns) noexcept {
     if (!order_buf_ || !pre_risk_ || underlying_id_ >= MAX_INSTRUMENTS) return;
     if (live_hedge_order_id_ != 0 && live_hedge_remaining_ > 0) return;
 
-    const double threshold = params_->hedge_delta_threshold.load(std::memory_order_relaxed);
+    // Hedge threshold uses total product delta including the already-filled future hedge,
+    // so repeated hedge orders shrink as the future inventory catches up.
+    const double threshold = params_->product_delta_threshold.load(std::memory_order_relaxed);
     if (threshold <= 0.0) return;
 
     const double total_delta = product_net_delta_ + static_cast<double>(underlying_net_position_);
@@ -975,6 +987,8 @@ void OptionMMCoreStrategy::update_product_exposure(OptionState& state,
 OptionMMCoreStrategy::ProductRegime
 OptionMMCoreStrategy::capture_product_regime(int64_t now_ns) const noexcept {
     ProductRegime regime{};
+    // Product gating is intentionally conservative: any session/risk/exposure/shock issue
+    // suppresses the whole product and tells the monitor why.
     regime.exposure_breached = product_exposure_breached();
     regime.underlying_shock_suppressed = product_temporarily_suppressed(now_ns);
     regime.product_suppressed =
@@ -1015,7 +1029,7 @@ bool OptionMMCoreStrategy::product_exposure_breached() const noexcept {
     if (!params_) return false;
 
     const double total_delta = product_net_delta_ + static_cast<double>(underlying_net_position_);
-    const double delta_threshold = params_->hedge_delta_threshold.load(std::memory_order_relaxed);
+    const double delta_threshold = params_->product_delta_threshold.load(std::memory_order_relaxed);
     const double vega_threshold = params_->product_vega_threshold.load(std::memory_order_relaxed);
 
     const bool delta_breach = delta_threshold > 0.0 && std::fabs(total_delta) > delta_threshold;

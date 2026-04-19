@@ -7,6 +7,7 @@
 #include <grpcpp/create_channel.h>
 #include <grpcpp/client_context.h>
 
+#include <QAbstractItemView>
 #include <QApplication>
 #include <QCheckBox>
 #include <QColor>
@@ -16,6 +17,7 @@
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QHeaderView>
+#include <QHBoxLayout>
 #include <QLabel>
 #include <QPainter>
 #include <QPainterPath>
@@ -50,6 +52,8 @@
 namespace omm::gui {
 
 namespace {
+
+constexpr int kWorkspaceStateVersion = 1;
 
 struct VolCurveSnapshot {
     uint32_t curve_id{0};
@@ -333,6 +337,16 @@ public:
         req.set_order_id(order_id);
         req.set_instrument_id(instrument_id);
         grpc::Status status = stub_->CancelOrder(&ctx, req, &resp);
+        return status.ok() && resp.ok();
+    }
+
+    bool cancel_quote(uint64_t quote_id, uint32_t instrument_id) {
+        grpc::ClientContext ctx;
+        omm::proto::CancelQuoteRequest req;
+        omm::proto::CancelQuoteResponse resp;
+        req.set_quote_id(quote_id);
+        req.set_instrument_id(instrument_id);
+        grpc::Status status = stub_->CancelQuote(&ctx, req, &resp);
         return status.ok() && resp.ok();
     }
 
@@ -885,15 +899,76 @@ void TraderMainWindow::build_ui() {
     header_layout->addWidget(vega_label_, 3, 2);
     layout->addWidget(header_panel);
 
+    auto* desk_splitter = new QSplitter(Qt::Vertical, central);
+    desk_splitter->setChildrenCollapsible(false);
+
+    auto* quote_panel = new QWidget();
+    auto* quote_layout = new QVBoxLayout(quote_panel);
+    quote_layout->setContentsMargins(0, 0, 0, 0);
+    quote_layout->setSpacing(6);
+
+    auto* quote_title = new QLabel("Live Quote Board");
+    quote_title->setStyleSheet("font-size: 16px; font-weight: 700; color: #2b2418;");
+    quote_layout->addWidget(quote_title);
+
+    auto* quote_hint = new QLabel(
+        "Click bid / ask cells to stage orders. Quote state and suppression reasons stay visible inline.");
+    quote_hint->setWordWrap(true);
+    quote_hint->setStyleSheet("color:#6b5a3f; padding-left:2px;");
+    quote_layout->addWidget(quote_hint);
+
     t_table_ = make_table({"C.Q", "C.Why", "C.BQty", "C.Bid", "C.Theo", "C.Ask", "C.AQty",
                            "Exp", "Strike", "Net",
                            "P.BQty", "P.Bid", "P.Theo", "P.Ask", "P.AQty", "P.Q", "P.Why"});
-    t_table_->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    t_table_->setShowGrid(false);
+    t_table_->setWordWrap(false);
+    t_table_->setSelectionMode(QAbstractItemView::SingleSelection);
+    t_table_->setMinimumHeight(420);
+    auto* t_header = t_table_->horizontalHeader();
+    t_header->setSectionResizeMode(QHeaderView::ResizeToContents);
+    t_header->setSectionResizeMode(1, QHeaderView::Stretch);
+    t_header->setSectionResizeMode(16, QHeaderView::Stretch);
     t_table_->verticalHeader()->setDefaultSectionSize(22);
-    layout->addWidget(t_table_);
+    quote_layout->addWidget(t_table_, 1);
+    desk_splitter->addWidget(quote_panel);
+
+    orders_table_ = make_table({"OrderId", "Instrument", "Exchange", "Side", "Price", "Volume", "Status", "FillPx", "FillQty", "Ts"});
+    quotes_table_ = make_table({"Instrument", "BidPx", "BidQty", "AskPx", "AskQty", "QState", "Why", "Status"});
+    trades_table_ = make_table({"TradeId", "OrderId", "Instrument", "Exchange", "Side", "Price", "Qty", "Ts"});
+    alerts_table_ = make_table({"Ts", "Type", "Message"});
+    alerts_table_->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    alerts_table_->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+
+    auto* blotter_panel = new QWidget();
+    auto* blotter_layout = new QVBoxLayout(blotter_panel);
+    blotter_layout->setContentsMargins(0, 0, 0, 0);
+    blotter_layout->setSpacing(6);
+
+    auto* blotter_title = new QLabel("Desk Blotter");
+    blotter_title->setStyleSheet("font-size: 16px; font-weight: 700; color: #2b2418;");
+    blotter_layout->addWidget(blotter_title);
+
+    auto* blotter_hint = new QLabel(
+        "Orders, working quotes, fills, and alerts stay docked under the board for one-scan monitoring.");
+    blotter_hint->setWordWrap(true);
+    blotter_hint->setStyleSheet("color:#6b5a3f; padding-left:2px;");
+    blotter_layout->addWidget(blotter_hint);
+
+    auto* blotter_tabs = new QTabWidget();
+    blotter_tabs->setDocumentMode(true);
+    blotter_tabs->addTab(orders_table_, "Orders");
+    blotter_tabs->addTab(quotes_table_, "Quotes");
+    blotter_tabs->addTab(trades_table_, "Trades");
+    blotter_tabs->addTab(alerts_table_, "Risk Alerts");
+    blotter_layout->addWidget(blotter_tabs, 1);
+    desk_splitter->addWidget(blotter_panel);
+    desk_splitter->setStretchFactor(0, 5);
+    desk_splitter->setStretchFactor(1, 2);
+    layout->addWidget(desk_splitter, 1);
     setCentralWidget(central);
 
     vol_dock_ = new QDockWidget("ORC Wing / Vol Curves", this);
+    vol_dock_->setObjectName("volCurvesDock");
     vol_dock_->setFeatures(QDockWidget::DockWidgetMovable |
                            QDockWidget::DockWidgetFloatable |
                            QDockWidget::DockWidgetClosable);
@@ -906,14 +981,16 @@ void TraderMainWindow::build_ui() {
     addDockWidget(Qt::RightDockWidgetArea, vol_dock_);
     ensure_vol_window();
 
-    auto* quick_dock = new QDockWidget("Quick Order / Strategy", this);
-    quick_dock->setFeatures(QDockWidget::DockWidgetMovable |
-                            QDockWidget::DockWidgetFloatable |
-                            QDockWidget::DockWidgetClosable);
-    auto* quick_panel = new QWidget();
-    auto* quick_layout = new QVBoxLayout(quick_panel);
-    quick_layout->setContentsMargins(8, 8, 8, 8);
-    quick_layout->setSpacing(8);
+    auto* controls_dock = new QDockWidget("Trader Controls", this);
+    controls_dock->setObjectName("traderControlsDock");
+    controls_dock->setFeatures(QDockWidget::DockWidgetMovable |
+                               QDockWidget::DockWidgetFloatable |
+                               QDockWidget::DockWidgetClosable);
+    auto* controls_panel = new QWidget();
+    controls_panel->setMinimumWidth(410);
+    auto* controls_layout = new QVBoxLayout(controls_panel);
+    controls_layout->setContentsMargins(8, 8, 8, 8);
+    controls_layout->setSpacing(8);
 
     auto configure_double = [](QDoubleSpinBox* box,
                                int decimals,
@@ -927,6 +1004,29 @@ void TraderMainWindow::build_ui() {
     auto configure_int = [](QSpinBox* box, int min_value, int max_value) {
         box->setRange(min_value, max_value);
     };
+
+    auto* selection_box = new QGroupBox("Selected Product Status");
+    auto* selection_layout = new QVBoxLayout(selection_box);
+    selection_layout->setContentsMargins(8, 8, 8, 8);
+    selection_layout->setSpacing(6);
+    strategy_status_label_ = new QLabel("Selected product strategy state will follow the live snapshot.");
+    strategy_status_label_->setWordWrap(true);
+    strategy_status_label_->setStyleSheet(
+        "padding:4px 8px; border-radius:8px; background:#f3f0e7; color:#4a4032;");
+    selection_layout->addWidget(strategy_status_label_);
+    product_gate_label_ = new QLabel("Product gate follows live MM state.");
+    product_gate_label_->setWordWrap(true);
+    product_gate_label_->setStyleSheet(
+        "padding:4px 8px; border-radius:8px; background:#ececec; color:#353535; font-weight:700;");
+    selection_layout->addWidget(product_gate_label_);
+    auto* params_state_row = new QHBoxLayout();
+    params_state_row->addWidget(new QLabel("Param Editor"));
+    params_state_label_ = new QLabel("No live params");
+    params_state_label_->setAlignment(Qt::AlignCenter);
+    style_pill(params_state_label_, QColor("#ececec"));
+    params_state_row->addWidget(params_state_label_, 1);
+    selection_layout->addLayout(params_state_row);
+    controls_layout->addWidget(selection_box);
 
     auto* order_box = new QGroupBox("Manual Order Ticket");
     auto* order_layout = new QGridLayout(order_box);
@@ -951,20 +1051,22 @@ void TraderMainWindow::build_ui() {
     sell_button_ = new QPushButton("Send Sell");
     order_layout->addWidget(buy_button_, 4, 0, 1, 3);
     order_layout->addWidget(sell_button_, 5, 0, 1, 3);
-    quick_layout->addWidget(order_box);
-
     auto* execution_box = new QGroupBox("Execution / Cancel");
     auto* execution_layout = new QGridLayout(execution_box);
     cancel_selected_order_button_ = new QPushButton("Cancel Selected");
     cancel_product_orders_button_ = new QPushButton("Cancel Product Working");
+    cancel_selected_quote_button_ = new QPushButton("Cancel Selected Quote");
+    cancel_product_quotes_button_ = new QPushButton("Cancel Product Quotes");
     execution_layout->addWidget(cancel_selected_order_button_, 0, 0, 1, 2);
     execution_layout->addWidget(cancel_product_orders_button_, 1, 0, 1, 2);
-    execution_status_label_ = new QLabel("Select an order row to cancel or hit product-wide working cancels.");
+    execution_layout->addWidget(cancel_selected_quote_button_, 2, 0, 1, 2);
+    execution_layout->addWidget(cancel_product_quotes_button_, 3, 0, 1, 2);
+    execution_status_label_ = new QLabel(
+        "Select an order or quote row to cancel, or use product-wide order / quote sweeps.");
     execution_status_label_->setWordWrap(true);
     execution_status_label_->setStyleSheet(
         "padding:4px 8px; border-radius:8px; background:#f3f0e7; color:#4a4032;");
-    execution_layout->addWidget(execution_status_label_, 2, 0, 1, 2);
-    quick_layout->addWidget(execution_box);
+    execution_layout->addWidget(execution_status_label_, 4, 0, 1, 2);
 
     auto* strategy_box = new QGroupBox("Strategy Control");
     auto* strategy_layout = new QGridLayout(strategy_box);
@@ -972,27 +1074,23 @@ void TraderMainWindow::build_ui() {
     stop_button_ = new QPushButton("Stop MM");
     strategy_layout->addWidget(start_button_, 0, 0);
     strategy_layout->addWidget(stop_button_, 0, 1);
-    strategy_status_label_ = new QLabel("Selected product strategy state will follow the live snapshot.");
-    strategy_status_label_->setWordWrap(true);
-    strategy_status_label_->setStyleSheet(
+    auto* strategy_note = new QLabel(
+        "Use Start / Stop for the selected product only. Live gate state stays pinned above.");
+    strategy_note->setWordWrap(true);
+    strategy_note->setStyleSheet(
         "padding:4px 8px; border-radius:8px; background:#f3f0e7; color:#4a4032;");
-    strategy_layout->addWidget(strategy_status_label_, 1, 0, 1, 2);
-    product_gate_label_ = new QLabel("Product gate follows live MM state.");
-    product_gate_label_->setWordWrap(true);
-    product_gate_label_->setStyleSheet(
-        "padding:4px 8px; border-radius:8px; background:#ececec; color:#353535; font-weight:700;");
-    strategy_layout->addWidget(product_gate_label_, 2, 0, 1, 2);
-    quick_layout->addWidget(strategy_box);
+    strategy_layout->addWidget(strategy_note, 1, 0, 1, 2);
 
-    auto* params_box = new QGroupBox("MM Parameter Editor");
+    auto* params_box = new QWidget();
     auto* params_root_layout = new QVBoxLayout(params_box);
-    auto* params_summary_layout = new QGridLayout();
-    params_summary_layout->addWidget(new QLabel("Editor State"), 0, 0);
-    params_state_label_ = new QLabel("No live params");
-    params_state_label_->setAlignment(Qt::AlignCenter);
-    style_pill(params_state_label_, QColor("#ececec"));
-    params_summary_layout->addWidget(params_state_label_, 0, 1);
-    params_root_layout->addLayout(params_summary_layout);
+    params_root_layout->setContentsMargins(0, 0, 0, 0);
+    params_root_layout->setSpacing(8);
+
+    auto* params_hint = new QLabel(
+        "MM controls are grouped by how traders think: shape the quote, manage inventory, then hedge and gate.");
+    params_hint->setWordWrap(true);
+    params_hint->setStyleSheet("padding:4px 2px; color:#6b5a3f;");
+    params_root_layout->addWidget(params_hint);
 
     params_tabs_ = new QTabWidget();
 
@@ -1060,10 +1158,10 @@ void TraderMainWindow::build_ui() {
 
     auto* hedge_tab = new QWidget();
     auto* hedge_layout = new QGridLayout(hedge_tab);
-    hedge_layout->addWidget(new QLabel("Hedge Delta"), 0, 0);
-    hedge_threshold_editor_ = new QDoubleSpinBox();
-    configure_double(hedge_threshold_editor_, 4, 0.0, 999999.0, 1.0);
-    hedge_layout->addWidget(hedge_threshold_editor_, 0, 1);
+    hedge_layout->addWidget(new QLabel("Product Delta"), 0, 0);
+    product_delta_threshold_editor_ = new QDoubleSpinBox();
+    configure_double(product_delta_threshold_editor_, 4, 0.0, 999999.0, 1.0);
+    hedge_layout->addWidget(product_delta_threshold_editor_, 0, 1);
     hedge_layout->addWidget(new QLabel("Product Vega"), 0, 2);
     product_vega_threshold_editor_ = new QDoubleSpinBox();
     configure_double(product_vega_threshold_editor_, 4, 0.0, 99999999.0, 10.0);
@@ -1093,18 +1191,9 @@ void TraderMainWindow::build_ui() {
     params_actions_layout->addWidget(revert_params_button_, 0, 1);
     params_actions_layout->addWidget(apply_params_button_, 0, 2);
     params_root_layout->addLayout(params_actions_layout);
-    quick_layout->addWidget(params_box);
-    quick_layout->addStretch(1);
 
-    quick_dock->setWidget(quick_panel);
-    addDockWidget(Qt::RightDockWidgetArea, quick_dock);
-
-    auto* risk_dock = new QDockWidget("Risk Controls", this);
-    risk_dock->setFeatures(QDockWidget::DockWidgetMovable |
-                           QDockWidget::DockWidgetFloatable |
-                           QDockWidget::DockWidgetClosable);
-    auto* risk_panel = new QWidget();
-    auto* risk_layout = new QGridLayout(risk_panel);
+    auto* risk_box = new QGroupBox("Soft Risk Thresholds");
+    auto* risk_layout = new QGridLayout(risk_box);
     risk_layout->addWidget(new QLabel("Soft Pos"), 0, 0);
     soft_position_limit_editor_ = new QSpinBox();
     configure_int(soft_position_limit_editor_, 1, 10000000);
@@ -1128,9 +1217,45 @@ void TraderMainWindow::build_ui() {
     risk_action_label_->setStyleSheet(
         "padding:4px 8px; border-radius:8px; background:#f3f0e7; color:#4a4032;");
     risk_layout->addWidget(risk_action_label_, 5, 0, 1, 2);
-    risk_dock->setWidget(risk_panel);
-    addDockWidget(Qt::RightDockWidgetArea, risk_dock);
-    tabifyDockWidget(quick_dock, risk_dock);
+
+    auto* control_tabs = new QTabWidget();
+    control_tabs->setDocumentMode(true);
+
+    auto* ticket_tab = new QWidget();
+    auto* ticket_layout = new QVBoxLayout(ticket_tab);
+    ticket_layout->setContentsMargins(0, 0, 0, 0);
+    ticket_layout->setSpacing(8);
+    ticket_layout->addWidget(order_box);
+    ticket_layout->addWidget(execution_box);
+    ticket_layout->addStretch(1);
+    control_tabs->addTab(ticket_tab, "Ticket");
+
+    auto* strategy_tab = new QWidget();
+    auto* strategy_tab_layout = new QVBoxLayout(strategy_tab);
+    strategy_tab_layout->setContentsMargins(0, 0, 0, 0);
+    strategy_tab_layout->setSpacing(8);
+    strategy_tab_layout->addWidget(strategy_box);
+    strategy_tab_layout->addStretch(1);
+    control_tabs->addTab(strategy_tab, "Strategy");
+
+    auto* params_tab = new QWidget();
+    auto* params_tab_layout = new QVBoxLayout(params_tab);
+    params_tab_layout->setContentsMargins(0, 0, 0, 0);
+    params_tab_layout->setSpacing(8);
+    params_tab_layout->addWidget(params_box);
+    control_tabs->addTab(params_tab, "MM Params");
+
+    auto* risk_tab = new QWidget();
+    auto* risk_tab_layout = new QVBoxLayout(risk_tab);
+    risk_tab_layout->setContentsMargins(0, 0, 0, 0);
+    risk_tab_layout->setSpacing(8);
+    risk_tab_layout->addWidget(risk_box);
+    risk_tab_layout->addStretch(1);
+    control_tabs->addTab(risk_tab, "Risk");
+
+    controls_layout->addWidget(control_tabs, 1);
+    controls_dock->setWidget(controls_panel);
+    addDockWidget(Qt::RightDockWidgetArea, controls_dock);
 
     connect(buy_button_, &QPushButton::clicked, this, [this] {
         side_selector_->setCurrentText("buy");
@@ -1148,6 +1273,12 @@ void TraderMainWindow::build_ui() {
     });
     connect(cancel_product_orders_button_, &QPushButton::clicked, this, [this] {
         cancel_selected_product_orders();
+    });
+    connect(cancel_selected_quote_button_, &QPushButton::clicked, this, [this] {
+        cancel_selected_quote();
+    });
+    connect(cancel_product_quotes_button_, &QPushButton::clicked, this, [this] {
+        cancel_selected_product_quotes();
     });
     connect(reset_params_button_, &QPushButton::clicked, this, [this] {
         reset_strategy_params_to_defaults();
@@ -1254,23 +1385,23 @@ void TraderMainWindow::build_ui() {
     positions_tree_ = new QTreeWidget();
     positions_tree_->setColumnCount(8);
     positions_tree_->setHeaderLabels({"Node", "Net", "Avg", "RPnL", "UPnL", "Delta", "Gamma", "Vega"});
-    positions_tree_->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    positions_tree_->setAlternatingRowColors(true);
+    positions_tree_->setUniformRowHeights(true);
+    positions_tree_->header()->setSectionResizeMode(0, QHeaderView::Stretch);
+    for (int col = 1; col < positions_tree_->columnCount(); ++col) {
+        positions_tree_->header()->setSectionResizeMode(col, QHeaderView::ResizeToContents);
+    }
     positions_layout->addWidget(positions_tree_, 1);
 
     auto* positions_dock = new QDockWidget("Positions / Greeks", this);
+    positions_dock->setObjectName("positionsGreeksDock");
     positions_dock->setFeatures(QDockWidget::DockWidgetMovable |
                                 QDockWidget::DockWidgetFloatable |
                                 QDockWidget::DockWidgetClosable);
+    positions_panel->setMinimumWidth(320);
     positions_dock->setWidget(positions_panel);
     addDockWidget(Qt::LeftDockWidgetArea, positions_dock);
 
-    orders_table_ = make_table({"OrderId", "Instrument", "Exchange", "Side", "Price", "Volume", "Status", "FillPx", "FillQty", "Ts"});
-    auto* orders_dock = new QDockWidget("Orders", this);
-    orders_dock->setFeatures(QDockWidget::DockWidgetMovable |
-                             QDockWidget::DockWidgetFloatable |
-                             QDockWidget::DockWidgetClosable);
-    orders_dock->setWidget(orders_table_);
-    addDockWidget(Qt::BottomDockWidgetArea, orders_dock);
     connect(orders_table_, &QTableWidget::cellClicked, this, [this](int row, int) {
         auto* order_item = orders_table_->item(row, 0);
         auto* instrument_item = orders_table_->item(row, 1);
@@ -1280,37 +1411,16 @@ void TraderMainWindow::build_ui() {
                 .arg(order_item->text(),
                      instrument_item != nullptr ? instrument_item->text() : QString("-")));
     });
-
-    quotes_table_ = make_table({"Instrument", "BidPx", "BidQty", "AskPx", "AskQty", "QState", "Why", "Status"});
-    auto* quotes_dock = new QDockWidget("Quotes", this);
-    quotes_dock->setFeatures(QDockWidget::DockWidgetMovable |
-                             QDockWidget::DockWidgetFloatable |
-                             QDockWidget::DockWidgetClosable);
-    quotes_dock->setWidget(quotes_table_);
-    addDockWidget(Qt::BottomDockWidgetArea, quotes_dock);
-
-    trades_table_ = make_table({"TradeId", "OrderId", "Instrument", "Exchange", "Side", "Price", "Qty", "Ts"});
-    auto* trades_dock = new QDockWidget("Trades", this);
-    trades_dock->setFeatures(QDockWidget::DockWidgetMovable |
-                             QDockWidget::DockWidgetFloatable |
-                             QDockWidget::DockWidgetClosable);
-    trades_dock->setWidget(trades_table_);
-    addDockWidget(Qt::BottomDockWidgetArea, trades_dock);
-
-    alerts_table_ = make_table({"Ts", "Type", "Message"});
-    alerts_table_->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
-    alerts_table_->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
-    auto* alerts_dock = new QDockWidget("Risk Alerts", this);
-    alerts_dock->setFeatures(QDockWidget::DockWidgetMovable |
-                             QDockWidget::DockWidgetFloatable |
-                             QDockWidget::DockWidgetClosable);
-    alerts_dock->setWidget(alerts_table_);
-    addDockWidget(Qt::BottomDockWidgetArea, alerts_dock);
-
-    tabifyDockWidget(orders_dock, quotes_dock);
-    tabifyDockWidget(quotes_dock, trades_dock);
-    tabifyDockWidget(trades_dock, alerts_dock);
-    resizeDocks({vol_dock_}, {520}, Qt::Horizontal);
+    connect(quotes_table_, &QTableWidget::cellClicked, this, [this](int row, int) {
+        auto* instrument_item = quotes_table_->item(row, 0);
+        auto* state_item = quotes_table_->item(row, 5);
+        if (instrument_item == nullptr) return;
+        execution_status_label_->setText(
+            QString("Selected quote on %1 [%2]")
+                .arg(instrument_item->text(),
+                     state_item != nullptr ? state_item->text() : QString("-")));
+    });
+    resizeDocks({positions_dock, controls_dock, vol_dock_}, {350, 430, 520}, Qt::Horizontal);
 }
 
 void TraderMainWindow::ensure_vol_window() {
@@ -1402,7 +1512,7 @@ void TraderMainWindow::restore_ui_state() {
     const QByteArray geometry = settings.value("main/geometry").toByteArray();
     const QByteArray state = settings.value("main/state").toByteArray();
     if (!geometry.isEmpty()) restoreGeometry(geometry);
-    if (!state.isEmpty()) restoreState(state);
+    if (!state.isEmpty()) restoreState(state, kWorkspaceStateVersion);
     impl_->selected_product_index = settings.value("selection/product", 0u).toUInt();
     impl_->selected_instrument_id = settings.value("selection/instrument", 0u).toUInt();
 
@@ -1433,7 +1543,7 @@ void TraderMainWindow::restore_ui_state() {
 void TraderMainWindow::save_ui_state() const {
     QSettings settings;
     settings.setValue("main/geometry", saveGeometry());
-    settings.setValue("main/state", saveState());
+    settings.setValue("main/state", saveState(kWorkspaceStateVersion));
     settings.setValue("selection/product", impl_->selected_product_index);
     settings.setValue("selection/instrument", impl_->selected_instrument_id);
     if (vol_window_ != nullptr) {
@@ -1456,6 +1566,8 @@ void TraderMainWindow::refresh_ui() {
     apply_risk_button_->setEnabled(connected);
     cancel_selected_order_button_->setEnabled(connected);
     cancel_product_orders_button_->setEnabled(connected);
+    cancel_selected_quote_button_->setEnabled(connected);
+    cancel_product_quotes_button_->setEnabled(connected);
 
     struct SideView {
         uint32_t instrument_id{0};
@@ -1611,7 +1723,7 @@ void TraderMainWindow::refresh_ui() {
                               live_params.inventory_skew_per_lot_ticks()) ||
                 !approx_equal(editor_params.market_width_widen_threshold_ticks(),
                               live_params.market_width_widen_threshold_ticks()) ||
-                !approx_equal(editor_params.hedge_delta_threshold(), live_params.hedge_delta_threshold()) ||
+                !approx_equal(editor_params.product_delta_threshold(), live_params.product_delta_threshold()) ||
                 !approx_equal(editor_params.product_vega_threshold(), live_params.product_vega_threshold()) ||
                 editor_params.quote_volume() != live_params.quote_volume() ||
                 editor_params.warning_position() != live_params.warning_position() ||
@@ -2312,6 +2424,10 @@ void TraderMainWindow::refresh_ui() {
         set_cell(quotes_table_, i, 5, quote_state_label, quote_state_color);
         set_cell(quotes_table_, i, 6, reason_label, reason_color);
         set_cell(quotes_table_, i, 7, QString::fromStdString(quote.status()), QColor("#e4f8f0"));
+        if (auto* quote_item = quotes_table_->item(i, 0); quote_item != nullptr) {
+            quote_item->setData(Qt::UserRole, QVariant::fromValue(quote.client_quote_id()));
+            quote_item->setData(Qt::UserRole + 1, QVariant::fromValue(quote.instrument_id()));
+        }
     }
 
     std::vector<omm::proto::OrderUpdate> trades;
@@ -2415,10 +2531,10 @@ void TraderMainWindow::load_strategy_params_into_editors(const omm::proto::MMPar
                 params.has_market_width_widen_threshold_ticks()
                     ? params.market_width_widen_threshold_ticks()
                     : defaults.market_width_widen_threshold_ticks);
-    sync_double(hedge_threshold_editor_,
-                params.has_hedge_delta_threshold()
-                    ? params.hedge_delta_threshold()
-                    : defaults.hedge_delta_threshold);
+    sync_double(product_delta_threshold_editor_,
+                params.has_product_delta_threshold()
+                    ? params.product_delta_threshold()
+                    : defaults.product_delta_threshold);
     sync_double(product_vega_threshold_editor_,
                 params.has_product_vega_threshold()
                     ? params.product_vega_threshold()
@@ -2459,7 +2575,7 @@ omm::proto::MMParams TraderMainWindow::collect_strategy_params_from_editors() co
     params.set_follow_weight(follow_weight_editor_->value());
     params.set_inventory_skew_per_lot_ticks(inventory_skew_editor_->value());
     params.set_market_width_widen_threshold_ticks(market_width_widen_editor_->value());
-    params.set_hedge_delta_threshold(hedge_threshold_editor_->value());
+    params.set_product_delta_threshold(product_delta_threshold_editor_->value());
     params.set_product_vega_threshold(product_vega_threshold_editor_->value());
     params.set_quote_volume(quote_volume_editor_->value());
     params.set_warning_position(warning_position_editor_->value());
@@ -2483,7 +2599,7 @@ void TraderMainWindow::reset_strategy_params_to_defaults() {
     params.set_follow_weight(defaults.follow_weight);
     params.set_inventory_skew_per_lot_ticks(defaults.inventory_skew_per_lot_ticks);
     params.set_market_width_widen_threshold_ticks(defaults.market_width_widen_threshold_ticks);
-    params.set_hedge_delta_threshold(defaults.hedge_delta_threshold);
+    params.set_product_delta_threshold(defaults.product_delta_threshold);
     params.set_product_vega_threshold(defaults.product_vega_threshold);
     params.set_quote_volume(defaults.quote_volume);
     params.set_warning_position(defaults.warning_position);
@@ -2621,6 +2737,115 @@ void TraderMainWindow::cancel_selected_product_orders() {
         "Product cancel sent for %1 / %2 working orders at %3")
             .arg(sent)
             .arg(working_orders.size())
+            .arg(current_time_text());
+}
+
+void TraderMainWindow::cancel_selected_quote() {
+    const int row = quotes_table_ != nullptr ? quotes_table_->currentRow() : -1;
+    if (row < 0) {
+        impl_->last_operator_status_text = "Select a quote row before sending quote cancel";
+        execution_status_label_->setText("Select a quote row before sending quote cancel.");
+        return;
+    }
+
+    auto* quote_item = quotes_table_->item(row, 0);
+    if (quote_item == nullptr || !quote_item->data(Qt::UserRole + 1).isValid()) {
+        impl_->last_operator_status_text = "Selected quote row has no instrument id";
+        execution_status_label_->setText("Selected quote row has no instrument id.");
+        return;
+    }
+
+    const uint32_t instrument_id = quote_item->data(Qt::UserRole + 1).toUInt();
+    const QString instrument_label = quote_item->text();
+
+    uint64_t latest_quote_id = 0;
+    bool quote_working = false;
+    {
+        std::lock_guard<std::mutex> lock(impl_->state.mutex);
+        for (const auto& quote : impl_->state.quotes) {
+            if (quote.instrument_id() != instrument_id) continue;
+            latest_quote_id = quote.client_quote_id();
+            break;
+        }
+        if (auto state_it = impl_->state.instrument_states.find(instrument_id);
+            state_it != impl_->state.instrument_states.end()) {
+            switch (state_it->second.quote_state()) {
+            case omm::proto::MM_QUOTE_LIVE:
+            case omm::proto::MM_QUOTE_REPLACE_PENDING:
+            case omm::proto::MM_QUOTE_CANCEL_PENDING:
+                quote_working = true;
+                break;
+            case omm::proto::MM_QUOTE_IDLE:
+            case omm::proto::MM_QUOTE_CANCEL_FAILED:
+            case omm::proto::MM_QUOTE_SUPPRESSED:
+            default:
+                break;
+            }
+        }
+    }
+
+    if (latest_quote_id == 0 || !quote_working) {
+        impl_->last_operator_status_text = "No working quote found for the selected quote row";
+        execution_status_label_->setText("No working quote found for the selected quote row.");
+        return;
+    }
+
+    const bool ok = impl_->client->cancel_quote(latest_quote_id, instrument_id);
+    execution_status_label_->setText(
+        ok ? QString("Cancel sent for quote %1 on %2").arg(latest_quote_id).arg(instrument_label)
+           : QString("Cancel failed for quote %1 on %2").arg(latest_quote_id).arg(instrument_label));
+    impl_->last_operator_status_text = ok
+        ? QString("Cancel sent for quote %1 at %2").arg(latest_quote_id).arg(current_time_text())
+        : QString("Cancel failed for quote %1 at %2").arg(latest_quote_id).arg(current_time_text());
+}
+
+void TraderMainWindow::cancel_selected_product_quotes() {
+    const uint32_t product_index = product_selector_->currentData().toUInt();
+    std::vector<std::pair<uint64_t, uint32_t>> working_quotes;
+    {
+        std::lock_guard<std::mutex> lock(impl_->state.mutex);
+        std::unordered_map<uint32_t, uint64_t> latest_quote_by_instrument;
+        for (const auto& quote : impl_->state.quotes) {
+            auto meta_it = impl_->state.instruments.find(quote.instrument_id());
+            if (meta_it == impl_->state.instruments.end()) continue;
+            if (meta_it->second.product_index != product_index) continue;
+            if (latest_quote_by_instrument.find(quote.instrument_id()) != latest_quote_by_instrument.end()) continue;
+            latest_quote_by_instrument.emplace(quote.instrument_id(), quote.client_quote_id());
+        }
+        for (const auto& [instrument_id, quote_id] : latest_quote_by_instrument) {
+            auto state_it = impl_->state.instrument_states.find(instrument_id);
+            if (state_it == impl_->state.instrument_states.end()) continue;
+            switch (state_it->second.quote_state()) {
+            case omm::proto::MM_QUOTE_LIVE:
+            case omm::proto::MM_QUOTE_REPLACE_PENDING:
+            case omm::proto::MM_QUOTE_CANCEL_PENDING:
+                working_quotes.emplace_back(quote_id, instrument_id);
+                break;
+            case omm::proto::MM_QUOTE_IDLE:
+            case omm::proto::MM_QUOTE_CANCEL_FAILED:
+            case omm::proto::MM_QUOTE_SUPPRESSED:
+            default:
+                break;
+            }
+        }
+    }
+
+    if (working_quotes.empty()) {
+        execution_status_label_->setText("No working quotes found for the selected product.");
+        impl_->last_operator_status_text = "No working quotes found for selected product";
+        return;
+    }
+
+    int sent = 0;
+    for (const auto& [quote_id, instrument_id] : working_quotes) {
+        if (impl_->client->cancel_quote(quote_id, instrument_id)) ++sent;
+    }
+    execution_status_label_->setText(
+        QString("Product quote cancel sent for %1 / %2 working quotes").arg(sent).arg(working_quotes.size()));
+    impl_->last_operator_status_text = QString(
+        "Product quote cancel sent for %1 / %2 working quotes at %3")
+            .arg(sent)
+            .arg(working_quotes.size())
             .arg(current_time_text());
 }
 

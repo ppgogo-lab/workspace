@@ -59,6 +59,10 @@ public:
     [[nodiscard]] virtual bool send_quote (const Quote& quote) noexcept = 0;
     [[nodiscard]] virtual bool cancel_order(OrderId id,
                                             uint16_t instrument_id) noexcept = 0;
+    [[nodiscard]] virtual bool cancel_quote(QuoteId id,
+                                            uint16_t instrument_id) noexcept {
+        return cancel_order(id, instrument_id);
+    }
     [[nodiscard]] virtual bool supports_quote_replace() const noexcept {
         return false;
     }

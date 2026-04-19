@@ -1313,4 +1313,9 @@ bool TradingEngine::cancel_order(OrderId id, uint16_t instrument_id) noexcept {
     return gateway_->cancel_order(id, instrument_id);
 }
 
+bool TradingEngine::cancel_quote(QuoteId id, uint16_t instrument_id) noexcept {
+    if (!gateway_ || !gateway_->is_connected()) return false;
+    return gateway_->cancel_quote(id, instrument_id);
+}
+
 } // namespace omm

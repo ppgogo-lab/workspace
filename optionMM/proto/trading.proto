@@ -111,7 +111,7 @@ message VolSurface {
 message MMParams {
     optional double bid_spread                          = 1;
     optional double ask_spread                          = 2;
-    optional double hedge_delta_threshold               = 3;
+    optional double product_delta_threshold             = 3;
     optional int32  quote_volume                        = 4;
     optional int32  max_position                        = 5;
     optional bool   enabled                             = 6;
@@ -217,6 +217,8 @@ message ManualOrderResponse { bool ok = 1; string message = 2; uint64 order_id =
 
 message CancelOrderRequest  { uint64 order_id = 1; uint32 instrument_id = 2; }
 message CancelOrderResponse { bool ok = 1; string message = 2; }
+message CancelQuoteRequest  { uint64 quote_id = 1; uint32 instrument_id = 2; }
+message CancelQuoteResponse { bool ok = 1; string message = 2; }
 
 message SnapshotRequest  {}
 message SnapshotResponse {
@@ -252,5 +254,6 @@ service TradingMonitor {
     rpc SetRiskThreshold   (SetRiskThresholdRequest)   returns (SetRiskThresholdResponse);
     rpc SendManualOrder    (ManualOrderRequest)         returns (ManualOrderResponse);
     rpc CancelOrder        (CancelOrderRequest)        returns (CancelOrderResponse);
+    rpc CancelQuote        (CancelQuoteRequest)        returns (CancelQuoteResponse);
     rpc GetSnapshot        (SnapshotRequest)           returns (SnapshotResponse);
 }

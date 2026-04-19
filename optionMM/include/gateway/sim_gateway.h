@@ -57,6 +57,8 @@ public:
     [[nodiscard]] bool send_quote(const Quote& quote) noexcept override;
     [[nodiscard]] bool cancel_order(OrderId id,
                                      uint16_t instrument_id) noexcept override;
+    [[nodiscard]] bool cancel_quote(QuoteId id,
+                                    uint16_t instrument_id) noexcept override;
     [[nodiscard]] bool supports_quote_replace() const noexcept override { return true; }
 
     bool query_instruments(Instrument* out, uint16_t* count,
@@ -104,12 +106,14 @@ private:
     struct ActiveQuote {
         bool used{false};
         bool ack_sent{false};
+        bool cancel_pending{false};
         Quote quote{};
         Volume remaining_bid{0};
         Volume remaining_ask{0};
         uint64_t exchange_quote_id{0};
         Timestamp ack_due_ns{0};
         Timestamp next_fill_due_ns{0};
+        Timestamp cancel_due_ns{0};
     };
 
     void start_worker();

@@ -227,8 +227,8 @@ static MMParamsConfig parse_mm_params(const YAML::Node& n, std::string path_pref
     p.bid_spread             = get<double>(n["bid_spread"], (path_prefix+".bid_spread").c_str(), 0.5);
     p.ask_spread             = get<double>(n["ask_spread"], (path_prefix+".ask_spread").c_str(), 0.5);
     p.quote_volume           = get<int>(n["quote_volume"], (path_prefix+".quote_volume").c_str(), 10);
-    p.hedge_delta_threshold  = get<double>(n["hedge_delta_threshold"],
-                                           (path_prefix+".hedge_delta_threshold").c_str(), 50.0);
+    p.product_delta_threshold = get<double>(n["product_delta_threshold"],
+                                            (path_prefix+".product_delta_threshold").c_str(), 50.0);
     p.product_vega_threshold = get<double>(n["product_vega_threshold"],
                                            (path_prefix+".product_vega_threshold").c_str(), 1000.0);
     p.min_quote_interval_ms  = get<double>(n["min_quote_interval_ms"],

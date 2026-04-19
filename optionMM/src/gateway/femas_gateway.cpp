@@ -428,6 +428,10 @@ bool FEMASGateway::cancel_order(OrderId id, uint16_t instrument_id) noexcept {
     return true;
 }
 
+bool FEMASGateway::cancel_quote(QuoteId id, uint16_t instrument_id) noexcept {
+    return cancel_order(id, instrument_id);
+}
+
 bool FEMASGateway::query_instruments(Instrument* out, uint16_t* count, uint16_t max_count) {
     if (!api_ || !trading_ready_.load(std::memory_order_relaxed)) {
         *count = 0;
