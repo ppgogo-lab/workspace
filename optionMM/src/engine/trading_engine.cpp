@@ -208,8 +208,7 @@ void TradingEngine::init_strategies() noexcept {
                     instruments_,
                     tick_snapshot_,
                     &post_risk_,
-                    &monitor_alerts_[i],
-                    gateway_ && gateway_->supports_quote_replace());
+                    &monitor_alerts_[i]);
             strategies_[i].reset(s);
         } else {
             auto* s = new SimpleMMStrategy();

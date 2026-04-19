@@ -164,12 +164,12 @@ message RiskState {
 }
 
 enum MMQuoteState {
-    MM_QUOTE_IDLE            = 0;
-    MM_QUOTE_LIVE            = 1;
-    MM_QUOTE_REPLACE_PENDING = 2;
-    MM_QUOTE_CANCEL_PENDING  = 3;
-    MM_QUOTE_CANCEL_FAILED   = 4;
-    MM_QUOTE_SUPPRESSED      = 5;
+    MM_QUOTE_IDLE           = 0;
+    MM_QUOTE_LIVE           = 1;
+    MM_QUOTE_ACK_PENDING    = 2;
+    MM_QUOTE_CANCEL_PENDING = 3;
+    MM_QUOTE_CANCEL_FAILED  = 4;
+    MM_QUOTE_SUPPRESSED     = 5;
 }
 
 enum MMSuppressReason {

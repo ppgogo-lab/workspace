@@ -160,8 +160,8 @@ omm::proto::MMQuoteState quote_state_to_proto(StrategyQuoteMonitorState state) n
         return omm::proto::MM_QUOTE_IDLE;
     case StrategyQuoteMonitorState::Live:
         return omm::proto::MM_QUOTE_LIVE;
-    case StrategyQuoteMonitorState::ReplacePending:
-        return omm::proto::MM_QUOTE_REPLACE_PENDING;
+    case StrategyQuoteMonitorState::AckPending:
+        return omm::proto::MM_QUOTE_ACK_PENDING;
     case StrategyQuoteMonitorState::CancelPending:
         return omm::proto::MM_QUOTE_CANCEL_PENDING;
     case StrategyQuoteMonitorState::CancelFailed:

@@ -4,6 +4,7 @@
 #include "monitoring/topic.h"
 #include "risk/post_trade_risk.h"
 #include "strategy/mm_framework.h"
+#include "strategy/quote_lifecycle.h"
 
 #include <array>
 #include <atomic>
@@ -27,8 +28,7 @@ public:
               const Instrument* instruments,
               const MarketTick* tick_snapshot,
               const PostTradeRisk* post_risk,
-              MonitoringTopic<SystemAlert, 256>* alert_topic,
-              bool supports_quote_replace = false) noexcept;
+              MonitoringTopic<SystemAlert, 256>* alert_topic) noexcept;
 
     // Feed-driven callbacks from pricing, execution, and timer subsystems.
     void on_signal(const PricingSignal& signal) noexcept override;
@@ -63,16 +63,6 @@ private:
         SuppressCancelStuck = 1u << 8,  // Quote cancel exhausted retries and needs trader attention.
     };
 
-    // Quote lifecycle state for a single option instrument.
-    enum class QuoteState : uint8_t {
-        Idle,  // No live or pending quote is tracked.
-        Live,  // One quote is acknowledged live in the market.
-        ReplacePending,  // A new quote is pending ack and may replace the current live quote.
-        CancelPending,  // A zero-volume cancel has been sent and we are waiting for confirmation.
-        CancelFailed,  // Cancel retry budget was exhausted; strategy stops touching this instrument.
-        Suppressed,  // Strategy intentionally has no quote due to current gating/suppression.
-    };
-
     // Output of build_decision(): what to quote next, or why we decided not to.
     struct QuoteDecision {
         bool valid{false};  // True when bid/ask/size are populated and can be sent.
@@ -96,21 +86,7 @@ private:
         double last_vega{0.0};  // Latest per-lot vega from pricing.
         double last_underlying_px{0.0};  // Last underlying reference price seen with the signal.
         int64_t last_signal_ts{0};  // Pricing signal timestamp used for stale-theo detection.
-        double live_bid{0.0};  // Bid currently believed live in the market.
-        double live_ask{0.0};  // Ask currently believed live in the market.
-        Volume live_bid_vol{0};  // Remaining live bid size.
-        Volume live_ask_vol{0};  // Remaining live ask size.
-        QuoteId live_quote_id{0};  // Latest acknowledged quote id.
-        QuoteId pending_quote_id{0};  // Quote id waiting for ack/reject/cancel.
-        QuoteId cancel_target_quote_id{0};  // Quote id that the current cancel request is targeting.
-        QuoteDecision pending_quote{};  // Proposed quote remembered until ack promotes it to live.
-        int64_t last_quote_ts{0};  // Last send timestamp for quote or cancel traffic.
-        int64_t live_since_ts{0};  // Ack time of the currently live quote.
-        int64_t cancel_last_send_ts{0};  // Timestamp of the most recent cancel attempt.
-        uint8_t cancel_attempts{0};  // Retry count for the current cancel sequence.
-        bool reevaluate_after_quote_update{false};  // Defer quote rebuild until current replace/cancel resolves.
-        uint8_t _pad0[6]{};
-        QuoteState quote_state{QuoteState::Idle};  // Current lifecycle state for this instrument.
+        QuoteLifecycleState quote_lifecycle{};  // Shared quote state machine for this instrument.
         uint32_t suppress_flags{SuppressNone};  // Last suppress reasons exported to the monitor.
     };
 
@@ -143,7 +119,6 @@ private:
     OrderId live_hedge_order_id_{0};  // Outstanding hedge order id, if any.
     Volume live_hedge_remaining_{0};  // Remaining hedge volume tracked for pre-risk and fill handling.
     ProductRegime regime_state_{};  // Last computed product gate state.
-    bool supports_quote_replace_{false};  // Whether the gateway can replace quotes without explicit cancel-first.
 
     // Atomics below are a read-mostly mirror consumed by the monitor thread.
     std::atomic<bool> monitor_session_open_{true};
@@ -166,13 +141,7 @@ private:
     void send_quote(OptionState& state, const QuoteDecision& decision, int64_t now_ns) noexcept;
     void send_cancel(OptionState& state, int64_t now_ns) noexcept;
     [[nodiscard]] bool manage_quote_lifecycle(OptionState& state, int64_t now_ns) noexcept;
-    void reset_quote_tracking(OptionState& state, QuoteState next_state) noexcept;
-    void clear_live_quote(OptionState& state) noexcept;
-    void clear_pending_quote(OptionState& state) noexcept;
-    void promote_pending_quote_to_live(OptionState& state, int64_t ack_ts) noexcept;
-    void maybe_requote_after_quote_update(OptionState& state, int64_t now_ns) noexcept;
     void publish_cancel_failed_alert(const OptionState& state, int64_t now_ns) noexcept;
-    [[nodiscard]] bool quote_fully_filled(const OptionState& state) const noexcept;
 
     // Product exposure and hedging helpers.
     void maybe_trigger_hedge(int64_t now_ns) noexcept;
@@ -181,13 +150,6 @@ private:
     [[nodiscard]] bool handle_product_regime_transition(int64_t now_ns) noexcept;
     [[nodiscard]] bool product_exposure_breached() const noexcept;
     [[nodiscard]] bool product_temporarily_suppressed(int64_t now_ns) const noexcept;
-
-    // Quote churn filter and monitor mirroring.
-    [[nodiscard]] bool is_material_change(const OptionState& state,
-                                          const QuoteDecision& decision,
-                                          double epsilon_px,
-                                          int64_t min_interval_ns,
-                                          int64_t now_ns) const noexcept;
     void update_monitor_state(const OptionState& state) noexcept;
     void update_monitor_product_state() noexcept;
     void update_all_monitor_states() noexcept;

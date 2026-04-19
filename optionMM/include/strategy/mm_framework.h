@@ -10,7 +10,7 @@ namespace omm {
 enum class StrategyQuoteMonitorState : uint8_t {
     Idle = 0,
     Live,
-    ReplacePending,
+    AckPending,
     CancelPending,
     CancelFailed,
     Suppressed,

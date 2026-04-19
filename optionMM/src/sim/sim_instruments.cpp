@@ -18,6 +18,7 @@ Exchange parse_exchange(const ExchangeId& exchange_id) noexcept {
     if (exchange_id == "DCE") return Exchange::DCE;
     if (exchange_id == "CZCE") return Exchange::CZCE;
     if (exchange_id == "CFFEX") return Exchange::CFFEX;
+    if (exchange_id == "GFEX") return Exchange::GFEX;
     return Exchange::Unknown;
 }
 

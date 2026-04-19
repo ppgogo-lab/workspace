@@ -622,10 +622,12 @@ void CTPGateway::fill_instrument(Instrument& out,
     }
 
     // Exchange enum
-    if      (std::strncmp(src.ExchangeID, "SHFE", 4) == 0) out.exchange = Exchange::SHFE;
-    else if (std::strncmp(src.ExchangeID, "DCE",  3) == 0) out.exchange = Exchange::DCE;
-    else if (std::strncmp(src.ExchangeID, "CZCE", 4) == 0) out.exchange = Exchange::CZCE;
-    else                                                     out.exchange = Exchange::Unknown;
+    if      (std::strncmp(src.ExchangeID, "SHFE",  4) == 0) out.exchange = Exchange::SHFE;
+    else if (std::strncmp(src.ExchangeID, "DCE",   3) == 0) out.exchange = Exchange::DCE;
+    else if (std::strncmp(src.ExchangeID, "CZCE",  4) == 0) out.exchange = Exchange::CZCE;
+    else if (std::strncmp(src.ExchangeID, "CFFEX", 5) == 0) out.exchange = Exchange::CFFEX;
+    else if (std::strncmp(src.ExchangeID, "GFEX",  4) == 0) out.exchange = Exchange::GFEX;
+    else                                                      out.exchange = Exchange::Unknown;
 
     // Expiry date: CTP ExpireDate is "YYYYMMDD"
     out.expiry_date = std::atoi(src.ExpireDate);

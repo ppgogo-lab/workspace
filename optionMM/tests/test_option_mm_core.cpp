@@ -15,30 +15,49 @@ using namespace omm;
 
 namespace {
 
-Instrument make_future(uint16_t id, uint8_t product_idx, const char* code) {
+const char* exchange_name(Exchange exchange) {
+    switch (exchange) {
+    case Exchange::SHFE: return "SHFE";
+    case Exchange::DCE: return "DCE";
+    case Exchange::CZCE: return "CZCE";
+    case Exchange::CFFEX: return "CFFEX";
+    case Exchange::GFEX: return "GFEX";
+    default: return "UNKNOWN";
+    }
+}
+
+Instrument make_future(uint16_t id,
+                       uint8_t product_idx,
+                       const char* code,
+                       Exchange exchange = Exchange::GFEX) {
     Instrument instr{};
     instr.instrument_id = id;
     instr.product_index = product_idx;
     instr.kind = InstrumentKind::Future;
+    instr.exchange = exchange;
     instr.tick_size = 1.0;
     instr.multiplier = 1.0;
     std::strncpy(instr.code.data, code, sizeof(instr.code.data) - 1);
     std::strncpy(instr.underlying_code.data, code, sizeof(instr.underlying_code.data) - 1);
+    std::strncpy(instr.exchange_id.data, exchange_name(exchange), sizeof(instr.exchange_id.data) - 1);
     instr.expiry_epoch_ns = get_monotonic_ns() + static_cast<int64_t>(0.25 * 365.0 * 24.0 * 3600.0 * 1e9);
     return instr;
 }
 
 Instrument make_option(uint16_t id, uint16_t underlying_id, uint8_t product_idx,
-                       OptionType type, double strike) {
+                       OptionType type, double strike,
+                       Exchange exchange = Exchange::GFEX) {
     Instrument instr{};
     instr.instrument_id = id;
     instr.underlying_id = underlying_id;
     instr.product_index = product_idx;
     instr.kind = InstrumentKind::Option;
     instr.option_type = type;
+    instr.exchange = exchange;
     instr.tick_size = 0.5;
     instr.multiplier = 1.0;
     instr.strike = strike;
+    std::strncpy(instr.exchange_id.data, exchange_name(exchange), sizeof(instr.exchange_id.data) - 1);
     instr.expiry_epoch_ns = get_monotonic_ns() + static_cast<int64_t>(0.25 * 365.0 * 24.0 * 3600.0 * 1e9);
     return instr;
 }
@@ -379,6 +398,65 @@ TEST_F(OptionMmCoreTest, CancelsBeforeReplacingLiveQuote) {
     EXPECT_GT(replacement.ask_volume, 0);
     EXPECT_GT(replacement.bid_price, initial.bid_price);
     EXPECT_GT(replacement.ask_price, initial.ask_price);
+}
+
+TEST_F(OptionMmCoreTest, ReplacesLiveQuoteDirectlyOnShfe) {
+    instruments[0] = make_future(0, PROD, "cu2501", Exchange::SHFE);
+    instruments[1] = make_option(1, 0, PROD, OptionType::Call, 100.0, Exchange::SHFE);
+    instruments[2] = make_option(2, 0, PROD, OptionType::Put, 100.0, Exchange::SHFE);
+    strat.init(PROD, &quote_buf, &order_buf, &pre_risk, &params,
+               instruments, tick_snapshot, &post_risk, &alert_topic);
+
+    strat.on_signal(make_signal(1, 9.8, 10.2));
+
+    Quote initial{};
+    ASSERT_TRUE(quote_buf.try_pop(initial));
+    strat.on_quote_ack(initial);
+
+    strat.on_signal(make_signal(1, 11.8, 12.2));
+
+    Quote replacement{};
+    ASSERT_TRUE(quote_buf.try_pop(replacement));
+    EXPECT_GT(replacement.bid_volume, 0);
+    EXPECT_GT(replacement.ask_volume, 0);
+    EXPECT_GT(replacement.bid_price, initial.bid_price);
+    EXPECT_GT(replacement.ask_price, initial.ask_price);
+
+    Quote extra{};
+    EXPECT_FALSE(quote_buf.try_pop(extra));
+}
+
+TEST_F(OptionMmCoreTest, ClearsDeferredRequoteWhenStrategyStops) {
+    strat.on_signal(make_signal(1, 9.8, 10.2));
+
+    Quote initial{};
+    ASSERT_TRUE(quote_buf.try_pop(initial));
+    strat.on_quote_ack(initial);
+
+    strat.on_signal(make_signal(1, 11.8, 12.2));
+
+    Quote cancel{};
+    ASSERT_TRUE(quote_buf.try_pop(cancel));
+    EXPECT_EQ(cancel.bid_volume, 0);
+    EXPECT_EQ(cancel.ask_volume, 0);
+
+    params.enabled.store(false, std::memory_order_relaxed);
+    TimerEvent refresh{};
+    refresh.type = TimerEventType::QuoteRefresh;
+    refresh.trigger_ts_ns = get_monotonic_ns();
+    strat.on_timer(refresh);
+
+    Quote cancel_ack = initial;
+    cancel_ack.client_quote_id = cancel.client_quote_id;
+    cancel_ack.bid_volume = 0;
+    cancel_ack.ask_volume = 0;
+    strat.on_quote_cancel(cancel_ack);
+
+    Quote unexpected{};
+    EXPECT_FALSE(quote_buf.try_pop(unexpected));
+
+    params.enabled.store(true, std::memory_order_relaxed);
+    EXPECT_FALSE(quote_buf.try_pop(unexpected));
 }
 
 TEST_F(OptionMmCoreTest, CancelsLiveQuoteAfterThreeSecondsAlive) {

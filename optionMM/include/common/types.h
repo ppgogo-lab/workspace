@@ -55,7 +55,14 @@ using ExchangeId     = FixedStr<16>;   // exchange code, e.g. "SHFE"
 using AccountId      = FixedStr<32>;   // trading account
 
 // ─── Enumerations (explicit uint8_t to control struct packing) ───────────────
-enum class Exchange : uint8_t { SHFE = 0, DCE = 1, CZCE = 2, CFFEX = 3, Unknown = 255 };
+enum class Exchange : uint8_t {
+    SHFE = 0,
+    DCE = 1,
+    CZCE = 2,
+    CFFEX = 3,
+    GFEX = 4,
+    Unknown = 255
+};
 enum class OptionType  : uint8_t { Call, Put };
 enum class Side        : uint8_t { Buy, Sell };
 enum class OffsetFlag  : uint8_t { Open, Close, CloseToday, CloseYesterday };

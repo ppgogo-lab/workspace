@@ -667,8 +667,8 @@ QString mm_quote_state_text(omm::proto::MMQuoteState state) {
     switch (state) {
     case omm::proto::MM_QUOTE_LIVE:
         return "LIVE";
-    case omm::proto::MM_QUOTE_REPLACE_PENDING:
-        return "REPLACE";
+    case omm::proto::MM_QUOTE_ACK_PENDING:
+        return "ACK";
     case omm::proto::MM_QUOTE_CANCEL_PENDING:
         return "CANCEL";
     case omm::proto::MM_QUOTE_CANCEL_FAILED:
@@ -685,7 +685,7 @@ QColor mm_quote_state_color(omm::proto::MMQuoteState state) {
     switch (state) {
     case omm::proto::MM_QUOTE_LIVE:
         return QColor("#cdeccf");
-    case omm::proto::MM_QUOTE_REPLACE_PENDING:
+    case omm::proto::MM_QUOTE_ACK_PENDING:
         return QColor("#cfe7ff");
     case omm::proto::MM_QUOTE_CANCEL_PENDING:
         return QColor("#ffd7a8");
@@ -2097,7 +2097,7 @@ void TraderMainWindow::refresh_ui() {
 
                 switch (mm_it->second.quote_state()) {
                 case omm::proto::MM_QUOTE_LIVE:
-                case omm::proto::MM_QUOTE_REPLACE_PENDING:
+                case omm::proto::MM_QUOTE_ACK_PENDING:
                 case omm::proto::MM_QUOTE_CANCEL_PENDING:
                     ++quoted_instruments;
                     break;
@@ -2771,7 +2771,7 @@ void TraderMainWindow::cancel_selected_quote() {
             state_it != impl_->state.instrument_states.end()) {
             switch (state_it->second.quote_state()) {
             case omm::proto::MM_QUOTE_LIVE:
-            case omm::proto::MM_QUOTE_REPLACE_PENDING:
+            case omm::proto::MM_QUOTE_ACK_PENDING:
             case omm::proto::MM_QUOTE_CANCEL_PENDING:
                 quote_working = true;
                 break;
@@ -2817,7 +2817,7 @@ void TraderMainWindow::cancel_selected_product_quotes() {
             if (state_it == impl_->state.instrument_states.end()) continue;
             switch (state_it->second.quote_state()) {
             case omm::proto::MM_QUOTE_LIVE:
-            case omm::proto::MM_QUOTE_REPLACE_PENDING:
+            case omm::proto::MM_QUOTE_ACK_PENDING:
             case omm::proto::MM_QUOTE_CANCEL_PENDING:
                 working_quotes.emplace_back(quote_id, instrument_id);
                 break;
