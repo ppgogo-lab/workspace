@@ -44,11 +44,11 @@ cmake --build build --target test_latency
 ```
 
 **Build types:**
-- `Release`: `-O3 -march=native -mavx2` (production)
+- `Release`: `-O3 -DNDEBUG` with runtime-dispatched Black-76 SIMD backends
 - `Debug`: `-O0 -g3 -fsanitize=address,undefined` (development)
 - `RelWithDebInfo`: `-O2 -g -fno-omit-frame-pointer` (profiling)
 
-**Note:** Target CPU is Intel i7-9700 (dev) with AVX2. Production Xeon Gold 6544Y supports AVX-512; replace `-mavx2` with `-mavx512f -mavx512dq` in CMakeLists.txt for production builds.
+**Note:** Target CPU is Intel i7-9700 (dev) with AVX2. Production Xeon Gold 6544Y supports AVX-512; the Black-76 pricer now auto-selects AVX-512 at runtime when available and otherwise falls back to AVX2 or scalar.
 
 ## Architecture
 

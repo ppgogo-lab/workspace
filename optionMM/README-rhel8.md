@@ -98,13 +98,18 @@ If your host already provides compatible runtime libraries, you can omit some of
 
 ## 5. CPU Requirements
 
-The project currently builds with:
+The baseline project build now uses portable compiler flags, while Black-76
+selects its SIMD backend at runtime:
 
-- `-march=native`
-- `-mavx2`
-- `-mfma`
+- baseline build: no `-march=native`
+- Black-76 AVX2 backend: compiled separately with `-mavx2 -mfma`
+- Black-76 AVX-512 backend: compiled separately with `-mavx512f -mfma`
 
-That means the target machine must support AVX2 and FMA.
+That means:
+
+- any host can run the scalar fallback
+- AVX2 hosts use the AVX2 Black-76 backend automatically
+- Xeon Gold 6544Y-class hosts use the AVX-512 Black-76 backend automatically
 
 Check with:
 
@@ -112,7 +117,8 @@ Check with:
 lscpu | egrep 'Model name|Flags'
 ```
 
-If the machine does not support AVX2/FMA, lower the compile flags in [CMakeLists.txt](./CMakeLists.txt) before building.
+If you want to disable the AVX-512 backend at build time, configure with
+`-DOMM_ENABLE_BLACK76_AVX512=OFF`.
 
 ## 6. Build Modes
 
@@ -131,31 +137,31 @@ Notes:
 ### Release build
 
 ```bash
-cmake -S . -B build-release -DCMAKE_BUILD_TYPE=Release
-cmake --build build-release -j"$(nproc)"
+cmake -S . -B build-latency-release -DCMAKE_BUILD_TYPE=Release
+cmake --build build-latency-release -j"$(nproc)"
 ```
 
-### RelWithDebInfo build
+### Optional RelWithDebInfo build
 
 ```bash
 cmake -S . -B build-relwithdebinfo -DCMAKE_BUILD_TYPE=RelWithDebInfo
 cmake --build build-relwithdebinfo -j"$(nproc)"
 ```
 
-Use this for profiling and lower-noise debug work.
+Use this only when you explicitly want a separate profiling build directory. The standard optimized build directory used elsewhere in this README is `build-latency-release`.
 
 ## 7. Common Build Targets
 
 ### Full binary
 
 ```bash
-cmake --build build-release --target optionmm -j"$(nproc)"
+cmake --build build-latency-release --target optionmm -j"$(nproc)"
 ```
 
 ### Core tests
 
 ```bash
-cmake --build build-release --target \
+cmake --build build-latency-release --target \
   test_simple_mm \
   test_option_mm_core \
   test_pre_trade_risk \
@@ -166,7 +172,7 @@ cmake --build build-release --target \
 ### Full gateway library compile check
 
 ```bash
-cmake --build build-release --target gateway_lib -j"$(nproc)"
+cmake --build build-latency-release --target gateway_lib -j"$(nproc)"
 ```
 
 This is useful to verify CTP/FEMAS integration compiles even if you do not run those gateways locally.
@@ -176,7 +182,7 @@ This is useful to verify CTP/FEMAS integration compiles even if you do not run t
 Run the core tests:
 
 ```bash
-cd build-release
+cd build-latency-release
 ctest --output-on-failure -R 'test_simple_mm|test_option_mm_core|test_pre_trade_risk'
 ```
 
@@ -212,7 +218,7 @@ Example:
 
 ```bash
 export LD_LIBRARY_PATH=/path/to/optionMM/third_party/compat_ssl:/path/to/optionMM/third_party/ctp:/path/to/optionMM/third_party/femas:${LD_LIBRARY_PATH}
-./build-release/optionmm config/config.yaml
+./build-latency-release/optionmm config/config.yaml
 ```
 
 ## 11. Minimal Test-Only Build Option
@@ -248,7 +254,10 @@ Make sure `LD_LIBRARY_PATH` includes:
 
 ### Illegal instruction at runtime
 
-The build host and run host likely differ in CPU capabilities. Remove `-march=native` or lower SIMD flags if needed.
+This should no longer happen from `-march=native`, because the baseline build is
+portable. If it does happen, confirm the host supports the selected runtime SIMD
+backend and rebuild with `-DOMM_ENABLE_BLACK76_AVX512=OFF` if you need to rule
+out AVX-512-specific issues.
 
 ### CTP/FEMAS `.so` not found
 

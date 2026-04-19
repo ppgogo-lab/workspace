@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 option(OMM_BUILD_TRADER_GUI "Build the optional Qt trader viewer" OFF)
+option(OMM_ENABLE_BLACK76_AVX512 "Build the AVX-512 Black76 backend" ON)
 set(OMM_PROTO_FILE "${CMAKE_SOURCE_DIR}/proto/trading.proto")
 set(OMM_PROTO_GEN_DIR "${CMAKE_CURRENT_BINARY_DIR}/proto/gen")
 file(MAKE_DIRECTORY "${OMM_PROTO_GEN_DIR}")
@@ -73,18 +74,18 @@ if(WIN32)
 endif()
 
 # ─── Compiler flags ───────────────────────────────────────────────────────────
-# Note: target CPU is Intel i7-9700 (Coffeelake) — supports AVX2 but NOT AVX-512.
-# On the production Xeon Gold 6544Y, replace -mavx2 with -mavx512f -mavx512dq.
+# Keep the baseline binary portable across build and run hosts.
+# Black76 ISA-specific code is compiled per-source and selected at runtime.
 set(OMM_COMMON_FLAGS "-Wall -Wextra -Wpedantic -fno-rtti")
 
-# Release: optimise aggressively, enable AVX2 SIMD
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -mavx2 -DNDEBUG ${OMM_COMMON_FLAGS}")
+# Release: optimise aggressively
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG ${OMM_COMMON_FLAGS}")
 
 # Debug: full debug info, sanitizers
 set(CMAKE_CXX_FLAGS_DEBUG   "-O0 -g3 -fsanitize=address,undefined ${OMM_COMMON_FLAGS}")
 
 # RelWithDebInfo: for profiling
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -fno-omit-frame-pointer -march=native -mavx2 ${OMM_COMMON_FLAGS}")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -fno-omit-frame-pointer ${OMM_COMMON_FLAGS}")
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Debug)
@@ -168,7 +169,19 @@ add_library(pricing_lib STATIC
     src/pricing/wing.cpp
     src/pricing/orc_wing.cpp
 )
-target_compile_options(pricing_lib PRIVATE -mavx2 -mfma)
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64|amd64)$")
+  target_sources(pricing_lib PRIVATE src/pricing/black76_avx2.cpp)
+  set_source_files_properties(src/pricing/black76_avx2.cpp PROPERTIES
+      COMPILE_OPTIONS "-mavx2;-mfma")
+  target_compile_definitions(pricing_lib PUBLIC OMM_BLACK76_AVX2_BACKEND=1)
+
+  if(OMM_ENABLE_BLACK76_AVX512)
+    target_sources(pricing_lib PRIVATE src/pricing/black76_avx512.cpp)
+    set_source_files_properties(src/pricing/black76_avx512.cpp PROPERTIES
+        COMPILE_OPTIONS "-mavx512f;-mfma")
+    target_compile_definitions(pricing_lib PUBLIC OMM_BLACK76_AVX512_BACKEND=1)
+  endif()
+endif()
 target_link_libraries(pricing_lib PUBLIC Ceres::ceres)
 
 # ─── risk_lib ─────────────────────────────────────────────────────────────────
@@ -262,7 +275,6 @@ target_link_libraries(logger_lib PUBLIC spdlog::spdlog Threads::Threads)
 add_library(engine_lib STATIC
     src/engine/trading_engine.cpp
 )
-target_compile_options(engine_lib PRIVATE -mavx2 -mfma)
 target_link_libraries(engine_lib PUBLIC
     common_lib pricing_lib risk_lib strategy_lib feed_lib gateway_lib logger_lib)
 
@@ -270,7 +282,6 @@ target_link_libraries(engine_lib PUBLIC
 add_library(engine_lib_test STATIC
     src/engine/trading_engine.cpp
 )
-target_compile_options(engine_lib_test PRIVATE -mavx2 -mfma)
 target_link_libraries(engine_lib_test PUBLIC
     common_lib pricing_lib risk_lib strategy_lib sim_gateway_lib logger_lib)
 
@@ -335,7 +346,6 @@ add_test(NAME test_ring_buffer COMMAND test_ring_buffer)
 # test_black76
 add_executable(test_black76 tests/test_black76.cpp)
 target_link_libraries(test_black76 PRIVATE pricing_lib GTest::gtest_main)
-target_compile_options(test_black76 PRIVATE -mavx2 -mfma)
 add_test(NAME test_black76 COMMAND test_black76)
 
 # test_vol_surface
@@ -372,7 +382,6 @@ add_test(NAME test_option_mm_core COMMAND test_option_mm_core)
 # Build with RelWithDebInfo for realistic latency numbers.
 add_executable(test_latency tests/test_latency.cpp)
 target_link_libraries(test_latency PRIVATE engine_lib_test GTest::gtest_main Threads::Threads)
-target_compile_options(test_latency PRIVATE -mavx2 -mfma)
 # Intentionally no add_test() — latency benchmarks must be run explicitly:
 #   ./build/tests/test_latency --gtest_filter="LatencyTest.*"
 
@@ -380,5 +389,4 @@ target_compile_options(test_latency PRIVATE -mavx2 -mfma)
 # Run manually: ./build/test_vol_calibration
 add_executable(test_vol_calibration tests/test_vol_calibration.cpp)
 target_link_libraries(test_vol_calibration PRIVATE pricing_lib GTest::gtest_main)
-target_compile_options(test_vol_calibration PRIVATE -mavx2 -mfma)
 # Intentionally no add_test() — depends on external CSV file path
