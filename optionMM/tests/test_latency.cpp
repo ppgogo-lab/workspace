@@ -7,11 +7,13 @@
 #include "gateway/sim_gateway.h"
 
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <chrono>
 #include <cmath>
 #include <cstring>
 #include <iostream>
+#include <string>
 #include <thread>
 #include <vector>
 
@@ -25,17 +27,46 @@ using namespace omm;
 #  endif
 #endif
 
-// Records quote send timing at the gateway edge so the benchmark measures
-// tick-to-dispatch latency without racing the strategy's SPSC quote ring.
+namespace {
+
+const char* exchange_name(Exchange exchange) {
+    switch (exchange) {
+    case Exchange::SHFE: return "SHFE";
+    case Exchange::DCE: return "DCE";
+    case Exchange::CZCE: return "CZCE";
+    case Exchange::CFFEX: return "CFFEX";
+    case Exchange::GFEX: return "GFEX";
+    default: return "UNKNOWN";
+    }
+}
+
+const char* monitoring_mode_name(MonitoringPublishMode mode) {
+    switch (mode) {
+    case MonitoringPublishMode::Full: return "full";
+    case MonitoringPublishMode::Deferred: return "deferred";
+    case MonitoringPublishMode::Off: return "off";
+    default: return "unknown";
+    }
+}
+
 class LatencySimGateway : public SimGateway {
 public:
     bool send_quote(const Quote& q) noexcept override {
         if (q.instrument_id < MAX_INSTRUMENTS) {
-            strategy_send_ts_[q.instrument_id].store(q.send_ts,
-                                                     std::memory_order_relaxed);
-            gateway_recv_ts_[q.instrument_id].store(get_monotonic_ns(),
-                                                    std::memory_order_release);
-            quote_count_[q.instrument_id].fetch_add(1, std::memory_order_release);
+            strategy_send_ts_[q.instrument_id].store(q.send_ts, std::memory_order_relaxed);
+            gateway_recv_ts_[q.instrument_id].store(get_monotonic_ns(), std::memory_order_release);
+            quote_message_count_[q.instrument_id].fetch_add(1, std::memory_order_release);
+            if (q.bid_volume == 0 && q.ask_volume == 0) {
+                cancel_message_count_[q.instrument_id].fetch_add(1, std::memory_order_release);
+            } else {
+                live_quote_count_[q.instrument_id].fetch_add(1, std::memory_order_release);
+            }
+        }
+
+        if (q.bid_volume == 0 && q.ask_volume == 0) {
+            if (cancel_quote(q.client_quote_id, q.instrument_id)) {
+                return true;
+            }
         }
         return SimGateway::send_quote(q);
     }
@@ -48,38 +79,55 @@ public:
         return gateway_recv_ts_[id].load(std::memory_order_acquire);
     }
 
-    uint64_t quote_count(uint16_t id) const noexcept {
-        return quote_count_[id].load(std::memory_order_acquire);
+    uint64_t live_quote_count(uint16_t id) const noexcept {
+        return live_quote_count_[id].load(std::memory_order_acquire);
+    }
+
+    uint64_t quote_message_count(uint16_t id) const noexcept {
+        return quote_message_count_[id].load(std::memory_order_acquire);
+    }
+
+    uint64_t cancel_message_count(uint16_t id) const noexcept {
+        return cancel_message_count_[id].load(std::memory_order_acquire);
     }
 
 private:
     std::atomic<int64_t> strategy_send_ts_[MAX_INSTRUMENTS]{};
     std::atomic<int64_t> gateway_recv_ts_[MAX_INSTRUMENTS]{};
-    std::atomic<uint64_t> quote_count_[MAX_INSTRUMENTS]{};
+    std::atomic<uint64_t> live_quote_count_[MAX_INSTRUMENTS]{};
+    std::atomic<uint64_t> quote_message_count_[MAX_INSTRUMENTS]{};
+    std::atomic<uint64_t> cancel_message_count_[MAX_INSTRUMENTS]{};
 };
 
-static Instrument make_future(uint16_t id, const char* code,
-                              uint8_t product_idx) {
+static Instrument make_future(uint16_t id,
+                              const char* code,
+                              uint8_t product_idx,
+                              double tick_size,
+                              Exchange exchange) {
     Instrument f{};
     f.instrument_id = id;
     f.underlying_id = id;
     f.product_index = product_idx;
     f.kind = InstrumentKind::Future;
     f.multiplier = 1.0;
-    f.tick_size = 10.0;
+    f.tick_size = tick_size;
+    f.exchange = exchange;
     std::strncpy(f.code.data, code, sizeof(f.code.data) - 1);
     std::strncpy(f.underlying_code.data, code, sizeof(f.underlying_code.data) - 1);
-    f.exchange = Exchange::SHFE;
+    std::strncpy(f.exchange_id.data, exchange_name(exchange), sizeof(f.exchange_id.data) - 1);
     f.expiry_epoch_ns = get_monotonic_ns()
                       + static_cast<int64_t>(0.25 * 365.0 * 24.0 * 3600.0 * 1e9);
     return f;
 }
 
-static Instrument make_option(uint16_t id, uint16_t underlying_id,
+static Instrument make_option(uint16_t id,
+                              uint16_t underlying_id,
                               const char* underlying_code,
                               uint8_t product_idx,
-                              double strike, OptionType otype,
-                              double tick_size = 2.0) {
+                              double strike,
+                              OptionType otype,
+                              double tick_size,
+                              Exchange exchange) {
     Instrument o{};
     o.instrument_id = id;
     o.underlying_id = underlying_id;
@@ -89,96 +137,247 @@ static Instrument make_option(uint16_t id, uint16_t underlying_id,
     o.strike = strike;
     o.tick_size = tick_size;
     o.multiplier = 1.0;
-    o.exchange = Exchange::SHFE;
-    std::strncpy(o.underlying_code.data, underlying_code,
-                 sizeof(o.underlying_code.data) - 1);
+    o.exchange = exchange;
+    std::strncpy(o.underlying_code.data, underlying_code, sizeof(o.underlying_code.data) - 1);
+    std::strncpy(o.exchange_id.data, exchange_name(exchange), sizeof(o.exchange_id.data) - 1);
     o.expiry_epoch_ns = get_monotonic_ns()
                       + static_cast<int64_t>(0.25 * 365.0 * 24.0 * 3600.0 * 1e9);
     return o;
 }
 
-static MarketTick make_tick(uint16_t id, double last,
-                            double bid, double ask) {
+static MarketTick make_tick(uint16_t id, double last, double bid, double ask, uint64_t sequence_no = 0) {
     MarketTick t{};
     t.instrument_id = id;
     t.last_price = last;
     t.bid_price[0] = bid;
     t.ask_price[0] = ask;
-    t.bid_volume[0] = 10;
-    t.ask_volume[0] = 10;
+    t.bid_volume[0] = 50;
+    t.ask_volume[0] = 50;
     t.recv_ts_ns = get_monotonic_ns();
     t.exchange_ts_ns = t.recv_ts_ns;
+    t.sequence_no = sequence_no;
     return t;
 }
 
 struct OptionQuoteSeed {
-    uint16_t id;
-    double last;
-    double bid;
-    double ask;
+    uint16_t id{INVALID_INSTRUMENT_ID};
+    double strike{0.0};
+    OptionType type{OptionType::Call};
+    double last{0.0};
+    double bid{0.0};
+    double ask{0.0};
 };
 
-static int64_t percentile(std::vector<int64_t>& v, double p) {
-    if (v.empty()) return 0;
-    size_t idx = static_cast<size_t>(p * (v.size() - 1));
-    return v[idx];
+struct ProductScenario {
+    uint8_t product_index{0};
+    uint16_t future_id{INVALID_INSTRUMENT_ID};
+    std::string underlying_code;
+    Exchange exchange{Exchange::SHFE};
+    double future_base{0.0};
+    double future_swing{0.0};
+    double future_tick{0.0};
+    double option_tick{0.0};
+    std::vector<OptionQuoteSeed> options;
+};
+
+struct ScenarioConfig {
+    const char* label{"option_mm_core"};
+    Exchange exchange{Exchange::SHFE};
+    int product_count{1};
+    int options_per_product{16};
+    int iterations{200};
+    int64_t timeout_ns{5'000'000LL};
+    MonitoringPublishMode monitoring_mode{MonitoringPublishMode::Deferred};
+    int gateway_cancel_latency_ms{0};
+    double signal_emit_price_epsilon_ticks{0.0};
+    double signal_emit_underlying_epsilon_ticks{0.0};
+    double signal_emit_delta_epsilon{0.0};
+    double signal_emit_vega_epsilon{0.0};
+};
+
+struct ScenarioResult {
+    std::vector<int64_t> tick_to_gateway_ns;
+    std::vector<int64_t> tick_to_signal_emit_ns;
+    std::vector<int64_t> signal_emit_to_strategy_ns;
+    std::vector<int64_t> strategy_to_quote_send_ns;
+    std::vector<int64_t> quote_send_to_gateway_ns;
+    std::vector<int64_t> quote_ack_route_latency_ns;
+    std::vector<int64_t> quote_cancel_route_latency_ns;
+    std::vector<size_t> quotes_by_product;
+    std::vector<StrategyRuntimeStats> strategy_stats;
+    size_t expected_total_quotes{0};
+    uint64_t coalesced_signal_writes{0};
+    uint64_t coalesced_signal_overwrites{0};
+    uint64_t coalesced_timer_writes{0};
+    uint64_t coalesced_timer_overwrites{0};
+    uint64_t signal_emits{0};
+    uint64_t signal_suppressed{0};
+    uint64_t pending_future_tick_overwrites{0};
+    uint32_t max_signal_queue_depth{0};
+    uint32_t max_signal_mailbox_depth{0};
+    uint32_t max_timer_queue_depth{0};
+};
+
+static int64_t percentile_sorted(const std::vector<int64_t>& sorted, double p) {
+    if (sorted.empty()) return 0;
+    const size_t idx = static_cast<size_t>(p * static_cast<double>(sorted.size() - 1));
+    return sorted[idx];
 }
 
-TEST(LatencyTest, TickToQuoteLatency) {
-#ifdef RUNNING_ASAN
-    GTEST_SKIP() << "Skipping latency measurement under ASAN (overhead distorts results)";
-#endif
+static void print_series(const char* label, std::vector<int64_t> values) {
+    if (values.empty()) return;
+    std::sort(values.begin(), values.end());
+    std::cout << "[" << label << "] min=" << values.front()
+              << " ns p50=" << percentile_sorted(values, 0.50)
+              << " ns p95=" << percentile_sorted(values, 0.95)
+              << " ns p99=" << percentile_sorted(values, 0.99)
+              << " ns p99.9=" << percentile_sorted(values, 0.999)
+              << " ns max=" << values.back()
+              << " ns count=" << values.size() << "\n";
+}
 
-    SystemConfig cfg{};
-    cfg.product_count = 2;
+static ProductScenario build_product(uint8_t product_idx,
+                                     uint16_t* next_id,
+                                     const ScenarioConfig& cfg) {
+    ProductScenario product{};
+    product.product_index = product_idx;
+    product.future_id = (*next_id)++;
+    product.exchange = cfg.exchange;
 
-    std::strncpy(cfg.products[0].underlying_id.data, "cu2501", 31);
-    cfg.products[0].params.bid_spread = 50.0;
-    cfg.products[0].params.ask_spread = 50.0;
-    cfg.products[0].params.quote_volume = 5;
-    cfg.products[0].params.max_position = 500;
-    cfg.products[0].params.enabled = true;
-    cfg.products[0].params.min_quote_interval_ms = 0;
-    cfg.products[0].params.follow_weight = 0.0;
-    cfg.products[0].params.requote_price_epsilon_ticks = 0.0;
-    cfg.products[0].params.underlying_move_widen_threshold_ticks = 0.0;
-    cfg.products[0].strategy_core = -1;
+    if ((product_idx & 1u) == 0u) {
+        product.underlying_code = "cu2501";
+        product.future_base = 75000.0;
+        product.future_swing = 40.0;
+        product.future_tick = 10.0;
+        product.option_tick = 2.0;
+    } else {
+        product.underlying_code = "rb2501";
+        product.future_base = 3500.0;
+        product.future_swing = 4.0;
+        product.future_tick = 1.0;
+        product.option_tick = 0.5;
+    }
 
-    std::strncpy(cfg.products[1].underlying_id.data, "rb2501", 31);
-    cfg.products[1].params.bid_spread = 5.0;
-    cfg.products[1].params.ask_spread = 5.0;
-    cfg.products[1].params.quote_volume = 5;
-    cfg.products[1].params.max_position = 500;
-    cfg.products[1].params.enabled = true;
-    cfg.products[1].params.min_quote_interval_ms = 0;
-    cfg.products[1].params.follow_weight = 0.0;
-    cfg.products[1].params.requote_price_epsilon_ticks = 0.0;
-    cfg.products[1].params.underlying_move_widen_threshold_ticks = 0.0;
-    cfg.products[1].strategy_core = -1;
+    const int half = std::max(2, cfg.options_per_product / 2);
+    const double premium_base = product.future_base > 10000.0 ? 900.0 : 80.0;
+    const double premium_slope = product.future_base > 10000.0 ? 70.0 : 6.0;
+    const int center = half / 2;
 
-    cfg.pricing.risk_free_rate = 0.025;
-    cfg.pricing.fit_interval_seconds = 1;
-    cfg.risk.hard.max_volume_per_order = 100;
-    cfg.risk.soft.max_net_position = 500;
-    cfg.risk.soft.max_delta = 100000;
-    cfg.risk.soft.max_gamma = 100000;
-    cfg.risk.soft.max_vega = 100000;
-    cfg.timer.hedge_check_interval_ms = 60000;
-    cfg.timer.quote_refresh_interval_ms = 60000;
+    auto add_option = [&](OptionType type, int i) {
+        const double strike_offset = static_cast<double>(i - center);
+        const double strike = product.future_base + strike_offset * product.future_tick * 8.0;
+        const double mid = std::max(product.option_tick * 4.0,
+                                    premium_base - premium_slope * std::fabs(strike_offset));
+        OptionQuoteSeed seed{};
+        seed.id = (*next_id)++;
+        seed.strike = strike;
+        seed.type = type;
+        seed.last = mid;
+        seed.bid = std::max(product.option_tick, mid - product.option_tick);
+        seed.ask = std::max(seed.bid + product.option_tick, mid + product.option_tick);
+        product.options.push_back(seed);
+    };
 
-    cfg.affinity.feed_core = -1;
-    cfg.affinity.pricer_core = -1;
-    cfg.affinity.gateway_dispatcher_core = -1;
-    cfg.affinity.vol_fitter_core = -1;
-    cfg.affinity.risk_monitor_core = -1;
-    cfg.affinity.timer_core = -1;
+    for (int i = 0; i < half; ++i) add_option(OptionType::Call, i);
+    for (int i = 0; i < half; ++i) add_option(OptionType::Put, i);
+    return product;
+}
+
+static void configure_option_mm_core_product(ProductConfig* cfg_product,
+                                             const ProductScenario& product) {
+    std::strncpy(cfg_product->underlying_id.data,
+                 product.underlying_code.c_str(),
+                 sizeof(cfg_product->underlying_id.data) - 1);
+    std::strncpy(cfg_product->exchange_id.data,
+                 exchange_name(product.exchange),
+                 sizeof(cfg_product->exchange_id.data) - 1);
+    std::strncpy(cfg_product->strategy_type,
+                 "option_mm_core",
+                 sizeof(cfg_product->strategy_type) - 1);
+    cfg_product->strategy_core = -1;
+    cfg_product->params.bid_spread = 0.5;
+    cfg_product->params.ask_spread = 0.5;
+    cfg_product->params.quote_volume = 5;
+    cfg_product->params.product_delta_threshold = 1'000'000.0;
+    cfg_product->params.product_vega_threshold = 1'000'000.0;
+    cfg_product->params.min_quote_interval_ms = 0.0;
+    cfg_product->params.max_position = 5000;
+    cfg_product->params.warning_position = 2500;
+    cfg_product->params.base_half_spread_ticks = 1.0;
+    cfg_product->params.min_half_spread_ticks = 1.0;
+    cfg_product->params.max_half_spread_ticks = 8.0;
+    cfg_product->params.inventory_skew_per_lot_ticks = 0.01;
+    cfg_product->params.follow_weight = 0.35;
+    cfg_product->params.requote_price_epsilon_ticks = 0.0;
+    cfg_product->params.market_width_widen_threshold_ticks = 6.0;
+    cfg_product->params.underlying_move_widen_threshold_ticks = 0.0;
+    cfg_product->params.use_one_sided_at_limits = true;
+    cfg_product->params.enabled = true;
+}
+
+static void push_option_market_ticks(TradingEngine* engine, const ProductScenario& product) {
+    for (const auto& seed : product.options) {
+        MarketTick tick = make_tick(seed.id, seed.last, seed.bid, seed.ask);
+        while (!engine->tick_buf().try_push(tick)) spin_pause();
+    }
+}
+
+static int64_t push_future_tick(TradingEngine* engine,
+                                const ProductScenario& product,
+                                double future_price,
+                                uint64_t sequence_no) {
+    MarketTick tick{};
+    tick.instrument_id = product.future_id;
+    tick.last_price = future_price;
+    tick.bid_price[0] = future_price - product.future_tick;
+    tick.ask_price[0] = future_price + product.future_tick;
+    tick.bid_volume[0] = 200;
+    tick.ask_volume[0] = 200;
+    tick.exchange_ts_ns = get_monotonic_ns();
+    tick.recv_ts_ns = tick.exchange_ts_ns;
+    tick.sequence_no = sequence_no;
+    while (!engine->tick_buf().try_push(tick)) spin_pause();
+    return tick.recv_ts_ns;
+}
+
+static ScenarioResult run_latency_scenario(const ScenarioConfig& cfg) {
+    SystemConfig sys{};
+    sys.product_count = cfg.product_count;
+    sys.pricing.risk_free_rate = 0.025;
+    sys.pricing.fit_interval_seconds = 60;
+    sys.pricing.signal_emit_price_epsilon_ticks = cfg.signal_emit_price_epsilon_ticks;
+    sys.pricing.signal_emit_underlying_epsilon_ticks = cfg.signal_emit_underlying_epsilon_ticks;
+    sys.pricing.signal_emit_delta_epsilon = cfg.signal_emit_delta_epsilon;
+    sys.pricing.signal_emit_vega_epsilon = cfg.signal_emit_vega_epsilon;
+    sys.risk.hard.max_volume_per_order = 1000;
+    sys.risk.soft.max_net_position = 50000;
+    sys.risk.soft.max_delta = 1'000'000.0;
+    sys.risk.soft.max_gamma = 1'000'000.0;
+    sys.risk.soft.max_vega = 1'000'000.0;
+    sys.timer.hedge_check_interval_ms = 60000;
+    sys.timer.quote_refresh_interval_ms = 60000;
+    sys.monitoring.hot_path_publish_mode = cfg.monitoring_mode;
+    sys.affinity.feed_core = -1;
+    sys.affinity.pricer_core = -1;
+    sys.affinity.gateway_dispatcher_core = -1;
+    sys.affinity.vol_fitter_core = -1;
+    sys.affinity.risk_monitor_core = -1;
+    sys.affinity.timer_core = -1;
+
+    std::vector<ProductScenario> products;
+    products.reserve(cfg.product_count);
+    uint16_t next_id = 0;
+    for (int p = 0; p < cfg.product_count; ++p) {
+        products.push_back(build_product(static_cast<uint8_t>(p), &next_id, cfg));
+        configure_option_mm_core_product(&sys.products[p], products.back());
+    }
 
     auto gw = std::make_unique<LatencySimGateway>();
     auto* lat_gw = gw.get();
 
     SimConfig sim{};
     sim.gateway_ack_latency_ms = 0;
-    sim.gateway_cancel_latency_ms = 0;
+    sim.gateway_cancel_latency_ms = cfg.gateway_cancel_latency_ms;
     sim.gateway_fill_interval_ms = 1;
     sim.gateway_order_fill_probability = 0.0;
     sim.gateway_quote_cross_fill_probability = 0.0;
@@ -187,262 +386,273 @@ TEST(LatencyTest, TickToQuoteLatency) {
     sim.gateway_reject_probability = 0.0;
     gw->set_sim_config(sim);
 
-    gw->add_instrument(make_future(0, "cu2501", 0));
-    gw->set_last_price(0, 75000.0);
-    gw->add_instrument(make_option(1, 0, "cu2501", 0, 73000.0, OptionType::Call));
-    gw->add_instrument(make_option(2, 0, "cu2501", 0, 74000.0, OptionType::Call));
-    gw->add_instrument(make_option(3, 0, "cu2501", 0, 75000.0, OptionType::Call));
-    gw->add_instrument(make_option(4, 0, "cu2501", 0, 73000.0, OptionType::Put));
-    gw->add_instrument(make_option(5, 0, "cu2501", 0, 74000.0, OptionType::Put));
-    gw->add_instrument(make_option(6, 0, "cu2501", 0, 75000.0, OptionType::Put));
+    for (const auto& product : products) {
+        gw->add_instrument(make_future(product.future_id,
+                                       product.underlying_code.c_str(),
+                                       product.product_index,
+                                       product.future_tick,
+                                       product.exchange));
+        gw->set_last_price(product.future_id, product.future_base);
 
-    gw->set_last_price(1, 2800.0);
-    gw->set_last_price(2, 1900.0);
-    gw->set_last_price(3, 1200.0);
-    gw->set_last_price(4, 400.0);
-    gw->set_last_price(5, 900.0);
-    gw->set_last_price(6, 1200.0);
+        for (const auto& seed : product.options) {
+            gw->add_instrument(make_option(seed.id,
+                                           product.future_id,
+                                           product.underlying_code.c_str(),
+                                           product.product_index,
+                                           seed.strike,
+                                           seed.type,
+                                           product.option_tick,
+                                           product.exchange));
+            gw->set_last_price(seed.id, seed.last);
+        }
+    }
 
-    gw->add_instrument(make_future(7, "rb2501", 1));
-    gw->set_last_price(7, 3500.0);
-    gw->add_instrument(make_option(8, 7, "rb2501", 1, 3400.0, OptionType::Call, 0.5));
-    gw->add_instrument(make_option(9, 7, "rb2501", 1, 3500.0, OptionType::Call, 0.5));
-    gw->add_instrument(make_option(10, 7, "rb2501", 1, 3600.0, OptionType::Call, 0.5));
-    gw->add_instrument(make_option(11, 7, "rb2501", 1, 3400.0, OptionType::Put, 0.5));
-    gw->add_instrument(make_option(12, 7, "rb2501", 1, 3500.0, OptionType::Put, 0.5));
-    gw->add_instrument(make_option(13, 7, "rb2501", 1, 3600.0, OptionType::Put, 0.5));
+    gw->connect(sys.gateway);
 
-    gw->set_last_price(8, 130.0);
-    gw->set_last_price(9, 75.0);
-    gw->set_last_price(10, 35.0);
-    gw->set_last_price(11, 30.0);
-    gw->set_last_price(12, 75.0);
-    gw->set_last_price(13, 130.0);
-
-    gw->connect(cfg.gateway);
-
-    auto engine = std::make_unique<TradingEngine>(cfg, std::move(gw), nullptr);
+    auto engine = std::make_unique<TradingEngine>(sys, std::move(gw), nullptr);
     engine->start();
 
-    constexpr OptionQuoteSeed PRODUCT_OPTION_QUOTES[2][6] = {
-        {
-            {1, 2800.0, 2750.0, 2850.0},
-            {2, 1900.0, 1870.0, 1930.0},
-            {3, 1200.0, 1180.0, 1220.0},
-            {4, 400.0, 390.0, 410.0},
-            {5, 900.0, 880.0, 920.0},
-            {6, 1200.0, 1180.0, 1220.0},
-        },
-        {
-            {8, 130.0, 127.0, 133.0},
-            {9, 75.0, 73.0, 77.0},
-            {10, 35.0, 34.0, 36.0},
-            {11, 30.0, 29.0, 31.0},
-            {12, 75.0, 73.0, 77.0},
-            {13, 130.0, 127.0, 133.0},
-        }
-    };
-    constexpr uint16_t FUTURE_IDS[] = {0, 7};
-    constexpr double FUTURE_BASE[] = {75000.0, 3500.0};
-    constexpr double FUTURE_SWING[] = {40.0, 4.0};
-    constexpr int EXPECTED_QUOTES = 6;
-    constexpr int N = 5000;
+    uint64_t sequence_no = 1;
+    for (const auto& product : products) {
+        push_option_market_ticks(engine.get(), product);
+        (void)push_future_tick(engine.get(), product, product.future_base, sequence_no++);
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(750));
 
-    for (const auto& product_quotes : PRODUCT_OPTION_QUOTES) {
-        for (const auto& seed : product_quotes) {
-            MarketTick tick = make_tick(seed.id, seed.last, seed.bid, seed.ask);
-            while (!engine->tick_buf().try_push(tick)) spin_pause();
+    std::array<int64_t, MAX_INSTRUMENTS> seen_ack_route_ts{};
+    std::array<int64_t, MAX_INSTRUMENTS> seen_cancel_route_ts{};
+    for (const auto& product : products) {
+        for (const auto& seed : product.options) {
+            seen_ack_route_ts[seed.id] = engine->last_quote_ack_route_ts(seed.id);
+            seen_cancel_route_ts[seed.id] = engine->last_quote_cancel_route_ts(seed.id);
         }
     }
 
-    std::this_thread::sleep_for(std::chrono::seconds(3));
+    ScenarioResult result{};
+    result.expected_total_quotes =
+        static_cast<size_t>(cfg.iterations) * static_cast<size_t>(cfg.options_per_product);
+    result.quotes_by_product.assign(products.size(), 0);
+    result.strategy_stats.assign(products.size(), StrategyRuntimeStats{});
+    result.tick_to_gateway_ns.reserve(result.expected_total_quotes / 4);
+    result.tick_to_signal_emit_ns.reserve(result.expected_total_quotes / 4);
+    result.signal_emit_to_strategy_ns.reserve(result.expected_total_quotes / 4);
+    result.strategy_to_quote_send_ns.reserve(result.expected_total_quotes / 4);
+    result.quote_send_to_gateway_ns.reserve(result.expected_total_quotes / 4);
+    result.quote_ack_route_latency_ns.reserve(result.expected_total_quotes / 4);
+    result.quote_cancel_route_latency_ns.reserve(result.expected_total_quotes / 8);
 
-    std::vector<int64_t> latencies;
-    std::vector<int64_t> latencies_by_product[2];
-    std::vector<int64_t> quote_ack_callback_latencies;
-    std::vector<int64_t> quote_cancel_callback_latencies;
-    size_t quotes_by_product[2]{};
-    latencies.reserve(N * EXPECTED_QUOTES);
-    latencies_by_product[0].reserve((N / 2 + 1) * EXPECTED_QUOTES);
-    latencies_by_product[1].reserve((N / 2 + 1) * EXPECTED_QUOTES);
-    quote_ack_callback_latencies.reserve(N * EXPECTED_QUOTES);
-    quote_cancel_callback_latencies.reserve(N * EXPECTED_QUOTES);
-    uint64_t quote_monitor_cursor = engine->monitor_quotes().latest_seq();
-
-    auto drain_quote_callback_latencies = [&]() {
-        Quote monitored{};
-        while (engine->monitor_quotes().read_next(quote_monitor_cursor, monitored)) {
-            if (monitored.ack_ts <= 0) continue;
-
-            const int64_t now_ns = get_monotonic_ns();
-            const int64_t callback_latency = now_ns - monitored.ack_ts;
-            if (callback_latency <= 0) continue;
-
-            if (monitored.bid_volume == 0 && monitored.ask_volume == 0) {
-                quote_cancel_callback_latencies.push_back(callback_latency);
-            } else {
-                quote_ack_callback_latencies.push_back(callback_latency);
-            }
-        }
-    };
-
-    for (int i = 0; i < N; ++i) {
-        const int slot = i % 2;
-        const int product_iter = i / 2;
-        const uint16_t fut_id = FUTURE_IDS[slot];
-        const double signed_swing = (product_iter & 1) ? FUTURE_SWING[slot] : -FUTURE_SWING[slot];
-        const double F = FUTURE_BASE[slot] + signed_swing;
-
-        uint64_t base_counts[EXPECTED_QUOTES]{};
-        for (int qi = 0; qi < EXPECTED_QUOTES; ++qi) {
-            const auto& seed = PRODUCT_OPTION_QUOTES[slot][qi];
-            base_counts[qi] = lat_gw->quote_count(seed.id);
-            MarketTick opt_tick = make_tick(seed.id, seed.last, seed.bid, seed.ask);
-            while (!engine->tick_buf().try_push(opt_tick)) spin_pause();
-        }
-
-        lat_gw->set_last_price(fut_id, F);
-
-        MarketTick tick{};
-        tick.instrument_id = fut_id;
-        tick.last_price = F;
-        tick.bid_price[0] = F - FUTURE_SWING[slot] * 0.5;
-        tick.ask_price[0] = F + FUTURE_SWING[slot] * 0.5;
-        tick.bid_volume[0] = 100;
-        tick.ask_volume[0] = 100;
-        tick.exchange_ts_ns = get_monotonic_ns();
-        tick.recv_ts_ns = tick.exchange_ts_ns;
-
-        const int64_t t0 = tick.recv_ts_ns;
-        while (!engine->tick_buf().try_push(tick)) spin_pause();
-
-        constexpr int64_t TIMEOUT_NS = 5'000'000LL;
-        const int64_t deadline = t0 + TIMEOUT_NS;
-        bool seen[EXPECTED_QUOTES]{};
-        int quotes_collected = 0;
-
-        while (get_monotonic_ns() < deadline && quotes_collected < EXPECTED_QUOTES) {
-            drain_quote_callback_latencies();
-            for (int qi = 0; qi < EXPECTED_QUOTES; ++qi) {
-                if (seen[qi]) continue;
-                const uint16_t option_id = PRODUCT_OPTION_QUOTES[slot][qi].id;
-                if (lat_gw->quote_count(option_id) <= base_counts[qi]) continue;
-
-                const int64_t latency = lat_gw->get_last_gateway_recv_ts(option_id) - t0;
-                if (latency > 0) {
-                    latencies.push_back(latency);
-                    latencies_by_product[slot].push_back(latency);
-                    quotes_by_product[slot]++;
+    auto drain_callback_latencies = [&]() {
+        for (const auto& product : products) {
+            for (const auto& seed : product.options) {
+                const int64_t ack_route_ts = engine->last_quote_ack_route_ts(seed.id);
+                if (ack_route_ts > seen_ack_route_ts[seed.id]) {
+                    seen_ack_route_ts[seed.id] = ack_route_ts;
+                    const int64_t latency = engine->last_quote_ack_route_latency_ns(seed.id);
+                    if (latency > 0) result.quote_ack_route_latency_ns.push_back(latency);
                 }
-                seen[qi] = true;
-                ++quotes_collected;
-            }
 
-            if (quotes_collected < EXPECTED_QUOTES) spin_pause();
+                const int64_t cancel_route_ts = engine->last_quote_cancel_route_ts(seed.id);
+                if (cancel_route_ts > seen_cancel_route_ts[seed.id]) {
+                    seen_cancel_route_ts[seed.id] = cancel_route_ts;
+                    const int64_t latency = engine->last_quote_cancel_route_latency_ns(seed.id);
+                    if (latency > 0) result.quote_cancel_route_latency_ns.push_back(latency);
+                }
+            }
+        }
+    };
+
+    for (int i = 0; i < cfg.iterations; ++i) {
+        const ProductScenario& product = products[static_cast<size_t>(i) % products.size()];
+        push_option_market_ticks(engine.get(), product);
+
+        std::vector<uint64_t> base_live_counts(product.options.size(), 0);
+        for (size_t oi = 0; oi < product.options.size(); ++oi) {
+            const auto& seed = product.options[oi];
+            base_live_counts[oi] = lat_gw->live_quote_count(seed.id);
         }
 
-        drain_quote_callback_latencies();
-        std::this_thread::sleep_for(std::chrono::microseconds(200));
+        const int product_iter = i / std::max(1, cfg.product_count);
+        const double swing = (product_iter & 1) ? product.future_swing : -product.future_swing;
+        const double future_price = product.future_base + swing;
+        lat_gw->set_last_price(product.future_id, future_price);
+        const int64_t tick_ts = push_future_tick(engine.get(), product, future_price, sequence_no++);
+        const int64_t deadline = tick_ts + cfg.timeout_ns;
+
+        std::vector<uint8_t> seen(product.options.size(), 0);
+        size_t captured = 0;
+
+        while (get_monotonic_ns() < deadline && captured < product.options.size()) {
+            drain_callback_latencies();
+
+            for (size_t oi = 0; oi < product.options.size(); ++oi) {
+                if (seen[oi]) continue;
+                const auto& seed = product.options[oi];
+                if (lat_gw->live_quote_count(seed.id) <= base_live_counts[oi]) continue;
+
+                const int64_t gateway_ts = lat_gw->get_last_gateway_recv_ts(seed.id);
+                const int64_t strategy_send_ts = lat_gw->get_last_strategy_send_ts(seed.id);
+                const int64_t signal_emit_ts = engine->last_signal_emit_ts(seed.id);
+                const int64_t strategy_signal_ts = engine->last_strategy_signal_ts(seed.id);
+
+                if (gateway_ts > tick_ts) {
+                    result.tick_to_gateway_ns.push_back(gateway_ts - tick_ts);
+                    result.quotes_by_product[product.product_index]++;
+                }
+                if (signal_emit_ts >= tick_ts && signal_emit_ts <= gateway_ts) {
+                    result.tick_to_signal_emit_ns.push_back(signal_emit_ts - tick_ts);
+                }
+                if (strategy_signal_ts >= signal_emit_ts && signal_emit_ts > 0) {
+                    result.signal_emit_to_strategy_ns.push_back(strategy_signal_ts - signal_emit_ts);
+                }
+                if (strategy_send_ts >= strategy_signal_ts && strategy_signal_ts > 0) {
+                    result.strategy_to_quote_send_ns.push_back(strategy_send_ts - strategy_signal_ts);
+                }
+                if (gateway_ts >= strategy_send_ts && strategy_send_ts > 0) {
+                    result.quote_send_to_gateway_ns.push_back(gateway_ts - strategy_send_ts);
+                }
+
+                seen[oi] = 1;
+                ++captured;
+            }
+
+            if (captured < product.options.size()) spin_pause();
+        }
+
+        drain_callback_latencies();
+        std::this_thread::sleep_for(std::chrono::microseconds(150));
     }
 
-    drain_quote_callback_latencies();
+    if (!products.empty()) {
+        const ProductScenario& overload_product = products.front();
+        push_option_market_ticks(engine.get(), overload_product);
+        for (int burst = 0; burst < 8; ++burst) {
+            const double price = overload_product.future_base
+                               + static_cast<double>(burst) * overload_product.future_tick;
+            lat_gw->set_last_price(overload_product.future_id, price);
+            (void)push_future_tick(engine.get(), overload_product, price, sequence_no++);
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        drain_callback_latencies();
+    }
 
-    const uint64_t coalesced_signal_writes = engine->total_coalesced_signal_writes();
-    const uint64_t coalesced_signal_overwrites = engine->total_coalesced_signal_overwrites();
-    const uint64_t coalesced_timer_writes = engine->total_coalesced_timer_writes();
-    const uint64_t coalesced_timer_overwrites = engine->total_coalesced_timer_overwrites();
-    const uint32_t max_signal_queue_depth = engine->max_signal_queue_depth();
-    const uint32_t max_signal_mailbox_depth = engine->max_signal_mailbox_depth();
-    const uint32_t max_timer_queue_depth = engine->max_timer_queue_depth();
+    result.coalesced_signal_writes = engine->total_coalesced_signal_writes();
+    result.coalesced_signal_overwrites = engine->total_coalesced_signal_overwrites();
+    result.coalesced_timer_writes = engine->total_coalesced_timer_writes();
+    result.coalesced_timer_overwrites = engine->total_coalesced_timer_overwrites();
+    result.signal_emits = engine->total_signal_emit_count();
+    result.signal_suppressed = engine->total_signal_suppressed_count();
+    result.pending_future_tick_overwrites = engine->total_pending_future_tick_overwrites();
+    result.max_signal_queue_depth = engine->max_signal_queue_depth();
+    result.max_signal_mailbox_depth = engine->max_signal_mailbox_depth();
+    result.max_timer_queue_depth = engine->max_timer_queue_depth();
+    for (size_t i = 0; i < products.size(); ++i) {
+        (void)engine->strategy_runtime_stats(static_cast<int>(i), &result.strategy_stats[i]);
+    }
     engine->stop();
 
-    std::sort(latencies.begin(), latencies.end());
-    std::sort(quote_ack_callback_latencies.begin(), quote_ack_callback_latencies.end());
-    std::sort(quote_cancel_callback_latencies.begin(), quote_cancel_callback_latencies.end());
-    const size_t n = latencies.size();
-    const size_t expected_total_quotes = static_cast<size_t>(N) * EXPECTED_QUOTES;
-    const size_t expected_quotes_by_product[2] = {
-        static_cast<size_t>((N + 1) / 2) * EXPECTED_QUOTES,
-        static_cast<size_t>(N / 2) * EXPECTED_QUOTES,
-    };
-    const size_t min_total_quotes = static_cast<size_t>(expected_total_quotes * 0.45);
-    const size_t min_quotes_by_product[2] = {
-        static_cast<size_t>(expected_quotes_by_product[0] * 0.45),
-        static_cast<size_t>(expected_quotes_by_product[1] * 0.45),
-    };
+    std::cout << "\n[SCENARIO] " << cfg.label
+              << " exchange=" << exchange_name(cfg.exchange)
+              << " products=" << cfg.product_count
+              << " options_per_product=" << cfg.options_per_product
+              << " iterations=" << cfg.iterations
+              << " cancel_latency_ms=" << cfg.gateway_cancel_latency_ms
+              << " monitoring=" << monitoring_mode_name(cfg.monitoring_mode) << "\n";
+    std::cout << "[COUNTS] captured_quotes=" << result.tick_to_gateway_ns.size()
+              << " expected_quotes=" << result.expected_total_quotes
+              << " capture_ratio="
+              << (result.expected_total_quotes == 0
+                    ? 0.0
+                    : 100.0 * static_cast<double>(result.tick_to_gateway_ns.size())
+                        / static_cast<double>(result.expected_total_quotes))
+              << "%\n";
+    for (size_t i = 0; i < result.quotes_by_product.size(); ++i) {
+        std::cout << "[COUNTS] product " << i << " quotes=" << result.quotes_by_product[i]
+                  << " single_instr_reevals=" << result.strategy_stats[i].single_instrument_reevaluations
+                  << " full_book_reevals=" << result.strategy_stats[i].full_book_reevaluations
+                  << "\n";
+    }
+    print_series("LATENCY tick->gateway", result.tick_to_gateway_ns);
+    print_series("STAGE tick->signal_emit", result.tick_to_signal_emit_ns);
+    print_series("STAGE signal_emit->strategy", result.signal_emit_to_strategy_ns);
+    print_series("STAGE strategy->quote_send", result.strategy_to_quote_send_ns);
+    print_series("STAGE quote_send->gateway", result.quote_send_to_gateway_ns);
+    print_series("CALLBACK QuoteAck route", result.quote_ack_route_latency_ns);
+    print_series("CALLBACK QuoteCancel route", result.quote_cancel_route_latency_ns);
+    std::cout << "[SIGNAL] emits=" << result.signal_emits
+              << " suppressed=" << result.signal_suppressed
+              << " future_overwrites=" << result.pending_future_tick_overwrites << "\n";
+    std::cout << "[COALESCE] signal writes=" << result.coalesced_signal_writes
+              << " overwrites=" << result.coalesced_signal_overwrites
+              << " timer writes=" << result.coalesced_timer_writes
+              << " timer overwrites=" << result.coalesced_timer_overwrites << "\n";
+    std::cout << "[QUEUE] max_signal_ring=" << result.max_signal_queue_depth
+              << " max_signal_mailbox=" << result.max_signal_mailbox_depth
+              << " max_timer_ring=" << result.max_timer_queue_depth << "\n";
 
-    std::cout << "\n[LATENCY] Tick-to-gateway-quote over " << N
-              << " future ticks, 2 products (cu/rb), 6 quote-path messages per injected future tick\n"
-              << "[LATENCY] Quotes captured: " << n
-              << " (" << (100.0 * n / expected_total_quotes) << "%)\n";
-    std::cout << "[LATENCY] Product 0 quotes: " << quotes_by_product[0] << "\n"
-              << "[LATENCY] Product 1 quotes: " << quotes_by_product[1] << "\n";
+    return result;
+}
 
-    if (n > 0) {
-        std::cout << "[LATENCY] min:   " << latencies.front()            << " ns\n"
-                  << "[LATENCY] p50:   " << percentile(latencies, 0.50)  << " ns\n"
-                  << "[LATENCY] p95:   " << percentile(latencies, 0.95)  << " ns\n"
-                  << "[LATENCY] p99:   " << percentile(latencies, 0.99)  << " ns\n"
-                  << "[LATENCY] p99.9: " << percentile(latencies, 0.999) << " ns\n"
-                  << "[LATENCY] max:   " << latencies.back()             << " ns\n";
-    }
-    if (!quote_ack_callback_latencies.empty()) {
-        std::cout << "[CALLBACK] QuoteAck captured: " << quote_ack_callback_latencies.size() << "\n"
-                  << "[CALLBACK] QuoteAck p50:   "
-                  << percentile(quote_ack_callback_latencies, 0.50) << " ns\n"
-                  << "[CALLBACK] QuoteAck p95:   "
-                  << percentile(quote_ack_callback_latencies, 0.95) << " ns\n"
-                  << "[CALLBACK] QuoteAck p99:   "
-                  << percentile(quote_ack_callback_latencies, 0.99) << " ns\n"
-                  << "[CALLBACK] QuoteAck p99.9: "
-                  << percentile(quote_ack_callback_latencies, 0.999) << " ns\n";
-    }
-    if (!quote_cancel_callback_latencies.empty()) {
-        std::cout << "[CALLBACK] QuoteCancel captured: " << quote_cancel_callback_latencies.size() << "\n"
-                  << "[CALLBACK] QuoteCancel p50:   "
-                  << percentile(quote_cancel_callback_latencies, 0.50) << " ns\n"
-                  << "[CALLBACK] QuoteCancel p95:   "
-                  << percentile(quote_cancel_callback_latencies, 0.95) << " ns\n"
-                  << "[CALLBACK] QuoteCancel p99:   "
-                  << percentile(quote_cancel_callback_latencies, 0.99) << " ns\n"
-                  << "[CALLBACK] QuoteCancel p99.9: "
-                  << percentile(quote_cancel_callback_latencies, 0.999) << " ns\n";
-    }
-    for (int prod = 0; prod < 2; ++prod) {
-        auto& prod_lat = latencies_by_product[prod];
-        if (prod_lat.empty()) continue;
-        std::sort(prod_lat.begin(), prod_lat.end());
-        std::cout << "[LATENCY] product " << prod
-                  << " p50=" << percentile(prod_lat, 0.50)
-                  << " ns p99=" << percentile(prod_lat, 0.99)
-                  << " ns count=" << prod_lat.size() << "\n";
-    }
-    std::cout << "[COALESCE] signal mailbox writes: " << coalesced_signal_writes
-              << " overwrites: " << coalesced_signal_overwrites << "\n"
-              << "[COALESCE] timer mailbox writes: " << coalesced_timer_writes
-              << " overwrites: " << coalesced_timer_overwrites << "\n"
-              << "[QUEUE] max signal ring depth: " << max_signal_queue_depth << "\n"
-              << "[QUEUE] max signal mailbox depth: " << max_signal_mailbox_depth << "\n"
-              << "[QUEUE] max timer ring depth: " << max_timer_queue_depth << "\n";
+} // namespace
 
-    // The synthetic alternating market does not force every option to emit a
-    // fresh outbound message on every future tick, but it should still drive a
-    // stable, balanced stream across both products.
-    EXPECT_GT(n, min_total_quotes)
-        << "Expected the benchmark to capture a stable quote-path message stream";
-    EXPECT_GT(quotes_by_product[0], min_quotes_by_product[0])
-        << "Expected product 0 to receive quotes under fair rotation";
-    EXPECT_GT(quotes_by_product[1], min_quotes_by_product[1])
-        << "Expected product 1 to receive quotes under fair rotation";
-    if (n > 0) {
-        EXPECT_GT(latencies.front(), 0LL) << "Latency must be positive";
-        EXPECT_LT(percentile(latencies, 0.99), 100'000'000LL)
-            << "p99 latency exceeded 100ms, something is very wrong";
-    }
-    EXPECT_GT(quote_ack_callback_latencies.size(), 0u)
-        << "Expected to capture quote ack callback routing latency";
-    if (!quote_ack_callback_latencies.empty()) {
-        EXPECT_LT(percentile(quote_ack_callback_latencies, 0.99), 100'000'000LL)
-            << "Quote ack callback routing p99 exceeded 100ms";
-    }
+TEST(LatencyTest, TickToQuoteLatency) {
+#ifdef RUNNING_ASAN
+    GTEST_SKIP() << "Skipping latency measurement under ASAN (overhead distorts results)";
+#endif
+
+    ScenarioConfig cfg{};
+    cfg.label = "OptionMMCore direct-replace latency";
+    cfg.exchange = Exchange::SHFE;
+    cfg.product_count = 1;
+    cfg.options_per_product = 160;
+    cfg.iterations = 320;
+    cfg.timeout_ns = 6'000'000LL;
+    cfg.monitoring_mode = MonitoringPublishMode::Deferred;
+
+    ScenarioResult result = run_latency_scenario(cfg);
+
+    const size_t min_quotes = std::max<size_t>(256, result.expected_total_quotes / 20);
+    EXPECT_GT(result.tick_to_gateway_ns.size(), min_quotes)
+        << "Expected a stable quote stream from option_mm_core direct-replace benchmark";
+    EXPECT_GT(result.signal_emits, 0u);
+    EXPECT_GT(result.strategy_stats[0].single_instrument_reevaluations, 0u);
+    EXPECT_GT(result.pending_future_tick_overwrites, 0u)
+        << "Expected the production-scale direct-replace scenario to overwrite pending future ticks";
+
+    auto sorted = result.tick_to_gateway_ns;
+    std::sort(sorted.begin(), sorted.end());
+    ASSERT_FALSE(sorted.empty());
+    EXPECT_GT(sorted.front(), 0LL);
+    EXPECT_LT(percentile_sorted(sorted, 0.99), 100'000'000LL)
+        << "Direct-replace p99 latency exceeded 100ms";
+}
+
+TEST(LatencyTest, TickToQuoteLatencyCancelFirst) {
+#ifdef RUNNING_ASAN
+    GTEST_SKIP() << "Skipping latency measurement under ASAN (overhead distorts results)";
+#endif
+
+    ScenarioConfig cfg{};
+    cfg.label = "OptionMMCore cancel-first latency";
+    cfg.exchange = Exchange::GFEX;
+    cfg.product_count = 1;
+    cfg.options_per_product = 16;
+    cfg.iterations = 120;
+    cfg.timeout_ns = 10'000'000LL;
+    cfg.monitoring_mode = MonitoringPublishMode::Deferred;
+    cfg.gateway_cancel_latency_ms = 1;
+
+    ScenarioResult result = run_latency_scenario(cfg);
+
+    EXPECT_GT(result.tick_to_gateway_ns.size(), 32u)
+        << "Expected a measurable replacement stream from cancel-first benchmark";
+    EXPECT_GT(result.quote_cancel_route_latency_ns.size(), 0u)
+        << "Expected cancel-first benchmark to capture quote-cancel callback routing";
+    EXPECT_GT(result.strategy_stats[0].single_instrument_reevaluations, 0u);
+
+    auto sorted = result.tick_to_gateway_ns;
+    std::sort(sorted.begin(), sorted.end());
+    ASSERT_FALSE(sorted.empty());
+    EXPECT_GT(sorted.front(), 0LL);
+    EXPECT_LT(percentile_sorted(sorted, 0.99), 100'000'000LL)
+        << "Cancel-first p99 latency exceeded 100ms";
 }

@@ -83,6 +83,18 @@ static bool wait_for_monitored_quote(const TradingEngine& engine,
     return false;
 }
 
+static bool wait_for_monitored_tick(const TradingEngine& engine,
+                                    MarketTick* out,
+                                    std::chrono::milliseconds timeout = std::chrono::milliseconds(200)) {
+    uint64_t cursor = 0;
+    const auto deadline = std::chrono::steady_clock::now() + timeout;
+    while (std::chrono::steady_clock::now() < deadline) {
+        if (engine.monitor_ticks().read_next(cursor, *out)) return true;
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    return false;
+}
+
 // ─── SimpleMMStrategy unit tests ─────────────────────────────────────────────
 
 class SimpleMmTest : public ::testing::Test {
@@ -489,7 +501,161 @@ TEST(TradingEngineIntegration, DeferredMonitoringStillStreamsQuotes) {
     EXPECT_GT(monitored.bid_volume + monitored.ask_volume, 0);
 }
 
-TEST(TradingEngineIntegration, PricingSignalOverflowFallsBackToCoalescing) {
+TEST(TradingEngineIntegration, DeferredMonitoringStillStreamsTicks) {
+    SystemConfig cfg{};
+    cfg.product_count = 1;
+    cfg.products[0].params.bid_spread = 0.01;
+    cfg.products[0].params.ask_spread = 0.01;
+    cfg.products[0].params.quote_volume = 5;
+    cfg.products[0].params.max_position = 100;
+    cfg.products[0].params.enabled = true;
+    cfg.products[0].strategy_core = -1;
+    cfg.monitoring.hot_path_publish_mode = MonitoringPublishMode::Deferred;
+    std::strncpy(cfg.products[0].underlying_id.data, "cu2501", 31);
+    cfg.pricing.risk_free_rate = 0.025;
+    cfg.pricing.fit_interval_seconds = 60;
+    cfg.timer.hedge_check_interval_ms = 10000;
+    cfg.risk.hard.max_volume_per_order = 100;
+    cfg.risk.soft.max_net_position = 500;
+
+    auto gw = std::make_unique<SimGateway>();
+    Instrument fut = make_future(1, 0, "cu2501", 0.01);
+    Instrument opt = make_option(0, 1, 0, 5.0, OptionType::Call, 0.01);
+    std::memcpy(opt.underlying_code.data, "cu2501", 7);
+    gw->add_instrument(fut);
+    gw->add_instrument(opt);
+    gw->set_last_price(0, 5.0);
+    gw->set_last_price(1, 5.0);
+    gw->connect(cfg.gateway);
+
+    auto engine = std::make_unique<TradingEngine>(cfg, std::move(gw), nullptr);
+    engine->start();
+
+    MarketTick tick{};
+    tick.instrument_id  = 1;
+    tick.last_price     = 5.0;
+    tick.bid_price[0]   = 4.99;
+    tick.ask_price[0]   = 5.01;
+    tick.recv_ts_ns     = get_monotonic_ns();
+    tick.exchange_ts_ns = tick.recv_ts_ns;
+    (void)engine->tick_buf().try_push(tick);
+
+    MarketTick monitored{};
+    const bool saw_monitored_tick = wait_for_monitored_tick(*engine, &monitored);
+
+    engine->stop();
+
+    ASSERT_TRUE(saw_monitored_tick)
+        << "Expected deferred monitoring mode to publish tick flow";
+    EXPECT_EQ(monitored.instrument_id, 1);
+    EXPECT_EQ(monitored.last_price, 5.0);
+}
+
+TEST(TradingEngineIntegration, PricingSignalSuppressionSkipsSubThresholdUpdates) {
+    SystemConfig cfg{};
+    cfg.product_count = 1;
+    std::strncpy(cfg.products[0].underlying_id.data, "cu2501", 31);
+    std::strncpy(cfg.products[0].strategy_type, "option_mm_core", sizeof(cfg.products[0].strategy_type) - 1);
+    cfg.products[0].strategy_core = -1;
+    cfg.products[0].params.quote_volume = 5;
+    cfg.products[0].params.max_position = 100;
+    cfg.products[0].params.warning_position = 50;
+    cfg.products[0].params.min_quote_interval_ms = 0.0;
+    cfg.products[0].params.base_half_spread_ticks = 1.0;
+    cfg.products[0].params.min_half_spread_ticks = 1.0;
+    cfg.products[0].params.max_half_spread_ticks = 6.0;
+    cfg.products[0].params.follow_weight = 0.35;
+    cfg.products[0].params.requote_price_epsilon_ticks = 0.0;
+    cfg.products[0].params.underlying_move_widen_threshold_ticks = 0.0;
+    cfg.products[0].params.enabled = true;
+    cfg.monitoring.hot_path_publish_mode = MonitoringPublishMode::Off;
+    cfg.pricing.risk_free_rate = 0.025;
+    cfg.pricing.fit_interval_seconds = 60;
+    cfg.pricing.signal_emit_price_epsilon_ticks = 50.0;
+    cfg.pricing.signal_emit_underlying_epsilon_ticks = 50.0;
+    cfg.pricing.signal_emit_delta_epsilon = 1.0;
+    cfg.pricing.signal_emit_vega_epsilon = 1.0;
+    cfg.timer.hedge_check_interval_ms = 60000;
+    cfg.timer.quote_refresh_interval_ms = 60000;
+    cfg.risk.hard.max_volume_per_order = 100;
+    cfg.risk.soft.max_net_position = 500;
+    cfg.risk.soft.max_delta = 100000.0;
+    cfg.risk.soft.max_gamma = 100000.0;
+    cfg.risk.soft.max_vega = 100000.0;
+
+    auto gw = std::make_unique<SimGateway>();
+    Instrument fut = make_future(0, 0, "cu2501", 0.01);
+    Instrument opt = make_option(1, 0, 0, 5.0, OptionType::Call, 0.01);
+    std::memcpy(opt.underlying_code.data, "cu2501", 7);
+    gw->add_instrument(fut);
+    gw->add_instrument(opt);
+    gw->set_last_price(0, 5.0);
+    gw->set_last_price(1, 5.0);
+    gw->connect(cfg.gateway);
+
+    auto engine = std::make_unique<TradingEngine>(cfg, std::move(gw), nullptr);
+    engine->start();
+
+    MarketTick option_tick{};
+    option_tick.instrument_id = 1;
+    option_tick.last_price = 5.0;
+    option_tick.bid_price[0] = 4.99;
+    option_tick.ask_price[0] = 5.01;
+    option_tick.recv_ts_ns = get_monotonic_ns();
+    option_tick.exchange_ts_ns = option_tick.recv_ts_ns;
+    ASSERT_TRUE(engine->tick_buf().try_push(option_tick));
+
+    MarketTick first_future_tick{};
+    first_future_tick.instrument_id = 0;
+    first_future_tick.last_price = 5.0;
+    first_future_tick.bid_price[0] = 4.99;
+    first_future_tick.ask_price[0] = 5.01;
+    first_future_tick.recv_ts_ns = get_monotonic_ns();
+    first_future_tick.exchange_ts_ns = first_future_tick.recv_ts_ns;
+    first_future_tick.sequence_no = 1;
+    ASSERT_TRUE(engine->tick_buf().try_push(first_future_tick));
+
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(250);
+    while (std::chrono::steady_clock::now() < deadline
+           && (engine->total_signal_emit_count() == 0
+               || static_cast<SimGateway*>(engine->gateway())->quotes_sent() == 0)) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+
+    const uint64_t emits_before = engine->total_signal_emit_count();
+    const uint64_t quotes_before = static_cast<SimGateway*>(engine->gateway())->quotes_sent();
+
+    for (int i = 0; i < 4; ++i) {
+        option_tick.recv_ts_ns = get_monotonic_ns();
+        option_tick.exchange_ts_ns = option_tick.recv_ts_ns;
+        while (!engine->tick_buf().try_push(option_tick)) spin_pause();
+
+        MarketTick small_future_tick{};
+        small_future_tick.instrument_id = 0;
+        small_future_tick.last_price = 5.0001 + static_cast<double>(i) * 0.00005;
+        small_future_tick.bid_price[0] = small_future_tick.last_price - 0.01;
+        small_future_tick.ask_price[0] = small_future_tick.last_price + 0.01;
+        small_future_tick.recv_ts_ns = get_monotonic_ns();
+        small_future_tick.exchange_ts_ns = small_future_tick.recv_ts_ns;
+        small_future_tick.sequence_no = static_cast<uint64_t>(i + 2);
+        while (!engine->tick_buf().try_push(small_future_tick)) spin_pause();
+    }
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    const uint64_t emits_after = engine->total_signal_emit_count();
+    const uint64_t suppressed_after = engine->total_signal_suppressed_count();
+
+    engine->stop();
+
+    EXPECT_GT(emits_before, 0u);
+    EXPECT_EQ(emits_after, emits_before)
+        << "Small future moves should stay below the configured signal-emission threshold";
+    EXPECT_GT(suppressed_after, 0u);
+    EXPECT_GE(static_cast<SimGateway*>(engine->gateway())->quotes_sent(), quotes_before);
+}
+
+TEST(TradingEngineIntegration, PricingSignalOverflowUsesBackpressureMitigation) {
     SystemConfig cfg{};
     cfg.product_count = 1;
     cfg.products[0].params.bid_spread = 0.01;
@@ -530,7 +696,7 @@ TEST(TradingEngineIntegration, PricingSignalOverflowFallsBackToCoalescing) {
     auto engine = std::make_unique<TradingEngine>(cfg, std::move(gw), nullptr);
     engine->start();
 
-    for (int burst = 0; burst < 6; ++burst) {
+    for (int burst = 0; burst < 64; ++burst) {
         MarketTick tick{};
         tick.instrument_id  = 0;
         tick.last_price     = 75000.0 + burst * 5.0;
@@ -546,19 +712,21 @@ TEST(TradingEngineIntegration, PricingSignalOverflowFallsBackToCoalescing) {
 
     const auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(500);
     while (std::chrono::steady_clock::now() < deadline
-           && engine->total_coalesced_signal_writes() == 0) {
+           && engine->total_coalesced_signal_writes() == 0
+           && engine->total_pending_future_tick_overwrites() == 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
     const uint64_t signal_writes = engine->total_coalesced_signal_writes();
+    const uint64_t future_overwrites = engine->total_pending_future_tick_overwrites();
     const uint32_t signal_ring_depth = engine->max_signal_queue_depth();
     const uint32_t signal_mailbox_depth = engine->max_signal_mailbox_depth();
     engine->stop();
 
-    EXPECT_GT(signal_writes, 0u)
-        << "Expected latest-only signal coalescing to engage under synthetic overload";
+    EXPECT_TRUE(signal_writes > 0u || future_overwrites > 0u)
+        << "Expected synthetic overload to engage signal coalescing or pending future overwrite protection";
     EXPECT_GT(signal_ring_depth, 0u);
-    EXPECT_GT(signal_mailbox_depth, 0u);
+    EXPECT_TRUE(signal_mailbox_depth > 0u || future_overwrites > 0u);
 }
 
 TEST(TradingEngineIntegration, TimerRefreshesUseCoalescedMailbox) {

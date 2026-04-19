@@ -36,6 +36,11 @@ struct InstrumentMonitorState {
     Timestamp last_quote_ts_ns{0};
 };
 
+struct StrategyRuntimeStats {
+    uint64_t full_book_reevaluations{0};
+    uint64_t single_instrument_reevaluations{0};
+};
+
 // ─── IMarketMaker ─────────────────────────────────────────────────────────────
 // Abstract interface for a per-product market making strategy.
 // One instance per product, running on a dedicated strategy thread.
@@ -92,6 +97,11 @@ public:
         (void)out;
         (void)max_count;
         return 0;
+    }
+
+    [[nodiscard]] virtual bool read_runtime_stats(StrategyRuntimeStats* out) const noexcept {
+        if (out != nullptr) *out = StrategyRuntimeStats{};
+        return false;
     }
 
     virtual ~IMarketMaker() = default;

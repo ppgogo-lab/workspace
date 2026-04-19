@@ -98,6 +98,10 @@ struct PricingConfig {
     VolMethod vol_method{VolMethod::SVI};
     int       fit_interval_seconds{60};
     double    sabr_beta{1.0};          // SABR beta (fixed, typically 0.5 or 1.0)
+    double    signal_emit_price_epsilon_ticks{0.0};
+    double    signal_emit_underlying_epsilon_ticks{0.0};
+    double    signal_emit_delta_epsilon{0.0};
+    double    signal_emit_vega_epsilon{0.0};
 };
 
 // ─── Risk configuration ───────────────────────────────────────────────────────

@@ -47,6 +47,7 @@ public:
     [[nodiscard]] bool read_product_monitor_state(ProductMonitorState* out) const noexcept override;
     [[nodiscard]] int read_instrument_monitor_states(InstrumentMonitorState* out,
                                                      int max_count) const noexcept override;
+    [[nodiscard]] bool read_runtime_stats(StrategyRuntimeStats* out) const noexcept override;
 
 private:
     // Reasons why the strategy is not willing to quote this instrument right now.
@@ -130,9 +131,12 @@ private:
     std::array<std::atomic<int32_t>, MAX_INSTRUMENTS> monitor_net_position_{};
     std::array<std::atomic<uint32_t>, MAX_INSTRUMENTS> monitor_suppress_flags_{};
     std::array<std::atomic<int64_t>, MAX_INSTRUMENTS> monitor_last_quote_ts_ns_{};
+    std::atomic<uint64_t> runtime_full_book_reevaluations_{0};
+    std::atomic<uint64_t> runtime_single_instrument_reevaluations_{0};
 
     // Product-wide work orchestration.
     void reevaluate_all(int64_t now_ns) noexcept;
+    void reevaluate_one(uint16_t instrument_id, int64_t now_ns) noexcept;
     void cancel_all_live(int64_t now_ns) noexcept;
 
     // Per-instrument quote lifecycle.

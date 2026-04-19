@@ -193,6 +193,22 @@ static PricingConfig parse_pricing(const YAML::Node& n) {
     c.fit_interval_seconds = get<int>(n["vol_surface"]["fit_interval_seconds"],
                                       "pricing.vol_surface.fit_interval_seconds", 60);
     c.sabr_beta           = get<double>(n["sabr_beta"], "pricing.sabr_beta", 1.0);
+    c.signal_emit_price_epsilon_ticks = get<double>(
+        n["signal_emit_price_epsilon_ticks"],
+        "pricing.signal_emit_price_epsilon_ticks",
+        0.0);
+    c.signal_emit_underlying_epsilon_ticks = get<double>(
+        n["signal_emit_underlying_epsilon_ticks"],
+        "pricing.signal_emit_underlying_epsilon_ticks",
+        0.0);
+    c.signal_emit_delta_epsilon = get<double>(
+        n["signal_emit_delta_epsilon"],
+        "pricing.signal_emit_delta_epsilon",
+        0.0);
+    c.signal_emit_vega_epsilon = get<double>(
+        n["signal_emit_vega_epsilon"],
+        "pricing.signal_emit_vega_epsilon",
+        0.0);
 
     std::string method = get<std::string>(n["vol_surface"]["method"],
                                           "pricing.vol_surface.method", "svi");

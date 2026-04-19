@@ -38,6 +38,10 @@ gateway:
 
 pricing:
   risk_free_rate: 0.025
+  signal_emit_price_epsilon_ticks: 0.25
+  signal_emit_underlying_epsilon_ticks: 0.5
+  signal_emit_delta_epsilon: 0.01
+  signal_emit_vega_epsilon: 0.02
   vol_surface:
     method: svi
     fit_interval_seconds: 60

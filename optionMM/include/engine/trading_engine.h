@@ -110,9 +110,20 @@ public:
     [[nodiscard]] uint64_t total_coalesced_signal_overwrites() const noexcept;
     [[nodiscard]] uint64_t total_coalesced_timer_writes() const noexcept;
     [[nodiscard]] uint64_t total_coalesced_timer_overwrites() const noexcept;
+    [[nodiscard]] uint64_t total_signal_emit_count() const noexcept;
+    [[nodiscard]] uint64_t total_signal_suppressed_count() const noexcept;
+    [[nodiscard]] uint64_t total_pending_future_tick_overwrites() const noexcept;
     [[nodiscard]] uint32_t max_signal_queue_depth() const noexcept;
     [[nodiscard]] uint32_t max_signal_mailbox_depth() const noexcept;
     [[nodiscard]] uint32_t max_timer_queue_depth() const noexcept;
+    [[nodiscard]] int64_t last_signal_emit_ts(uint16_t instrument_id) const noexcept;
+    [[nodiscard]] int64_t last_strategy_signal_ts(uint16_t instrument_id) const noexcept;
+    [[nodiscard]] int64_t last_quote_ack_route_ts(uint16_t instrument_id) const noexcept;
+    [[nodiscard]] int64_t last_quote_cancel_route_ts(uint16_t instrument_id) const noexcept;
+    [[nodiscard]] int64_t last_quote_ack_route_latency_ns(uint16_t instrument_id) const noexcept;
+    [[nodiscard]] int64_t last_quote_cancel_route_latency_ns(uint16_t instrument_id) const noexcept;
+    [[nodiscard]] bool strategy_runtime_stats(int product_idx,
+                                              StrategyRuntimeStats* out) const noexcept;
 
     // Manual order submission from gRPC (bypasses strategy, goes direct to gateway dispatcher)
     [[nodiscard]] OrderId next_manual_order_id() noexcept {
@@ -149,6 +160,7 @@ private:
     alignas(64) SPSCRingBuffer<Order,         4096> deferred_monitor_orders_;
     alignas(64) SPSCRingBuffer<Quote,         4096> deferred_monitor_quotes_;
     alignas(64) SPSCRingBuffer<Trade,         4096> deferred_monitor_trades_;
+    alignas(64) SPSCRingBuffer<MarketTick,    8192> deferred_monitor_ticks_;
     alignas(64) SPSCRingBuffer<uint16_t,      2048> coalesced_signal_index_buf_[MAX_PRODUCTS];
 
     alignas(64) PricingSignal coalesced_signal_mailbox_[MAX_PRODUCTS][MAX_INSTRUMENTS]{};
@@ -162,9 +174,32 @@ private:
     alignas(64) std::atomic<uint64_t> coalesced_signal_overwrites_[MAX_PRODUCTS]{};
     alignas(64) std::atomic<uint64_t> coalesced_timer_writes_[MAX_PRODUCTS]{};
     alignas(64) std::atomic<uint64_t> coalesced_timer_overwrites_[MAX_PRODUCTS]{};
+    alignas(64) std::atomic<uint64_t> signal_emit_count_[MAX_PRODUCTS]{};
+    alignas(64) std::atomic<uint64_t> signal_suppressed_count_[MAX_PRODUCTS]{};
+    alignas(64) std::atomic<uint64_t> pending_future_tick_overwrites_[MAX_PRODUCTS]{};
+    alignas(64) std::atomic<uint64_t> surface_versions_[MAX_PRODUCTS]{};
     alignas(64) std::atomic<uint32_t> max_signal_queue_depth_[MAX_PRODUCTS]{};
     alignas(64) std::atomic<uint32_t> max_signal_mailbox_depth_[MAX_PRODUCTS]{};
     alignas(64) std::atomic<uint32_t> max_timer_queue_depth_[MAX_PRODUCTS]{};
+
+    struct SignalEmitState {
+        bool     valid{false};
+        uint8_t  _pad0[7]{};
+        double   theo_bid{0.0};
+        double   theo_ask{0.0};
+        float    delta{0.0F};
+        float    vega{0.0F};
+        float    underlying_bid{0.0F};
+        float    underlying_ask{0.0F};
+        uint64_t surface_version{0};
+    };
+    alignas(64) SignalEmitState last_emitted_signal_[MAX_PRODUCTS][MAX_INSTRUMENTS]{};
+    alignas(64) std::atomic<int64_t> last_signal_emit_ts_[MAX_INSTRUMENTS]{};
+    alignas(64) std::atomic<int64_t> last_strategy_signal_ts_[MAX_INSTRUMENTS]{};
+    alignas(64) std::atomic<int64_t> last_quote_ack_route_ts_[MAX_INSTRUMENTS]{};
+    alignas(64) std::atomic<int64_t> last_quote_cancel_route_ts_[MAX_INSTRUMENTS]{};
+    alignas(64) std::atomic<int64_t> last_quote_ack_route_latency_ns_[MAX_INSTRUMENTS]{};
+    alignas(64) std::atomic<int64_t> last_quote_cancel_route_latency_ns_[MAX_INSTRUMENTS]{};
 
     // ── Components ───────────────────────────────────────────────────────────
     std::unique_ptr<IGateway>      gateway_;
@@ -262,6 +297,16 @@ private:
     int drain_coalesced_timers(int product_idx,
                                uint64_t* seen_versions,
                                int budget) noexcept;
+    [[nodiscard]] bool should_emit_signal(uint8_t product_idx,
+                                          uint16_t option_slot,
+                                          const PricingSignal& sig,
+                                          uint64_t surface_version) const noexcept;
+    void note_signal_emitted(uint8_t product_idx,
+                             uint16_t option_slot,
+                             uint16_t instrument_id,
+                             const PricingSignal& sig,
+                             uint64_t surface_version) noexcept;
+    void publish_monitor_tick(const MarketTick& tick) noexcept;
     void publish_monitor_order(const Order& order) noexcept;
     void publish_monitor_quote(const Quote& quote) noexcept;
     void publish_monitor_trade(const Trade& trade) noexcept;

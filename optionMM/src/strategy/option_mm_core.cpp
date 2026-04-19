@@ -80,6 +80,8 @@ void OptionMMCoreStrategy::init(uint8_t product_idx,
     live_hedge_order_id_ = 0;
     live_hedge_remaining_ = 0;
     regime_state_ = ProductRegime{};
+    runtime_full_book_reevaluations_.store(0, std::memory_order_relaxed);
+    runtime_single_instrument_reevaluations_.store(0, std::memory_order_relaxed);
     for (auto& state : option_state_) state = OptionState{};
     for (uint16_t id = 0; id < MAX_INSTRUMENTS; ++id) {
         monitor_quote_state_[id].store(static_cast<uint8_t>(StrategyQuoteMonitorState::Idle),
@@ -162,6 +164,16 @@ int OptionMMCoreStrategy::read_instrument_monitor_states(InstrumentMonitorState*
     return count;
 }
 
+bool OptionMMCoreStrategy::read_runtime_stats(StrategyRuntimeStats* out) const noexcept {
+    if (out == nullptr) return false;
+
+    out->full_book_reevaluations =
+        runtime_full_book_reevaluations_.load(std::memory_order_relaxed);
+    out->single_instrument_reevaluations =
+        runtime_single_instrument_reevaluations_.load(std::memory_order_relaxed);
+    return true;
+}
+
 void OptionMMCoreStrategy::on_signal(const PricingSignal& signal) noexcept {
     if (!params_) return;
     const uint16_t id = signal.instrument_id;
@@ -214,7 +226,7 @@ void OptionMMCoreStrategy::on_signal(const PricingSignal& signal) noexcept {
     if (handle_product_regime_transition(now_ns) || regime_state_.product_suppressed) {
         return;
     }
-    maybe_quote(id, now_ns);
+    reevaluate_one(id, now_ns);
 }
 
 void OptionMMCoreStrategy::on_fill(const Trade& trade) noexcept {
@@ -258,7 +270,7 @@ void OptionMMCoreStrategy::on_fill(const Trade& trade) noexcept {
     if (handle_product_regime_transition(now_ns) || regime_state_.product_suppressed) {
         return;
     }
-    maybe_quote(trade.instrument_id, now_ns);
+    reevaluate_one(trade.instrument_id, now_ns);
 }
 
 void OptionMMCoreStrategy::on_order_ack(const Order& order) noexcept {
@@ -283,7 +295,7 @@ void OptionMMCoreStrategy::on_quote_ack(const Quote& quote) noexcept {
         : state.suppress_flags;
     update_monitor_state(state);
     if (request_requote) {
-        maybe_quote(quote.instrument_id, now_ns);
+        reevaluate_one(quote.instrument_id, now_ns);
     }
 }
 
@@ -301,7 +313,7 @@ void OptionMMCoreStrategy::on_quote_cancel(const Quote& quote) noexcept {
     }
     update_monitor_state(state);
     if (request_requote) {
-        maybe_quote(quote.instrument_id, now_ns);
+        reevaluate_one(quote.instrument_id, now_ns);
     }
 }
 
@@ -319,7 +331,7 @@ void OptionMMCoreStrategy::on_quote_reject(const Quote& quote) noexcept {
     state.suppress_flags |= SuppressInvalidMarket;
     update_monitor_state(state);
     if (request_requote) {
-        maybe_quote(quote.instrument_id, get_monotonic_ns());
+        reevaluate_one(quote.instrument_id, get_monotonic_ns());
     }
 }
 
@@ -371,6 +383,7 @@ void OptionMMCoreStrategy::on_timer(const TimerEvent& event) noexcept {
 }
 
 void OptionMMCoreStrategy::reevaluate_all(int64_t now_ns) noexcept {
+    runtime_full_book_reevaluations_.fetch_add(1, std::memory_order_relaxed);
     if (product_exposure_breached() || product_temporarily_suppressed(now_ns)) {
         cancel_all_live(now_ns);
         return;
@@ -379,6 +392,11 @@ void OptionMMCoreStrategy::reevaluate_all(int64_t now_ns) noexcept {
     for (uint16_t i = 0; i < option_count_; ++i) {
         maybe_quote(option_ids_[i], now_ns);
     }
+}
+
+void OptionMMCoreStrategy::reevaluate_one(uint16_t instrument_id, int64_t now_ns) noexcept {
+    runtime_single_instrument_reevaluations_.fetch_add(1, std::memory_order_relaxed);
+    maybe_quote(instrument_id, now_ns);
 }
 
 void OptionMMCoreStrategy::cancel_all_live(int64_t now_ns) noexcept {
