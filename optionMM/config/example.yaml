@@ -60,6 +60,7 @@ products:
   - underlying_id: "cu2501"
     exchange_id: "SHFE"
     strategy_core: 4
+    arbitrage_core: 8
     strategy_type: option_mm_core
     params:
       bid_spread: 10.0        # RMB per tonne (copper option tick is 10)
@@ -79,10 +80,22 @@ products:
       underlying_move_widen_threshold_ticks: 2.0
       use_one_sided_at_limits: true
       enabled: true
+    arbitrage_strategies:
+      - type: pcp
+        params:
+          enabled: false
+          min_edge_ticks: 2.0
+          cooldown_ms: 25.0
+          scan_interval_ms: 1.0
+          cleanup_timeout_ms: 25.0
+          max_order_volume: 1
+          max_live_orders: 8
+          cleanup_on_partial: true
 
   - underlying_id: "rb2501"
     exchange_id: "SHFE"
     strategy_core: 5
+    arbitrage_core: 9
     strategy_type: option_mm_core
     params:
       bid_spread: 2.0         # RMB per tonne (rebar option tick is 1)
@@ -102,6 +115,17 @@ products:
       underlying_move_widen_threshold_ticks: 2.0
       use_one_sided_at_limits: true
       enabled: true
+    arbitrage_strategies:
+      - type: pcp
+        params:
+          enabled: false
+          min_edge_ticks: 2.0
+          cooldown_ms: 25.0
+          scan_interval_ms: 1.0
+          cleanup_timeout_ms: 25.0
+          max_order_volume: 1
+          max_live_orders: 8
+          cleanup_on_partial: true
 
 monitoring:
   grpc_listen_addr: "0.0.0.0:50051"

@@ -129,6 +129,33 @@ message MMParams {
     optional bool   use_one_sided_at_limits             = 18;
 }
 
+enum ArbitrageStrategyType {
+    ARB_STRATEGY_NONE = 0;
+    ARB_STRATEGY_PCP  = 1;
+}
+
+message ArbParams {
+    optional double min_edge_ticks      = 1;
+    optional double cooldown_ms         = 2;
+    optional double scan_interval_ms    = 3;
+    optional double cleanup_timeout_ms  = 4;
+    optional int32  max_order_volume    = 5;
+    optional int32  max_live_orders     = 6;
+    optional bool   cleanup_on_partial  = 7;
+    optional bool   enabled             = 8;
+}
+
+message ArbStrategyId {
+    uint32 product_index = 1;
+    ArbitrageStrategyType strategy_type = 2;
+}
+
+message ArbStrategyParamsEntry {
+    uint32 product_index = 1;
+    ArbitrageStrategyType strategy_type = 2;
+    ArbParams params = 3;
+}
+
 message SetStrategyParamsRequest {
     uint32   product_index = 1;
     MMParams params        = 2;
@@ -139,11 +166,30 @@ message SetStrategyParamsResponse {
     string message = 2;
 }
 
+message SetArbStrategyParamsRequest {
+    ArbStrategyId id = 1;
+    ArbParams params = 2;
+}
+
+message SetArbStrategyParamsResponse {
+    bool   ok      = 1;
+    string message = 2;
+}
+
 message StartStopRequest {
     int32 product_index = 1;  // -1 = all products
 }
 
 message StartStopResponse {
+    bool   ok      = 1;
+    string message = 2;
+}
+
+message ArbStartStopRequest {
+    ArbStrategyId id = 1;
+}
+
+message ArbStartStopResponse {
     bool   ok      = 1;
     string message = 2;
 }
@@ -186,6 +232,17 @@ enum MMSuppressReason {
     MM_REASON_CANCEL_STUCK      = 10;
 }
 
+enum ArbSuppressReason {
+    ARB_REASON_NONE               = 0;
+    ARB_REASON_DISABLED           = 1;
+    ARB_REASON_NO_PAIRS           = 2;
+    ARB_REASON_INVALID_MARKET     = 3;
+    ARB_REASON_COOLDOWN           = 4;
+    ARB_REASON_INTENT_BACKPRESSURE = 5;
+    ARB_REASON_LIVE_ORDERS        = 6;
+    ARB_REASON_CLEANUP_PENDING    = 7;
+}
+
 message ProductMMState {
     uint32 product_index      = 1;
     bool strategy_enabled     = 2;
@@ -202,6 +259,24 @@ message InstrumentMMState {
     int32  net_position       = 5;
     uint32 cancel_attempts    = 6;
     int64  last_quote_ts_ns   = 7;
+}
+
+message ArbStrategyState {
+    uint32 product_index                 = 1;
+    ArbitrageStrategyType strategy_type  = 2;
+    bool enabled                         = 3;
+    bool running                         = 4;
+    bool cleanup_active                  = 5;
+    uint32 live_orders                   = 6;
+    uint32 pair_count                    = 7;
+    uint32 active_call_id                = 8;
+    uint32 active_put_id                 = 9;
+    uint32 active_future_id              = 10;
+    repeated ArbSuppressReason reasons   = 11;
+    double last_edge_ticks               = 12;
+    double last_trigger_edge_ticks       = 13;
+    int64  last_eval_ts_ns               = 14;
+    int64  last_trigger_ts_ns            = 15;
 }
 
 message SetRiskThresholdRequest  { RiskThreshold threshold = 1; }
@@ -230,6 +305,8 @@ message SnapshotResponse {
     RiskState               risk_state  = 6;
     repeated ProductMMState product_states = 7;
     repeated InstrumentMMState instrument_states = 8;
+    repeated ArbStrategyParamsEntry arb_params = 9;
+    repeated ArbStrategyState arb_strategy_states = 10;
 }
 
 message StreamRequest { uint32 product_index = 1; }  // 0xFF = all
@@ -251,6 +328,9 @@ service TradingMonitor {
     rpc SetStrategyParams  (SetStrategyParamsRequest)  returns (SetStrategyParamsResponse);
     rpc StartStrategy      (StartStopRequest)          returns (StartStopResponse);
     rpc StopStrategy       (StartStopRequest)          returns (StartStopResponse);
+    rpc SetArbStrategyParams (SetArbStrategyParamsRequest) returns (SetArbStrategyParamsResponse);
+    rpc StartArbStrategy     (ArbStartStopRequest)        returns (ArbStartStopResponse);
+    rpc StopArbStrategy      (ArbStartStopRequest)        returns (ArbStartStopResponse);
     rpc SetRiskThreshold   (SetRiskThresholdRequest)   returns (SetRiskThresholdResponse);
     rpc SendManualOrder    (ManualOrderRequest)         returns (ManualOrderResponse);
     rpc CancelOrder        (CancelOrderRequest)        returns (CancelOrderResponse);

@@ -12,6 +12,7 @@ namespace omm {
 static constexpr uint16_t MAX_INSTRUMENTS = 1024;
 static constexpr uint16_t INVALID_INSTRUMENT_ID = 0xFFFF;
 static constexpr uint8_t  MAX_PRODUCTS    = 32;
+static constexpr uint8_t  MAX_ARBITRAGE_STRATEGIES_PER_PRODUCT = 4;
 static constexpr uint16_t MAX_OPEN_ORDERS = 4096;
 
 // ─── Primitive aliases ────────────────────────────────────────────────────────
@@ -69,6 +70,7 @@ enum class OffsetFlag  : uint8_t { Open, Close, CloseToday, CloseYesterday };
 enum class OrderType   : uint8_t { Limit, FAK, FOK, Market };
 enum class OrderStatus : uint8_t { New, PartialFilled, Filled, Cancelled, Rejected };
 enum class InstrumentKind : uint8_t { Future, Option };
+enum class ArbitrageStrategyType : uint8_t { None = 0, PCP = 1 };
 
 // ─── Instrument (registry entry, off hot path) ───────────────────────────────
 // Populated at startup: futures from config, options from gateway query.
@@ -240,6 +242,25 @@ struct alignas(64) Trade {
     Volume     fill_volume;
     uint32_t   _pad2;
     Timestamp  fill_ts;
+};
+
+enum class ArbIntentKind : uint8_t {
+    SubmitOrder = 0,
+    CancelOrder = 1,
+};
+
+struct alignas(64) ArbIntent {
+    Order                 order{};
+    ArbitrageStrategyType strategy_type{ArbitrageStrategyType::None};
+    ArbIntentKind         kind{ArbIntentKind::SubmitOrder};
+    bool                  cleanup{false};
+    uint8_t               _pad0[5]{};
+    Timestamp             intent_ts{0};
+    double                edge_ticks{0.0};
+    uint16_t              call_instrument_id{INVALID_INSTRUMENT_ID};
+    uint16_t              put_instrument_id{INVALID_INSTRUMENT_ID};
+    uint16_t              future_instrument_id{INVALID_INSTRUMENT_ID};
+    uint16_t              _pad1{0};
 };
 
 // ─── Position ─────────────────────────────────────────────────────────────────

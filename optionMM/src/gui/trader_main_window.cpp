@@ -90,8 +90,10 @@ struct SharedState {
     std::deque<omm::proto::OrderUpdate> trades;
     std::deque<omm::proto::RiskAlert> alerts;
     std::map<uint32_t, omm::proto::MMParams> mm_params;
+    std::map<uint64_t, omm::proto::ArbParams> arb_params;
     std::unordered_map<uint32_t, omm::proto::ProductMMState> product_states;
     std::unordered_map<uint32_t, omm::proto::InstrumentMMState> instrument_states;
+    std::map<uint64_t, omm::proto::ArbStrategyState> arb_strategy_states;
     std::map<uint32_t, VolCurveSnapshot> curves;
 };
 
@@ -304,6 +306,20 @@ public:
         return status.ok() && resp.ok();
     }
 
+    bool set_arb_strategy_enabled(uint32_t product_index,
+                                  omm::proto::ArbitrageStrategyType strategy_type,
+                                  bool enabled) {
+        grpc::ClientContext ctx;
+        omm::proto::ArbStartStopRequest req;
+        omm::proto::ArbStartStopResponse resp;
+        req.mutable_id()->set_product_index(product_index);
+        req.mutable_id()->set_strategy_type(strategy_type);
+        grpc::Status status = enabled
+            ? stub_->StartArbStrategy(&ctx, req, &resp)
+            : stub_->StopArbStrategy(&ctx, req, &resp);
+        return status.ok() && resp.ok();
+    }
+
     bool set_strategy_params(uint32_t product_index, const omm::proto::MMParams& params) {
         grpc::ClientContext ctx;
         omm::proto::SetStrategyParamsRequest req;
@@ -412,6 +428,11 @@ private:
                     for (int i = 0; i < resp.mm_params_size(); ++i) {
                         state_->mm_params[static_cast<uint32_t>(i)] = resp.mm_params(i);
                     }
+                    state_->arb_params.clear();
+                    for (const auto& entry : resp.arb_params()) {
+                        state_->arb_params[make_arb_key(entry.product_index(), entry.strategy_type())] =
+                            entry.params();
+                    }
                     state_->product_states.clear();
                     for (const auto& product_state : resp.product_states()) {
                         state_->product_states[product_state.product_index()] = product_state;
@@ -419,6 +440,11 @@ private:
                     state_->instrument_states.clear();
                     for (const auto& instrument_state : resp.instrument_states()) {
                         state_->instrument_states[instrument_state.instrument_id()] = instrument_state;
+                    }
+                    state_->arb_strategy_states.clear();
+                    for (const auto& arb_state : resp.arb_strategy_states()) {
+                        state_->arb_strategy_states[make_arb_key(
+                            arb_state.product_index(), arb_state.strategy_type())] = arb_state;
                     }
                 }
             }
@@ -627,6 +653,12 @@ QString format_monotonic_ts(int64_t ts_ns) {
     return QString("T+%1").arg(time.toString("hh:mm:ss.zzz"));
 }
 
+uint64_t make_arb_key(uint32_t product_index,
+                      omm::proto::ArbitrageStrategyType strategy_type) {
+    return (static_cast<uint64_t>(product_index) << 32)
+        | static_cast<uint32_t>(strategy_type);
+}
+
 QColor risk_color(double value, double warning, double danger) {
     const double magnitude = std::abs(value);
     if (magnitude >= danger) return QColor("#ffb3b3");
@@ -645,6 +677,16 @@ QColor risk_alert_color(omm::proto::RiskAlert::AlertType type) {
         return QColor("#ffd7a8");
     }
     return QColor("#ececec");
+}
+
+QString arb_strategy_type_text(omm::proto::ArbitrageStrategyType type) {
+    switch (type) {
+    case omm::proto::ARB_STRATEGY_PCP:
+        return "PCP";
+    case omm::proto::ARB_STRATEGY_NONE:
+    default:
+        return "None";
+    }
 }
 
 QString risk_alert_type_text(omm::proto::RiskAlert::AlertType type) {
@@ -779,6 +821,72 @@ QColor suppress_reason_color(const RepeatedReasons& reasons) {
     return QColor("#ececec");
 }
 
+template<typename RepeatedReasons>
+bool has_arb_reason(const RepeatedReasons& reasons, omm::proto::ArbSuppressReason reason) {
+    for (const int value : reasons) {
+        if (value == static_cast<int>(reason)) return true;
+    }
+    return false;
+}
+
+template<typename RepeatedReasons>
+QString arb_suppress_reason_text(const RepeatedReasons& reasons) {
+    QStringList parts;
+    auto add_part = [&parts](const QString& text) {
+        if (!parts.contains(text)) parts.push_back(text);
+    };
+
+    for (const int value : reasons) {
+        switch (static_cast<omm::proto::ArbSuppressReason>(value)) {
+        case omm::proto::ARB_REASON_DISABLED:
+            add_part("DISABLED");
+            break;
+        case omm::proto::ARB_REASON_NO_PAIRS:
+            add_part("NO PAIRS");
+            break;
+        case omm::proto::ARB_REASON_INVALID_MARKET:
+            add_part("MARKET");
+            break;
+        case omm::proto::ARB_REASON_COOLDOWN:
+            add_part("COOLDOWN");
+            break;
+        case omm::proto::ARB_REASON_INTENT_BACKPRESSURE:
+            add_part("INTENT");
+            break;
+        case omm::proto::ARB_REASON_LIVE_ORDERS:
+            add_part("LIVE ORDERS");
+            break;
+        case omm::proto::ARB_REASON_CLEANUP_PENDING:
+            add_part("CLEANUP");
+            break;
+        case omm::proto::ARB_REASON_NONE:
+        default:
+            break;
+        }
+    }
+    return parts.isEmpty() ? "-" : parts.join(" / ");
+}
+
+template<typename RepeatedReasons>
+QColor arb_suppress_reason_color(const RepeatedReasons& reasons) {
+    if (has_arb_reason(reasons, omm::proto::ARB_REASON_INTENT_BACKPRESSURE)) {
+        return QColor("#ffb3b3");
+    }
+    if (has_arb_reason(reasons, omm::proto::ARB_REASON_LIVE_ORDERS)
+        || has_arb_reason(reasons, omm::proto::ARB_REASON_CLEANUP_PENDING)) {
+        return QColor("#ffd7a8");
+    }
+    if (has_arb_reason(reasons, omm::proto::ARB_REASON_INVALID_MARKET)
+        || has_arb_reason(reasons, omm::proto::ARB_REASON_COOLDOWN)) {
+        return QColor("#fff0b3");
+    }
+    if (has_arb_reason(reasons, omm::proto::ARB_REASON_DISABLED)
+        || has_arb_reason(reasons, omm::proto::ARB_REASON_NO_PAIRS)) {
+        return QColor("#e0e0e0");
+    }
+    return QColor("#ececec");
+}
+
 void style_pill(QLabel* label, const QColor& bg, const QColor& fg = QColor("#1d1d1d")) {
     if (label == nullptr) return;
     label->setStyleSheet(QString(
@@ -808,6 +916,7 @@ struct TraderMainWindow::Impl {
     std::unique_ptr<GrpcTraderClient> client;
     uint32_t selected_product_index{0};
     uint32_t selected_instrument_id{0};
+    int selected_arb_strategy_type{static_cast<int>(omm::proto::ARB_STRATEGY_NONE)};
     bool ui_state_restored{false};
     uint32_t params_editor_product_index{0xFFFFFFFFu};
     QString last_risk_action_text{"Risk thresholds not updated yet"};
@@ -1075,11 +1184,28 @@ void TraderMainWindow::build_ui() {
     strategy_layout->addWidget(start_button_, 0, 0);
     strategy_layout->addWidget(stop_button_, 0, 1);
     auto* strategy_note = new QLabel(
-        "Use Start / Stop for the selected product only. Live gate state stays pinned above.");
+        "MM start / stop only affects the selected product. Arbitrage runs independently below.");
     strategy_note->setWordWrap(true);
     strategy_note->setStyleSheet(
         "padding:4px 8px; border-radius:8px; background:#f3f0e7; color:#4a4032;");
     strategy_layout->addWidget(strategy_note, 1, 0, 1, 2);
+    strategy_layout->addWidget(new QLabel("Arb Strategy"), 2, 0);
+    arb_strategy_selector_ = new QComboBox();
+    strategy_layout->addWidget(arb_strategy_selector_, 2, 1);
+    arb_start_button_ = new QPushButton("Start Arb");
+    arb_stop_button_ = new QPushButton("Stop Arb");
+    strategy_layout->addWidget(arb_start_button_, 3, 0);
+    strategy_layout->addWidget(arb_stop_button_, 3, 1);
+    arb_status_label_ = new QLabel("No arbitrage strategy selected.");
+    arb_status_label_->setWordWrap(true);
+    arb_status_label_->setStyleSheet(
+        "padding:4px 8px; border-radius:8px; background:#ececec; color:#353535; font-weight:700;");
+    strategy_layout->addWidget(arb_status_label_, 4, 0, 1, 2);
+    arb_details_label_ = new QLabel("Arbitrage state follows the live snapshot.");
+    arb_details_label_->setWordWrap(true);
+    arb_details_label_->setStyleSheet(
+        "padding:4px 8px; border-radius:8px; background:#f3f0e7; color:#4a4032;");
+    strategy_layout->addWidget(arb_details_label_, 5, 0, 1, 2);
 
     auto* params_box = new QWidget();
     auto* params_root_layout = new QVBoxLayout(params_box);
@@ -1267,6 +1393,8 @@ void TraderMainWindow::build_ui() {
     });
     connect(start_button_, &QPushButton::clicked, this, [this] { start_strategy(true); });
     connect(stop_button_, &QPushButton::clicked, this, [this] { start_strategy(false); });
+    connect(arb_start_button_, &QPushButton::clicked, this, [this] { start_arb_strategy(true); });
+    connect(arb_stop_button_, &QPushButton::clicked, this, [this] { start_arb_strategy(false); });
     connect(apply_params_button_, &QPushButton::clicked, this, [this] { apply_strategy_params(); });
     connect(cancel_selected_order_button_, &QPushButton::clicked, this, [this] {
         cancel_selected_order();
@@ -1290,6 +1418,11 @@ void TraderMainWindow::build_ui() {
     connect(product_selector_, &QComboBox::currentIndexChanged, this, [this](int) {
         const QVariant data = product_selector_->currentData();
         if (data.isValid()) impl_->selected_product_index = data.toUInt();
+        refresh_ui();
+    });
+    connect(arb_strategy_selector_, &QComboBox::currentIndexChanged, this, [this](int) {
+        const QVariant data = arb_strategy_selector_->currentData();
+        if (data.isValid()) impl_->selected_arb_strategy_type = data.toInt();
         refresh_ui();
     });
     connect(instrument_selector_, &QComboBox::currentIndexChanged, this, [this](int) {
@@ -1562,6 +1695,9 @@ void TraderMainWindow::refresh_ui() {
     sell_button_->setEnabled(connected);
     start_button_->setEnabled(connected);
     stop_button_->setEnabled(connected);
+    arb_strategy_selector_->setEnabled(connected);
+    arb_start_button_->setEnabled(connected);
+    arb_stop_button_->setEnabled(connected);
     apply_params_button_->setEnabled(connected);
     apply_risk_button_->setEnabled(connected);
     cancel_selected_order_button_->setEnabled(connected);
@@ -1634,6 +1770,52 @@ void TraderMainWindow::refresh_ui() {
         }
     }
     const uint32_t selected_product = impl_->selected_product_index;
+
+    const QVariant selected_arb_data = QVariant::fromValue(impl_->selected_arb_strategy_type);
+    std::vector<std::pair<QString, QVariant>> arb_items;
+    {
+        std::map<int, QString> arb_labels;
+        for (const auto& [key, arb_state] : impl_->state.arb_strategy_states) {
+            const uint32_t product_index = static_cast<uint32_t>(key >> 32);
+            if (product_index != selected_product) continue;
+            arb_labels[static_cast<int>(arb_state.strategy_type())] =
+                arb_strategy_type_text(arb_state.strategy_type());
+        }
+        for (const auto& [key, params] : impl_->state.arb_params) {
+            const uint32_t product_index = static_cast<uint32_t>(key >> 32);
+            if (product_index != selected_product) continue;
+            const auto strategy_type =
+                static_cast<omm::proto::ArbitrageStrategyType>(static_cast<uint32_t>(key));
+            if (params.enabled()) {
+                arb_labels[static_cast<int>(strategy_type)] = arb_strategy_type_text(strategy_type);
+            } else if (arb_labels.find(static_cast<int>(strategy_type)) == arb_labels.end()) {
+                arb_labels[static_cast<int>(strategy_type)] = arb_strategy_type_text(strategy_type);
+            }
+        }
+        for (const auto& [strategy_type, label] : arb_labels) {
+            if (strategy_type == static_cast<int>(omm::proto::ARB_STRATEGY_NONE)) continue;
+            arb_items.push_back({label, QVariant::fromValue(strategy_type)});
+        }
+    }
+    if (!combo_matches(arb_strategy_selector_, arb_items)) {
+        QSignalBlocker blocker(arb_strategy_selector_);
+        arb_strategy_selector_->clear();
+        for (const auto& [label, data] : arb_items) {
+            arb_strategy_selector_->addItem(label, data);
+        }
+    }
+    {
+        QSignalBlocker blocker(arb_strategy_selector_);
+        int restore_index = arb_strategy_selector_->findData(selected_arb_data);
+        if (restore_index >= 0) {
+            arb_strategy_selector_->setCurrentIndex(restore_index);
+        } else if (arb_strategy_selector_->count() > 0) {
+            arb_strategy_selector_->setCurrentIndex(0);
+            impl_->selected_arb_strategy_type = arb_strategy_selector_->currentData().toInt();
+        } else {
+            impl_->selected_arb_strategy_type = static_cast<int>(omm::proto::ARB_STRATEGY_NONE);
+        }
+    }
 
     const QVariant selected_instrument_data = QVariant::fromValue(impl_->selected_instrument_id);
     std::vector<std::pair<QString, QVariant>> instrument_items;
@@ -1852,6 +2034,97 @@ void TraderMainWindow::refresh_ui() {
                : (have_product_state && product_state.product_suppressed()) ? suppress_reason_color(product_state.reasons())
                : any_breach ? QColor("#ffb3b3")
                : QColor("#cdeccf"));
+
+    const auto selected_arb_type =
+        static_cast<omm::proto::ArbitrageStrategyType>(impl_->selected_arb_strategy_type);
+    const bool have_arb_selection =
+        selected_arb_type != omm::proto::ARB_STRATEGY_NONE && !arb_items.empty();
+    bool have_arb_state = false;
+    bool have_arb_params = false;
+    omm::proto::ArbStrategyState arb_state;
+    omm::proto::ArbParams arb_params;
+    if (have_arb_selection) {
+        const uint64_t arb_key = make_arb_key(selected_product, selected_arb_type);
+        if (auto state_it = impl_->state.arb_strategy_states.find(arb_key);
+            state_it != impl_->state.arb_strategy_states.end()) {
+            have_arb_state = true;
+            arb_state = state_it->second;
+        }
+        if (auto params_it = impl_->state.arb_params.find(arb_key);
+            params_it != impl_->state.arb_params.end()) {
+            have_arb_params = true;
+            arb_params = params_it->second;
+        }
+    }
+
+    if (!have_arb_selection) {
+        arb_strategy_selector_->setEnabled(connected && !arb_items.empty());
+        arb_start_button_->setEnabled(false);
+        arb_stop_button_->setEnabled(false);
+        arb_status_label_->setText("No arbitrage strategy configured for the selected product.");
+        arb_status_label_->setStyleSheet(
+            "padding:4px 8px; border-radius:8px; background:#ececec; color:#353535; font-weight:700;");
+        arb_details_label_->setText("Arbitrage control is idle until the selected product exposes a strategy.");
+    } else {
+        const bool arb_enabled = have_arb_state
+            ? arb_state.enabled()
+            : (have_arb_params && arb_params.enabled());
+        const QString arb_name = arb_strategy_type_text(selected_arb_type);
+        const QString arb_reason = have_arb_state ? arb_suppress_reason_text(arb_state.reasons())
+                                                  : (arb_enabled ? "-" : "DISABLED");
+
+        QString arb_status = QString("%1 READY").arg(arb_name);
+        QColor arb_color("#cdeccf");
+        if (!arb_enabled) {
+            arb_status = QString("%1 STOPPED").arg(arb_name);
+            arb_color = QColor("#e0e0e0");
+        } else if (have_arb_state && arb_state.cleanup_active()) {
+            arb_status = QString("%1 CLEANUP").arg(arb_name);
+            arb_color = QColor("#ffd7a8");
+        } else if (have_arb_state && arb_state.live_orders() > 0) {
+            arb_status = QString("%1 WORKING").arg(arb_name);
+            arb_color = QColor("#cfe7ff");
+        } else if (have_arb_state && arb_reason != "-") {
+            arb_status = QString("%1 GATED  %2").arg(arb_name, arb_reason);
+            arb_color = arb_suppress_reason_color(arb_state.reasons());
+        } else if (have_arb_state && arb_state.running()) {
+            arb_status = QString("%1 RUNNING").arg(arb_name);
+            arb_color = QColor("#cdeccf");
+        }
+
+        arb_strategy_selector_->setEnabled(connected);
+        arb_start_button_->setEnabled(connected);
+        arb_stop_button_->setEnabled(connected);
+        arb_status_label_->setText(arb_status);
+        arb_status_label_->setStyleSheet(QString(
+            "padding:4px 8px; border-radius:8px; background:%1; color:#2a261f; font-weight:700;")
+                .arg(arb_color.name()));
+
+        const QString pair_count = have_arb_state
+            ? QString::number(arb_state.pair_count())
+            : QString("-");
+        const QString live_orders = have_arb_state
+            ? QString::number(arb_state.live_orders())
+            : QString("-");
+        const QString last_edge = have_arb_state
+            ? QString::number(arb_state.last_edge_ticks(), 'f', 2)
+            : QString("-");
+        const QString last_trigger = have_arb_state
+            ? QString::number(arb_state.last_trigger_edge_ticks(), 'f', 2)
+            : QString("-");
+        const QString eval_ts = have_arb_state
+            ? format_monotonic_ts(arb_state.last_eval_ts_ns())
+            : QString("-");
+        arb_details_label_->setText(
+            QString("%1 pairs %2 | live %3 | edge %4t | trigger %5t | eval %6 | reason %7")
+                .arg(arb_name)
+                .arg(pair_count)
+                .arg(live_orders)
+                .arg(last_edge)
+                .arg(last_trigger)
+                .arg(eval_ts)
+                .arg(arb_reason));
+    }
 
     if (!impl_->state.alerts.empty()) {
         const auto& alert = impl_->state.alerts.front();
@@ -2659,6 +2932,35 @@ void TraderMainWindow::start_strategy(bool enabled) {
               .arg(enabled ? "Strategy started" : "Strategy stopped")
               .arg(current_time_text())
         : QString("Strategy action failed at %1").arg(current_time_text());
+}
+
+void TraderMainWindow::start_arb_strategy(bool enabled) {
+    const QVariant product_data = product_selector_->currentData();
+    const QVariant strategy_data = arb_strategy_selector_->currentData();
+    if (!product_data.isValid() || !strategy_data.isValid()) {
+        impl_->last_operator_status_text = "Select an arbitrage strategy before sending control";
+        return;
+    }
+
+    const uint32_t product_index = product_data.toUInt();
+    const auto strategy_type =
+        static_cast<omm::proto::ArbitrageStrategyType>(strategy_data.toInt());
+    const bool ok = impl_->client->set_arb_strategy_enabled(product_index, strategy_type, enabled);
+    if (ok) {
+        std::lock_guard<std::mutex> lock(impl_->state.mutex);
+        const uint64_t arb_key = make_arb_key(product_index, strategy_type);
+        impl_->state.arb_params[arb_key].set_enabled(enabled);
+        impl_->state.arb_strategy_states[arb_key].set_product_index(product_index);
+        impl_->state.arb_strategy_states[arb_key].set_strategy_type(strategy_type);
+        impl_->state.arb_strategy_states[arb_key].set_enabled(enabled);
+        impl_->state.arb_strategy_states[arb_key].set_running(enabled);
+    }
+    impl_->last_operator_status_text = ok
+        ? QString("%1 %2 at %3")
+              .arg(arb_strategy_type_text(strategy_type))
+              .arg(enabled ? "started" : "stopped")
+              .arg(current_time_text())
+        : QString("Arbitrage action failed at %1").arg(current_time_text());
 }
 
 void TraderMainWindow::apply_strategy_params() {

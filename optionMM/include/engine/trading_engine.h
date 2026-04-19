@@ -12,6 +12,8 @@
 #include "pricing/wing.h"
 #include "pricing/orc_wing.h"
 #include "gateway/gateway.h"
+#include "strategy/arbitrage_strategy.h"
+#include "strategy/arb_params.h"
 #include "strategy/mm_framework.h"
 #include "strategy/mm_params.h"
 #include "risk/pre_trade_risk.h"
@@ -124,6 +126,29 @@ public:
     [[nodiscard]] int64_t last_quote_cancel_route_latency_ns(uint16_t instrument_id) const noexcept;
     [[nodiscard]] bool strategy_runtime_stats(int product_idx,
                                               StrategyRuntimeStats* out) const noexcept;
+    [[nodiscard]] int arbitrage_strategy_count(int product_idx) const noexcept {
+        if (product_idx < 0 || product_idx >= product_count()) return 0;
+        return cfg_.products[product_idx].arbitrage_strategy_count;
+    }
+    [[nodiscard]] ArbitrageStrategyType arbitrage_strategy_type(int product_idx,
+                                                                int slot) const noexcept {
+        if (product_idx < 0 || product_idx >= product_count()) return ArbitrageStrategyType::None;
+        if (slot < 0 || slot >= MAX_ARBITRAGE_STRATEGIES_PER_PRODUCT) {
+            return ArbitrageStrategyType::None;
+        }
+        return arb_strategy_types_[product_idx][slot];
+    }
+    [[nodiscard]] bool arbitrage_strategy_state(int product_idx,
+                                                ArbitrageStrategyType type,
+                                                ArbStrategyMonitorState* out) const noexcept;
+    [[nodiscard]] bool arbitrage_params_snapshot(int product_idx,
+                                                 ArbitrageStrategyType type,
+                                                 ArbParamsConfig* out) const noexcept;
+    [[nodiscard]] bool set_arbitrage_enabled(int product_idx,
+                                             ArbitrageStrategyType type,
+                                             bool enabled) noexcept;
+    [[nodiscard]] AtomicArbParams* arbitrage_params(int product_idx,
+                                                    ArbitrageStrategyType type) noexcept;
 
     // Manual order submission from gRPC (bypasses strategy, goes direct to gateway dispatcher)
     [[nodiscard]] OrderId next_manual_order_id() noexcept {
@@ -157,6 +182,8 @@ private:
     alignas(64) SPSCRingBuffer<Order,          512> order_buf_ [MAX_PRODUCTS];
     alignas(64) SPSCRingBuffer<Quote,          512> quote_buf_ [MAX_PRODUCTS];
     alignas(64) SPSCRingBuffer<Trade,          256> risk_buf_;
+    alignas(64) SPSCRingBuffer<ArbIntent,      256> arb_intent_buf_[MAX_PRODUCTS];
+    alignas(64) SPSCRingBuffer<GatewayEvent,   256> arb_event_buf_[MAX_PRODUCTS];
     alignas(64) SPSCRingBuffer<Order,         4096> deferred_monitor_orders_;
     alignas(64) SPSCRingBuffer<Quote,         4096> deferred_monitor_quotes_;
     alignas(64) SPSCRingBuffer<Trade,         4096> deferred_monitor_trades_;
@@ -208,6 +235,12 @@ private:
     // Strategy slots (one per product)
     std::array<std::unique_ptr<IMarketMaker>, MAX_PRODUCTS> strategies_;
     std::array<AtomicMMParams,  MAX_PRODUCTS> mm_params_;
+    std::array<std::array<std::unique_ptr<IArbitrageStrategy>, MAX_ARBITRAGE_STRATEGIES_PER_PRODUCT>, MAX_PRODUCTS>
+        arbitrage_strategies_;
+    std::array<std::array<AtomicArbParams, MAX_ARBITRAGE_STRATEGIES_PER_PRODUCT>, MAX_PRODUCTS>
+        arb_params_;
+    std::array<std::array<ArbitrageStrategyType, MAX_ARBITRAGE_STRATEGIES_PER_PRODUCT>, MAX_PRODUCTS>
+        arb_strategy_types_{};
     std::array<PreTradeRisk,    MAX_PRODUCTS> pre_risk_;
     PostTradeRisk                             post_risk_;
 
@@ -263,6 +296,7 @@ private:
     std::thread feed_thread_;
     std::thread pricer_thread_;
     std::thread strategy_threads_[MAX_PRODUCTS];
+    std::thread arb_threads_[MAX_PRODUCTS];
     std::thread gateway_dispatcher_thread_;
     std::thread monitor_publisher_thread_;
     std::thread vol_fitter_thread_;
@@ -272,6 +306,7 @@ private:
     // ── Internal thread functions ─────────────────────────────────────────────
     void pricer_loop() noexcept;
     void strategy_loop(int product_idx) noexcept;
+    void arb_loop(int product_idx) noexcept;
     void gateway_dispatcher_loop() noexcept;
     void monitor_publish_loop() noexcept;
     void vol_fitter_loop() noexcept;
@@ -281,6 +316,7 @@ private:
     // ── Startup helpers ───────────────────────────────────────────────────────
     void populate_instrument_registry() noexcept;
     void init_strategies() noexcept;
+    void init_arbitrage_strategies() noexcept;
     void init_vol_surfaces() noexcept;
     // Recomputes option_T_ for all products using current monotonic time.
     // Called once at startup and then every second from timer_loop.
@@ -310,6 +346,8 @@ private:
     void publish_monitor_order(const Order& order) noexcept;
     void publish_monitor_quote(const Quote& quote) noexcept;
     void publish_monitor_trade(const Trade& trade) noexcept;
+    [[nodiscard]] int find_arbitrage_slot(int product_idx,
+                                          ArbitrageStrategyType type) const noexcept;
 };
 
 } // namespace omm

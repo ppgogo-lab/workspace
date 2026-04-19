@@ -195,6 +195,7 @@ add_library(strategy_lib STATIC
     src/strategy/mm_framework.cpp
     src/strategy/simple_mm.cpp
     src/strategy/option_mm_core.cpp
+    src/strategy/pcp_arbitrage.cpp
 )
 target_link_libraries(strategy_lib PUBLIC risk_lib common_lib)
 
@@ -377,6 +378,10 @@ add_test(NAME test_simple_mm COMMAND test_simple_mm)
 add_executable(test_option_mm_core tests/test_option_mm_core.cpp)
 target_link_libraries(test_option_mm_core PRIVATE strategy_lib risk_lib common_lib GTest::gtest_main Threads::Threads)
 add_test(NAME test_option_mm_core COMMAND test_option_mm_core)
+
+add_executable(test_pcp_arbitrage tests/test_pcp_arbitrage.cpp)
+target_link_libraries(test_pcp_arbitrage PRIVATE strategy_lib risk_lib common_lib GTest::gtest_main Threads::Threads)
+add_test(NAME test_pcp_arbitrage COMMAND test_pcp_arbitrage)
 
 # test_latency — NOT added to ctest (run explicitly for benchmarking)
 # Build with RelWithDebInfo for realistic latency numbers.

@@ -279,6 +279,45 @@ static MMParamsConfig parse_mm_params(const YAML::Node& n, std::string path_pref
     return p;
 }
 
+static ArbitrageStrategyType parse_arb_strategy_type(const YAML::Node& n,
+                                                     const char* path) {
+    const std::string type = get<std::string>(n, path, "");
+    if (type == "pcp" || type == "PCP") return ArbitrageStrategyType::PCP;
+    if (type.empty()) return ArbitrageStrategyType::None;
+    throw std::runtime_error(
+        std::string("config: ") + path + " must be 'pcp', got: " + type);
+}
+
+static ArbParamsConfig parse_arb_params(const YAML::Node& n, std::string path_prefix) {
+    ArbParamsConfig p;
+    if (!n) return p;
+    p.min_edge_ticks = get<double>(n["min_edge_ticks"],
+                                   (path_prefix + ".min_edge_ticks").c_str(),
+                                   2.0);
+    p.cooldown_ms = get<double>(n["cooldown_ms"],
+                                (path_prefix + ".cooldown_ms").c_str(),
+                                25.0);
+    p.scan_interval_ms = get<double>(n["scan_interval_ms"],
+                                     (path_prefix + ".scan_interval_ms").c_str(),
+                                     1.0);
+    p.cleanup_timeout_ms = get<double>(n["cleanup_timeout_ms"],
+                                       (path_prefix + ".cleanup_timeout_ms").c_str(),
+                                       25.0);
+    p.max_order_volume = get<int>(n["max_order_volume"],
+                                  (path_prefix + ".max_order_volume").c_str(),
+                                  1);
+    p.max_live_orders = get<int>(n["max_live_orders"],
+                                 (path_prefix + ".max_live_orders").c_str(),
+                                 8);
+    p.cleanup_on_partial = get<bool>(n["cleanup_on_partial"],
+                                     (path_prefix + ".cleanup_on_partial").c_str(),
+                                     true);
+    p.enabled = get<bool>(n["enabled"],
+                          (path_prefix + ".enabled").c_str(),
+                          false);
+    return p;
+}
+
 static TimerConfig parse_timer(const YAML::Node& n) {
     TimerConfig c;
     if (!n) return c;
@@ -373,11 +412,34 @@ SystemConfig load_config(std::string_view path) {
         p.strategy_core = get<int>(pn["strategy_core"], "products[].strategy_core", -1);
         if (p.strategy_core < 0)
             throw std::runtime_error("config: products[].strategy_core must be specified");
+        p.arbitrage_core = get<int>(pn["arbitrage_core"], "products[].arbitrage_core", -1);
 
         str_copy(p.strategy_type, sizeof(p.strategy_type),
                  pn["strategy_type"], "products[].strategy_type", "simple_mm");
         p.params = parse_mm_params(pn["params"],
                                    "products[" + std::to_string(cfg.product_count) + "].params");
+        p.arbitrage_strategy_count = 0;
+        if (auto arb_node = pn["arbitrage_strategies"]) {
+            if (!arb_node.IsSequence()) {
+                throw std::runtime_error("config: products[].arbitrage_strategies must be a sequence");
+            }
+            for (auto an : arb_node) {
+                if (p.arbitrage_strategy_count >= MAX_ARBITRAGE_STRATEGIES_PER_PRODUCT) {
+                    throw std::runtime_error("config: too many arbitrage strategies per product");
+                }
+                ArbitrageStrategyConfig& arb =
+                    p.arbitrage_strategies[p.arbitrage_strategy_count];
+                const std::string base =
+                    "products[" + std::to_string(cfg.product_count)
+                    + "].arbitrage_strategies[" + std::to_string(p.arbitrage_strategy_count) + "]";
+                arb.type = parse_arb_strategy_type(an["type"], (base + ".type").c_str());
+                arb.params = parse_arb_params(an["params"], base + ".params");
+                if (arb.type == ArbitrageStrategyType::None) {
+                    throw std::runtime_error("config: arbitrage strategy type must be specified");
+                }
+                ++p.arbitrage_strategy_count;
+            }
+        }
         ++cfg.product_count;
     }
 

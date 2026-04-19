@@ -145,6 +145,23 @@ struct MMParamsConfig {
     uint8_t _pad[2];
 };
 
+struct ArbParamsConfig {
+    double  min_edge_ticks{2.0};
+    double  cooldown_ms{25.0};
+    double  scan_interval_ms{1.0};
+    double  cleanup_timeout_ms{25.0};
+    int32_t max_order_volume{1};
+    int32_t max_live_orders{8};
+    bool    cleanup_on_partial{true};
+    bool    enabled{false};
+    uint8_t _pad[2];
+};
+
+struct ArbitrageStrategyConfig {
+    ArbitrageStrategyType type{ArbitrageStrategyType::None};
+    ArbParamsConfig       params;
+};
+
 // ─── Per-product configuration ────────────────────────────────────────────────
 // One entry per underlying option series. Strategy thread is per product.
 // Specific option strikes are NOT configured here — they come from the gateway
@@ -153,8 +170,11 @@ struct ProductConfig {
     InstrumentCode underlying_id;    // futures contract code, e.g. "cu2501"
     ExchangeId     exchange_id;      // which exchange, e.g. "SHFE"
     int            strategy_core{-1}; // CPU core for this product's strategy thread
+    int            arbitrage_core{-1}; // optional CPU core for the product arbitrage sidecar
     char           strategy_type[32]{"simple_mm"};
     MMParamsConfig params;
+    ArbitrageStrategyConfig arbitrage_strategies[MAX_ARBITRAGE_STRATEGIES_PER_PRODUCT]{};
+    int            arbitrage_strategy_count{0};
 };
 
 // ─── Timer configuration ─────────────────────────────────────────────────────

@@ -36,6 +36,7 @@ private:
     void refresh_ui();
     void send_manual_order();
     void start_strategy(bool enabled);
+    void start_arb_strategy(bool enabled);
     void apply_strategy_params();
     void reset_strategy_params_to_defaults();
     void revert_strategy_params_to_live();
@@ -69,6 +70,11 @@ private:
     QPushButton* sell_button_{nullptr};
     QPushButton* start_button_{nullptr};
     QPushButton* stop_button_{nullptr};
+    QComboBox* arb_strategy_selector_{nullptr};
+    QPushButton* arb_start_button_{nullptr};
+    QPushButton* arb_stop_button_{nullptr};
+    QLabel* arb_status_label_{nullptr};
+    QLabel* arb_details_label_{nullptr};
     QLabel* delta_label_{nullptr};
     QLabel* gamma_label_{nullptr};
     QLabel* vega_label_{nullptr};

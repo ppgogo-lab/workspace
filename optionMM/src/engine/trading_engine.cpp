@@ -1,5 +1,6 @@
 #include "engine/trading_engine.h"
 #include "strategy/option_mm_core.h"
+#include "strategy/pcp_arbitrage.h"
 #include "strategy/simple_mm.h"
 #include "common/thread_utils.h"
 #include "logger/logger.h"
@@ -21,7 +22,9 @@ constexpr int kDispatcherCallbackLeadBurstCap = 16;
 constexpr int kDispatcherCallbackInterleaveBurstCap = 8;
 constexpr int kDispatcherOrderBurstCap = 64;
 constexpr int kDispatcherQuoteBurstCap = 128;
+constexpr int kDispatcherArbIntentBurstCap = 16;
 constexpr int kCoalescedTimerSlotCount = 2;
+constexpr int kArbEventBurstCap = 32;
 
 void pin_if_configured(int core_id) noexcept {
     if (core_id < 0) return;
@@ -117,8 +120,14 @@ TradingEngine::TradingEngine(const SystemConfig& cfg,
 {
     std::memset(instr_to_product_, 0xFF, sizeof(instr_to_product_));
     // Apply initial MM params from config
-    for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i)
+    for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i) {
         mm_params_[i].apply(cfg_.products[i].params);
+        for (int slot = 0; slot < cfg_.products[i].arbitrage_strategy_count
+             && slot < MAX_ARBITRAGE_STRATEGIES_PER_PRODUCT; ++slot) {
+            arb_strategy_types_[i][slot] = cfg_.products[i].arbitrage_strategies[slot].type;
+            arb_params_[i][slot].apply(cfg_.products[i].arbitrage_strategies[slot].params);
+        }
+    }
     // Wire the feed's tick_buf pointer now that tick_buf_ is constructed
     if (feed_) feed_->set_tick_buf(&tick_buf_);
 }
@@ -272,10 +281,35 @@ void TradingEngine::init_vol_surfaces() noexcept {
     }
 }
 
+void TradingEngine::init_arbitrage_strategies() noexcept {
+    for (int product = 0; product < cfg_.product_count && product < MAX_PRODUCTS; ++product) {
+        for (int slot = 0;
+             slot < cfg_.products[product].arbitrage_strategy_count
+                 && slot < MAX_ARBITRAGE_STRATEGIES_PER_PRODUCT;
+             ++slot) {
+            const ArbitrageStrategyType type = arb_strategy_types_[product][slot];
+            if (type != ArbitrageStrategyType::PCP) continue;
+
+            auto* strategy = new PCPArbitrageStrategy();
+            strategy->init(static_cast<uint8_t>(product),
+                           &arb_intent_buf_[product],
+                           &arb_params_[product][slot],
+                           instruments_,
+                           tick_snapshot_,
+                           greeks_snapshot_,
+                           cfg_.pricing.risk_free_rate,
+                           cfg_.risk.hard,
+                           cfg_.instance.account_id);
+            arbitrage_strategies_[product][slot].reset(strategy);
+        }
+    }
+}
+
 void TradingEngine::start() {
     setup_fp_environment();
     populate_instrument_registry();
     init_strategies();
+    init_arbitrage_strategies();
     init_vol_surfaces();
 
     stop_flag_.store(false, std::memory_order_relaxed);
@@ -291,6 +325,9 @@ void TradingEngine::start() {
 
     for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i) {
         strategy_threads_[i] = std::thread([this, i] { strategy_loop(i); });
+        if (cfg_.products[i].arbitrage_strategy_count > 0) {
+            arb_threads_[i] = std::thread([this, i] { arb_loop(i); });
+        }
     }
 
     if (monitoring_deferred_mode()) {
@@ -312,6 +349,7 @@ void TradingEngine::stop() noexcept {
     auto join = [](std::thread& t) { if (t.joinable()) t.join(); };
     join(pricer_thread_);
     for (auto& t : strategy_threads_) join(t);
+    for (auto& t : arb_threads_) join(t);
     join(gateway_dispatcher_thread_);
     join(monitor_publisher_thread_);
     join(vol_fitter_thread_);
@@ -432,6 +470,53 @@ bool TradingEngine::strategy_runtime_stats(int product_idx,
     if (product_idx < 0 || product_idx >= product_count()) return false;
     if (!strategies_[product_idx]) return false;
     return strategies_[product_idx]->read_runtime_stats(out);
+}
+
+int TradingEngine::find_arbitrage_slot(int product_idx,
+                                       ArbitrageStrategyType type) const noexcept {
+    if (product_idx < 0 || product_idx >= product_count()) return -1;
+    if (type == ArbitrageStrategyType::None) return -1;
+    for (int slot = 0; slot < cfg_.products[product_idx].arbitrage_strategy_count
+         && slot < MAX_ARBITRAGE_STRATEGIES_PER_PRODUCT; ++slot) {
+        if (arb_strategy_types_[product_idx][slot] == type) return slot;
+    }
+    return -1;
+}
+
+bool TradingEngine::arbitrage_strategy_state(int product_idx,
+                                             ArbitrageStrategyType type,
+                                             ArbStrategyMonitorState* out) const noexcept {
+    const int slot = find_arbitrage_slot(product_idx, type);
+    if (slot < 0) return false;
+    const auto& strategy = arbitrage_strategies_[product_idx][slot];
+    if (!strategy) return false;
+    return strategy->read_monitor_state(out);
+}
+
+bool TradingEngine::arbitrage_params_snapshot(int product_idx,
+                                              ArbitrageStrategyType type,
+                                              ArbParamsConfig* out) const noexcept {
+    if (out == nullptr) return false;
+    const int slot = find_arbitrage_slot(product_idx, type);
+    if (slot < 0) return false;
+    *out = arb_params_[product_idx][slot].snapshot();
+    return true;
+}
+
+bool TradingEngine::set_arbitrage_enabled(int product_idx,
+                                          ArbitrageStrategyType type,
+                                          bool enabled) noexcept {
+    const int slot = find_arbitrage_slot(product_idx, type);
+    if (slot < 0) return false;
+    arb_params_[product_idx][slot].enabled.store(enabled, std::memory_order_release);
+    return true;
+}
+
+AtomicArbParams* TradingEngine::arbitrage_params(int product_idx,
+                                                 ArbitrageStrategyType type) noexcept {
+    const int slot = find_arbitrage_slot(product_idx, type);
+    if (slot < 0) return nullptr;
+    return &arb_params_[product_idx][slot];
 }
 
 void TradingEngine::coalesce_signal(uint8_t product_idx,
@@ -864,8 +949,11 @@ void TradingEngine::pricer_loop() noexcept {
             ++emitted_count;
         }
 
-        update_max(max_signal_queue_depth_[prod],
-                   static_cast<uint32_t>(signal_buf_[prod].size_approx()));
+        const uint32_t queued_before_push = static_cast<uint32_t>(signal_buf_[prod].size_approx());
+        const uint32_t projected_queue_depth = std::min<uint32_t>(
+            static_cast<uint32_t>(signal_buf_[prod].capacity()),
+            queued_before_push + static_cast<uint32_t>(emitted_count));
+        update_max(max_signal_queue_depth_[prod], projected_queue_depth);
         if (!signal_buf_[prod].try_push_batch(emitted_sigs, emitted_count)) {
             // Phase 5: if the bounded signal ring is saturated, collapse this
             // batch into latest-only per-option mailboxes instead of spinning.
@@ -993,6 +1081,61 @@ void TradingEngine::strategy_loop(int idx) noexcept {
     }
 }
 
+void TradingEngine::arb_loop(int idx) noexcept {
+    set_thread_name("omm-arb");
+    if (idx >= 0 && idx < cfg_.product_count && idx < MAX_PRODUCTS) {
+        const int arb_core = cfg_.products[idx].arbitrage_core;
+        if (arb_core >= 0 && arb_core != cfg_.products[idx].strategy_core) {
+            pin_if_configured(arb_core);
+        }
+    }
+
+    GatewayEvent ev{};
+    while (!stop_flag_.load(std::memory_order_relaxed)) {
+        bool did_work = false;
+
+        for (int drained = 0;
+             drained < kArbEventBurstCap && arb_event_buf_[idx].try_pop(ev);
+             ++drained) {
+            did_work = true;
+            for (int slot = 0; slot < cfg_.products[idx].arbitrage_strategy_count
+                 && slot < MAX_ARBITRAGE_STRATEGIES_PER_PRODUCT; ++slot) {
+                auto& strategy = arbitrage_strategies_[idx][slot];
+                if (!strategy) continue;
+                switch (ev.type) {
+                case GatewayEventType::OrderAck:
+                    strategy->on_order_ack(ev.order);
+                    break;
+                case GatewayEventType::OrderFill:
+                case GatewayEventType::QuoteFill:
+                    strategy->on_fill(ev.trade);
+                    break;
+                case GatewayEventType::OrderCancel:
+                    strategy->on_order_cancel(ev.order.client_order_id);
+                    break;
+                case GatewayEventType::OrderReject:
+                    strategy->on_order_reject(ev.order);
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+
+        const Timestamp now_ns = get_monotonic_ns();
+        for (int slot = 0; slot < cfg_.products[idx].arbitrage_strategy_count
+             && slot < MAX_ARBITRAGE_STRATEGIES_PER_PRODUCT; ++slot) {
+            auto& strategy = arbitrage_strategies_[idx][slot];
+            if (!strategy) continue;
+            strategy->evaluate(now_ns);
+        }
+
+        if (!did_work) {
+            std::this_thread::sleep_for(std::chrono::microseconds(100));
+        }
+    }
+}
+
 // ─── Gateway dispatcher thread ────────────────────────────────────────────────
 
 void TradingEngine::gateway_dispatcher_loop() noexcept {
@@ -1008,11 +1151,13 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                  ++drained) {
                 did_work = true;
                 const int p = ev.product_index;
-                if (p >= MAX_PRODUCTS || !strategies_[p]) continue;
+                if (p >= MAX_PRODUCTS) continue;
 
+                bool route_to_arbitrage = false;
                 switch (ev.type) {
                 case GatewayEventType::OrderAck:
                     publish_monitor_order(ev.order);
+                    route_to_arbitrage = is_arb_order_id(ev.order.client_order_id);
                     break;
                 case GatewayEventType::QuoteAck:
                     publish_monitor_quote(ev.quote);
@@ -1026,6 +1171,7 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                 case GatewayEventType::OrderFill:
                 case GatewayEventType::QuoteFill:
                     publish_monitor_trade(ev.trade);
+                    route_to_arbitrage = is_arb_order_id(ev.trade.client_order_id);
                     {
                         Order filled{};
                         filled.client_order_id = ev.trade.client_order_id;
@@ -1051,16 +1197,26 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                     break;
                 case GatewayEventType::OrderCancel:
                     publish_monitor_order(ev.order);
+                    route_to_arbitrage = is_arb_order_id(ev.order.client_order_id);
                     break;
                 case GatewayEventType::OrderReject:
                     publish_monitor_order(ev.order);
+                    route_to_arbitrage = is_arb_order_id(ev.order.client_order_id);
                     break;
                 default:
                     break;
                 }
-                while (!stop_flag_.load(std::memory_order_relaxed)
-                    && !gateway_event_buf_[p].try_push(ev)) {
-                    spin_pause();
+
+                if (route_to_arbitrage) {
+                    while (!stop_flag_.load(std::memory_order_relaxed)
+                        && !arb_event_buf_[p].try_push(ev)) {
+                        spin_pause();
+                    }
+                } else {
+                    while (!stop_flag_.load(std::memory_order_relaxed)
+                        && !gateway_event_buf_[p].try_push(ev)) {
+                        spin_pause();
+                    }
                 }
             }
         };
@@ -1089,6 +1245,19 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                 did_work = true;
                 gateway_->send_quote(quote);
                 publish_monitor_quote(quote);
+            }
+
+            ArbIntent intent{};
+            for (int drained = 0;
+                 drained < kDispatcherArbIntentBurstCap && arb_intent_buf_[i].try_pop(intent);
+                 ++drained) {
+                did_work = true;
+                if (intent.kind == ArbIntentKind::SubmitOrder) {
+                    gateway_->send_order(intent.order);
+                    publish_monitor_order(intent.order);
+                } else if (intent.kind == ArbIntentKind::CancelOrder) {
+                    gateway_->cancel_order(intent.order.client_order_id, intent.order.instrument_id);
+                }
             }
             drain_callbacks(kDispatcherCallbackInterleaveBurstCap);
         }

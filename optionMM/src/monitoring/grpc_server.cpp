@@ -85,6 +85,30 @@ const char* option_type_name(const Instrument& instr) noexcept {
     return instr.option_type == OptionType::Call ? "Call" : "Put";
 }
 
+omm::proto::ArbitrageStrategyType arb_strategy_type_to_proto(ArbitrageStrategyType type) noexcept {
+    switch (type) {
+    case ArbitrageStrategyType::PCP:
+        return omm::proto::ARB_STRATEGY_PCP;
+    case ArbitrageStrategyType::None:
+    default:
+        return omm::proto::ARB_STRATEGY_NONE;
+    }
+}
+
+bool arb_strategy_type_from_proto(omm::proto::ArbitrageStrategyType type,
+                                  ArbitrageStrategyType* out) noexcept {
+    if (out == nullptr) return false;
+    switch (type) {
+    case omm::proto::ARB_STRATEGY_PCP:
+        *out = ArbitrageStrategyType::PCP;
+        return true;
+    case omm::proto::ARB_STRATEGY_NONE:
+    default:
+        *out = ArbitrageStrategyType::None;
+        return false;
+    }
+}
+
 void populate_order_update(const TradingEngine& engine, const Order& order, omm::proto::OrderUpdate* msg) {
     msg->set_client_order_id(order.client_order_id);
     msg->set_instrument_id(order.instrument_id);
@@ -173,12 +197,12 @@ omm::proto::MMQuoteState quote_state_to_proto(StrategyQuoteMonitorState state) n
 }
 
 void add_reason_unique(google::protobuf::RepeatedField<int>* reasons,
-                       omm::proto::MMSuppressReason reason) {
+                       int reason) {
     if (reasons == nullptr) return;
     for (const int existing : *reasons) {
-        if (existing == static_cast<int>(reason)) return;
+        if (existing == reason) return;
     }
-    reasons->Add(static_cast<int>(reason));
+    reasons->Add(reason);
 }
 
 void append_product_reasons(const ProductMonitorState& state,
@@ -225,6 +249,31 @@ void append_instrument_reasons(uint32_t suppress_flags,
     }
     if (suppress_flags & kSuppressCancelStuck) {
         add_reason_unique(reasons, omm::proto::MM_REASON_CANCEL_STUCK);
+    }
+}
+
+void append_arb_reasons(uint32_t suppress_flags,
+                        google::protobuf::RepeatedField<int>* reasons) {
+    if (suppress_flags & ArbSuppressDisabled) {
+        add_reason_unique(reasons, omm::proto::ARB_REASON_DISABLED);
+    }
+    if (suppress_flags & ArbSuppressNoPairs) {
+        add_reason_unique(reasons, omm::proto::ARB_REASON_NO_PAIRS);
+    }
+    if (suppress_flags & ArbSuppressInvalidMarket) {
+        add_reason_unique(reasons, omm::proto::ARB_REASON_INVALID_MARKET);
+    }
+    if (suppress_flags & ArbSuppressCooldown) {
+        add_reason_unique(reasons, omm::proto::ARB_REASON_COOLDOWN);
+    }
+    if (suppress_flags & ArbSuppressIntentBackpressure) {
+        add_reason_unique(reasons, omm::proto::ARB_REASON_INTENT_BACKPRESSURE);
+    }
+    if (suppress_flags & ArbSuppressLiveOrders) {
+        add_reason_unique(reasons, omm::proto::ARB_REASON_LIVE_ORDERS);
+    }
+    if (suppress_flags & ArbSuppressCleanupPending) {
+        add_reason_unique(reasons, omm::proto::ARB_REASON_CLEANUP_PENDING);
     }
 }
 
@@ -310,6 +359,94 @@ public:
         set_enabled(req->product_index(), false);
         OMM_LOG_INFO("grpc", "StopStrategy product={}", req->product_index());
         resp->set_ok(true);
+        return grpc::Status::OK;
+    }
+
+    grpc::Status SetArbStrategyParams(
+            grpc::ServerContext*,
+            const omm::proto::SetArbStrategyParamsRequest* req,
+            omm::proto::SetArbStrategyParamsResponse* resp) override
+    {
+        ArbitrageStrategyType type = ArbitrageStrategyType::None;
+        if (!arb_strategy_type_from_proto(req->id().strategy_type(), &type)) {
+            resp->set_ok(false);
+            resp->set_message("invalid arbitrage strategy_type");
+            return grpc::Status::OK;
+        }
+        const int idx = static_cast<int>(req->id().product_index());
+        AtomicArbParams* params = engine_.arbitrage_params(idx, type);
+        if (params == nullptr) {
+            resp->set_ok(false);
+            resp->set_message("arbitrage strategy not configured");
+            return grpc::Status::OK;
+        }
+
+        ArbParamsConfig snap = params->snapshot();
+        const auto& p = req->params();
+        if (p.has_min_edge_ticks()) snap.min_edge_ticks = p.min_edge_ticks();
+        if (p.has_cooldown_ms()) snap.cooldown_ms = p.cooldown_ms();
+        if (p.has_scan_interval_ms()) snap.scan_interval_ms = p.scan_interval_ms();
+        if (p.has_cleanup_timeout_ms()) snap.cleanup_timeout_ms = p.cleanup_timeout_ms();
+        if (p.has_max_order_volume()) snap.max_order_volume = p.max_order_volume();
+        if (p.has_max_live_orders()) snap.max_live_orders = p.max_live_orders();
+        if (p.has_cleanup_on_partial()) snap.cleanup_on_partial = p.cleanup_on_partial();
+        if (p.has_enabled()) snap.enabled = p.enabled();
+        params->apply(snap);
+
+        OMM_LOG_INFO("grpc",
+                     "SetArbStrategyParams product={} type={} edge_ticks={} max_order_volume={} enabled={}",
+                     idx,
+                     static_cast<int>(type),
+                     snap.min_edge_ticks,
+                     snap.max_order_volume,
+                     static_cast<int>(snap.enabled));
+        resp->set_ok(true);
+        return grpc::Status::OK;
+    }
+
+    grpc::Status StartArbStrategy(
+            grpc::ServerContext*,
+            const omm::proto::ArbStartStopRequest* req,
+            omm::proto::ArbStartStopResponse* resp) override
+    {
+        ArbitrageStrategyType type = ArbitrageStrategyType::None;
+        if (!arb_strategy_type_from_proto(req->id().strategy_type(), &type)) {
+            resp->set_ok(false);
+            resp->set_message("invalid arbitrage strategy_type");
+            return grpc::Status::OK;
+        }
+        const bool ok =
+            engine_.set_arbitrage_enabled(static_cast<int>(req->id().product_index()), type, true);
+        resp->set_ok(ok);
+        if (!ok) {
+            resp->set_message("arbitrage strategy not configured");
+        }
+        OMM_LOG_INFO("grpc", "StartArbStrategy product={} type={}",
+                     req->id().product_index(),
+                     static_cast<int>(type));
+        return grpc::Status::OK;
+    }
+
+    grpc::Status StopArbStrategy(
+            grpc::ServerContext*,
+            const omm::proto::ArbStartStopRequest* req,
+            omm::proto::ArbStartStopResponse* resp) override
+    {
+        ArbitrageStrategyType type = ArbitrageStrategyType::None;
+        if (!arb_strategy_type_from_proto(req->id().strategy_type(), &type)) {
+            resp->set_ok(false);
+            resp->set_message("invalid arbitrage strategy_type");
+            return grpc::Status::OK;
+        }
+        const bool ok =
+            engine_.set_arbitrage_enabled(static_cast<int>(req->id().product_index()), type, false);
+        resp->set_ok(ok);
+        if (!ok) {
+            resp->set_message("arbitrage strategy not configured");
+        }
+        OMM_LOG_INFO("grpc", "StopArbStrategy product={} type={}",
+                     req->id().product_index(),
+                     static_cast<int>(type));
         return grpc::Status::OK;
     }
 
@@ -454,6 +591,49 @@ public:
                 snap.underlying_move_widen_threshold_ticks);
             mp->set_use_one_sided_at_limits(snap.use_one_sided_at_limits);
             mp->set_enabled(snap.enabled);
+        }
+
+        for (int i = 0; i < engine_.product_count(); ++i) {
+            for (int slot = 0; slot < engine_.arbitrage_strategy_count(i); ++slot) {
+                const ArbitrageStrategyType type = engine_.arbitrage_strategy_type(i, slot);
+                if (type == ArbitrageStrategyType::None) continue;
+
+                ArbParamsConfig arb_params{};
+                if (engine_.arbitrage_params_snapshot(i, type, &arb_params)) {
+                    auto* entry = resp->add_arb_params();
+                    entry->set_product_index(i);
+                    entry->set_strategy_type(arb_strategy_type_to_proto(type));
+                    auto* params = entry->mutable_params();
+                    params->set_min_edge_ticks(arb_params.min_edge_ticks);
+                    params->set_cooldown_ms(arb_params.cooldown_ms);
+                    params->set_scan_interval_ms(arb_params.scan_interval_ms);
+                    params->set_cleanup_timeout_ms(arb_params.cleanup_timeout_ms);
+                    params->set_max_order_volume(arb_params.max_order_volume);
+                    params->set_max_live_orders(arb_params.max_live_orders);
+                    params->set_cleanup_on_partial(arb_params.cleanup_on_partial);
+                    params->set_enabled(arb_params.enabled);
+                }
+
+                ArbStrategyMonitorState arb_state{};
+                if (engine_.arbitrage_strategy_state(i, type, &arb_state)) {
+                    auto* state = resp->add_arb_strategy_states();
+                    state->set_product_index(arb_state.product_index);
+                    state->set_strategy_type(arb_strategy_type_to_proto(arb_state.strategy_type));
+                    state->set_enabled(arb_state.enabled);
+                    state->set_running(arb_state.running);
+                    state->set_cleanup_active(arb_state.cleanup_active);
+                    state->set_live_orders(arb_state.live_orders);
+                    state->set_pair_count(arb_state.pair_count);
+                    state->set_active_call_id(arb_state.active_call_id);
+                    state->set_active_put_id(arb_state.active_put_id);
+                    state->set_active_future_id(arb_state.active_future_id);
+                    state->set_last_edge_ticks(arb_state.last_edge_ticks);
+                    state->set_last_trigger_edge_ticks(arb_state.last_trigger_edge_ticks);
+                    state->set_last_eval_ts_ns(arb_state.last_eval_ts_ns);
+                    state->set_last_trigger_ts_ns(arb_state.last_trigger_ts_ns);
+                    append_arb_reasons(arb_state.suppress_flags, state->mutable_reasons());
+                }
+            }
         }
 
         for (int i = 0; i < engine_.product_count(); ++i) {
