@@ -149,6 +149,31 @@ set_target_properties(femas_md PROPERTIES
     IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
     INTERFACE_LINK_OPTIONS "-Wl,--allow-shlib-undefined")
 
+add_library(femas_simulator_lib STATIC
+    src/sim/femas_simulator.cpp
+)
+target_include_directories(femas_simulator_lib PUBLIC
+    ${CMAKE_SOURCE_DIR}/include
+    ${FEMAS_SDK_DIR}
+)
+target_link_libraries(femas_simulator_lib PUBLIC
+    logger_lib
+    Threads::Threads
+)
+
+add_library(femas_api_lib STATIC
+    src/femas/femas_api.cpp
+)
+target_include_directories(femas_api_lib PUBLIC
+    ${CMAKE_SOURCE_DIR}/include
+    ${FEMAS_SDK_DIR}
+)
+target_link_libraries(femas_api_lib PUBLIC
+    femas_simulator_lib
+    femas_md
+    femas_trader
+)
+
 # ─── common_lib ───────────────────────────────────────────────────────────────
 add_library(common_lib STATIC
     src/common/config.cpp
@@ -212,7 +237,7 @@ target_include_directories(feed_lib PUBLIC
 )
 target_link_libraries(feed_lib PUBLIC
     common_lib
-    femas_md
+    femas_api_lib
 )
 
 if(0)
@@ -262,7 +287,7 @@ target_include_directories(gateway_lib PUBLIC
     ${FEMAS_SDK_DIR}
 )
 target_link_libraries(gateway_lib PUBLIC
-    common_lib logger_lib ctp_trader femas_trader
+    common_lib logger_lib ctp_trader femas_api_lib
 )
 
 # ─── logger_lib ───────────────────────────────────────────────────────────────
@@ -378,6 +403,10 @@ add_test(NAME test_simple_mm COMMAND test_simple_mm)
 add_executable(test_option_mm_core tests/test_option_mm_core.cpp)
 target_link_libraries(test_option_mm_core PRIVATE strategy_lib risk_lib common_lib GTest::gtest_main Threads::Threads)
 add_test(NAME test_option_mm_core COMMAND test_option_mm_core)
+
+add_executable(test_femas_simulator tests/test_femas_simulator.cpp)
+target_link_libraries(test_femas_simulator PRIVATE femas_simulator_lib GTest::gtest_main Threads::Threads)
+add_test(NAME test_femas_simulator COMMAND test_femas_simulator)
 
 add_executable(test_pcp_arbitrage tests/test_pcp_arbitrage.cpp)
 target_link_libraries(test_pcp_arbitrage PRIVATE strategy_lib risk_lib common_lib GTest::gtest_main Threads::Threads)

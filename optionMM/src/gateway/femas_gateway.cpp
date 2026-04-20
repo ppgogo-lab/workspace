@@ -2,7 +2,9 @@
 #include "logger/logger.h"
 
 #include <chrono>
+#include <cstdlib>
 #include <cstdio>
+#include <ctime>
 
 namespace omm {
 
@@ -10,6 +12,39 @@ namespace {
 
 constexpr char kMarketMakerHedge = USTP_FTDC_CHF_MarketMaker;
 constexpr char kSpecHedge = USTP_FTDC_CHF_Speculation;
+
+Exchange parse_exchange_id(const char* exchange_id) noexcept {
+    if (!exchange_id) return Exchange::Unknown;
+    if (std::strncmp(exchange_id, "SHFE", 4) == 0) return Exchange::SHFE;
+    if (std::strncmp(exchange_id, "DCE", 3) == 0) return Exchange::DCE;
+    if (std::strncmp(exchange_id, "CZCE", 4) == 0) return Exchange::CZCE;
+    if (std::strncmp(exchange_id, "CFFEX", 5) == 0) return Exchange::CFFEX;
+    if (std::strncmp(exchange_id, "GFEX", 4) == 0) return Exchange::GFEX;
+    return Exchange::Unknown;
+}
+
+int64_t estimate_expiry_epoch_ns(const char* expire_date) noexcept {
+    if (!expire_date || std::strlen(expire_date) != 8) return 0;
+
+    int year = 0;
+    int month = 0;
+    int day = 0;
+    if (std::sscanf(expire_date, "%4d%2d%2d", &year, &month, &day) != 3) return 0;
+
+    std::tm expiry_tm{};
+    expiry_tm.tm_year = year - 1900;
+    expiry_tm.tm_mon = month - 1;
+    expiry_tm.tm_mday = day;
+    expiry_tm.tm_hour = 15;
+
+    const std::time_t expiry_wall = std::mktime(&expiry_tm);
+    if (expiry_wall == static_cast<std::time_t>(-1)) return 0;
+
+    const auto now_wall = std::chrono::system_clock::to_time_t(
+        std::chrono::system_clock::now());
+    const int64_t delta_sec = std::max<int64_t>(0, expiry_wall - now_wall);
+    return get_monotonic_ns() + delta_sec * 1'000'000'000LL;
+}
 
 } // namespace
 
@@ -186,9 +221,9 @@ void FEMASGateway::push_trade_event(GatewayEventType type,
 bool FEMASGateway::connect(const GatewayConfig& cfg) {
     cfg_ = cfg;
 
-    api_ = CUstpFtdcTraderApi::CreateFtdcTraderApi("./femas_flow/");
+    api_ = create_femas_trader_api(cfg_.femas.front_addr);
     if (!api_) {
-        OMM_LOG_ERROR("femas", "CreateFtdcTraderApi failed");
+        OMM_LOG_ERROR("femas", "CreateFtdcTraderApi failed front={}", cfg_.femas.front_addr);
         return false;
     }
 
@@ -753,7 +788,9 @@ void FEMASGateway::fill_instrument(Instrument& out,
     std::strncpy(out.exchange_id.data, src.ExchangeID, sizeof(out.exchange_id.data) - 1);
     out.tick_size = src.PriceTick;
     out.multiplier = static_cast<double>(src.VolumeMultiple);
-    out.exchange = Exchange::CFFEX;
+    out.exchange = parse_exchange_id(src.ExchangeID);
+    out.expiry_date = std::atoi(src.ExpireDate);
+    out.expiry_epoch_ns = estimate_expiry_epoch_ns(src.ExpireDate);
 
     if (src.OptionsType == USTP_FTDC_OT_CallOptions) {
         out.kind = InstrumentKind::Option;

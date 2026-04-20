@@ -2,6 +2,7 @@
 
 #include "gateway/gateway.h"
 #include "common/thread_utils.h"
+#include "femas/api_wrapper.h"
 
 #include "USTPFtdcTraderApi.h"
 
@@ -65,7 +66,7 @@ private:
         char    ask_order_sys_id[32]{};
     };
 
-    CUstpFtdcTraderApi* api_{nullptr};
+    IFemasTraderApi* api_{nullptr};
     GatewayConfig cfg_{};
 
     std::atomic<bool> trading_ready_{false};

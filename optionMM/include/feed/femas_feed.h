@@ -2,6 +2,7 @@
 
 #include "feed/feed_handler.h"
 #include "common/config.h"
+#include "femas/api_wrapper.h"
 #include "USTPFtdcMduserApi.h"
 
 #include <atomic>
@@ -34,7 +35,7 @@ public:
 
 private:
     FemasMdConfig       cfg_{};
-    CUstpFtdcMduserApi* api_{nullptr};
+    IFemasMdApi*        api_{nullptr};
     std::atomic<int>    request_id_{1};
     std::atomic<bool>   login_ready_{false};
     std::atomic<int>    current_sequence_no_{0};

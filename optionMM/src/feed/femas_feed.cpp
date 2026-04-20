@@ -15,10 +15,10 @@ void FEMASFeedHandler::start() {
         return;
     }
 
-    api_ = CUstpFtdcMduserApi::CreateFtdcMduserApi("./femas_md_flow/");
+    api_ = create_femas_md_api(cfg_.front_addr);
     if (!api_) {
         err_count_.fetch_add(1, std::memory_order_relaxed);
-        OMM_LOG_ERROR("femas-md", "CreateFtdcMduserApi failed");
+        OMM_LOG_ERROR("femas-md", "CreateFtdcMduserApi failed front={}", cfg_.front_addr);
         return;
     }
 
