@@ -337,6 +337,7 @@ public:
             snap.use_one_sided_at_limits = p.use_one_sided_at_limits();
         }
         engine_.mm_params(idx).apply(snap);
+        engine_.persist_mm_params_update(idx, snap);
         OMM_LOG_INFO(
             "grpc",
             "SetStrategyParams product={} qv={} max_pos={} warn_pos={} base_half={} product_delta={} vega={} enabled={}",
@@ -404,6 +405,7 @@ public:
         if (p.has_cleanup_on_partial()) snap.cleanup_on_partial = p.cleanup_on_partial();
         if (p.has_enabled()) snap.enabled = p.enabled();
         params->apply(snap);
+        engine_.persist_arb_params_update(idx, type, snap);
 
         OMM_LOG_INFO("grpc",
                      "SetArbStrategyParams product={} type={} edge_ticks={} max_order_volume={} enabled={}",
@@ -470,6 +472,7 @@ public:
         const auto& t = req->threshold();
         engine_.post_risk_mutable().set_limits(
             t.max_net_position(), t.max_delta(), t.max_gamma(), t.max_vega());
+        engine_.persist_risk_limits_update(engine_.post_risk().limits());
         OMM_LOG_INFO("grpc", "SetRiskThreshold pos={} delta={} gamma={} vega={}",
                      t.max_net_position(), t.max_delta(), t.max_gamma(), t.max_vega());
         resp->set_ok(true);
@@ -1005,10 +1008,14 @@ private:
 
     void set_enabled(int product_index, bool enabled) {
         if (product_index < 0) {
-            for (int i = 0; i < engine_.product_count(); ++i)
+            for (int i = 0; i < engine_.product_count(); ++i) {
                 engine_.mm_params(i).enabled.store(enabled, std::memory_order_release);
+                engine_.persist_mm_params_update(i, engine_.mm_params(i).snapshot());
+            }
         } else if (product_index < engine_.product_count()) {
             engine_.mm_params(product_index).enabled.store(enabled, std::memory_order_release);
+            engine_.persist_mm_params_update(product_index,
+                                             engine_.mm_params(product_index).snapshot());
         }
     }
 };

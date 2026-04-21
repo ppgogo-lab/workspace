@@ -47,6 +47,38 @@ struct GatewayEvent {
     GatewayEvent() noexcept : type{}, product_index{}, _pad{}, order{} {}
 };
 
+struct GatewayOrderRecoveryHandle {
+    bool    valid{false};
+    bool    is_quote_leg{false};
+    uint8_t _pad0[6]{};
+    QuoteId client_quote_id{0};
+    char    exchange_local_id[16]{};
+    char    order_sys_id[32]{};
+};
+
+struct GatewayQuoteRecoveryHandle {
+    bool    valid{false};
+    uint8_t _pad0[7]{};
+    OrderId bid_order_id{0};
+    OrderId ask_order_id{0};
+    char    quote_local_id[16]{};
+    char    quote_sys_id[32]{};
+    char    bid_local_id[16]{};
+    char    ask_local_id[16]{};
+    char    bid_order_sys_id[32]{};
+    char    ask_order_sys_id[32]{};
+};
+
+struct GatewayRecoveredOrder {
+    Order                    order{};
+    GatewayOrderRecoveryHandle recovery{};
+};
+
+struct GatewayRecoveredQuote {
+    Quote                     quote{};
+    GatewayQuoteRecoveryHandle recovery{};
+};
+
 class IGateway {
 public:
     // ── Lifecycle ────────────────────────────────────────────────────────────
@@ -73,6 +105,30 @@ public:
     virtual bool query_instruments(Instrument* instruments,
                                     uint16_t*   count,
                                     uint16_t    max_count) = 0;
+
+    [[nodiscard]] virtual bool get_order_recovery_handle(
+            OrderId id,
+            GatewayOrderRecoveryHandle* out) const noexcept {
+        (void)id;
+        if (out != nullptr) *out = GatewayOrderRecoveryHandle{};
+        return false;
+    }
+
+    [[nodiscard]] virtual bool get_quote_recovery_handle(
+            QuoteId id,
+            GatewayQuoteRecoveryHandle* out) const noexcept {
+        (void)id;
+        if (out != nullptr) *out = GatewayQuoteRecoveryHandle{};
+        return false;
+    }
+
+    virtual void restore_order_recovery(const GatewayRecoveredOrder& order) noexcept {
+        (void)order;
+    }
+
+    virtual void restore_quote_recovery(const GatewayRecoveredQuote& quote) noexcept {
+        (void)quote;
+    }
 
     virtual void set_instruments(const Instrument* instruments,
                                  uint16_t n) noexcept {

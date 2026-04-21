@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstdio>
 
 namespace omm {
 
@@ -148,6 +149,76 @@ bool SimGateway::cancel_quote(QuoteId id, uint16_t instrument_id) noexcept {
     quote.cancel_pending = true;
     quote.cancel_due_ns = now_ns + static_cast<Timestamp>(settings_.cancel_latency_ms) * 1'000'000LL;
     return true;
+}
+
+bool SimGateway::get_order_recovery_handle(
+        OrderId id,
+        GatewayOrderRecoveryHandle* out) const noexcept {
+    if (out == nullptr) return false;
+    *out = GatewayOrderRecoveryHandle{};
+
+    std::lock_guard<std::mutex> lock(state_mutex_);
+    for (const auto& order : active_orders_) {
+        if (!order.used || order.order.client_order_id != id) continue;
+        out->valid = true;
+        std::snprintf(out->order_sys_id,
+                      sizeof(out->order_sys_id),
+                      "%llu",
+                      static_cast<unsigned long long>(order.exchange_order_id));
+        return true;
+    }
+    return false;
+}
+
+bool SimGateway::get_quote_recovery_handle(
+        QuoteId id,
+        GatewayQuoteRecoveryHandle* out) const noexcept {
+    if (out == nullptr) return false;
+    *out = GatewayQuoteRecoveryHandle{};
+
+    std::lock_guard<std::mutex> lock(state_mutex_);
+    for (const auto& quote : active_quotes_) {
+        if (!quote.used || quote.quote.client_quote_id != id) continue;
+        out->valid = true;
+        std::snprintf(out->quote_sys_id,
+                      sizeof(out->quote_sys_id),
+                      "%llu",
+                      static_cast<unsigned long long>(quote.exchange_quote_id));
+        return true;
+    }
+    return false;
+}
+
+void SimGateway::restore_order_recovery(const GatewayRecoveredOrder& recovered) noexcept {
+    std::lock_guard<std::mutex> lock(state_mutex_);
+    auto slot_it = std::find_if(active_orders_.begin(), active_orders_.end(), [](const ActiveOrder& item) {
+        return !item.used;
+    });
+    if (slot_it == active_orders_.end()) return;
+
+    ActiveOrder& slot = *slot_it;
+    slot = ActiveOrder{};
+    slot.used = true;
+    slot.ack_sent = true;
+    slot.order = recovered.order;
+    slot.remaining_volume = std::max<Volume>(0, recovered.order.volume - recovered.order.filled_volume);
+    slot.fill_notional =
+        recovered.order.avg_fill_price * static_cast<double>(recovered.order.filled_volume);
+    slot.exchange_order_id = recovered.order.exchange_order_id;
+}
+
+void SimGateway::restore_quote_recovery(const GatewayRecoveredQuote& recovered) noexcept {
+    if (recovered.quote.instrument_id >= MAX_INSTRUMENTS) return;
+
+    std::lock_guard<std::mutex> lock(state_mutex_);
+    ActiveQuote& slot = active_quotes_[recovered.quote.instrument_id];
+    slot = ActiveQuote{};
+    slot.used = true;
+    slot.ack_sent = true;
+    slot.quote = recovered.quote;
+    slot.remaining_bid = std::max<Volume>(0, recovered.quote.bid_volume);
+    slot.remaining_ask = std::max<Volume>(0, recovered.quote.ask_volume);
+    slot.exchange_quote_id = recovered.quote.exchange_quote_id;
 }
 
 void SimGateway::start_worker() {

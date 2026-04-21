@@ -10,6 +10,7 @@
 #include <cmath>
 #include <algorithm>
 #include <chrono>
+#include <ctime>
 
 namespace omm {
 
@@ -119,6 +120,10 @@ TradingEngine::TradingEngine(const SystemConfig& cfg,
     , post_risk_(cfg.risk.soft)
 {
     std::memset(instr_to_product_, 0xFF, sizeof(instr_to_product_));
+    if (cfg_.persistence.enabled) {
+        repository_ = std::make_unique<DataRepository>(
+            cfg_.persistence, cfg_.gateway.type, cfg_.pricing.vol_method);
+    }
     // Apply initial MM params from config
     for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i) {
         mm_params_[i].apply(cfg_.products[i].params);
@@ -305,9 +310,110 @@ void TradingEngine::init_arbitrage_strategies() noexcept {
     }
 }
 
+void TradingEngine::init_persistence() noexcept {
+    if (!repository_) return;
+
+    repository_->set_instruments(instruments_, n_instruments_);
+    if (!repository_->open()) {
+        OMM_LOG_ERROR("repo", "failed to open repository path={}", cfg_.persistence.data_path);
+        repository_.reset();
+        return;
+    }
+    (void)repository_->persist_instruments();
+
+    RecoveryState recovery{};
+    if (!repository_->load_recovery_state(&recovery)) {
+        OMM_LOG_WARN("repo", "failed to load recovery state");
+        repository_->start();
+        return;
+    }
+
+    apply_recovery_state(recovery);
+    seed_gateway_recovery(recovery);
+    repository_->start();
+    for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i) {
+        persist_mm_params_update(i, mm_params_[i].snapshot());
+        for (int slot = 0; slot < cfg_.products[i].arbitrage_strategy_count
+             && slot < MAX_ARBITRAGE_STRATEGIES_PER_PRODUCT; ++slot) {
+            persist_arb_params_update(i,
+                                      arb_strategy_types_[i][slot],
+                                      arb_params_[i][slot].snapshot());
+        }
+    }
+    persist_risk_limits_update(post_risk_.limits());
+    request_recovery_cancels(recovery);
+}
+
+void TradingEngine::apply_recovery_state(const RecoveryState& state) noexcept {
+    if (!state.positions.empty()) {
+        post_risk_.restore_positions(state.positions.data(),
+                                     static_cast<uint16_t>(state.positions.size()));
+    }
+    if (state.has_risk_params) {
+        post_risk_.set_limits(state.risk_params);
+    }
+    for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i) {
+        if (state.mm_params[i].valid) {
+            mm_params_[i].apply(state.mm_params[i].params);
+        }
+    }
+    for (const auto& entry : state.arb_params) {
+        if (!entry.valid) continue;
+        AtomicArbParams* params = arbitrage_params(entry.product_index, entry.strategy_type);
+        if (params != nullptr) params->apply(entry.params);
+    }
+}
+
+void TradingEngine::seed_gateway_recovery(const RecoveryState& state) noexcept {
+    if (!gateway_) return;
+
+    for (const auto& order : state.live_orders) {
+        gateway_->restore_order_recovery(order);
+    }
+    for (const auto& quote : state.live_quotes) {
+        gateway_->restore_quote_recovery(quote);
+    }
+}
+
+void TradingEngine::request_recovery_cancels(const RecoveryState& state) noexcept {
+    if (!gateway_ || !gateway_->is_connected()) return;
+
+    for (const auto& order : state.live_orders) {
+        (void)gateway_->cancel_order(order.order.client_order_id, order.order.instrument_id);
+    }
+    for (const auto& quote : state.live_quotes) {
+        if (cfg_.gateway.type == GatewayType::CTP) {
+            if (quote.recovery.bid_order_id != 0) {
+                (void)gateway_->cancel_order(quote.recovery.bid_order_id, quote.quote.instrument_id);
+            }
+            if (quote.recovery.ask_order_id != 0) {
+                (void)gateway_->cancel_order(quote.recovery.ask_order_id, quote.quote.instrument_id);
+            }
+        } else {
+            (void)gateway_->cancel_quote(quote.quote.client_quote_id, quote.quote.instrument_id);
+        }
+    }
+}
+
+void TradingEngine::persist_shutdown_state() noexcept {
+    if (!repository_) return;
+
+    PositionSnapshotEvent positions{};
+    positions.snapshot_ts = get_monotonic_ns();
+    positions.n_instruments = n_instruments_;
+    const Position* current_positions = post_risk_.positions();
+    for (uint16_t i = 0; i < n_instruments_; ++i) {
+        positions.positions[i] = current_positions[i];
+    }
+    (void)repository_->enqueue_positions_snapshot(positions);
+    persist_end_of_day_snapshot();
+    repository_->stop();
+}
+
 void TradingEngine::start() {
     setup_fp_environment();
     populate_instrument_registry();
+    init_persistence();
     init_strategies();
     init_arbitrage_strategies();
     init_vol_surfaces();
@@ -355,6 +461,8 @@ void TradingEngine::stop() noexcept {
     join(vol_fitter_thread_);
     join(risk_monitor_thread_);
     join(timer_thread_);
+
+    persist_shutdown_state();
 
     if (gateway_) gateway_->disconnect();
 }
@@ -522,6 +630,7 @@ bool TradingEngine::set_arbitrage_enabled(int product_idx,
     const int slot = find_arbitrage_slot(product_idx, type);
     if (slot < 0) return false;
     arb_params_[product_idx][slot].enabled.store(enabled, std::memory_order_release);
+    persist_arb_params_update(product_idx, type, arb_params_[product_idx][slot].snapshot());
     return true;
 }
 
@@ -781,6 +890,70 @@ void TradingEngine::publish_monitor_trade(const Trade& trade) noexcept {
     case MonitoringPublishMode::Off:
         break;
     }
+}
+
+void TradingEngine::persist_order_event(OrderPersistenceEventType type,
+                                        const Order& order,
+                                        const GatewayOrderRecoveryHandle* recovery) noexcept {
+    if (!repository_) return;
+    OrderPersistenceEvent event{};
+    event.type = type;
+    event.order = order;
+    if (recovery != nullptr) event.recovery = *recovery;
+    if (!repository_->enqueue_order_event(event)) {
+        OMM_LOG_WARN("repo", "order persistence queue full type={} order_id={}",
+                     static_cast<int>(type), order.client_order_id);
+    }
+}
+
+void TradingEngine::persist_quote_event(QuotePersistenceEventType type,
+                                        const Quote& quote,
+                                        const GatewayQuoteRecoveryHandle* recovery) noexcept {
+    if (!repository_) return;
+    QuotePersistenceEvent event{};
+    event.type = type;
+    event.quote = quote;
+    if (recovery != nullptr) event.recovery = *recovery;
+    if (!repository_->enqueue_quote_event(event)) {
+        OMM_LOG_WARN("repo", "quote persistence queue full type={} quote_id={}",
+                     static_cast<int>(type), quote.client_quote_id);
+    }
+}
+
+void TradingEngine::persist_trade(const Trade& trade) noexcept {
+    if (!repository_) return;
+    if (!repository_->enqueue_trade(trade)) {
+        OMM_LOG_WARN("repo", "trade persistence queue full order_id={} trade_id={}",
+                     trade.client_order_id, trade.trade_id);
+    }
+}
+
+void TradingEngine::persist_end_of_day_snapshot() noexcept {
+    if (!repository_) return;
+    const EndOfDaySnapshot snapshot = build_end_of_day_snapshot(
+        0,
+        instruments_,
+        n_instruments_,
+        greeks_snapshot_,
+        cfg_.pricing.vol_method,
+        vol_surfaces_,
+        wing_surfaces_,
+        orc_wing_surfaces_,
+        cfg_.product_count);
+    EndOfDaySnapshot eod_snapshot = snapshot;
+    if (eod_snapshot.trading_day == 0) {
+        const auto now = std::time(nullptr);
+        std::tm local_tm{};
+#if defined(_WIN32)
+        localtime_s(&local_tm, &now);
+#else
+        localtime_r(&now, &local_tm);
+#endif
+        eod_snapshot.trading_day = (local_tm.tm_year + 1900) * 10000
+                                 + (local_tm.tm_mon + 1) * 100
+                                 + local_tm.tm_mday;
+    }
+    (void)repository_->persist_end_of_day_snapshot(eod_snapshot);
 }
 
 // ─── Pricer thread ────────────────────────────────────────────────────────────
@@ -1170,20 +1343,39 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                 switch (ev.type) {
                 case GatewayEventType::OrderAck:
                     publish_monitor_order(ev.order);
+                    {
+                        GatewayOrderRecoveryHandle recovery{};
+                        if (gateway_->get_order_recovery_handle(ev.order.client_order_id, &recovery)) {
+                            persist_order_event(OrderPersistenceEventType::Ack, ev.order, &recovery);
+                        } else {
+                            persist_order_event(OrderPersistenceEventType::Ack, ev.order);
+                        }
+                    }
                     route_to_arbitrage = is_arb_order_id(ev.order.client_order_id);
                     break;
                 case GatewayEventType::QuoteAck:
                     publish_monitor_quote(ev.quote);
+                    {
+                        GatewayQuoteRecoveryHandle recovery{};
+                        if (gateway_->get_quote_recovery_handle(ev.quote.client_quote_id, &recovery)) {
+                            persist_quote_event(QuotePersistenceEventType::Ack, ev.quote, &recovery);
+                        } else {
+                            persist_quote_event(QuotePersistenceEventType::Ack, ev.quote);
+                        }
+                    }
                     break;
                 case GatewayEventType::QuoteCancel:
                     publish_monitor_quote(ev.quote);
+                    persist_quote_event(QuotePersistenceEventType::Cancel, ev.quote);
                     break;
                 case GatewayEventType::QuoteReject:
                     publish_monitor_quote(ev.quote);
+                    persist_quote_event(QuotePersistenceEventType::Reject, ev.quote);
                     break;
                 case GatewayEventType::OrderFill:
                 case GatewayEventType::QuoteFill:
                     publish_monitor_trade(ev.trade);
+                    persist_trade(ev.trade);
                     route_to_arbitrage = is_arb_order_id(ev.trade.client_order_id);
                     {
                         Order filled{};
@@ -1210,10 +1402,12 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                     break;
                 case GatewayEventType::OrderCancel:
                     publish_monitor_order(ev.order);
+                    persist_order_event(OrderPersistenceEventType::Cancel, ev.order);
                     route_to_arbitrage = is_arb_order_id(ev.order.client_order_id);
                     break;
                 case GatewayEventType::OrderReject:
                     publish_monitor_order(ev.order);
+                    persist_order_event(OrderPersistenceEventType::Reject, ev.order);
                     route_to_arbitrage = is_arb_order_id(ev.order.client_order_id);
                     break;
                 default:
@@ -1247,8 +1441,21 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                  drained < kDispatcherOrderBurstCap && order_buf_[i].try_pop(order);
                  ++drained) {
                 did_work = true;
-                gateway_->send_order(order);
+                const bool sent = gateway_->send_order(order);
                 publish_monitor_order(order);
+                if (sent) {
+                    GatewayOrderRecoveryHandle recovery{};
+                    if (gateway_->get_order_recovery_handle(order.client_order_id, &recovery)) {
+                        persist_order_event(OrderPersistenceEventType::Submit, order, &recovery);
+                    } else {
+                        persist_order_event(OrderPersistenceEventType::Submit, order);
+                    }
+                } else {
+                    Order rejected = order;
+                    rejected.status = OrderStatus::Rejected;
+                    rejected.ack_ts = get_monotonic_ns();
+                    persist_order_event(OrderPersistenceEventType::Reject, rejected);
+                }
             }
 
             Quote quote{};
@@ -1256,8 +1463,22 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                  drained < kDispatcherQuoteBurstCap && quote_buf_[i].try_pop(quote);
                  ++drained) {
                 did_work = true;
-                gateway_->send_quote(quote);
+                const bool sent = gateway_->send_quote(quote);
                 publish_monitor_quote(quote);
+                if (sent && (quote.bid_volume > 0 || quote.ask_volume > 0)) {
+                    GatewayQuoteRecoveryHandle recovery{};
+                    if (gateway_->get_quote_recovery_handle(quote.client_quote_id, &recovery)) {
+                        persist_quote_event(QuotePersistenceEventType::Submit, quote, &recovery);
+                    } else {
+                        persist_quote_event(QuotePersistenceEventType::Submit, quote);
+                    }
+                } else if (!sent) {
+                    Quote rejected = quote;
+                    rejected.bid_status = OrderStatus::Rejected;
+                    rejected.ask_status = OrderStatus::Rejected;
+                    rejected.ack_ts = get_monotonic_ns();
+                    persist_quote_event(QuotePersistenceEventType::Reject, rejected);
+                }
             }
 
             ArbIntent intent{};
@@ -1266,8 +1487,21 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                  ++drained) {
                 did_work = true;
                 if (intent.kind == ArbIntentKind::SubmitOrder) {
-                    gateway_->send_order(intent.order);
+                    const bool sent = gateway_->send_order(intent.order);
                     publish_monitor_order(intent.order);
+                    if (sent) {
+                        GatewayOrderRecoveryHandle recovery{};
+                        if (gateway_->get_order_recovery_handle(intent.order.client_order_id, &recovery)) {
+                            persist_order_event(OrderPersistenceEventType::Submit, intent.order, &recovery);
+                        } else {
+                            persist_order_event(OrderPersistenceEventType::Submit, intent.order);
+                        }
+                    } else {
+                        Order rejected = intent.order;
+                        rejected.status = OrderStatus::Rejected;
+                        rejected.ack_ts = get_monotonic_ns();
+                        persist_order_event(OrderPersistenceEventType::Reject, rejected);
+                    }
                 } else if (intent.kind == ArbIntentKind::CancelOrder) {
                     gateway_->cancel_order(intent.order.client_order_id, intent.order.instrument_id);
                 }
@@ -1617,6 +1851,7 @@ void TradingEngine::vol_fitter_loop() noexcept {
 void TradingEngine::risk_monitor_loop() noexcept {
     set_thread_name("omm-risk");
     pin_if_configured(cfg_.affinity.risk_monitor_core);
+    int64_t last_snapshot_ts = 0;
 
     while (!stop_flag_.load(std::memory_order_relaxed)) {
         // Process fills from risk_buf_
@@ -1634,6 +1869,25 @@ void TradingEngine::risk_monitor_loop() noexcept {
                          (int)post_risk_.delta_breach(),
                          (int)post_risk_.gamma_breach(),
                          (int)post_risk_.vega_breach());
+
+        if (repository_) {
+            const int64_t now_ns = get_monotonic_ns();
+            const int64_t snapshot_interval_ns =
+                static_cast<int64_t>(cfg_.persistence.snapshot_interval_ms) * 1'000'000LL;
+            if (snapshot_interval_ns > 0 && now_ns - last_snapshot_ts >= snapshot_interval_ns) {
+                PositionSnapshotEvent snapshot{};
+                snapshot.snapshot_ts = now_ns;
+                snapshot.n_instruments = n_instruments_;
+                const Position* positions = post_risk_.positions();
+                for (uint16_t i = 0; i < n_instruments_; ++i) {
+                    snapshot.positions[i] = positions[i];
+                }
+                if (!repository_->enqueue_positions_snapshot(snapshot)) {
+                    OMM_LOG_WARN("repo", "position snapshot queue full");
+                }
+                last_snapshot_ts = now_ns;
+            }
+        }
 
         struct timespec ts{0, 100'000'000};
         nanosleep(&ts, nullptr);
@@ -1707,6 +1961,43 @@ bool TradingEngine::submit_manual_order(const Order& o) noexcept {
     // Route through the product's order buffer so the gateway dispatcher sends it
     uint8_t prod = (o.product_index < MAX_PRODUCTS) ? o.product_index : 0;
     return order_buf_[prod].try_push(o);
+}
+
+void TradingEngine::persist_mm_params_update(int product_index,
+                                             const MMParamsConfig& params) noexcept {
+    if (!repository_ || product_index < 0 || product_index >= MAX_PRODUCTS) return;
+    MMParamsPersistenceEvent event{};
+    event.product_index = static_cast<uint8_t>(product_index);
+    event.params = params;
+    event.update_ts = get_monotonic_ns();
+    if (!repository_->enqueue_mm_params(event)) {
+        OMM_LOG_WARN("repo", "mm params queue full product={}", product_index);
+    }
+}
+
+void TradingEngine::persist_arb_params_update(int product_index,
+                                              ArbitrageStrategyType type,
+                                              const ArbParamsConfig& params) noexcept {
+    if (!repository_ || product_index < 0 || product_index >= MAX_PRODUCTS) return;
+    ArbParamsPersistenceEvent event{};
+    event.product_index = static_cast<uint8_t>(product_index);
+    event.strategy_type = type;
+    event.params = params;
+    event.update_ts = get_monotonic_ns();
+    if (!repository_->enqueue_arb_params(event)) {
+        OMM_LOG_WARN("repo", "arb params queue full product={} type={}",
+                     product_index, static_cast<int>(type));
+    }
+}
+
+void TradingEngine::persist_risk_limits_update(const SoftRiskConfig& cfg) noexcept {
+    if (!repository_) return;
+    RiskParamsPersistenceEvent event{};
+    event.params = cfg;
+    event.update_ts = get_monotonic_ns();
+    if (!repository_->enqueue_risk_params(event)) {
+        OMM_LOG_WARN("repo", "risk params queue full");
+    }
 }
 
 bool TradingEngine::cancel_order(OrderId id, uint16_t instrument_id) noexcept {

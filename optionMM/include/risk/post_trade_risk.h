@@ -80,6 +80,9 @@ public:
         cfg_.max_vega         = max_vega;
     }
 
+    void restore_positions(const Position* positions,
+                           uint16_t n_positions) noexcept;
+
     void reset() noexcept;
 
 private:

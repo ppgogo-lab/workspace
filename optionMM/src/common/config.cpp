@@ -373,6 +373,34 @@ static MonitoringConfig parse_monitoring(const YAML::Node& n) {
     return c;
 }
 
+static PersistenceConfig parse_persistence(const YAML::Node& n) {
+    PersistenceConfig c;
+    if (!n) return c;
+
+    c.enabled = get<bool>(n["enabled"], "persistence.enabled", false);
+    str_copy(c.data_path,
+             sizeof(c.data_path),
+             n["data_path"], "persistence.data_path", "data/optionmm.sqlite");
+    c.batch_max_rows = get<int>(n["batch_max_rows"], "persistence.batch_max_rows", 256);
+    c.flush_interval_ms = get<int>(n["flush_interval_ms"], "persistence.flush_interval_ms", 10);
+    c.snapshot_interval_ms = get<int>(n["snapshot_interval_ms"],
+                                      "persistence.snapshot_interval_ms", 1000);
+    c.busy_timeout_ms = get<int>(n["busy_timeout_ms"], "persistence.busy_timeout_ms", 1000);
+    if (c.batch_max_rows <= 0) {
+        throw std::runtime_error("config: persistence.batch_max_rows must be > 0");
+    }
+    if (c.flush_interval_ms < 0) {
+        throw std::runtime_error("config: persistence.flush_interval_ms must be >= 0");
+    }
+    if (c.snapshot_interval_ms <= 0) {
+        throw std::runtime_error("config: persistence.snapshot_interval_ms must be > 0");
+    }
+    if (c.busy_timeout_ms < 0) {
+        throw std::runtime_error("config: persistence.busy_timeout_ms must be >= 0");
+    }
+    return c;
+}
+
 // ─── Main loader ──────────────────────────────────────────────────────────────
 SystemConfig load_config(std::string_view path) {
     YAML::Node root;
@@ -392,6 +420,7 @@ SystemConfig load_config(std::string_view path) {
     cfg.risk      = parse_risk(root["risk"]);
     cfg.timer     = parse_timer(root["timer"]);
     cfg.monitoring = parse_monitoring(root["monitoring"]);
+    cfg.persistence = parse_persistence(root["persistence"]);
     cfg.affinity  = parse_affinity(root["thread_affinity"]);
 
     // Products (underlying option series)

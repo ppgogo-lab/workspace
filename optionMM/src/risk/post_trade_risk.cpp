@@ -13,6 +13,18 @@ void PostTradeRisk::reset() noexcept {
     vega_breach_.store(false, std::memory_order_relaxed);
 }
 
+void PostTradeRisk::restore_positions(const Position* positions,
+                                      uint16_t n_positions) noexcept {
+    reset();
+    if (positions == nullptr) return;
+
+    for (uint16_t i = 0; i < n_positions; ++i) {
+        const Position& pos = positions[i];
+        if (pos.instrument_id >= MAX_INSTRUMENTS) continue;
+        positions_[pos.instrument_id] = pos;
+    }
+}
+
 void PostTradeRisk::on_fill(const Trade& trade) noexcept {
     if (trade.instrument_id >= MAX_INSTRUMENTS) return;
 

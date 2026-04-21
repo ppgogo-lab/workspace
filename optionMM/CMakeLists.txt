@@ -101,6 +101,7 @@ find_package(spdlog REQUIRED)
 find_package(Threads REQUIRED)
 find_package(Protobuf REQUIRED)
 find_package(Ceres REQUIRED)
+find_package(SQLite3 REQUIRED)
 
 # gRPC via pkg-config (Ubuntu packages install it this way)
 find_package(PkgConfig REQUIRED)
@@ -296,20 +297,29 @@ add_library(logger_lib STATIC
 )
 target_link_libraries(logger_lib PUBLIC spdlog::spdlog Threads::Threads)
 
+add_library(persistence_lib STATIC
+    src/persistence/data_repository.cpp
+)
+target_link_libraries(persistence_lib PUBLIC
+    common_lib
+    logger_lib
+    SQLite::SQLite3
+)
+
 # ─── engine_lib ───────────────────────────────────────────────────────────────
 # Full engine: links gateway_lib which includes CTP+FEMAS SDK .so files.
 add_library(engine_lib STATIC
     src/engine/trading_engine.cpp
 )
 target_link_libraries(engine_lib PUBLIC
-    common_lib pricing_lib risk_lib strategy_lib feed_lib gateway_lib logger_lib)
+    common_lib pricing_lib risk_lib strategy_lib feed_lib gateway_lib logger_lib persistence_lib)
 
 # Test-only engine: links sim_gateway_lib (no CTP/FEMAS SDK dependencies).
 add_library(engine_lib_test STATIC
     src/engine/trading_engine.cpp
 )
 target_link_libraries(engine_lib_test PUBLIC
-    common_lib pricing_lib risk_lib strategy_lib sim_gateway_lib logger_lib)
+    common_lib pricing_lib risk_lib strategy_lib sim_gateway_lib logger_lib persistence_lib)
 
 # ─── monitoring_lib (gRPC server) ─────────────────────────────────────────────
 add_library(monitoring_lib STATIC
@@ -411,6 +421,10 @@ add_test(NAME test_femas_simulator COMMAND test_femas_simulator)
 add_executable(test_pcp_arbitrage tests/test_pcp_arbitrage.cpp)
 target_link_libraries(test_pcp_arbitrage PRIVATE strategy_lib risk_lib common_lib GTest::gtest_main Threads::Threads)
 add_test(NAME test_pcp_arbitrage COMMAND test_pcp_arbitrage)
+
+add_executable(test_data_repository tests/test_data_repository.cpp)
+target_link_libraries(test_data_repository PRIVATE persistence_lib SQLite::SQLite3 GTest::gtest_main Threads::Threads)
+add_test(NAME test_data_repository COMMAND test_data_repository)
 
 # test_latency — NOT added to ctest (run explicitly for benchmarking)
 # Build with RelWithDebInfo for realistic latency numbers.

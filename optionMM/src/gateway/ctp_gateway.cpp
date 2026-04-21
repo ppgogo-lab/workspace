@@ -290,6 +290,24 @@ bool CTPGateway::cancel_quote(QuoteId id, uint16_t instrument_id) noexcept {
     return ok;
 }
 
+bool CTPGateway::get_quote_recovery_handle(
+        QuoteId id,
+        GatewayQuoteRecoveryHandle* out) const noexcept {
+    if (out == nullptr) return false;
+    *out = GatewayQuoteRecoveryHandle{};
+
+    std::lock_guard<std::mutex> lk(quote_state_mutex_);
+    for (uint16_t instrument_id = 0; instrument_id < MAX_INSTRUMENTS; ++instrument_id) {
+        const auto& state = synthetic_quotes_[instrument_id];
+        if (!state.used || state.quote.client_quote_id != id) continue;
+        out->valid = true;
+        out->bid_order_id = state.bid_order_id;
+        out->ask_order_id = state.ask_order_id;
+        return true;
+    }
+    return false;
+}
+
 bool CTPGateway::query_instruments(Instrument* out, uint16_t* count,
                                     uint16_t max_count) {
     if (!api_ || !trading_ready_.load(std::memory_order_relaxed)) {

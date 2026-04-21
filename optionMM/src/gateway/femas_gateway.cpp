@@ -467,6 +467,150 @@ bool FEMASGateway::cancel_quote(QuoteId id, uint16_t instrument_id) noexcept {
     return cancel_order(id, instrument_id);
 }
 
+bool FEMASGateway::get_order_recovery_handle(
+        OrderId id,
+        GatewayOrderRecoveryHandle* out) const noexcept {
+    if (out == nullptr) return false;
+    *out = GatewayOrderRecoveryHandle{};
+
+    std::lock_guard<std::mutex> lk(state_mutex_);
+    for (const auto& state : order_states_) {
+        if (!state.used || state.is_quote_leg || state.client_order_id != id) continue;
+        out->valid = true;
+        out->client_quote_id = state.client_quote_id;
+        std::strncpy(out->exchange_local_id,
+                     state.exchange_local_id,
+                     sizeof(out->exchange_local_id) - 1);
+        std::strncpy(out->order_sys_id,
+                     state.order_sys_id,
+                     sizeof(out->order_sys_id) - 1);
+        return true;
+    }
+    return false;
+}
+
+bool FEMASGateway::get_quote_recovery_handle(
+        QuoteId id,
+        GatewayQuoteRecoveryHandle* out) const noexcept {
+    if (out == nullptr) return false;
+    *out = GatewayQuoteRecoveryHandle{};
+
+    std::lock_guard<std::mutex> lk(state_mutex_);
+    for (const auto& state : quote_states_) {
+        if (!state.used || state.quote.client_quote_id != id) continue;
+        out->valid = true;
+        std::strncpy(out->quote_local_id,
+                     state.quote_local_id,
+                     sizeof(out->quote_local_id) - 1);
+        std::strncpy(out->quote_sys_id,
+                     state.quote_sys_id,
+                     sizeof(out->quote_sys_id) - 1);
+        std::strncpy(out->bid_local_id,
+                     state.bid_local_id,
+                     sizeof(out->bid_local_id) - 1);
+        std::strncpy(out->ask_local_id,
+                     state.ask_local_id,
+                     sizeof(out->ask_local_id) - 1);
+        std::strncpy(out->bid_order_sys_id,
+                     state.bid_order_sys_id,
+                     sizeof(out->bid_order_sys_id) - 1);
+        std::strncpy(out->ask_order_sys_id,
+                     state.ask_order_sys_id,
+                     sizeof(out->ask_order_sys_id) - 1);
+        return true;
+    }
+    return false;
+}
+
+void FEMASGateway::restore_order_recovery(const GatewayRecoveredOrder& recovered) noexcept {
+    std::lock_guard<std::mutex> lk(state_mutex_);
+    OrderState* state = alloc_order_state();
+    if (!state) return;
+
+    state->client_order_id = recovered.order.client_order_id;
+    state->instrument_id = recovered.order.instrument_id;
+    state->product_index = recovered.order.product_index;
+    state->side = recovered.order.side;
+    state->offset = recovered.order.offset;
+    state->price = recovered.order.price;
+    state->volume = std::max<Volume>(0, recovered.order.volume - recovered.order.filled_volume);
+    state->acked = true;
+    std::strncpy(state->exchange_local_id,
+                 recovered.recovery.exchange_local_id,
+                 sizeof(state->exchange_local_id) - 1);
+    std::strncpy(state->order_sys_id,
+                 recovered.recovery.order_sys_id,
+                 sizeof(state->order_sys_id) - 1);
+}
+
+void FEMASGateway::restore_quote_recovery(const GatewayRecoveredQuote& recovered) noexcept {
+    std::lock_guard<std::mutex> lk(state_mutex_);
+    QuoteState* quote_state = alloc_quote_state();
+    OrderState* bid_state = alloc_order_state();
+    OrderState* ask_state = alloc_order_state();
+    if (!quote_state || !bid_state || !ask_state) {
+        if (quote_state) *quote_state = QuoteState{};
+        if (bid_state) *bid_state = OrderState{};
+        if (ask_state) *ask_state = OrderState{};
+        return;
+    }
+
+    quote_state->acked = true;
+    quote_state->quote = recovered.quote;
+    std::strncpy(quote_state->quote_local_id,
+                 recovered.recovery.quote_local_id,
+                 sizeof(quote_state->quote_local_id) - 1);
+    std::strncpy(quote_state->quote_sys_id,
+                 recovered.recovery.quote_sys_id,
+                 sizeof(quote_state->quote_sys_id) - 1);
+    std::strncpy(quote_state->bid_local_id,
+                 recovered.recovery.bid_local_id,
+                 sizeof(quote_state->bid_local_id) - 1);
+    std::strncpy(quote_state->ask_local_id,
+                 recovered.recovery.ask_local_id,
+                 sizeof(quote_state->ask_local_id) - 1);
+    std::strncpy(quote_state->bid_order_sys_id,
+                 recovered.recovery.bid_order_sys_id,
+                 sizeof(quote_state->bid_order_sys_id) - 1);
+    std::strncpy(quote_state->ask_order_sys_id,
+                 recovered.recovery.ask_order_sys_id,
+                 sizeof(quote_state->ask_order_sys_id) - 1);
+
+    bid_state->used = true;
+    bid_state->acked = true;
+    bid_state->is_quote_leg = true;
+    bid_state->client_quote_id = recovered.quote.client_quote_id;
+    bid_state->instrument_id = recovered.quote.instrument_id;
+    bid_state->product_index = recovered.quote.product_index;
+    bid_state->side = Side::Buy;
+    bid_state->offset = recovered.quote.bid_offset;
+    bid_state->price = recovered.quote.bid_price;
+    bid_state->volume = recovered.quote.bid_volume;
+    std::strncpy(bid_state->exchange_local_id,
+                 recovered.recovery.bid_local_id,
+                 sizeof(bid_state->exchange_local_id) - 1);
+    std::strncpy(bid_state->order_sys_id,
+                 recovered.recovery.bid_order_sys_id,
+                 sizeof(bid_state->order_sys_id) - 1);
+
+    ask_state->used = true;
+    ask_state->acked = true;
+    ask_state->is_quote_leg = true;
+    ask_state->client_quote_id = recovered.quote.client_quote_id;
+    ask_state->instrument_id = recovered.quote.instrument_id;
+    ask_state->product_index = recovered.quote.product_index;
+    ask_state->side = Side::Sell;
+    ask_state->offset = recovered.quote.ask_offset;
+    ask_state->price = recovered.quote.ask_price;
+    ask_state->volume = recovered.quote.ask_volume;
+    std::strncpy(ask_state->exchange_local_id,
+                 recovered.recovery.ask_local_id,
+                 sizeof(ask_state->exchange_local_id) - 1);
+    std::strncpy(ask_state->order_sys_id,
+                 recovered.recovery.ask_order_sys_id,
+                 sizeof(ask_state->order_sys_id) - 1);
+}
+
 bool FEMASGateway::query_instruments(Instrument* out, uint16_t* count, uint16_t max_count) {
     if (!api_ || !trading_ready_.load(std::memory_order_relaxed)) {
         *count = 0;

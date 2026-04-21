@@ -19,6 +19,7 @@
 #include "risk/pre_trade_risk.h"
 #include "risk/post_trade_risk.h"
 #include "monitoring/topic.h"
+#include "persistence/data_repository.h"
 
 #include <thread>
 #include <atomic>
@@ -162,6 +163,12 @@ public:
     bool submit_manual_order(const Order& o) noexcept;
     bool cancel_order(OrderId id, uint16_t instrument_id) noexcept;
     bool cancel_quote(QuoteId id, uint16_t instrument_id) noexcept;
+    void persist_end_of_day_snapshot() noexcept;
+    void persist_mm_params_update(int product_index, const MMParamsConfig& params) noexcept;
+    void persist_arb_params_update(int product_index,
+                                   ArbitrageStrategyType type,
+                                   const ArbParamsConfig& params) noexcept;
+    void persist_risk_limits_update(const SoftRiskConfig& cfg) noexcept;
 
     // Allow tests to push ticks directly
     [[nodiscard]] SPSCRingBuffer<MarketTick, 1024>& tick_buf() noexcept {
@@ -235,6 +242,7 @@ private:
     // ── Components ───────────────────────────────────────────────────────────
     std::unique_ptr<IGateway>      gateway_;
     std::unique_ptr<IFeedHandler>  feed_;
+    std::unique_ptr<DataRepository> repository_;
 
     // Strategy slots (one per product)
     std::array<std::unique_ptr<IMarketMaker>, MAX_PRODUCTS> strategies_;
@@ -322,6 +330,11 @@ private:
     void init_strategies() noexcept;
     void init_arbitrage_strategies() noexcept;
     void init_vol_surfaces() noexcept;
+    void init_persistence() noexcept;
+    void apply_recovery_state(const RecoveryState& state) noexcept;
+    void seed_gateway_recovery(const RecoveryState& state) noexcept;
+    void request_recovery_cancels(const RecoveryState& state) noexcept;
+    void persist_shutdown_state() noexcept;
     // Recomputes option_T_ for all products using current monotonic time.
     // Called once at startup and then every second from timer_loop.
     void refresh_option_T() noexcept;
@@ -350,6 +363,13 @@ private:
     void publish_monitor_order(const Order& order) noexcept;
     void publish_monitor_quote(const Quote& quote) noexcept;
     void publish_monitor_trade(const Trade& trade) noexcept;
+    void persist_order_event(OrderPersistenceEventType type,
+                             const Order& order,
+                             const GatewayOrderRecoveryHandle* recovery = nullptr) noexcept;
+    void persist_quote_event(QuotePersistenceEventType type,
+                             const Quote& quote,
+                             const GatewayQuoteRecoveryHandle* recovery = nullptr) noexcept;
+    void persist_trade(const Trade& trade) noexcept;
     [[nodiscard]] int find_arbitrage_slot(int product_idx,
                                           ArbitrageStrategyType type) const noexcept;
 };

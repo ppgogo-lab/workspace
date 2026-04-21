@@ -58,6 +58,9 @@ public:
                                      uint16_t instrument_id) noexcept override;
     [[nodiscard]] bool cancel_quote(QuoteId id,
                                     uint16_t instrument_id) noexcept override;
+    [[nodiscard]] bool get_quote_recovery_handle(
+            QuoteId id,
+            GatewayQuoteRecoveryHandle* out) const noexcept override;
 
     bool query_instruments(Instrument* out, uint16_t* count,
                             uint16_t max_count) override;
@@ -90,7 +93,7 @@ private:
         bool bid_active{false};
         bool ask_active{false};
     };
-    std::mutex quote_state_mutex_;
+    mutable std::mutex quote_state_mutex_;
     std::array<SyntheticQuoteState, MAX_INSTRUMENTS> synthetic_quotes_{};
 
     // ── OrderRef ↔ client_order_id mapping ───────────────────────────────────

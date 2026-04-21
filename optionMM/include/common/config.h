@@ -209,6 +209,15 @@ struct MonitoringConfig {
     MonitoringPublishMode hot_path_publish_mode{MonitoringPublishMode::Full};
 };
 
+struct PersistenceConfig {
+    bool enabled{false};
+    char data_path[260]{"data/optionmm.sqlite"};
+    int  batch_max_rows{256};
+    int  flush_interval_ms{10};
+    int  snapshot_interval_ms{1000};
+    int  busy_timeout_ms{1000};
+};
+
 // ─── Instance configuration ───────────────────────────────────────────────────
 struct InstanceConfig {
     ExchangeId exchange_id;
@@ -227,6 +236,7 @@ struct SystemConfig {
     int                 product_count{0};
     TimerConfig         timer;
     MonitoringConfig    monitoring;
+    PersistenceConfig   persistence;
     ThreadAffinityConfig affinity;
 };
 

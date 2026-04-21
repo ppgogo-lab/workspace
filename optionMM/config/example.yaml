@@ -131,6 +131,14 @@ monitoring:
   grpc_listen_addr: "0.0.0.0:50051"
   hot_path_publish_mode: deferred
 
+persistence:
+  enabled: true
+  data_path: "data/optionmm.sqlite"
+  batch_max_rows: 256
+  flush_interval_ms: 10
+  snapshot_interval_ms: 1000
+  busy_timeout_ms: 1000
+
 thread_affinity:
   feed_core: 2
   pricer_core: 3
