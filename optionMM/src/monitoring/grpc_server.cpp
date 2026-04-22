@@ -1,4 +1,5 @@
 #include "monitoring/grpc_server.h"
+#include "common/auth.h"
 #include "engine/trading_engine.h"
 #include "strategy/mm_params.h"
 #include "common/config.h"
@@ -17,9 +18,12 @@
 #include <array>
 #include <chrono>
 #include <map>
+#include <mutex>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <thread>
+#include <unordered_map>
 #include <vector>
 
 namespace omm {
@@ -121,6 +125,68 @@ omm::proto::PcpOpportunityDirection pcp_direction_to_proto(PCPMonitorDirection d
     }
 }
 
+void populate_user_info(const PersistedUser& user, omm::proto::UserInfo* msg) {
+    if (msg == nullptr) return;
+    msg->set_user_id(user.user_id);
+    msg->set_username(user.username);
+    msg->set_display_name(user.display_name);
+    msg->set_active(user.active);
+    msg->set_default_book_id(user.default_book_id);
+}
+
+void populate_book_info(const PersistedBook& book, omm::proto::BookInfo* msg) {
+    if (msg == nullptr) return;
+    msg->set_book_id(book.book_id);
+    msg->set_book_code(book.book_code);
+    msg->set_display_name(book.display_name);
+    msg->set_active(book.active);
+    msg->set_description(book.description);
+}
+
+class SessionManager {
+public:
+    struct Session {
+        std::string token;
+        PersistedUser user{};
+    };
+
+    [[nodiscard]] Session create_session(const PersistedUser& user) {
+        Session session{};
+        session.token = generate_session_token();
+        session.user = user;
+        std::lock_guard<std::mutex> lock(mutex_);
+        sessions_[session.token] = session.user;
+        return session;
+    }
+
+    [[nodiscard]] bool get_session(std::string_view token, PersistedUser* out_user) const {
+        std::lock_guard<std::mutex> lock(mutex_);
+        const auto it = sessions_.find(std::string(token));
+        if (it == sessions_.end()) return false;
+        if (out_user != nullptr) *out_user = it->second;
+        return true;
+    }
+
+    [[nodiscard]] bool is_active(std::string_view token) const {
+        return get_session(token, nullptr);
+    }
+
+    [[nodiscard]] bool revoke(std::string_view token, bool* out_zero_sessions) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        const auto it = sessions_.find(std::string(token));
+        if (it == sessions_.end()) return false;
+        sessions_.erase(it);
+        if (out_zero_sessions != nullptr) {
+            *out_zero_sessions = sessions_.empty();
+        }
+        return true;
+    }
+
+private:
+    mutable std::mutex mutex_;
+    std::unordered_map<std::string, PersistedUser> sessions_;
+};
+
 void populate_order_update(const TradingEngine& engine, const Order& order, omm::proto::OrderUpdate* msg) {
     msg->set_client_order_id(order.client_order_id);
     msg->set_instrument_id(order.instrument_id);
@@ -136,6 +202,7 @@ void populate_order_update(const TradingEngine& engine, const Order& order, omm:
     msg->set_side(side_name(order.side));
     msg->set_price(order.price);
     msg->set_volume(order.volume);
+    msg->set_book_id(order.book_id);
 }
 
 void populate_trade_update(const Trade& trade, omm::proto::OrderUpdate* msg) {
@@ -150,6 +217,7 @@ void populate_trade_update(const Trade& trade, omm::proto::OrderUpdate* msg) {
     msg->set_price(trade.fill_price);
     msg->set_volume(trade.fill_volume);
     msg->set_exchange_trade_id(trade.trade_id);
+    msg->set_book_id(trade.book_id);
 }
 
 void populate_quote_update(const Quote& quote,
@@ -164,6 +232,7 @@ void populate_quote_update(const Quote& quote,
     msg->set_ask_volume(quote.ask_volume);
     msg->set_status(std::string(status));
     msg->set_ts_ns(ts_ns);
+    msg->set_book_id(quote.book_id);
 }
 
 void populate_tick(const MarketTick& tick, omm::proto::Tick* msg) {
@@ -295,11 +364,73 @@ class TradingMonitorServiceImpl final : public omm::proto::TradingMonitor::Servi
 public:
     explicit TradingMonitorServiceImpl(TradingEngine& engine) : engine_(engine) {}
 
-    grpc::Status SetStrategyParams(
+    grpc::Status Login(
             grpc::ServerContext*,
+            const omm::proto::LoginRequest* req,
+            omm::proto::LoginResponse* resp) override
+    {
+        const PersistedUser* user = find_user(req->username());
+        if (user == nullptr || !user->active || !password_matches(*user, req->password())) {
+            resp->set_ok(false);
+            resp->set_message("invalid username or password");
+            return grpc::Status::OK;
+        }
+
+        SessionManager::Session session{};
+        try {
+            session = session_manager_.create_session(*user);
+        } catch (const std::exception& e) {
+            return grpc::Status(grpc::StatusCode::INTERNAL, e.what());
+        }
+        engine_.note_session_activated();
+        resp->set_ok(true);
+        resp->set_session_token(session.token);
+        populate_user_info(session.user, resp->mutable_user());
+        return grpc::Status::OK;
+    }
+
+    grpc::Status Logout(
+            grpc::ServerContext* ctx,
+            const omm::proto::LogoutRequest*,
+            omm::proto::LogoutResponse* resp) override
+    {
+        std::string token;
+        PersistedUser user{};
+        grpc::Status auth_status = authenticate(ctx, &user, &token);
+        if (!auth_status.ok()) return auth_status;
+
+        bool zero_sessions = false;
+        if (!session_manager_.revoke(token, &zero_sessions)) {
+            return grpc::Status(grpc::StatusCode::UNAUTHENTICATED, "invalid session");
+        }
+        if (zero_sessions) {
+            engine_.shutdown_on_zero_sessions();
+        }
+        resp->set_ok(true);
+        resp->set_triggered_shutdown(zero_sessions);
+        return grpc::Status::OK;
+    }
+
+    grpc::Status WhoAmI(
+            grpc::ServerContext* ctx,
+            const omm::proto::WhoAmIRequest*,
+            omm::proto::WhoAmIResponse* resp) override
+    {
+        PersistedUser user{};
+        grpc::Status auth_status = authenticate(ctx, &user, nullptr);
+        if (!auth_status.ok()) return auth_status;
+        resp->set_ok(true);
+        populate_user_info(user, resp->mutable_user());
+        return grpc::Status::OK;
+    }
+
+    grpc::Status SetStrategyParams(
+            grpc::ServerContext* ctx,
             const omm::proto::SetStrategyParamsRequest* req,
             omm::proto::SetStrategyParamsResponse* resp) override
     {
+        grpc::Status auth_status = authenticate(ctx, nullptr, nullptr);
+        if (!auth_status.ok()) return auth_status;
         int idx = static_cast<int>(req->product_index());
         if (idx < 0 || idx >= engine_.product_count()) {
             resp->set_ok(false);
@@ -354,10 +485,12 @@ public:
     }
 
     grpc::Status StartStrategy(
-            grpc::ServerContext*,
+            grpc::ServerContext* ctx,
             const omm::proto::StartStopRequest* req,
             omm::proto::StartStopResponse* resp) override
     {
+        grpc::Status auth_status = authenticate(ctx, nullptr, nullptr);
+        if (!auth_status.ok()) return auth_status;
         set_enabled(req->product_index(), true);
         OMM_LOG_INFO("grpc", "StartStrategy product={}", req->product_index());
         resp->set_ok(true);
@@ -365,10 +498,12 @@ public:
     }
 
     grpc::Status StopStrategy(
-            grpc::ServerContext*,
+            grpc::ServerContext* ctx,
             const omm::proto::StartStopRequest* req,
             omm::proto::StartStopResponse* resp) override
     {
+        grpc::Status auth_status = authenticate(ctx, nullptr, nullptr);
+        if (!auth_status.ok()) return auth_status;
         set_enabled(req->product_index(), false);
         OMM_LOG_INFO("grpc", "StopStrategy product={}", req->product_index());
         resp->set_ok(true);
@@ -376,10 +511,12 @@ public:
     }
 
     grpc::Status SetArbStrategyParams(
-            grpc::ServerContext*,
+            grpc::ServerContext* ctx,
             const omm::proto::SetArbStrategyParamsRequest* req,
             omm::proto::SetArbStrategyParamsResponse* resp) override
     {
+        grpc::Status auth_status = authenticate(ctx, nullptr, nullptr);
+        if (!auth_status.ok()) return auth_status;
         ArbitrageStrategyType type = ArbitrageStrategyType::None;
         if (!arb_strategy_type_from_proto(req->id().strategy_type(), &type)) {
             resp->set_ok(false);
@@ -419,10 +556,12 @@ public:
     }
 
     grpc::Status StartArbStrategy(
-            grpc::ServerContext*,
+            grpc::ServerContext* ctx,
             const omm::proto::ArbStartStopRequest* req,
             omm::proto::ArbStartStopResponse* resp) override
     {
+        grpc::Status auth_status = authenticate(ctx, nullptr, nullptr);
+        if (!auth_status.ok()) return auth_status;
         ArbitrageStrategyType type = ArbitrageStrategyType::None;
         if (!arb_strategy_type_from_proto(req->id().strategy_type(), &type)) {
             resp->set_ok(false);
@@ -442,10 +581,12 @@ public:
     }
 
     grpc::Status StopArbStrategy(
-            grpc::ServerContext*,
+            grpc::ServerContext* ctx,
             const omm::proto::ArbStartStopRequest* req,
             omm::proto::ArbStartStopResponse* resp) override
     {
+        grpc::Status auth_status = authenticate(ctx, nullptr, nullptr);
+        if (!auth_status.ok()) return auth_status;
         ArbitrageStrategyType type = ArbitrageStrategyType::None;
         if (!arb_strategy_type_from_proto(req->id().strategy_type(), &type)) {
             resp->set_ok(false);
@@ -465,10 +606,12 @@ public:
     }
 
     grpc::Status SetRiskThreshold(
-            grpc::ServerContext*,
+            grpc::ServerContext* ctx,
             const omm::proto::SetRiskThresholdRequest* req,
             omm::proto::SetRiskThresholdResponse* resp) override
     {
+        grpc::Status auth_status = authenticate(ctx, nullptr, nullptr);
+        if (!auth_status.ok()) return auth_status;
         const auto& t = req->threshold();
         engine_.post_risk_mutable().set_limits(
             t.max_net_position(), t.max_delta(), t.max_gamma(), t.max_vega());
@@ -480,10 +623,13 @@ public:
     }
 
     grpc::Status SendManualOrder(
-            grpc::ServerContext*,
+            grpc::ServerContext* ctx,
             const omm::proto::ManualOrderRequest* req,
             omm::proto::ManualOrderResponse* resp) override
     {
+        PersistedUser user{};
+        grpc::Status auth_status = authenticate(ctx, &user, nullptr);
+        if (!auth_status.ok()) return auth_status;
         Order o{};
         o.instrument_id   = static_cast<uint16_t>(req->instrument_id());
         o.side            = (req->side() == "sell") ? Side::Sell : Side::Buy;
@@ -499,20 +645,33 @@ public:
             o.product_index = instr.product_index;
             o.exchange_id = instr.exchange_id;
         }
+        const BookId requested_book = req->has_book_id()
+            ? static_cast<BookId>(req->book_id())
+            : user.default_book_id;
+        const PersistedBook* book = find_book(requested_book);
+        if (book == nullptr || !book->active || requested_book == INVALID_BOOK_ID) {
+            resp->set_ok(false);
+            resp->set_message("manual order requires a valid active book");
+            return grpc::Status::OK;
+        }
+        o.book_id = requested_book;
 
         bool ok = engine_.submit_manual_order(o);
         OMM_LOG_INFO("grpc", "SendManualOrder instr={} side={} qty={} price={:.4f} ok={}",
                      o.instrument_id, req->side(), o.volume, o.price, (int)ok);
         resp->set_ok(ok);
         resp->set_order_id(o.client_order_id);
+        resp->set_book_id(o.book_id);
         return grpc::Status::OK;
     }
 
     grpc::Status CancelOrder(
-            grpc::ServerContext*,
+            grpc::ServerContext* ctx,
             const omm::proto::CancelOrderRequest* req,
             omm::proto::CancelOrderResponse* resp) override
     {
+        grpc::Status auth_status = authenticate(ctx, nullptr, nullptr);
+        if (!auth_status.ok()) return auth_status;
         bool ok = engine_.cancel_order(req->order_id(),
                                        static_cast<uint16_t>(req->instrument_id()));
         OMM_LOG_INFO("grpc", "CancelOrder order_id={} ok={}", req->order_id(), (int)ok);
@@ -521,10 +680,12 @@ public:
     }
 
     grpc::Status CancelQuote(
-            grpc::ServerContext*,
+            grpc::ServerContext* ctx,
             const omm::proto::CancelQuoteRequest* req,
             omm::proto::CancelQuoteResponse* resp) override
     {
+        grpc::Status auth_status = authenticate(ctx, nullptr, nullptr);
+        if (!auth_status.ok()) return auth_status;
         bool ok = engine_.cancel_quote(req->quote_id(),
                                        static_cast<uint16_t>(req->instrument_id()));
         OMM_LOG_INFO("grpc", "CancelQuote quote_id={} ok={}", req->quote_id(), (int)ok);
@@ -533,10 +694,13 @@ public:
     }
 
     grpc::Status GetSnapshot(
-            grpc::ServerContext*,
+            grpc::ServerContext* ctx,
             const omm::proto::SnapshotRequest*,
             omm::proto::SnapshotResponse* resp) override
     {
+        PersistedUser user{};
+        grpc::Status auth_status = authenticate(ctx, &user, nullptr);
+        if (!auth_status.ok()) return auth_status;
         const auto* greeks_snap = engine_.greeks_snapshot();
         for (int i = 0; i < engine_.n_instruments(); ++i) {
             const auto& g = greeks_snap[i];
@@ -724,6 +888,51 @@ public:
             pi->set_exchange_id(std::string(instr.exchange_id.view()));
             pi->set_expiry_date(instr.expiry_date);
         }
+
+        populate_user_info(user, resp->mutable_current_user());
+        for (const auto& book : engine_.identity_state().books) {
+            populate_book_info(book, resp->add_books());
+        }
+
+        std::vector<BookPosition> book_positions(
+            engine_.identity_state().books.size()
+            * static_cast<std::size_t>(std::max(1, engine_.n_instruments())));
+        const int book_position_count =
+            engine_.book_positions_snapshot(book_positions.data(),
+                                            static_cast<int>(book_positions.size()));
+        for (int i = 0; i < book_position_count; ++i) {
+            const BookPosition& pos = book_positions[static_cast<std::size_t>(i)];
+            auto* msg = resp->add_book_positions();
+            msg->set_book_id(pos.book_id);
+            msg->set_instrument_id(pos.instrument_id);
+            msg->set_product_index(pos.product_index);
+            msg->set_net_position(pos.net_position);
+            msg->set_long_position(pos.long_position);
+            msg->set_short_position(pos.short_position);
+            msg->set_avg_long_price(pos.avg_long_price);
+            msg->set_avg_short_price(pos.avg_short_price);
+            msg->set_realized_pnl(pos.realized_pnl);
+        }
+
+        std::vector<BookPortfolioGreeks> book_portfolios(
+            engine_.identity_state().books.size()
+            * static_cast<std::size_t>(MAX_PRODUCTS + 1));
+        const int book_portfolio_count =
+            engine_.book_portfolios_snapshot(book_portfolios.data(),
+                                             static_cast<int>(book_portfolios.size()));
+        for (int i = 0; i < book_portfolio_count; ++i) {
+            const BookPortfolioGreeks& portfolio = book_portfolios[static_cast<std::size_t>(i)];
+            auto* msg = resp->add_book_portfolios();
+            msg->set_book_id(portfolio.book_id);
+            msg->set_product_index(portfolio.product_index);
+            msg->set_total_delta(portfolio.net_delta);
+            msg->set_total_gamma(portfolio.net_gamma);
+            msg->set_total_vega(portfolio.net_vega);
+            msg->set_total_theta(portfolio.net_theta);
+            msg->set_realized_pnl(portfolio.pnl_realized);
+            msg->set_unrealized_pnl(portfolio.pnl_unrealized);
+            msg->set_calc_ts_ns(portfolio.calc_ts);
+        }
         return grpc::Status::OK;
     }
 
@@ -732,7 +941,13 @@ public:
             const omm::proto::StreamRequest* req,
             grpc::ServerWriter<omm::proto::Greeks>* writer) override
     {
+        std::string token;
+        grpc::Status auth_status = authenticate(ctx, nullptr, &token);
+        if (!auth_status.ok()) return auth_status;
         while (!ctx->IsCancelled()) {
+            if (!session_manager_.is_active(token)) {
+                return grpc::Status(grpc::StatusCode::UNAUTHENTICATED, "session expired");
+            }
             const auto* snap = engine_.greeks_snapshot();
             for (int i = 0; i < engine_.n_instruments(); ++i) {
                 const auto& g = snap[i];
@@ -761,7 +976,13 @@ public:
             const omm::proto::StreamRequest* req,
             grpc::ServerWriter<omm::proto::Position>* writer) override
     {
+        std::string token;
+        grpc::Status auth_status = authenticate(ctx, nullptr, &token);
+        if (!auth_status.ok()) return auth_status;
         while (!ctx->IsCancelled()) {
+            if (!session_manager_.is_active(token)) {
+                return grpc::Status(grpc::StatusCode::UNAUTHENTICATED, "session expired");
+            }
             const auto* pos_snap = engine_.post_risk().positions();
             for (int i = 0; i < engine_.n_instruments(); ++i) {
                 const auto& pos = pos_snap[i];
@@ -785,6 +1006,9 @@ public:
             const omm::proto::StreamRequest* req,
             grpc::ServerWriter<omm::proto::RiskAlert>* writer) override
     {
+        std::string token;
+        grpc::Status auth_status = authenticate(ctx, nullptr, &token);
+        if (!auth_status.ok()) return auth_status;
         std::array<uint64_t, MAX_PRODUCTS> cursors{};
         for (int i = 0; i < engine_.product_count() && i < static_cast<int>(MAX_PRODUCTS); ++i) {
             cursors[i] = engine_.monitor_alerts(i).latest_seq();
@@ -794,6 +1018,9 @@ public:
         bool sent_gamma_breach = false;
         bool sent_vega_breach = false;
         while (!ctx->IsCancelled()) {
+            if (!session_manager_.is_active(token)) {
+                return grpc::Status(grpc::StatusCode::UNAUTHENTICATED, "session expired");
+            }
             const auto& pr = engine_.post_risk();
             auto send = [&](omm::proto::RiskAlert::AlertType t, const char* msg) {
                 omm::proto::RiskAlert alert;
@@ -856,9 +1083,15 @@ public:
             const omm::proto::StreamRequest* req,
             grpc::ServerWriter<omm::proto::Tick>* writer) override
     {
+        std::string token;
+        grpc::Status auth_status = authenticate(ctx, nullptr, &token);
+        if (!auth_status.ok()) return auth_status;
         uint64_t cursor = engine_.monitor_ticks().latest_seq();
         MarketTick tick{};
         while (!ctx->IsCancelled()) {
+            if (!session_manager_.is_active(token)) {
+                return grpc::Status(grpc::StatusCode::UNAUTHENTICATED, "session expired");
+            }
             bool wrote = false;
             while (engine_.monitor_ticks().read_next(cursor, tick)) {
                 if (!instrument_in_scope(engine_, req->product_index(), tick.instrument_id)) continue;
@@ -877,9 +1110,15 @@ public:
             const omm::proto::StreamRequest* req,
             grpc::ServerWriter<omm::proto::OrderUpdate>* writer) override
     {
+        std::string token;
+        grpc::Status auth_status = authenticate(ctx, nullptr, &token);
+        if (!auth_status.ok()) return auth_status;
         uint64_t cursor = engine_.monitor_orders().latest_seq();
         Order order{};
         while (!ctx->IsCancelled()) {
+            if (!session_manager_.is_active(token)) {
+                return grpc::Status(grpc::StatusCode::UNAUTHENTICATED, "session expired");
+            }
             bool wrote = false;
             while (engine_.monitor_orders().read_next(cursor, order)) {
                 if (!product_in_scope(req->product_index(), order.product_index)) continue;
@@ -898,9 +1137,15 @@ public:
             const omm::proto::StreamRequest* req,
             grpc::ServerWriter<omm::proto::QuoteUpdate>* writer) override
     {
+        std::string token;
+        grpc::Status auth_status = authenticate(ctx, nullptr, &token);
+        if (!auth_status.ok()) return auth_status;
         uint64_t cursor = engine_.monitor_quotes().latest_seq();
         Quote quote{};
         while (!ctx->IsCancelled()) {
+            if (!session_manager_.is_active(token)) {
+                return grpc::Status(grpc::StatusCode::UNAUTHENTICATED, "session expired");
+            }
             bool wrote = false;
             while (engine_.monitor_quotes().read_next(cursor, quote)) {
                 if (!product_in_scope(req->product_index(), quote.product_index)) continue;
@@ -922,9 +1167,15 @@ public:
             const omm::proto::StreamRequest* req,
             grpc::ServerWriter<omm::proto::OrderUpdate>* writer) override
     {
+        std::string token;
+        grpc::Status auth_status = authenticate(ctx, nullptr, &token);
+        if (!auth_status.ok()) return auth_status;
         uint64_t cursor = engine_.monitor_trades().latest_seq();
         Trade trade{};
         while (!ctx->IsCancelled()) {
+            if (!session_manager_.is_active(token)) {
+                return grpc::Status(grpc::StatusCode::UNAUTHENTICATED, "session expired");
+            }
             bool wrote = false;
             while (engine_.monitor_trades().read_next(cursor, trade)) {
                 if (!product_in_scope(req->product_index(), trade.product_index)) continue;
@@ -943,7 +1194,13 @@ public:
             const omm::proto::StreamRequest* req,
             grpc::ServerWriter<omm::proto::VolSurface>* writer) override
     {
+        std::string token;
+        grpc::Status auth_status = authenticate(ctx, nullptr, &token);
+        if (!auth_status.ok()) return auth_status;
         while (!ctx->IsCancelled()) {
+            if (!session_manager_.is_active(token)) {
+                return grpc::Status(grpc::StatusCode::UNAUTHENTICATED, "session expired");
+            }
             for (int p = 0; p < engine_.product_count(); ++p) {
                 if (!product_in_scope(req->product_index(), p)) continue;
 
@@ -1005,6 +1262,65 @@ public:
 
 private:
     TradingEngine& engine_;
+    SessionManager session_manager_{};
+
+    [[nodiscard]] static std::string_view trim_bearer_prefix(std::string_view value) noexcept {
+        constexpr std::string_view kBearer = "Bearer ";
+        constexpr std::string_view kBearerLower = "bearer ";
+        if (value.rfind(kBearer, 0) == 0) return value.substr(kBearer.size());
+        if (value.rfind(kBearerLower, 0) == 0) return value.substr(kBearerLower.size());
+        return {};
+    }
+
+    [[nodiscard]] std::optional<std::string> extract_token(grpc::ServerContext* ctx) const {
+        if (ctx == nullptr) return std::nullopt;
+        const auto& metadata = ctx->client_metadata();
+        const auto it = metadata.find("authorization");
+        if (it == metadata.end()) return std::nullopt;
+        const std::string_view raw(it->second.data(), it->second.length());
+        const std::string_view token = trim_bearer_prefix(raw);
+        if (token.empty()) return std::nullopt;
+        return std::string(token);
+    }
+
+    grpc::Status authenticate(grpc::ServerContext* ctx,
+                              PersistedUser* out_user,
+                              std::string* out_token) const {
+        const std::optional<std::string> token = extract_token(ctx);
+        if (!token.has_value()) {
+            return grpc::Status(grpc::StatusCode::UNAUTHENTICATED, "missing bearer token");
+        }
+        PersistedUser user{};
+        if (!session_manager_.get_session(*token, &user)) {
+            return grpc::Status(grpc::StatusCode::UNAUTHENTICATED, "invalid session");
+        }
+        if (out_user != nullptr) *out_user = user;
+        if (out_token != nullptr) *out_token = *token;
+        return grpc::Status::OK;
+    }
+
+    [[nodiscard]] const PersistedUser* find_user(std::string_view username) const noexcept {
+        for (const auto& user : engine_.identity_state().users) {
+            if (username == user.username) return &user;
+        }
+        return nullptr;
+    }
+
+    [[nodiscard]] const PersistedBook* find_book(BookId book_id) const noexcept {
+        for (const auto& book : engine_.identity_state().books) {
+            if (book.book_id == book_id) return &book;
+        }
+        return nullptr;
+    }
+
+    [[nodiscard]] static bool password_matches(const PersistedUser& user,
+                                               std::string_view password) noexcept {
+        if (user.password_hash[0] == '\0') return false;
+        if (password_hash_encoded(user.password_hash)) {
+            return verify_password(password, user.password_hash);
+        }
+        return password == user.password_hash;
+    }
 
     void set_enabled(int product_index, bool enabled) {
         if (product_index < 0) {

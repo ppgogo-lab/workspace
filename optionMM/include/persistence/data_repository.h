@@ -118,6 +118,37 @@ struct EndOfDaySnapshot {
     PersistedVolModelSlice model_slices[MAX_PRODUCTS * MAX_EXPIRIES]{};
 };
 
+struct PersistedBook {
+    BookId book_id{INVALID_BOOK_ID};
+    char   book_code[32]{};
+    char   display_name[64]{};
+    bool   active{true};
+    char   description[128]{};
+};
+
+struct PersistedUser {
+    UserId user_id{INVALID_USER_ID};
+    char   username[32]{};
+    char   display_name[64]{};
+    char   password_hash[256]{};
+    bool   active{true};
+    BookId default_book_id{INVALID_BOOK_ID};
+};
+
+struct PersistedArbBookBinding {
+    uint8_t               product_index{0xFF};
+    ArbitrageStrategyType strategy_type{ArbitrageStrategyType::None};
+    uint8_t               _pad0[2]{};
+    BookId                book_id{INVALID_BOOK_ID};
+};
+
+struct IdentityState {
+    std::vector<PersistedUser> users;
+    std::vector<PersistedBook> books;
+    std::array<BookId, MAX_PRODUCTS> mm_book_ids{};
+    std::vector<PersistedArbBookBinding> arb_book_bindings;
+};
+
 struct RecoveryState {
     struct ProductParamsState {
         bool valid{false};
@@ -160,7 +191,9 @@ public:
     [[nodiscard]] bool is_enabled() const noexcept { return cfg_.enabled; }
 
     bool persist_instruments();
+    bool sync_identity_state(const SystemConfig& cfg, IdentityState* out);
     bool load_recovery_state(RecoveryState* out);
+    bool load_trade_history(std::vector<Trade>* out);
     bool persist_end_of_day_snapshot(const EndOfDaySnapshot& snapshot);
 
     bool enqueue_order_event(const OrderPersistenceEvent& event) noexcept;
@@ -190,6 +223,10 @@ private:
     bool prepare_statements_locked();
     void finalize_statements_locked() noexcept;
     void close_locked() noexcept;
+    bool load_identity_locked(IdentityState* out);
+    bool seed_identity_locked(const SystemConfig& cfg);
+    bool migrate_identity_schema_locked();
+    bool migrate_book_columns_locked();
 
     bool flush_once_locked(int max_rows);
     bool write_order_event_locked(const OrderPersistenceEvent& event);
@@ -255,6 +292,12 @@ private:
     sqlite3_stmt* stmt_delete_eod_greeks_for_day_{nullptr};
     sqlite3_stmt* stmt_delete_eod_model_params_for_day_{nullptr};
     sqlite3_stmt* stmt_delete_eod_instruments_for_day_{nullptr};
+    sqlite3_stmt* stmt_delete_books_{nullptr};
+    sqlite3_stmt* stmt_delete_users_{nullptr};
+    sqlite3_stmt* stmt_delete_strategy_bindings_{nullptr};
+    sqlite3_stmt* stmt_upsert_book_{nullptr};
+    sqlite3_stmt* stmt_upsert_user_{nullptr};
+    sqlite3_stmt* stmt_upsert_strategy_binding_{nullptr};
 };
 
 EndOfDaySnapshot build_end_of_day_snapshot(

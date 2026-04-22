@@ -25,6 +25,9 @@
 #include <atomic>
 #include <memory>
 #include <array>
+#include <mutex>
+#include <unordered_map>
+#include <vector>
 
 namespace omm {
 
@@ -154,6 +157,14 @@ public:
                                              bool enabled) noexcept;
     [[nodiscard]] AtomicArbParams* arbitrage_params(int product_idx,
                                                     ArbitrageStrategyType type) noexcept;
+    [[nodiscard]] const IdentityState& identity_state() const noexcept { return identity_state_; }
+    [[nodiscard]] bool zero_session_shutdown_active() const noexcept {
+        return strategy_dispatch_suspended_.load(std::memory_order_acquire);
+    }
+    [[nodiscard]] int book_positions_snapshot(BookPosition* out, int max_count) const noexcept;
+    [[nodiscard]] int book_portfolios_snapshot(BookPortfolioGreeks* out, int max_count) const noexcept;
+    void note_session_activated() noexcept;
+    void shutdown_on_zero_sessions() noexcept;
 
     // Manual order submission from gRPC (bypasses strategy, goes direct to gateway dispatcher)
     [[nodiscard]] OrderId next_manual_order_id() noexcept {
@@ -183,6 +194,17 @@ public:
     }
 
 private:
+    struct LiveOrderState {
+        Order order{};
+    };
+
+    struct LiveQuoteState {
+        Quote quote{};
+        GatewayQuoteRecoveryHandle recovery{};
+        Volume remaining_bid{0};
+        Volume remaining_ask{0};
+    };
+
     SystemConfig cfg_;
 
     // ── Ring buffers (engine owns all) ───────────────────────────────────────
@@ -260,6 +282,9 @@ private:
     std::array<VolSurfaceManager<SVIVolSurface>,  MAX_PRODUCTS> vol_surfaces_;
     std::array<VolSurfaceManager<WingVolSurface>, MAX_PRODUCTS> wing_surfaces_;
     std::array<VolSurfaceManager<OrcWingVolSurface>, MAX_PRODUCTS> orc_wing_surfaces_;
+    IdentityState identity_state_{};
+    std::array<BookId, MAX_PRODUCTS> mm_book_ids_{};
+    std::array<std::array<BookId, MAX_ARBITRAGE_STRATEGIES_PER_PRODUCT>, MAX_PRODUCTS> arb_book_ids_{};
 
     // ── Instrument registry ───────────────────────────────────────────────────
     Instrument instruments_[MAX_INSTRUMENTS]{};
@@ -301,10 +326,17 @@ private:
     MonitoringTopic<Quote, 4096>      monitor_quotes_;
     MonitoringTopic<Trade, 4096>      monitor_trades_;
     std::array<MonitoringTopic<SystemAlert, 256>, MAX_PRODUCTS> monitor_alerts_;
+    mutable std::mutex live_state_mutex_;
+    std::unordered_map<OrderId, LiveOrderState> live_orders_;
+    std::unordered_map<QuoteId, LiveQuoteState> live_quotes_;
+    std::unordered_map<OrderId, QuoteId> quote_leg_to_quote_;
+    mutable std::mutex book_state_mutex_;
+    std::unordered_map<uint64_t, BookPosition> book_positions_;
 
     // ── Threads ───────────────────────────────────────────────────────────────
     std::atomic<bool> stop_flag_{false};
     std::atomic<bool> gateway_dispatcher_running_{false};
+    std::atomic<bool> strategy_dispatch_suspended_{false};
     std::thread feed_thread_;
     std::thread pricer_thread_;
     std::thread strategy_threads_[MAX_PRODUCTS];
@@ -331,7 +363,10 @@ private:
     void init_arbitrage_strategies() noexcept;
     void init_vol_surfaces() noexcept;
     void init_persistence() noexcept;
+    void init_identity_from_config() noexcept;
+    void apply_identity_state(const IdentityState& state) noexcept;
     void apply_recovery_state(const RecoveryState& state) noexcept;
+    void rebuild_book_state_from_history() noexcept;
     void seed_gateway_recovery(const RecoveryState& state) noexcept;
     void request_recovery_cancels(const RecoveryState& state) noexcept;
     void persist_shutdown_state() noexcept;
@@ -370,6 +405,21 @@ private:
                              const Quote& quote,
                              const GatewayQuoteRecoveryHandle* recovery = nullptr) noexcept;
     void persist_trade(const Trade& trade) noexcept;
+    void rebuild_book_position_locked(const Trade& trade) noexcept;
+    void track_live_order_submit(const Order& order) noexcept;
+    void track_live_quote_submit(const Quote& quote,
+                                 const GatewayQuoteRecoveryHandle* recovery) noexcept;
+    void handle_gateway_order_update(Order& order,
+                                     GatewayEventType type) noexcept;
+    void handle_gateway_quote_update(Quote& quote,
+                                     GatewayEventType type,
+                                     const GatewayQuoteRecoveryHandle* recovery = nullptr) noexcept;
+    void handle_gateway_fill(Trade* trade, GatewayEventType* type) noexcept;
+    void cancel_all_live_orders_and_quotes() noexcept;
+    [[nodiscard]] BookId arb_book_id_for_type(int product_idx,
+                                              ArbitrageStrategyType type) const noexcept;
+    [[nodiscard]] static uint64_t book_position_key(BookId book_id,
+                                                    uint16_t instrument_id) noexcept;
     [[nodiscard]] int find_arbitrage_slot(int product_idx,
                                           ArbitrageStrategyType type) const noexcept;
 };

@@ -2,6 +2,7 @@
 
 #include <sqlite3.h>
 
+#include "common/auth.h"
 #include "persistence/data_repository.h"
 
 #include <cstdio>
@@ -183,6 +184,7 @@ TEST(DataRepositoryTest, PersistsAndRecoversLiveState) {
         quote_submit.quote.ask_price = 12.5;
         quote_submit.quote.bid_volume = 5;
         quote_submit.quote.ask_volume = 4;
+        quote_submit.quote.book_id = 201;
         quote_submit.quote.send_ts = 105;
         quote_submit.recovery.valid = true;
         quote_submit.recovery.bid_order_id = 1501;
@@ -203,6 +205,7 @@ TEST(DataRepositoryTest, PersistsAndRecoversLiveState) {
         quote_fill.offset = OffsetFlag::Open;
         quote_fill.fill_price = 12.0;
         quote_fill.fill_volume = 2;
+        quote_fill.book_id = 201;
         quote_fill.fill_ts = 106;
         EXPECT_TRUE(repo.enqueue_trade(quote_fill));
 
@@ -219,6 +222,7 @@ TEST(DataRepositoryTest, PersistsAndRecoversLiveState) {
         order_submit.order.status = OrderStatus::New;
         order_submit.order.price = 12.8;
         order_submit.order.volume = 7;
+        order_submit.order.book_id = 202;
         order_submit.order.send_ts = 107;
         order_submit.recovery.valid = true;
         copy_cstr(order_submit.recovery.exchange_local_id,
@@ -240,6 +244,7 @@ TEST(DataRepositoryTest, PersistsAndRecoversLiveState) {
         order_fill.offset = OffsetFlag::Open;
         order_fill.fill_price = 12.8;
         order_fill.fill_volume = 3;
+        order_fill.book_id = 202;
         order_fill.fill_ts = 108;
         EXPECT_TRUE(repo.enqueue_trade(order_fill));
 
@@ -276,18 +281,26 @@ TEST(DataRepositoryTest, PersistsAndRecoversLiveState) {
 
         ASSERT_EQ(state.live_quotes.size(), 1u);
         EXPECT_EQ(state.live_quotes[0].quote.client_quote_id, 501u);
+        EXPECT_EQ(state.live_quotes[0].quote.book_id, 201u);
         EXPECT_EQ(state.live_quotes[0].quote.bid_volume, 3);
         EXPECT_EQ(state.live_quotes[0].quote.ask_volume, 4);
         EXPECT_STREQ(state.live_quotes[0].recovery.quote_sys_id, "QSYS-1");
 
         ASSERT_EQ(state.live_orders.size(), 1u);
         EXPECT_EQ(state.live_orders[0].order.client_order_id, 601u);
+        EXPECT_EQ(state.live_orders[0].order.book_id, 202u);
         EXPECT_EQ(state.live_orders[0].order.volume, 7);
         EXPECT_EQ(state.live_orders[0].order.filled_volume, 3);
         EXPECT_EQ(state.live_orders[0].order.status, OrderStatus::PartialFilled);
         EXPECT_DOUBLE_EQ(state.live_orders[0].order.avg_fill_price, 12.8);
         EXPECT_STREQ(state.live_orders[0].recovery.exchange_local_id, "LOC-601");
         EXPECT_STREQ(state.live_orders[0].recovery.order_sys_id, "SYS-601");
+
+        std::vector<Trade> trades;
+        ASSERT_TRUE(repo.load_trade_history(&trades));
+        ASSERT_EQ(trades.size(), 2u);
+        EXPECT_EQ(trades[0].book_id, 201u);
+        EXPECT_EQ(trades[1].book_id, 202u);
     }
 
     remove_db_artifacts(db_path);
@@ -364,5 +377,69 @@ TEST(DataRepositoryTest, PersistsInstrumentsAndEndOfDaySnapshots) {
         0.22);
 
     sqlite3_close(db);
+    remove_db_artifacts(db_path);
+}
+
+TEST(DataRepositoryTest, SeedsAndLoadsIdentityState) {
+    const auto db_path = make_test_db_path("identity");
+    remove_db_artifacts(db_path);
+
+    PersistenceConfig persistence_cfg{};
+    persistence_cfg.enabled = true;
+    copy_cstr(persistence_cfg.data_path, sizeof(persistence_cfg.data_path), db_path.string().c_str());
+
+    SystemConfig system_cfg{};
+    system_cfg.persistence.enabled = true;
+    system_cfg.book_count = 3;
+    system_cfg.user_count = 1;
+    system_cfg.product_count = 1;
+
+    system_cfg.books[0].book_id = 101;
+    copy_cstr(system_cfg.books[0].book_code, sizeof(system_cfg.books[0].book_code), "MM-RB");
+    copy_cstr(system_cfg.books[0].display_name, sizeof(system_cfg.books[0].display_name), "MM RB");
+    copy_cstr(system_cfg.books[0].description, sizeof(system_cfg.books[0].description), "Market making");
+
+    system_cfg.books[1].book_id = 102;
+    copy_cstr(system_cfg.books[1].book_code, sizeof(system_cfg.books[1].book_code), "ARB-RB");
+    copy_cstr(system_cfg.books[1].display_name, sizeof(system_cfg.books[1].display_name), "ARB RB");
+    copy_cstr(system_cfg.books[1].description, sizeof(system_cfg.books[1].description), "Arbitrage");
+
+    system_cfg.books[2].book_id = 900;
+    copy_cstr(system_cfg.books[2].book_code, sizeof(system_cfg.books[2].book_code), "MANUAL");
+    copy_cstr(system_cfg.books[2].display_name, sizeof(system_cfg.books[2].display_name), "Manual");
+    copy_cstr(system_cfg.books[2].description, sizeof(system_cfg.books[2].description), "Manual trading");
+
+    system_cfg.users[0].user_id = 7;
+    copy_cstr(system_cfg.users[0].username, sizeof(system_cfg.users[0].username), "alice");
+    copy_cstr(system_cfg.users[0].display_name, sizeof(system_cfg.users[0].display_name), "Alice");
+    copy_cstr(system_cfg.users[0].password, sizeof(system_cfg.users[0].password), "secret-1");
+    system_cfg.users[0].default_book_id = 900;
+    system_cfg.users[0].active = true;
+
+    system_cfg.products[0].mm_book_id = 101;
+    system_cfg.products[0].arbitrage_strategy_count = 1;
+    system_cfg.products[0].arbitrage_strategies[0].type = ArbitrageStrategyType::PCP;
+    system_cfg.products[0].arbitrage_strategies[0].book_id = 102;
+
+    {
+        DataRepository repo(persistence_cfg, GatewayType::Sim, VolMethod::Wing);
+        ASSERT_TRUE(repo.open());
+
+        IdentityState state{};
+        ASSERT_TRUE(repo.sync_identity_state(system_cfg, &state));
+
+        ASSERT_EQ(state.books.size(), 3u);
+        ASSERT_EQ(state.users.size(), 1u);
+        EXPECT_EQ(state.mm_book_ids[0], 101u);
+        ASSERT_EQ(state.arb_book_bindings.size(), 1u);
+        EXPECT_EQ(state.arb_book_bindings[0].book_id, 102u);
+
+        EXPECT_EQ(state.users[0].user_id, 7u);
+        EXPECT_EQ(std::string(state.users[0].username), "alice");
+        EXPECT_EQ(state.users[0].default_book_id, 900u);
+        EXPECT_TRUE(password_hash_encoded(state.users[0].password_hash));
+        EXPECT_TRUE(verify_password("secret-1", state.users[0].password_hash));
+    }
+
     remove_db_artifacts(db_path);
 }

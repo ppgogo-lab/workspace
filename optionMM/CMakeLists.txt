@@ -102,6 +102,7 @@ find_package(Threads REQUIRED)
 find_package(Protobuf REQUIRED)
 find_package(Ceres REQUIRED)
 find_package(SQLite3 REQUIRED)
+find_package(OpenSSL REQUIRED)
 
 # gRPC via pkg-config (Ubuntu packages install it this way)
 find_package(PkgConfig REQUIRED)
@@ -177,11 +178,13 @@ target_link_libraries(femas_api_lib PUBLIC
 
 # ─── common_lib ───────────────────────────────────────────────────────────────
 add_library(common_lib STATIC
+    src/common/auth.cpp
     src/common/config.cpp
     src/common/thread_utils.cpp
     src/sim/sim_instruments.cpp
 )
 target_link_libraries(common_lib PUBLIC
+    OpenSSL::Crypto
     yaml-cpp
     Threads::Threads
 )

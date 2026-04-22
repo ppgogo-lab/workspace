@@ -318,6 +318,37 @@ static ArbParamsConfig parse_arb_params(const YAML::Node& n, std::string path_pr
     return p;
 }
 
+static BookBootstrapConfig parse_book(const YAML::Node& n, std::size_t index) {
+    BookBootstrapConfig book{};
+    const std::string base = "books[" + std::to_string(index) + "]";
+    book.book_id = get<BookId>(n["book_id"], (base + ".book_id").c_str(), INVALID_BOOK_ID);
+    str_copy(book.book_code, sizeof(book.book_code),
+             n["book_code"], (base + ".book_code").c_str(), "");
+    str_copy(book.display_name, sizeof(book.display_name),
+             n["display_name"], (base + ".display_name").c_str(), "");
+    str_copy(book.description, sizeof(book.description),
+             n["description"], (base + ".description").c_str(), "");
+    book.active = get<bool>(n["active"], (base + ".active").c_str(), true);
+    return book;
+}
+
+static UserBootstrapConfig parse_user(const YAML::Node& n, std::size_t index) {
+    UserBootstrapConfig user{};
+    const std::string base = "users[" + std::to_string(index) + "]";
+    user.user_id = get<UserId>(n["user_id"], (base + ".user_id").c_str(), INVALID_USER_ID);
+    str_copy(user.username, sizeof(user.username),
+             n["username"], (base + ".username").c_str(), "");
+    str_copy(user.display_name, sizeof(user.display_name),
+             n["display_name"], (base + ".display_name").c_str(), "");
+    str_copy(user.password, sizeof(user.password),
+             n["password"], (base + ".password").c_str(), "");
+    user.active = get<bool>(n["active"], (base + ".active").c_str(), true);
+    user.default_book_id = get<BookId>(n["default_book_id"],
+                                       (base + ".default_book_id").c_str(),
+                                       INVALID_BOOK_ID);
+    return user;
+}
+
 static TimerConfig parse_timer(const YAML::Node& n) {
     TimerConfig c;
     if (!n) return c;
@@ -445,6 +476,7 @@ SystemConfig load_config(std::string_view path) {
 
         str_copy(p.strategy_type, sizeof(p.strategy_type),
                  pn["strategy_type"], "products[].strategy_type", "simple_mm");
+        p.mm_book_id = get<BookId>(pn["book_id"], "products[].book_id", INVALID_BOOK_ID);
         p.params = parse_mm_params(pn["params"],
                                    "products[" + std::to_string(cfg.product_count) + "].params");
         p.arbitrage_strategy_count = 0;
@@ -463,6 +495,8 @@ SystemConfig load_config(std::string_view path) {
                     + "].arbitrage_strategies[" + std::to_string(p.arbitrage_strategy_count) + "]";
                 arb.type = parse_arb_strategy_type(an["type"], (base + ".type").c_str());
                 arb.params = parse_arb_params(an["params"], base + ".params");
+                arb.book_id = get<BookId>(an["book_id"], (base + ".book_id").c_str(),
+                                          INVALID_BOOK_ID);
                 if (arb.type == ArbitrageStrategyType::None) {
                     throw std::runtime_error("config: arbitrage strategy type must be specified");
                 }
@@ -474,6 +508,34 @@ SystemConfig load_config(std::string_view path) {
 
     if (cfg.product_count == 0)
         throw std::runtime_error("config: at least one product must be configured");
+
+    cfg.book_count = 0;
+    if (auto books_node = root["books"]) {
+        if (!books_node.IsSequence()) {
+            throw std::runtime_error("config: 'books' must be a sequence");
+        }
+        for (auto bn : books_node) {
+            if (cfg.book_count >= MAX_BOOKS) {
+                throw std::runtime_error("config: too many books");
+            }
+            cfg.books[cfg.book_count] = parse_book(bn, static_cast<std::size_t>(cfg.book_count));
+            ++cfg.book_count;
+        }
+    }
+
+    cfg.user_count = 0;
+    if (auto users_node = root["users"]) {
+        if (!users_node.IsSequence()) {
+            throw std::runtime_error("config: 'users' must be a sequence");
+        }
+        for (auto un : users_node) {
+            if (cfg.user_count >= MAX_USERS) {
+                throw std::runtime_error("config: too many users");
+            }
+            cfg.users[cfg.user_count] = parse_user(un, static_cast<std::size_t>(cfg.user_count));
+            ++cfg.user_count;
+        }
+    }
 
     return cfg;
 }

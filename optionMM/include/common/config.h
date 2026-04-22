@@ -160,6 +160,24 @@ struct ArbParamsConfig {
 struct ArbitrageStrategyConfig {
     ArbitrageStrategyType type{ArbitrageStrategyType::None};
     ArbParamsConfig       params;
+    BookId                book_id{INVALID_BOOK_ID};
+};
+
+struct BookBootstrapConfig {
+    BookId book_id{INVALID_BOOK_ID};
+    char   book_code[32]{};
+    char   display_name[64]{};
+    bool   active{true};
+    char   description[128]{};
+};
+
+struct UserBootstrapConfig {
+    UserId user_id{INVALID_USER_ID};
+    char   username[32]{};
+    char   display_name[64]{};
+    char   password[128]{};
+    bool   active{true};
+    BookId default_book_id{INVALID_BOOK_ID};
 };
 
 // ─── Per-product configuration ────────────────────────────────────────────────
@@ -172,6 +190,7 @@ struct ProductConfig {
     int            strategy_core{-1}; // CPU core for this product's strategy thread
     int            arbitrage_core{-1}; // optional CPU core for the product arbitrage sidecar
     char           strategy_type[32]{"simple_mm"};
+    BookId         mm_book_id{INVALID_BOOK_ID};
     MMParamsConfig params;
     ArbitrageStrategyConfig arbitrage_strategies[MAX_ARBITRAGE_STRATEGIES_PER_PRODUCT]{};
     int            arbitrage_strategy_count{0};
@@ -238,6 +257,10 @@ struct SystemConfig {
     MonitoringConfig    monitoring;
     PersistenceConfig   persistence;
     ThreadAffinityConfig affinity;
+    BookBootstrapConfig books[MAX_BOOKS]{};
+    int                 book_count{0};
+    UserBootstrapConfig users[MAX_USERS]{};
+    int                 user_count{0};
 };
 
 // ─── Loader ───────────────────────────────────────────────────────────────────

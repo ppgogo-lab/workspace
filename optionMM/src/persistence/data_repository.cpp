@@ -1,5 +1,6 @@
 #include "persistence/data_repository.h"
 
+#include "common/auth.h"
 #include "logger/logger.h"
 
 #include <sqlite3.h>
@@ -10,6 +11,7 @@
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
+#include <set>
 #include <string>
 #include <thread>
 
@@ -54,6 +56,45 @@ bool exec_sql(sqlite3* db, const char* sql) {
         return false;
     }
     return true;
+}
+
+bool column_exists(sqlite3* db, const char* table_name, const char* column_name) {
+    std::string sql = "PRAGMA table_info(" + std::string(table_name) + ")";
+    sqlite3_stmt* stmt = nullptr;
+    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+        return false;
+    }
+    bool found = false;
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        const auto* name = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
+        if (name != nullptr && std::strcmp(name, column_name) == 0) {
+            found = true;
+            break;
+        }
+    }
+    sqlite3_finalize(stmt);
+    return found;
+}
+
+int query_single_int(sqlite3* db, const char* sql) {
+    sqlite3_stmt* stmt = nullptr;
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK) {
+        return -1;
+    }
+    int value = -1;
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+        value = sqlite3_column_int(stmt, 0);
+    }
+    sqlite3_finalize(stmt);
+    return value;
+}
+
+void copy_text_field(char* dst, std::size_t dst_size, const unsigned char* src) noexcept {
+    if (dst == nullptr || dst_size == 0) return;
+    dst[0] = '\0';
+    if (src == nullptr) return;
+    std::strncpy(dst, reinterpret_cast<const char*>(src), dst_size - 1);
+    dst[dst_size - 1] = '\0';
 }
 
 bool any_quote_handle(const GatewayQuoteRecoveryHandle& handle) noexcept {
@@ -168,6 +209,272 @@ bool DataRepository::persist_instruments() {
         (void)exec_sql(db_, "ROLLBACK;");
         return false;
     }
+    return exec_sql(db_, "COMMIT;");
+}
+
+bool DataRepository::sync_identity_state(const SystemConfig& cfg, IdentityState* out) {
+    if (out == nullptr) return false;
+    out->users.clear();
+    out->books.clear();
+    out->mm_book_ids.fill(INVALID_BOOK_ID);
+    out->arb_book_bindings.clear();
+    if (!cfg_.enabled) {
+        return true;
+    }
+
+    std::lock_guard<std::mutex> lock(db_mutex_);
+    if (db_ == nullptr) return false;
+
+    const int book_count = query_single_int(db_, "SELECT COUNT(*) FROM books");
+    const int user_count = query_single_int(db_, "SELECT COUNT(*) FROM users");
+    const int binding_count = query_single_int(db_, "SELECT COUNT(*) FROM strategy_book_bindings");
+    if (book_count < 0 || user_count < 0 || binding_count < 0) return false;
+
+    if (book_count == 0 && user_count == 0 && binding_count == 0) {
+        if (!seed_identity_locked(cfg)) return false;
+    }
+    return load_identity_locked(out);
+}
+
+bool DataRepository::load_identity_locked(IdentityState* out) {
+    if (out == nullptr) return false;
+    out->users.clear();
+    out->books.clear();
+    out->mm_book_ids.fill(INVALID_BOOK_ID);
+    out->arb_book_bindings.clear();
+
+    sqlite3_stmt* stmt = nullptr;
+    if (sqlite3_prepare_v2(db_,
+                           "SELECT book_id, book_code, display_name, active, description "
+                           "FROM books ORDER BY book_id",
+                           -1, &stmt, nullptr) != SQLITE_OK) {
+        return false;
+    }
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        PersistedBook book{};
+        book.book_id = static_cast<BookId>(sqlite3_column_int64(stmt, 0));
+        copy_text_field(book.book_code, sizeof(book.book_code), sqlite3_column_text(stmt, 1));
+        copy_text_field(book.display_name, sizeof(book.display_name), sqlite3_column_text(stmt, 2));
+        book.active = sqlite3_column_int(stmt, 3) != 0;
+        copy_text_field(book.description, sizeof(book.description), sqlite3_column_text(stmt, 4));
+        out->books.push_back(book);
+    }
+    sqlite3_finalize(stmt);
+    stmt = nullptr;
+
+    if (sqlite3_prepare_v2(db_,
+                           "SELECT user_id, username, display_name, password_hash, active, default_book_id "
+                           "FROM users ORDER BY user_id",
+                           -1, &stmt, nullptr) != SQLITE_OK) {
+        return false;
+    }
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        PersistedUser user{};
+        user.user_id = static_cast<UserId>(sqlite3_column_int64(stmt, 0));
+        copy_text_field(user.username, sizeof(user.username), sqlite3_column_text(stmt, 1));
+        copy_text_field(user.display_name, sizeof(user.display_name), sqlite3_column_text(stmt, 2));
+        copy_text_field(user.password_hash, sizeof(user.password_hash), sqlite3_column_text(stmt, 3));
+        user.active = sqlite3_column_int(stmt, 4) != 0;
+        user.default_book_id = static_cast<BookId>(sqlite3_column_int64(stmt, 5));
+        out->users.push_back(user);
+    }
+    sqlite3_finalize(stmt);
+    stmt = nullptr;
+
+    if (sqlite3_prepare_v2(db_,
+                           "SELECT scope_type, product_index, strategy_type, book_id "
+                           "FROM strategy_book_bindings",
+                           -1, &stmt, nullptr) != SQLITE_OK) {
+        return false;
+    }
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        const int scope_type = sqlite3_column_int(stmt, 0);
+        const int product_index = sqlite3_column_int(stmt, 1);
+        const int strategy_type = sqlite3_column_int(stmt, 2);
+        const BookId book_id = static_cast<BookId>(sqlite3_column_int64(stmt, 3));
+        if (product_index < 0 || product_index >= MAX_PRODUCTS) continue;
+        if (scope_type == 0) {
+            out->mm_book_ids[product_index] = book_id;
+        } else if (scope_type == 1) {
+            PersistedArbBookBinding binding{};
+            binding.product_index = static_cast<uint8_t>(product_index);
+            binding.strategy_type = static_cast<ArbitrageStrategyType>(strategy_type);
+            binding.book_id = book_id;
+            out->arb_book_bindings.push_back(binding);
+        }
+    }
+    sqlite3_finalize(stmt);
+    return true;
+}
+
+bool DataRepository::seed_identity_locked(const SystemConfig& cfg) {
+    std::set<BookId> known_books;
+    std::set<BookId> seen_book_ids;
+    std::set<std::string> seen_book_codes;
+    std::vector<PersistedBook> books;
+    books.reserve(static_cast<std::size_t>(cfg.book_count));
+    for (int i = 0; i < cfg.book_count; ++i) {
+        PersistedBook book{};
+        book.book_id = cfg.books[i].book_id != INVALID_BOOK_ID
+            ? cfg.books[i].book_id
+            : static_cast<BookId>(i + 1);
+        copy_text_field(book.book_code, sizeof(book.book_code),
+                        reinterpret_cast<const unsigned char*>(cfg.books[i].book_code));
+        copy_text_field(book.display_name, sizeof(book.display_name),
+                        reinterpret_cast<const unsigned char*>(cfg.books[i].display_name));
+        copy_text_field(book.description, sizeof(book.description),
+                        reinterpret_cast<const unsigned char*>(cfg.books[i].description));
+        book.active = cfg.books[i].active;
+        if (book.book_id == INVALID_BOOK_ID || book.book_code[0] == '\0') {
+            OMM_LOG_ERROR("repo", "invalid book bootstrap index={}", i);
+            return false;
+        }
+        if (!seen_book_ids.insert(book.book_id).second
+            || !seen_book_codes.insert(book.book_code).second) {
+            OMM_LOG_ERROR("repo", "duplicate book bootstrap id={} code={}",
+                          book.book_id, book.book_code);
+            return false;
+        }
+        known_books.insert(book.book_id);
+        books.push_back(book);
+    }
+
+    std::set<UserId> seen_user_ids;
+    std::set<std::string> seen_usernames;
+    struct SeedUser {
+        PersistedUser user{};
+        std::string password_hash;
+    };
+    std::vector<SeedUser> users;
+    users.reserve(static_cast<std::size_t>(cfg.user_count));
+    for (int i = 0; i < cfg.user_count; ++i) {
+        SeedUser seed{};
+        seed.user.user_id = cfg.users[i].user_id != INVALID_USER_ID
+            ? cfg.users[i].user_id
+            : static_cast<UserId>(i + 1);
+        copy_text_field(seed.user.username, sizeof(seed.user.username),
+                        reinterpret_cast<const unsigned char*>(cfg.users[i].username));
+        copy_text_field(seed.user.display_name, sizeof(seed.user.display_name),
+                        reinterpret_cast<const unsigned char*>(cfg.users[i].display_name));
+        seed.user.active = cfg.users[i].active;
+        seed.user.default_book_id = cfg.users[i].default_book_id;
+        if (seed.user.user_id == INVALID_USER_ID || seed.user.username[0] == '\0') {
+            OMM_LOG_ERROR("repo", "invalid user bootstrap index={}", i);
+            return false;
+        }
+        if (seed.user.default_book_id != INVALID_BOOK_ID
+            && known_books.find(seed.user.default_book_id) == known_books.end()) {
+            OMM_LOG_ERROR("repo", "user={} references unknown default_book_id={}",
+                          seed.user.username, seed.user.default_book_id);
+            return false;
+        }
+        if (!seen_user_ids.insert(seed.user.user_id).second
+            || !seen_usernames.insert(seed.user.username).second) {
+            OMM_LOG_ERROR("repo", "duplicate user bootstrap id={} username={}",
+                          seed.user.user_id, seed.user.username);
+            return false;
+        }
+
+        const std::string password = cfg.users[i].password;
+        if (password.empty()) {
+            OMM_LOG_ERROR("repo", "user={} missing password bootstrap", seed.user.username);
+            return false;
+        }
+        try {
+            seed.password_hash = password_hash_encoded(password) ? password : hash_password(password);
+        } catch (const std::exception& e) {
+            OMM_LOG_ERROR("repo", "failed to hash password for user={} err={}",
+                          seed.user.username, e.what());
+            return false;
+        }
+        copy_text_field(seed.user.password_hash, sizeof(seed.user.password_hash),
+                        reinterpret_cast<const unsigned char*>(seed.password_hash.c_str()));
+        users.push_back(seed);
+    }
+
+    if (!exec_sql(db_, "BEGIN IMMEDIATE TRANSACTION;")) return false;
+    reset_stmt(stmt_delete_strategy_bindings_);
+    reset_stmt(stmt_delete_users_);
+    reset_stmt(stmt_delete_books_);
+    if (!step_done(db_, stmt_delete_strategy_bindings_, "clear strategy_book_bindings")
+        || !step_done(db_, stmt_delete_users_, "clear users")
+        || !step_done(db_, stmt_delete_books_, "clear books")) {
+        (void)exec_sql(db_, "ROLLBACK;");
+        return false;
+    }
+
+    for (const auto& book : books) {
+        reset_stmt(stmt_upsert_book_);
+        bind_integer(stmt_upsert_book_, 1, book.book_id);
+        bind_text(stmt_upsert_book_, 2, book.book_code);
+        bind_text(stmt_upsert_book_, 3, book.display_name);
+        bind_integer(stmt_upsert_book_, 4, book.active ? 1 : 0);
+        bind_text(stmt_upsert_book_, 5, book.description);
+        if (!step_done(db_, stmt_upsert_book_, "upsert book")) {
+            (void)exec_sql(db_, "ROLLBACK;");
+            return false;
+        }
+    }
+
+    for (const auto& user : users) {
+        reset_stmt(stmt_upsert_user_);
+        bind_integer(stmt_upsert_user_, 1, user.user.user_id);
+        bind_text(stmt_upsert_user_, 2, user.user.username);
+        bind_text(stmt_upsert_user_, 3, user.user.display_name);
+        bind_text(stmt_upsert_user_, 4, user.user.password_hash);
+        bind_integer(stmt_upsert_user_, 5, user.user.active ? 1 : 0);
+        bind_integer(stmt_upsert_user_, 6, user.user.default_book_id);
+        if (!step_done(db_, stmt_upsert_user_, "upsert user")) {
+            (void)exec_sql(db_, "ROLLBACK;");
+            return false;
+        }
+    }
+
+    for (int product = 0; product < cfg.product_count && product < MAX_PRODUCTS; ++product) {
+        const BookId mm_book_id = cfg.products[product].mm_book_id;
+        if (mm_book_id != INVALID_BOOK_ID) {
+            if (known_books.find(mm_book_id) == known_books.end()) {
+                OMM_LOG_ERROR("repo", "product={} references unknown mm book_id={}",
+                              product, mm_book_id);
+                (void)exec_sql(db_, "ROLLBACK;");
+                return false;
+            }
+            reset_stmt(stmt_upsert_strategy_binding_);
+            bind_integer(stmt_upsert_strategy_binding_, 1, 0);
+            bind_integer(stmt_upsert_strategy_binding_, 2, product);
+            bind_integer(stmt_upsert_strategy_binding_, 3, 0);
+            bind_integer(stmt_upsert_strategy_binding_, 4, mm_book_id);
+            if (!step_done(db_, stmt_upsert_strategy_binding_, "upsert mm strategy binding")) {
+                (void)exec_sql(db_, "ROLLBACK;");
+                return false;
+            }
+        }
+        for (int slot = 0;
+             slot < cfg.products[product].arbitrage_strategy_count
+                 && slot < MAX_ARBITRAGE_STRATEGIES_PER_PRODUCT;
+             ++slot) {
+            const auto& arb_cfg = cfg.products[product].arbitrage_strategies[slot];
+            if (arb_cfg.type == ArbitrageStrategyType::None || arb_cfg.book_id == INVALID_BOOK_ID) {
+                continue;
+            }
+            if (known_books.find(arb_cfg.book_id) == known_books.end()) {
+                OMM_LOG_ERROR("repo", "product={} arb slot={} references unknown book_id={}",
+                              product, slot, arb_cfg.book_id);
+                (void)exec_sql(db_, "ROLLBACK;");
+                return false;
+            }
+            reset_stmt(stmt_upsert_strategy_binding_);
+            bind_integer(stmt_upsert_strategy_binding_, 1, 1);
+            bind_integer(stmt_upsert_strategy_binding_, 2, product);
+            bind_integer(stmt_upsert_strategy_binding_, 3, static_cast<int>(arb_cfg.type));
+            bind_integer(stmt_upsert_strategy_binding_, 4, arb_cfg.book_id);
+            if (!step_done(db_, stmt_upsert_strategy_binding_, "upsert arb strategy binding")) {
+                (void)exec_sql(db_, "ROLLBACK;");
+                return false;
+            }
+        }
+    }
+
     return exec_sql(db_, "COMMIT;");
 }
 
@@ -294,7 +601,7 @@ bool DataRepository::load_recovery_state(RecoveryState* out) {
         const char* sql =
             "SELECT client_order_id, instrument_code, product_index, account_id, exchange_id,"
             " side, offset_flag, order_type, status, price, volume, filled_volume, avg_fill_price,"
-            " send_ts, ack_ts, is_manual, is_hedge, exchange_order_id, is_quote_leg,"
+            " send_ts, ack_ts, is_manual, is_hedge, book_id, exchange_order_id, is_quote_leg,"
             " client_quote_id, exchange_local_id, order_sys_id"
             " FROM live_orders";
         if (sqlite3_prepare_v2(db_, sql, -1, &stmt, nullptr) != SQLITE_OK) return false;
@@ -307,12 +614,12 @@ bool DataRepository::load_recovery_state(RecoveryState* out) {
             entry.order.client_order_id = static_cast<OrderId>(sqlite3_column_int64(stmt, 0));
             entry.order.instrument_id = instrument_id;
             entry.order.product_index = static_cast<uint8_t>(sqlite3_column_int(stmt, 2));
-            std::strncpy(entry.order.account_id.data,
-                         reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3)),
-                         sizeof(entry.order.account_id.data) - 1);
-            std::strncpy(entry.order.exchange_id.data,
-                         reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4)),
-                         sizeof(entry.order.exchange_id.data) - 1);
+            copy_text_field(entry.order.account_id.data,
+                            sizeof(entry.order.account_id.data),
+                            sqlite3_column_text(stmt, 3));
+            copy_text_field(entry.order.exchange_id.data,
+                            sizeof(entry.order.exchange_id.data),
+                            sqlite3_column_text(stmt, 4));
             entry.order.side = static_cast<Side>(sqlite3_column_int(stmt, 5));
             entry.order.offset = static_cast<OffsetFlag>(sqlite3_column_int(stmt, 6));
             entry.order.order_type = static_cast<OrderType>(sqlite3_column_int(stmt, 7));
@@ -325,17 +632,18 @@ bool DataRepository::load_recovery_state(RecoveryState* out) {
             entry.order.ack_ts = sqlite3_column_int64(stmt, 14);
             entry.order.is_manual = sqlite3_column_int(stmt, 15) != 0;
             entry.order.is_hedge = sqlite3_column_int(stmt, 16) != 0;
-            entry.order.exchange_order_id = static_cast<OrderId>(sqlite3_column_int64(stmt, 17));
+            entry.order.book_id = static_cast<BookId>(sqlite3_column_int64(stmt, 17));
+            entry.order.exchange_order_id = static_cast<OrderId>(sqlite3_column_int64(stmt, 18));
 
             entry.recovery.valid = true;
-            entry.recovery.is_quote_leg = sqlite3_column_int(stmt, 18) != 0;
-            entry.recovery.client_quote_id = static_cast<QuoteId>(sqlite3_column_int64(stmt, 19));
-            std::strncpy(entry.recovery.exchange_local_id,
-                         reinterpret_cast<const char*>(sqlite3_column_text(stmt, 20)),
-                         sizeof(entry.recovery.exchange_local_id) - 1);
-            std::strncpy(entry.recovery.order_sys_id,
-                         reinterpret_cast<const char*>(sqlite3_column_text(stmt, 21)),
-                         sizeof(entry.recovery.order_sys_id) - 1);
+            entry.recovery.is_quote_leg = sqlite3_column_int(stmt, 19) != 0;
+            entry.recovery.client_quote_id = static_cast<QuoteId>(sqlite3_column_int64(stmt, 20));
+            copy_text_field(entry.recovery.exchange_local_id,
+                            sizeof(entry.recovery.exchange_local_id),
+                            sqlite3_column_text(stmt, 21));
+            copy_text_field(entry.recovery.order_sys_id,
+                            sizeof(entry.recovery.order_sys_id),
+                            sqlite3_column_text(stmt, 22));
             out->live_orders.push_back(entry);
         }
         sqlite3_finalize(stmt);
@@ -347,7 +655,7 @@ bool DataRepository::load_recovery_state(RecoveryState* out) {
         const char* sql =
             "SELECT client_quote_id, instrument_code, product_index, account_id, exchange_id,"
             " bid_offset, ask_offset, bid_price, ask_price, bid_volume, ask_volume,"
-            " bid_status, ask_status, send_ts, ack_ts, exchange_quote_id,"
+            " bid_status, ask_status, send_ts, ack_ts, book_id, exchange_quote_id,"
             " remaining_bid, remaining_ask, bid_order_id, ask_order_id, quote_local_id,"
             " quote_sys_id, bid_local_id, ask_local_id, bid_order_sys_id, ask_order_sys_id"
             " FROM live_quotes";
@@ -361,45 +669,46 @@ bool DataRepository::load_recovery_state(RecoveryState* out) {
             entry.quote.client_quote_id = static_cast<QuoteId>(sqlite3_column_int64(stmt, 0));
             entry.quote.instrument_id = instrument_id;
             entry.quote.product_index = static_cast<uint8_t>(sqlite3_column_int(stmt, 2));
-            std::strncpy(entry.quote.account_id.data,
-                         reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3)),
-                         sizeof(entry.quote.account_id.data) - 1);
-            std::strncpy(entry.quote.exchange_id.data,
-                         reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4)),
-                         sizeof(entry.quote.exchange_id.data) - 1);
+            copy_text_field(entry.quote.account_id.data,
+                            sizeof(entry.quote.account_id.data),
+                            sqlite3_column_text(stmt, 3));
+            copy_text_field(entry.quote.exchange_id.data,
+                            sizeof(entry.quote.exchange_id.data),
+                            sqlite3_column_text(stmt, 4));
             entry.quote.bid_offset = static_cast<OffsetFlag>(sqlite3_column_int(stmt, 5));
             entry.quote.ask_offset = static_cast<OffsetFlag>(sqlite3_column_int(stmt, 6));
             entry.quote.bid_price = sqlite3_column_double(stmt, 7);
             entry.quote.ask_price = sqlite3_column_double(stmt, 8);
-            entry.quote.bid_volume = sqlite3_column_int(stmt, 16);
-            entry.quote.ask_volume = sqlite3_column_int(stmt, 17);
+            entry.quote.bid_volume = sqlite3_column_int(stmt, 17);
+            entry.quote.ask_volume = sqlite3_column_int(stmt, 18);
             entry.quote.bid_status = static_cast<OrderStatus>(sqlite3_column_int(stmt, 11));
             entry.quote.ask_status = static_cast<OrderStatus>(sqlite3_column_int(stmt, 12));
             entry.quote.send_ts = sqlite3_column_int64(stmt, 13);
             entry.quote.ack_ts = sqlite3_column_int64(stmt, 14);
-            entry.quote.exchange_quote_id = static_cast<QuoteId>(sqlite3_column_int64(stmt, 15));
+            entry.quote.book_id = static_cast<BookId>(sqlite3_column_int64(stmt, 15));
+            entry.quote.exchange_quote_id = static_cast<QuoteId>(sqlite3_column_int64(stmt, 16));
 
             entry.recovery.valid = true;
-            entry.recovery.bid_order_id = static_cast<OrderId>(sqlite3_column_int64(stmt, 18));
-            entry.recovery.ask_order_id = static_cast<OrderId>(sqlite3_column_int64(stmt, 19));
-            std::strncpy(entry.recovery.quote_local_id,
-                         reinterpret_cast<const char*>(sqlite3_column_text(stmt, 20)),
-                         sizeof(entry.recovery.quote_local_id) - 1);
-            std::strncpy(entry.recovery.quote_sys_id,
-                         reinterpret_cast<const char*>(sqlite3_column_text(stmt, 21)),
-                         sizeof(entry.recovery.quote_sys_id) - 1);
-            std::strncpy(entry.recovery.bid_local_id,
-                         reinterpret_cast<const char*>(sqlite3_column_text(stmt, 22)),
-                         sizeof(entry.recovery.bid_local_id) - 1);
-            std::strncpy(entry.recovery.ask_local_id,
-                         reinterpret_cast<const char*>(sqlite3_column_text(stmt, 23)),
-                         sizeof(entry.recovery.ask_local_id) - 1);
-            std::strncpy(entry.recovery.bid_order_sys_id,
-                         reinterpret_cast<const char*>(sqlite3_column_text(stmt, 24)),
-                         sizeof(entry.recovery.bid_order_sys_id) - 1);
-            std::strncpy(entry.recovery.ask_order_sys_id,
-                         reinterpret_cast<const char*>(sqlite3_column_text(stmt, 25)),
-                         sizeof(entry.recovery.ask_order_sys_id) - 1);
+            entry.recovery.bid_order_id = static_cast<OrderId>(sqlite3_column_int64(stmt, 19));
+            entry.recovery.ask_order_id = static_cast<OrderId>(sqlite3_column_int64(stmt, 20));
+            copy_text_field(entry.recovery.quote_local_id,
+                            sizeof(entry.recovery.quote_local_id),
+                            sqlite3_column_text(stmt, 21));
+            copy_text_field(entry.recovery.quote_sys_id,
+                            sizeof(entry.recovery.quote_sys_id),
+                            sqlite3_column_text(stmt, 22));
+            copy_text_field(entry.recovery.bid_local_id,
+                            sizeof(entry.recovery.bid_local_id),
+                            sqlite3_column_text(stmt, 23));
+            copy_text_field(entry.recovery.ask_local_id,
+                            sizeof(entry.recovery.ask_local_id),
+                            sqlite3_column_text(stmt, 24));
+            copy_text_field(entry.recovery.bid_order_sys_id,
+                            sizeof(entry.recovery.bid_order_sys_id),
+                            sqlite3_column_text(stmt, 25));
+            copy_text_field(entry.recovery.ask_order_sys_id,
+                            sizeof(entry.recovery.ask_order_sys_id),
+                            sqlite3_column_text(stmt, 26));
             out->live_quotes.push_back(entry);
         }
         sqlite3_finalize(stmt);
@@ -416,6 +725,45 @@ bool DataRepository::load_recovery_state(RecoveryState* out) {
         prime_caches_locked(*out);
     }
     return ok;
+}
+
+bool DataRepository::load_trade_history(std::vector<Trade>* out) {
+    if (out == nullptr) return false;
+    out->clear();
+    if (!cfg_.enabled) return true;
+
+    std::lock_guard<std::mutex> lock(db_mutex_);
+    if (db_ == nullptr) return false;
+
+    sqlite3_stmt* stmt = nullptr;
+    const char* sql =
+        "SELECT client_order_id, trade_id, instrument_code, product_index, account_id, exchange_id,"
+        " side, offset_flag, book_id, fill_price, fill_volume, fill_ts"
+        " FROM trades ORDER BY fill_ts, id";
+    if (sqlite3_prepare_v2(db_, sql, -1, &stmt, nullptr) != SQLITE_OK) {
+        return false;
+    }
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        const auto* code = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
+        const uint16_t instrument_id = find_instrument_id_by_code(code);
+        if (instrument_id == INVALID_INSTRUMENT_ID) continue;
+        Trade trade{};
+        trade.client_order_id = static_cast<OrderId>(sqlite3_column_int64(stmt, 0));
+        trade.trade_id = static_cast<uint64_t>(sqlite3_column_int64(stmt, 1));
+        trade.instrument_id = instrument_id;
+        trade.product_index = static_cast<uint8_t>(sqlite3_column_int(stmt, 3));
+        copy_text_field(trade.account_id.data, sizeof(trade.account_id.data), sqlite3_column_text(stmt, 4));
+        copy_text_field(trade.exchange_id.data, sizeof(trade.exchange_id.data), sqlite3_column_text(stmt, 5));
+        trade.side = static_cast<Side>(sqlite3_column_int(stmt, 6));
+        trade.offset = static_cast<OffsetFlag>(sqlite3_column_int(stmt, 7));
+        trade.book_id = static_cast<BookId>(sqlite3_column_int64(stmt, 8));
+        trade.fill_price = sqlite3_column_double(stmt, 9);
+        trade.fill_volume = sqlite3_column_int(stmt, 10);
+        trade.fill_ts = sqlite3_column_int64(stmt, 11);
+        out->push_back(trade);
+    }
+    sqlite3_finalize(stmt);
+    return true;
 }
 
 bool DataRepository::persist_end_of_day_snapshot(const EndOfDaySnapshot& snapshot) {
@@ -485,7 +833,6 @@ void DataRepository::writer_loop() noexcept {
 
 bool DataRepository::ensure_schema_locked() {
     static const char* kSchemaSql =
-        "PRAGMA user_version = 1;"
         "CREATE TABLE IF NOT EXISTS instruments ("
         " instrument_code TEXT PRIMARY KEY,"
         " trading_day INTEGER NOT NULL,"
@@ -512,6 +859,7 @@ bool DataRepository::ensure_schema_locked() {
         " exchange_id TEXT NOT NULL,"
         " side INTEGER NOT NULL,"
         " offset_flag INTEGER NOT NULL,"
+        " book_id INTEGER NOT NULL DEFAULT 0,"
         " fill_price REAL NOT NULL,"
         " fill_volume INTEGER NOT NULL,"
         " fill_ts INTEGER NOT NULL,"
@@ -535,6 +883,7 @@ bool DataRepository::ensure_schema_locked() {
         " ack_ts INTEGER NOT NULL,"
         " is_manual INTEGER NOT NULL,"
         " is_hedge INTEGER NOT NULL,"
+        " book_id INTEGER NOT NULL DEFAULT 0,"
         " exchange_order_id INTEGER NOT NULL,"
         " is_quote_leg INTEGER NOT NULL,"
         " client_quote_id INTEGER NOT NULL,"
@@ -557,6 +906,7 @@ bool DataRepository::ensure_schema_locked() {
         " ask_status INTEGER NOT NULL,"
         " send_ts INTEGER NOT NULL,"
         " ack_ts INTEGER NOT NULL,"
+        " book_id INTEGER NOT NULL DEFAULT 0,"
         " exchange_quote_id INTEGER NOT NULL,"
         " remaining_bid INTEGER NOT NULL,"
         " remaining_ask INTEGER NOT NULL,"
@@ -687,7 +1037,60 @@ bool DataRepository::ensure_schema_locked() {
         " underlying_instrument_code TEXT NOT NULL,"
         " PRIMARY KEY(trading_day, instrument_code)"
         ");";
-    return exec_sql(db_, kSchemaSql);
+    if (!exec_sql(db_, kSchemaSql)) return false;
+    if (!migrate_book_columns_locked()) return false;
+    if (!migrate_identity_schema_locked()) return false;
+    return exec_sql(db_, "PRAGMA user_version = 2;");
+}
+
+bool DataRepository::migrate_book_columns_locked() {
+    if (!column_exists(db_, "trades", "book_id")
+        && !exec_sql(db_,
+                     "ALTER TABLE trades ADD COLUMN book_id INTEGER NOT NULL DEFAULT 0;")) {
+        return false;
+    }
+    if (!column_exists(db_, "live_orders", "book_id")
+        && !exec_sql(db_,
+                     "ALTER TABLE live_orders ADD COLUMN book_id INTEGER NOT NULL DEFAULT 0;")) {
+        return false;
+    }
+    if (!column_exists(db_, "live_quotes", "book_id")
+        && !exec_sql(db_,
+                     "ALTER TABLE live_quotes ADD COLUMN book_id INTEGER NOT NULL DEFAULT 0;")) {
+        return false;
+    }
+    return true;
+}
+
+bool DataRepository::migrate_identity_schema_locked() {
+    static const char* kIdentitySql =
+        "CREATE TABLE IF NOT EXISTS books ("
+        " book_id INTEGER PRIMARY KEY,"
+        " book_code TEXT NOT NULL UNIQUE,"
+        " display_name TEXT NOT NULL,"
+        " active INTEGER NOT NULL,"
+        " description TEXT NOT NULL"
+        ");"
+        "CREATE TABLE IF NOT EXISTS users ("
+        " user_id INTEGER PRIMARY KEY,"
+        " username TEXT NOT NULL UNIQUE,"
+        " display_name TEXT NOT NULL,"
+        " password_hash TEXT NOT NULL,"
+        " active INTEGER NOT NULL,"
+        " default_book_id INTEGER NOT NULL"
+        ");"
+        "CREATE TABLE IF NOT EXISTS strategy_book_bindings ("
+        " scope_type INTEGER NOT NULL,"
+        " product_index INTEGER NOT NULL,"
+        " strategy_type INTEGER NOT NULL,"
+        " book_id INTEGER NOT NULL,"
+        " PRIMARY KEY(scope_type, product_index, strategy_type)"
+        ");"
+        "CREATE INDEX IF NOT EXISTS idx_trades_fill_ts ON trades(fill_ts);"
+        "CREATE INDEX IF NOT EXISTS idx_trades_book_id ON trades(book_id);"
+        "CREATE INDEX IF NOT EXISTS idx_live_orders_book_id ON live_orders(book_id);"
+        "CREATE INDEX IF NOT EXISTS idx_live_quotes_book_id ON live_quotes(book_id);";
+    return exec_sql(db_, kIdentitySql);
 }
 
 bool DataRepository::prepare_statements_locked() {
@@ -699,9 +1102,9 @@ bool DataRepository::prepare_statements_locked() {
                    "INSERT INTO live_orders ("
                    " client_order_id, instrument_code, product_index, account_id, exchange_id,"
                    " side, offset_flag, order_type, status, price, volume, filled_volume,"
-                   " avg_fill_price, send_ts, ack_ts, is_manual, is_hedge, exchange_order_id,"
-                   " is_quote_leg, client_quote_id, exchange_local_id, order_sys_id)"
-                   " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                   " avg_fill_price, send_ts, ack_ts, is_manual, is_hedge, book_id,"
+                   " exchange_order_id, is_quote_leg, client_quote_id, exchange_local_id, order_sys_id)"
+                   " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
                    " ON CONFLICT(client_order_id) DO UPDATE SET"
                    " instrument_code=excluded.instrument_code,"
                    " product_index=excluded.product_index,"
@@ -719,6 +1122,7 @@ bool DataRepository::prepare_statements_locked() {
                    " ack_ts=excluded.ack_ts,"
                    " is_manual=excluded.is_manual,"
                    " is_hedge=excluded.is_hedge,"
+                   " book_id=excluded.book_id,"
                    " exchange_order_id=excluded.exchange_order_id,"
                    " is_quote_leg=excluded.is_quote_leg,"
                    " client_quote_id=excluded.client_quote_id,"
@@ -729,10 +1133,10 @@ bool DataRepository::prepare_statements_locked() {
                    "INSERT INTO live_quotes ("
                    " client_quote_id, instrument_code, product_index, account_id, exchange_id,"
                    " bid_offset, ask_offset, bid_price, ask_price, bid_volume, ask_volume,"
-                   " bid_status, ask_status, send_ts, ack_ts, exchange_quote_id, remaining_bid,"
+                   " bid_status, ask_status, send_ts, ack_ts, book_id, exchange_quote_id, remaining_bid,"
                    " remaining_ask, bid_order_id, ask_order_id, quote_local_id, quote_sys_id,"
                    " bid_local_id, ask_local_id, bid_order_sys_id, ask_order_sys_id)"
-                   " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                   " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
                    " ON CONFLICT(client_quote_id) DO UPDATE SET"
                    " instrument_code=excluded.instrument_code,"
                    " product_index=excluded.product_index,"
@@ -748,6 +1152,7 @@ bool DataRepository::prepare_statements_locked() {
                    " ask_status=excluded.ask_status,"
                    " send_ts=excluded.send_ts,"
                    " ack_ts=excluded.ack_ts,"
+                   " book_id=excluded.book_id,"
                    " exchange_quote_id=excluded.exchange_quote_id,"
                    " remaining_bid=excluded.remaining_bid,"
                    " remaining_ask=excluded.remaining_ask,"
@@ -763,8 +1168,8 @@ bool DataRepository::prepare_statements_locked() {
         && prepare(&stmt_insert_trade_,
                    "INSERT OR IGNORE INTO trades ("
                    " client_order_id, trade_id, instrument_code, product_index, account_id,"
-                   " exchange_id, side, offset_flag, fill_price, fill_volume, fill_ts)"
-                   " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+                   " exchange_id, side, offset_flag, book_id, fill_price, fill_volume, fill_ts)"
+                   " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
         && prepare(&stmt_insert_position_,
                    "INSERT OR REPLACE INTO positions_snapshot ("
                    " instrument_code, product_index, net_position, long_position, short_position,"
@@ -820,7 +1225,19 @@ bool DataRepository::prepare_statements_locked() {
         && prepare(&stmt_delete_eod_model_params_for_day_,
                    "DELETE FROM eod_vol_model_params WHERE trading_day = ?")
         && prepare(&stmt_delete_eod_instruments_for_day_,
-                   "DELETE FROM eod_instruments WHERE trading_day = ?");
+                   "DELETE FROM eod_instruments WHERE trading_day = ?")
+        && prepare(&stmt_delete_books_, "DELETE FROM books")
+        && prepare(&stmt_delete_users_, "DELETE FROM users")
+        && prepare(&stmt_delete_strategy_bindings_, "DELETE FROM strategy_book_bindings")
+        && prepare(&stmt_upsert_book_,
+                   "INSERT OR REPLACE INTO books (book_id, book_code, display_name, active, description)"
+                   " VALUES (?, ?, ?, ?, ?)")
+        && prepare(&stmt_upsert_user_,
+                   "INSERT OR REPLACE INTO users (user_id, username, display_name, password_hash, active, default_book_id)"
+                   " VALUES (?, ?, ?, ?, ?, ?)")
+        && prepare(&stmt_upsert_strategy_binding_,
+                   "INSERT OR REPLACE INTO strategy_book_bindings (scope_type, product_index, strategy_type, book_id)"
+                   " VALUES (?, ?, ?, ?)");
 }
 
 void DataRepository::finalize_statements_locked() noexcept {
@@ -848,6 +1265,12 @@ void DataRepository::finalize_statements_locked() noexcept {
     finalize(stmt_delete_eod_greeks_for_day_);
     finalize(stmt_delete_eod_model_params_for_day_);
     finalize(stmt_delete_eod_instruments_for_day_);
+    finalize(stmt_delete_books_);
+    finalize(stmt_delete_users_);
+    finalize(stmt_delete_strategy_bindings_);
+    finalize(stmt_upsert_book_);
+    finalize(stmt_upsert_user_);
+    finalize(stmt_upsert_strategy_binding_);
 }
 
 void DataRepository::close_locked() noexcept {
@@ -1044,11 +1467,12 @@ bool DataRepository::write_order_event_locked(const OrderPersistenceEvent& event
     bind_integer(stmt_upsert_live_order_, 15, record.order.ack_ts);
     bind_integer(stmt_upsert_live_order_, 16, record.order.is_manual ? 1 : 0);
     bind_integer(stmt_upsert_live_order_, 17, record.order.is_hedge ? 1 : 0);
-    bind_integer(stmt_upsert_live_order_, 18, record.order.exchange_order_id);
-    bind_integer(stmt_upsert_live_order_, 19, record.recovery.is_quote_leg ? 1 : 0);
-    bind_integer(stmt_upsert_live_order_, 20, record.recovery.client_quote_id);
-    bind_text(stmt_upsert_live_order_, 21, record.recovery.exchange_local_id);
-    bind_text(stmt_upsert_live_order_, 22, record.recovery.order_sys_id);
+    bind_integer(stmt_upsert_live_order_, 18, record.order.book_id);
+    bind_integer(stmt_upsert_live_order_, 19, record.order.exchange_order_id);
+    bind_integer(stmt_upsert_live_order_, 20, record.recovery.is_quote_leg ? 1 : 0);
+    bind_integer(stmt_upsert_live_order_, 21, record.recovery.client_quote_id);
+    bind_text(stmt_upsert_live_order_, 22, record.recovery.exchange_local_id);
+    bind_text(stmt_upsert_live_order_, 23, record.recovery.order_sys_id);
     return step_done(db_, stmt_upsert_live_order_, "upsert live_order");
 }
 
@@ -1141,17 +1565,18 @@ bool DataRepository::write_quote_event_locked(const QuotePersistenceEvent& event
     bind_integer(stmt_upsert_live_quote_, 13, static_cast<int>(record.quote.ask_status));
     bind_integer(stmt_upsert_live_quote_, 14, record.quote.send_ts);
     bind_integer(stmt_upsert_live_quote_, 15, record.quote.ack_ts);
-    bind_integer(stmt_upsert_live_quote_, 16, record.quote.exchange_quote_id);
-    bind_integer(stmt_upsert_live_quote_, 17, record.remaining_bid);
-    bind_integer(stmt_upsert_live_quote_, 18, record.remaining_ask);
-    bind_integer(stmt_upsert_live_quote_, 19, record.recovery.bid_order_id);
-    bind_integer(stmt_upsert_live_quote_, 20, record.recovery.ask_order_id);
-    bind_text(stmt_upsert_live_quote_, 21, record.recovery.quote_local_id);
-    bind_text(stmt_upsert_live_quote_, 22, record.recovery.quote_sys_id);
-    bind_text(stmt_upsert_live_quote_, 23, record.recovery.bid_local_id);
-    bind_text(stmt_upsert_live_quote_, 24, record.recovery.ask_local_id);
-    bind_text(stmt_upsert_live_quote_, 25, record.recovery.bid_order_sys_id);
-    bind_text(stmt_upsert_live_quote_, 26, record.recovery.ask_order_sys_id);
+    bind_integer(stmt_upsert_live_quote_, 16, record.quote.book_id);
+    bind_integer(stmt_upsert_live_quote_, 17, record.quote.exchange_quote_id);
+    bind_integer(stmt_upsert_live_quote_, 18, record.remaining_bid);
+    bind_integer(stmt_upsert_live_quote_, 19, record.remaining_ask);
+    bind_integer(stmt_upsert_live_quote_, 20, record.recovery.bid_order_id);
+    bind_integer(stmt_upsert_live_quote_, 21, record.recovery.ask_order_id);
+    bind_text(stmt_upsert_live_quote_, 22, record.recovery.quote_local_id);
+    bind_text(stmt_upsert_live_quote_, 23, record.recovery.quote_sys_id);
+    bind_text(stmt_upsert_live_quote_, 24, record.recovery.bid_local_id);
+    bind_text(stmt_upsert_live_quote_, 25, record.recovery.ask_local_id);
+    bind_text(stmt_upsert_live_quote_, 26, record.recovery.bid_order_sys_id);
+    bind_text(stmt_upsert_live_quote_, 27, record.recovery.ask_order_sys_id);
     return step_done(db_, stmt_upsert_live_quote_, "upsert live_quote");
 }
 
@@ -1168,9 +1593,10 @@ bool DataRepository::write_trade_locked(const Trade& trade) {
     bind_text(stmt_insert_trade_, 6, trade.exchange_id.data);
     bind_integer(stmt_insert_trade_, 7, static_cast<int>(trade.side));
     bind_integer(stmt_insert_trade_, 8, static_cast<int>(trade.offset));
-    sqlite3_bind_double(stmt_insert_trade_, 9, trade.fill_price);
-    bind_integer(stmt_insert_trade_, 10, trade.fill_volume);
-    bind_integer(stmt_insert_trade_, 11, trade.fill_ts);
+    bind_integer(stmt_insert_trade_, 9, trade.book_id);
+    sqlite3_bind_double(stmt_insert_trade_, 10, trade.fill_price);
+    bind_integer(stmt_insert_trade_, 11, trade.fill_volume);
+    bind_integer(stmt_insert_trade_, 12, trade.fill_ts);
     if (!step_done(db_, stmt_insert_trade_, "insert trade")) return false;
 
     auto order_it = live_orders_.find(trade.client_order_id);

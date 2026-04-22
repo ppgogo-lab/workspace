@@ -14,6 +14,8 @@ static constexpr uint16_t INVALID_INSTRUMENT_ID = 0xFFFF;
 static constexpr uint8_t  MAX_PRODUCTS    = 32;
 static constexpr uint8_t  MAX_ARBITRAGE_STRATEGIES_PER_PRODUCT = 4;
 static constexpr uint16_t MAX_OPEN_ORDERS = 4096;
+static constexpr uint16_t MAX_USERS = 64;
+static constexpr uint16_t MAX_BOOKS = 128;
 
 // ─── Primitive aliases ────────────────────────────────────────────────────────
 // Price stays as double. Set FTZ/DAZ flags at startup (see main.cpp) to prevent
@@ -24,6 +26,11 @@ using Volume    = int32_t;
 using OrderId   = uint64_t;
 using QuoteId   = uint64_t;
 using Timestamp = int64_t;   // nanoseconds since epoch (CLOCK_MONOTONIC_RAW)
+using UserId    = uint32_t;
+using BookId    = uint32_t;
+
+static constexpr UserId INVALID_USER_ID = 0;
+static constexpr BookId INVALID_BOOK_ID = 0;
 
 // ─── Fixed-length string (no heap allocation) ────────────────────────────────
 // Used only in non-hot-path structs (Instrument registry, config, logging).
@@ -184,7 +191,8 @@ struct alignas(64) Order {
     OrderId    exchange_order_id{0};
     uint16_t   instrument_id;
     uint8_t    product_index;
-    uint8_t    _pad0[5];
+    uint8_t    _pad0{0};
+    BookId     book_id{INVALID_BOOK_ID};
     AccountId  account_id;
     ExchangeId exchange_id;
     Side       side;
@@ -209,7 +217,8 @@ struct alignas(64) Quote {
     QuoteId    exchange_quote_id{0};
     uint16_t   instrument_id;
     uint8_t    product_index;
-    uint8_t    _pad0[5];
+    uint8_t    _pad0{0};
+    BookId     book_id{INVALID_BOOK_ID};
     AccountId  account_id;
     ExchangeId exchange_id;
     OffsetFlag bid_offset;
@@ -232,7 +241,8 @@ struct alignas(64) Trade {
     uint64_t   trade_id;
     uint16_t   instrument_id;
     uint8_t    product_index;
-    uint8_t    _pad0[5];
+    uint8_t    _pad0{0};
+    BookId     book_id{INVALID_BOOK_ID};
     AccountId  account_id;
     ExchangeId exchange_id;
     Side       side;
@@ -276,6 +286,34 @@ struct Position {
     double   avg_long_price{0.0};
     double   avg_short_price{0.0};
     double   realized_pnl{0.0};
+};
+
+struct BookPosition {
+    BookId   book_id{INVALID_BOOK_ID};
+    uint16_t instrument_id{INVALID_INSTRUMENT_ID};
+    uint8_t  product_index{0xFF};
+    uint8_t  _pad0{0};
+    int32_t  net_position{0};
+    int32_t  long_position{0};
+    int32_t  short_position{0};
+    int32_t  long_today{0};
+    int32_t  short_today{0};
+    double   avg_long_price{0.0};
+    double   avg_short_price{0.0};
+    double   realized_pnl{0.0};
+};
+
+struct BookPortfolioGreeks {
+    BookId    book_id{INVALID_BOOK_ID};
+    uint8_t   product_index{0xFF};  // 0xFF = aggregate across all products
+    uint8_t   _pad0[3]{};
+    double    net_delta{0.0};
+    double    net_gamma{0.0};
+    double    net_vega{0.0};
+    double    net_theta{0.0};
+    double    pnl_realized{0.0};
+    double    pnl_unrealized{0.0};
+    Timestamp calc_ts{0};
 };
 
 // ─── Portfolio-level Greeks (aggregated across all instruments) ───────────────

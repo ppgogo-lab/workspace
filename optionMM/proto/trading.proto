@@ -68,6 +68,7 @@ message OrderUpdate {
     double price            = 9;
     int32  volume           = 10;
     uint64 exchange_trade_id = 11;
+    uint32 book_id          = 12;
 }
 
 message QuoteUpdate {
@@ -79,6 +80,7 @@ message QuoteUpdate {
     int32  ask_volume      = 6;
     string status          = 7;
     int64  ts_ns           = 8;
+    uint32 book_id         = 9;
 }
 
 message InstrumentInfo {
@@ -92,6 +94,74 @@ message InstrumentInfo {
     uint32 underlying_id   = 8;
     string exchange_id     = 9;
     int32  expiry_date     = 10;
+}
+
+message UserInfo {
+    uint32 user_id = 1;
+    string username = 2;
+    string display_name = 3;
+    bool active = 4;
+    uint32 default_book_id = 5;
+}
+
+message LoginRequest {
+    string username = 1;
+    string password = 2;
+}
+
+message LoginResponse {
+    bool ok = 1;
+    string message = 2;
+    string session_token = 3;
+    UserInfo user = 4;
+}
+
+message LogoutRequest {}
+
+message LogoutResponse {
+    bool ok = 1;
+    string message = 2;
+    bool triggered_shutdown = 3;
+}
+
+message WhoAmIRequest {}
+
+message WhoAmIResponse {
+    bool ok = 1;
+    string message = 2;
+    UserInfo user = 3;
+}
+
+message BookInfo {
+    uint32 book_id = 1;
+    string book_code = 2;
+    string display_name = 3;
+    bool active = 4;
+    string description = 5;
+}
+
+message BookPosition {
+    uint32 book_id = 1;
+    uint32 instrument_id = 2;
+    uint32 product_index = 3;
+    int32 net_position = 4;
+    int32 long_position = 5;
+    int32 short_position = 6;
+    double avg_long_price = 7;
+    double avg_short_price = 8;
+    double realized_pnl = 9;
+}
+
+message BookPortfolio {
+    uint32 book_id = 1;
+    uint32 product_index = 2;  // 0xFF = aggregate across all products
+    double total_delta = 3;
+    double total_gamma = 4;
+    double total_vega = 5;
+    double total_theta = 6;
+    double realized_pnl = 7;
+    double unrealized_pnl = 8;
+    int64 calc_ts_ns = 9;
 }
 
 message VolSurfaceSlice {
@@ -316,8 +386,14 @@ message ManualOrderRequest {
     string side          = 2;  // "buy" | "sell"
     double price         = 3;
     int32  volume        = 4;
+    optional uint32 book_id = 5;
 }
-message ManualOrderResponse { bool ok = 1; string message = 2; uint64 order_id = 3; }
+message ManualOrderResponse {
+    bool ok = 1;
+    string message = 2;
+    uint64 order_id = 3;
+    uint32 book_id = 4;
+}
 
 message CancelOrderRequest  { uint64 order_id = 1; uint32 instrument_id = 2; }
 message CancelOrderResponse { bool ok = 1; string message = 2; }
@@ -337,6 +413,10 @@ message SnapshotResponse {
     repeated ArbStrategyParamsEntry arb_params = 9;
     repeated ArbStrategyState arb_strategy_states = 10;
     repeated PcpOpportunityState pcp_opportunities = 11;
+    UserInfo current_user = 12;
+    repeated BookInfo books = 13;
+    repeated BookPosition book_positions = 14;
+    repeated BookPortfolio book_portfolios = 15;
 }
 
 message StreamRequest { uint32 product_index = 1; }  // 0xFF = all
@@ -344,6 +424,9 @@ message StreamRequest { uint32 product_index = 1; }  // 0xFF = all
 // ─── Service ──────────────────────────────────────────────────────────────────
 
 service TradingMonitor {
+    rpc Login            (LoginRequest)               returns (LoginResponse);
+    rpc Logout           (LogoutRequest)              returns (LogoutResponse);
+    rpc WhoAmI           (WhoAmIRequest)              returns (WhoAmIResponse);
     // ── Streaming (server → client) ──────────────────────────────────────────
     rpc StreamGreeks     (StreamRequest) returns (stream Greeks);
     rpc StreamPositions  (StreamRequest) returns (stream Position);
