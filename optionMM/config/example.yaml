@@ -184,8 +184,18 @@ thread_affinity:
   gateway_dispatcher_core: 12
   vol_fitter_core: 13
   risk_monitor_core: 14
-  timer_core: 14
+  timer_core: 11
   grpc_server_core: 15
+
+thread_scheduling:
+  enable_realtime: false
+  pricer_priority: 80
+  strategy_priority: 70
+  arbitrage_priority: 60
+  gateway_dispatcher_priority: 75
+  vol_fitter_priority: 20
+  risk_monitor_priority: 30
+  timer_priority: 40
 
 timer:
   hedge_check_interval_ms: 1000

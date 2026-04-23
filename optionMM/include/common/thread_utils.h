@@ -23,6 +23,7 @@ void set_thread_name(std::string_view name) noexcept;
 // Set the calling thread to SCHED_FIFO real-time scheduling at the given
 // priority (1–99). Requires CAP_SYS_NICE or root. Aborts on failure.
 void set_realtime_priority(int priority) noexcept;
+[[nodiscard]] bool try_set_realtime_priority(int priority) noexcept;
 
 // Return the NUMA node for a given logical CPU core.
 // Reads /sys/devices/system/cpu/cpuN/node*/cpumap.

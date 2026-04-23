@@ -196,6 +196,7 @@ public:
 private:
     struct LiveOrderState {
         Order order{};
+        GatewayOrderRecoveryHandle recovery{};
     };
 
     struct LiveQuoteState {
@@ -406,14 +407,20 @@ private:
                              const GatewayQuoteRecoveryHandle* recovery = nullptr) noexcept;
     void persist_trade(const Trade& trade) noexcept;
     void rebuild_book_position_locked(const Trade& trade) noexcept;
-    void track_live_order_submit(const Order& order) noexcept;
+    void track_live_order_submit(const Order& order,
+                                 const GatewayOrderRecoveryHandle* recovery) noexcept;
     void track_live_quote_submit(const Quote& quote,
                                  const GatewayQuoteRecoveryHandle* recovery) noexcept;
     void handle_gateway_order_update(Order& order,
-                                     GatewayEventType type) noexcept;
+                                     GatewayEventType type,
+                                     GatewayOrderRecoveryHandle* recovery = nullptr) noexcept;
     void handle_gateway_quote_update(Quote& quote,
                                      GatewayEventType type,
-                                     const GatewayQuoteRecoveryHandle* recovery = nullptr) noexcept;
+                                     GatewayQuoteRecoveryHandle* recovery = nullptr) noexcept;
+    void update_live_order_recovery(OrderId order_id,
+                                    const GatewayOrderRecoveryHandle& recovery) noexcept;
+    void update_live_quote_recovery(QuoteId quote_id,
+                                    const GatewayQuoteRecoveryHandle& recovery) noexcept;
     void handle_gateway_fill(Trade* trade, GatewayEventType* type) noexcept;
     void cancel_all_live_orders_and_quotes() noexcept;
     [[nodiscard]] BookId arb_book_id_for_type(int product_idx,

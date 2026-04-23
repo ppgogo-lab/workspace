@@ -216,8 +216,20 @@ struct ThreadAffinityConfig {
     int gateway_dispatcher_core{12};
     int vol_fitter_core{13};
     int risk_monitor_core{14};
-    int timer_core{14};        // shared with risk_monitor by default
+    int timer_core{11};
     int grpc_server_core{15};
+};
+
+struct ThreadSchedulingConfig {
+    bool enable_realtime{false};
+    uint8_t _pad0[3]{};
+    int pricer_priority{80};
+    int strategy_priority{70};
+    int arbitrage_priority{60};
+    int gateway_dispatcher_priority{75};
+    int vol_fitter_priority{20};
+    int risk_monitor_priority{30};
+    int timer_priority{40};
 };
 
 // ─── Monitoring configuration ─────────────────────────────────────────────────
@@ -257,6 +269,7 @@ struct SystemConfig {
     MonitoringConfig    monitoring;
     PersistenceConfig   persistence;
     ThreadAffinityConfig affinity;
+    ThreadSchedulingConfig scheduling;
     BookBootstrapConfig books[MAX_BOOKS]{};
     int                 book_count{0};
     UserBootstrapConfig users[MAX_USERS]{};

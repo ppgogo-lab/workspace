@@ -376,8 +376,39 @@ static ThreadAffinityConfig parse_affinity(const YAML::Node& n) {
     c.gateway_dispatcher_core = get<int>(n["gateway_dispatcher_core"], "affinity.gateway_dispatcher_core", 12);
     c.vol_fitter_core         = get<int>(n["vol_fitter_core"],         "affinity.vol_fitter_core", 13);
     c.risk_monitor_core       = get<int>(n["risk_monitor_core"],       "affinity.risk_monitor_core", 14);
-    c.timer_core              = get<int>(n["timer_core"],              "affinity.timer_core", 14);
+    c.timer_core              = get<int>(n["timer_core"],              "affinity.timer_core", 11);
     c.grpc_server_core        = get<int>(n["grpc_server_core"],        "affinity.grpc_server_core", 15);
+    return c;
+}
+
+static ThreadSchedulingConfig parse_scheduling(const YAML::Node& n) {
+    ThreadSchedulingConfig c;
+    if (!n) return c;
+
+    c.enable_realtime = get<bool>(n["enable_realtime"],
+                                  "thread_scheduling.enable_realtime",
+                                  false);
+    c.pricer_priority = get<int>(n["pricer_priority"],
+                                 "thread_scheduling.pricer_priority",
+                                 80);
+    c.strategy_priority = get<int>(n["strategy_priority"],
+                                   "thread_scheduling.strategy_priority",
+                                   70);
+    c.arbitrage_priority = get<int>(n["arbitrage_priority"],
+                                    "thread_scheduling.arbitrage_priority",
+                                    60);
+    c.gateway_dispatcher_priority = get<int>(n["gateway_dispatcher_priority"],
+                                             "thread_scheduling.gateway_dispatcher_priority",
+                                             75);
+    c.vol_fitter_priority = get<int>(n["vol_fitter_priority"],
+                                     "thread_scheduling.vol_fitter_priority",
+                                     20);
+    c.risk_monitor_priority = get<int>(n["risk_monitor_priority"],
+                                       "thread_scheduling.risk_monitor_priority",
+                                       30);
+    c.timer_priority = get<int>(n["timer_priority"],
+                                "thread_scheduling.timer_priority",
+                                40);
     return c;
 }
 
@@ -453,6 +484,7 @@ SystemConfig load_config(std::string_view path) {
     cfg.monitoring = parse_monitoring(root["monitoring"]);
     cfg.persistence = parse_persistence(root["persistence"]);
     cfg.affinity  = parse_affinity(root["thread_affinity"]);
+    cfg.scheduling = parse_scheduling(root["thread_scheduling"]);
 
     // Products (underlying option series)
     auto products_node = root["products"];

@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <cerrno>
 #include <thread>
 #include <cstdint>
 
@@ -69,6 +70,16 @@ void set_realtime_priority(int priority) noexcept {
             priority, std::strerror(errno));
         std::abort();
     }
+}
+
+bool try_set_realtime_priority(int priority) noexcept {
+    if (priority < 1 || priority > 99) {
+        return false;
+    }
+
+    struct sched_param param{};
+    param.sched_priority = priority;
+    return sched_setscheduler(0, SCHED_FIFO, &param) == 0;
 }
 
 int get_numa_node_for_core(int core_id) noexcept {
