@@ -36,7 +36,7 @@ struct FPGARecord {
 class FPGAFeedHandler : public IFeedHandler {
 public:
     FPGAFeedHandler(const FpgaConfig& cfg,
-                    SPSCRingBuffer<MarketTick, 1024>* tick_buf) noexcept
+                    SPSCRingBuffer<TopOfBookTick, 1024>* tick_buf) noexcept
         : IFeedHandler(tick_buf), cfg_(cfg) {}
 
     void start() override;

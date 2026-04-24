@@ -13,7 +13,7 @@ double clamp01(double value) noexcept {
     return std::clamp(value, 0.0, 1.0);
 }
 
-double microprice_from_market(const MarketTick& md) noexcept {
+double microprice_from_market(const TopOfBookTick& md) noexcept {
     if (md.bid_price[0] <= 0.0 || md.ask_price[0] <= md.bid_price[0]) {
         return 0.0;
     }
@@ -55,7 +55,7 @@ void OptionMMCoreStrategy::init(uint8_t product_idx,
                                 PreTradeRisk* pre_risk,
                                 AtomicMMParams* params,
                                 const Instrument* instruments,
-                                const MarketTick* tick_snapshot,
+                                const TopOfBookTick* tick_snapshot,
                                 const PostTradeRisk* post_risk,
                                 MonitoringTopic<SystemAlert, 256>* alert_topic) noexcept {
     product_idx_ = product_idx;
@@ -475,7 +475,7 @@ OptionMMCoreStrategy::build_decision(OptionState& state, int64_t now_ns) const n
         return decision;
     }
 
-    const MarketTick& md = tick_snapshot_[state.instrument_id];
+    const TopOfBookTick& md = tick_snapshot_[state.instrument_id];
     const bool has_market = md.recv_ts_ns > 0
         && md.bid_price[0] > 0.0
         && md.ask_price[0] > md.bid_price[0];
@@ -772,7 +772,7 @@ void OptionMMCoreStrategy::maybe_trigger_hedge(int64_t now_ns) noexcept {
         static_cast<int64_t>(params_->min_quote_interval_ms.load(std::memory_order_relaxed) * 1'000'000.0));
     if (now_ns - last_hedge_ts_ns_ < min_hedge_interval_ns) return;
 
-    const MarketTick& underlying_md = tick_snapshot_[underlying_id_];
+    const TopOfBookTick& underlying_md = tick_snapshot_[underlying_id_];
     if (underlying_md.recv_ts_ns == 0
         || now_ns - underlying_md.recv_ts_ns > STALE_NS
         || underlying_md.bid_price[0] <= 0.0

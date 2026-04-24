@@ -98,7 +98,7 @@ void MulticastFeedHandler::decode_and_push(const uint8_t* buf, int len,
     std::memcpy(&tick.volume,         buf + 176, 8);
     std::memcpy(&tick.sequence_no,    buf + 184, 8);
 
-    if (!tick_buf_->try_push(tick))
+    if (!tick_buf_->try_push(to_top_of_book_tick(tick)))
         dropped_count_.fetch_add(1, std::memory_order_relaxed);
     else
         msg_count_.fetch_add(1, std::memory_order_relaxed);

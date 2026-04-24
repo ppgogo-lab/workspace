@@ -11,7 +11,7 @@ namespace {
 // For aggressive/taker-style execution we cross the spread:
 //   buy  -> lift best ask
 //   sell -> hit best bid
-[[nodiscard]] double bid_price_for_side(const MarketTick& tick, Side side) noexcept {
+[[nodiscard]] double bid_price_for_side(const TopOfBookTick& tick, Side side) noexcept {
     return side == Side::Buy ? tick.ask_price[0] : tick.bid_price[0];
 }
 
@@ -25,7 +25,7 @@ void PCPArbitrageStrategy::init(uint8_t product_idx,
                                 SPSCRingBuffer<ArbIntent, 256>* intent_buf,
                                 AtomicArbParams* params,
                                 const Instrument* instruments,
-                                const MarketTick* tick_snapshot,
+                                const TopOfBookTick* tick_snapshot,
                                 const Greeks* greeks_snapshot,
                                 double risk_free_rate,
                                 const HardRiskConfig& hard_risk_cfg,
@@ -177,7 +177,7 @@ double PCPArbitrageStrategy::discount_factor(const Pair& pair, Timestamp now_ns)
     return std::exp(-risk_free_rate_ * T);
 }
 
-bool PCPArbitrageStrategy::market_valid(const MarketTick& tick, Timestamp now_ns) const noexcept {
+bool PCPArbitrageStrategy::market_valid(const TopOfBookTick& tick, Timestamp now_ns) const noexcept {
     return tick.recv_ts_ns > 0
         && now_ns - tick.recv_ts_ns <= kMarketStaleNs
         && tick.bid_price[0] > 0.0
@@ -191,9 +191,9 @@ Volume PCPArbitrageStrategy::executable_volume(const Pair& pair,
                                                Direction dir,
                                                int max_order_volume) const noexcept {
     if (!pair.active || max_order_volume <= 0) return 0;
-    const MarketTick& call_tick = tick_snapshot_[pair.call_id];
-    const MarketTick& put_tick = tick_snapshot_[pair.put_id];
-    const MarketTick& future_tick = tick_snapshot_[pair.future_id];
+    const TopOfBookTick& call_tick = tick_snapshot_[pair.call_id];
+    const TopOfBookTick& put_tick = tick_snapshot_[pair.put_id];
+    const TopOfBookTick& future_tick = tick_snapshot_[pair.future_id];
 
     if (dir == Direction::LongSyntheticShortFuture) {
         // Buy call at ask, sell put at bid, sell future at bid. Size is bounded
@@ -239,9 +239,9 @@ bool PCPArbitrageStrategy::scan_best_opportunity(Timestamp now_ns,
         const Pair& pair = pairs_[i];
         if (!pair.active) return;
 
-        const MarketTick& call_tick = tick_snapshot_[pair.call_id];
-        const MarketTick& put_tick = tick_snapshot_[pair.put_id];
-        const MarketTick& future_tick = tick_snapshot_[pair.future_id];
+        const TopOfBookTick& call_tick = tick_snapshot_[pair.call_id];
+        const TopOfBookTick& put_tick = tick_snapshot_[pair.put_id];
+        const TopOfBookTick& future_tick = tick_snapshot_[pair.future_id];
         if (!market_valid(call_tick, now_ns)
             || !market_valid(put_tick, now_ns)
             || !market_valid(future_tick, now_ns)) {
@@ -353,9 +353,9 @@ void PCPArbitrageStrategy::publish_pair_monitor_states(Timestamp now_ns,
             continue;
         }
 
-        const MarketTick& call_tick = tick_snapshot_[pair.call_id];
-        const MarketTick& put_tick = tick_snapshot_[pair.put_id];
-        const MarketTick& future_tick = tick_snapshot_[pair.future_id];
+        const TopOfBookTick& call_tick = tick_snapshot_[pair.call_id];
+        const TopOfBookTick& put_tick = tick_snapshot_[pair.put_id];
+        const TopOfBookTick& future_tick = tick_snapshot_[pair.future_id];
         const bool valid_call = market_valid(call_tick, now_ns);
         const bool valid_put = market_valid(put_tick, now_ns);
         const bool valid_future = market_valid(future_tick, now_ns);
@@ -509,9 +509,9 @@ void PCPArbitrageStrategy::start_attempt(const Pair& pair,
     monitor_last_trigger_edge_ticks_.store(edge_ticks, std::memory_order_relaxed);
     monitor_last_trigger_ts_ns_.store(now_ns, std::memory_order_relaxed);
 
-    const MarketTick& call_tick = tick_snapshot_[pair.call_id];
-    const MarketTick& put_tick = tick_snapshot_[pair.put_id];
-    const MarketTick& future_tick = tick_snapshot_[pair.future_id];
+    const TopOfBookTick& call_tick = tick_snapshot_[pair.call_id];
+    const TopOfBookTick& put_tick = tick_snapshot_[pair.put_id];
+    const TopOfBookTick& future_tick = tick_snapshot_[pair.future_id];
 
     if (dir == Direction::LongSyntheticShortFuture) {
         // Synthetic long future = +Call - Put. We hedge that by shorting the
@@ -591,7 +591,7 @@ void PCPArbitrageStrategy::submit_cleanup_orders(Timestamp now_ns) noexcept {
     for (std::size_t i = 0; i < instruments.size(); ++i) {
         if (net_qty[i] == 0) continue;
         const uint16_t instrument_id = instruments[i];
-        const MarketTick& tick = tick_snapshot_[instrument_id];
+        const TopOfBookTick& tick = tick_snapshot_[instrument_id];
         if (!market_valid(tick, now_ns)) {
             last_suppress_flags_ |= ArbSuppressCleanupPending | ArbSuppressInvalidMarket;
             continue;

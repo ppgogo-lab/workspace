@@ -84,7 +84,7 @@ static bool wait_for_monitored_quote(const TradingEngine& engine,
 }
 
 static bool wait_for_monitored_tick(const TradingEngine& engine,
-                                    MarketTick* out,
+                                    TopOfBookTick* out,
                                     std::chrono::milliseconds timeout = std::chrono::milliseconds(200)) {
     uint64_t cursor = 0;
     const auto deadline = std::chrono::steady_clock::now() + timeout;
@@ -430,7 +430,7 @@ TEST(TradingEngineIntegration, TickToQuote) {
     engine->start();
 
     // Push a synthetic tick directly into the engine's tick buffer
-    MarketTick tick{};
+    TopOfBookTick tick{};
     tick.instrument_id  = 0;
     tick.last_price     = 5.0;
     tick.bid_price[0]   = 4.99;
@@ -481,7 +481,7 @@ TEST(TradingEngineIntegration, DeferredMonitoringStillStreamsQuotes) {
     auto engine = std::make_unique<TradingEngine>(cfg, std::move(gw), nullptr);
     engine->start();
 
-    MarketTick tick{};
+    TopOfBookTick tick{};
     tick.instrument_id  = 0;
     tick.last_price     = 5.0;
     tick.bid_price[0]   = 4.99;
@@ -531,7 +531,7 @@ TEST(TradingEngineIntegration, DeferredMonitoringStillStreamsTicks) {
     auto engine = std::make_unique<TradingEngine>(cfg, std::move(gw), nullptr);
     engine->start();
 
-    MarketTick tick{};
+    TopOfBookTick tick{};
     tick.instrument_id  = 1;
     tick.last_price     = 5.0;
     tick.bid_price[0]   = 4.99;
@@ -540,7 +540,7 @@ TEST(TradingEngineIntegration, DeferredMonitoringStillStreamsTicks) {
     tick.exchange_ts_ns = tick.recv_ts_ns;
     (void)engine->tick_buf().try_push(tick);
 
-    MarketTick monitored{};
+    TopOfBookTick monitored{};
     const bool saw_monitored_tick = wait_for_monitored_tick(*engine, &monitored);
 
     engine->stop();
@@ -596,7 +596,7 @@ TEST(TradingEngineIntegration, PricingSignalSuppressionSkipsSubThresholdUpdates)
     auto engine = std::make_unique<TradingEngine>(cfg, std::move(gw), nullptr);
     engine->start();
 
-    MarketTick option_tick{};
+    TopOfBookTick option_tick{};
     option_tick.instrument_id = 1;
     option_tick.last_price = 5.0;
     option_tick.bid_price[0] = 4.99;
@@ -605,7 +605,7 @@ TEST(TradingEngineIntegration, PricingSignalSuppressionSkipsSubThresholdUpdates)
     option_tick.exchange_ts_ns = option_tick.recv_ts_ns;
     ASSERT_TRUE(engine->tick_buf().try_push(option_tick));
 
-    MarketTick first_future_tick{};
+    TopOfBookTick first_future_tick{};
     first_future_tick.instrument_id = 0;
     first_future_tick.last_price = 5.0;
     first_future_tick.bid_price[0] = 4.99;
@@ -630,7 +630,7 @@ TEST(TradingEngineIntegration, PricingSignalSuppressionSkipsSubThresholdUpdates)
         option_tick.exchange_ts_ns = option_tick.recv_ts_ns;
         while (!engine->tick_buf().try_push(option_tick)) spin_pause();
 
-        MarketTick small_future_tick{};
+        TopOfBookTick small_future_tick{};
         small_future_tick.instrument_id = 0;
         small_future_tick.last_price = 5.0001 + static_cast<double>(i) * 0.00005;
         small_future_tick.bid_price[0] = small_future_tick.last_price - 0.01;
@@ -697,7 +697,7 @@ TEST(TradingEngineIntegration, PricingSignalOverflowUsesBackpressureMitigation) 
     engine->start();
 
     for (int burst = 0; burst < 64; ++burst) {
-        MarketTick tick{};
+        TopOfBookTick tick{};
         tick.instrument_id  = 0;
         tick.last_price     = 75000.0 + burst * 5.0;
         tick.bid_price[0]   = tick.last_price - 1.0;

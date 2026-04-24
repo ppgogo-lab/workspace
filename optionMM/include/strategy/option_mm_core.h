@@ -26,7 +26,7 @@ public:
               PreTradeRisk* pre_risk,
               AtomicMMParams* params,
               const Instrument* instruments,
-              const MarketTick* tick_snapshot,
+              const TopOfBookTick* tick_snapshot,
               const PostTradeRisk* post_risk,
               MonitoringTopic<SystemAlert, 256>* alert_topic) noexcept;
 
@@ -103,7 +103,7 @@ private:
     static constexpr int64_t CANCEL_RETRY_NS = 1'000'000'000LL;  // Minimum spacing between repeated cancel attempts.
     static constexpr uint8_t MAX_CANCEL_ATTEMPTS = 3;  // Stop retrying cancels after this many sends.
 
-    const MarketTick* tick_snapshot_{nullptr};  // Shared market data snapshot for options and the product future.
+    const TopOfBookTick* tick_snapshot_{nullptr};  // Shared TOB snapshot for options and the product future.
     const PostTradeRisk* post_risk_{nullptr};  // Portfolio soft-risk gate shared with the monitor.
     MonitoringTopic<SystemAlert, 256>* alert_topic_{nullptr};  // Alert sink for operator-visible failures.
     OptionState option_state_[MAX_INSTRUMENTS]{};  // Per-instrument quote state machine storage.

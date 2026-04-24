@@ -235,7 +235,7 @@ void populate_quote_update(const Quote& quote,
     msg->set_book_id(quote.book_id);
 }
 
-void populate_tick(const MarketTick& tick, omm::proto::Tick* msg) {
+void populate_tick(const TopOfBookTick& tick, omm::proto::Tick* msg) {
     msg->set_instrument_id(tick.instrument_id);
     msg->set_last_price(tick.last_price);
     msg->set_bid_price(tick.bid_price[0]);
@@ -1087,7 +1087,7 @@ public:
         grpc::Status auth_status = authenticate(ctx, nullptr, &token);
         if (!auth_status.ok()) return auth_status;
         uint64_t cursor = engine_.monitor_ticks().latest_seq();
-        MarketTick tick{};
+        TopOfBookTick tick{};
         while (!ctx->IsCancelled()) {
             if (!session_manager_.is_active(token)) {
                 return grpc::Status(grpc::StatusCode::UNAUTHENTICATED, "session expired");

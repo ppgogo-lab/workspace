@@ -12,7 +12,7 @@ class SimGateway;
 class SimFeedHandler : public IFeedHandler {
 public:
     SimFeedHandler(const SimConfig& cfg,
-                   SPSCRingBuffer<MarketTick, 1024>* tick_buf,
+                   SPSCRingBuffer<TopOfBookTick, 1024>* tick_buf,
                    SimGateway* sim_gateway) noexcept
         : IFeedHandler(tick_buf), cfg_(cfg), sim_gateway_(sim_gateway) {}
 

@@ -41,7 +41,7 @@ public:
               SPSCRingBuffer<ArbIntent, 256>* intent_buf,
               AtomicArbParams* params,
               const Instrument* instruments,
-              const MarketTick* tick_snapshot,
+              const TopOfBookTick* tick_snapshot,
               const Greeks* greeks_snapshot,
               double risk_free_rate,
               const HardRiskConfig& hard_risk_cfg,
@@ -105,7 +105,7 @@ private:
 
     void build_pairs() noexcept;
     [[nodiscard]] double discount_factor(const Pair& pair, Timestamp now_ns) const noexcept;
-    [[nodiscard]] bool market_valid(const MarketTick& tick, Timestamp now_ns) const noexcept;
+    [[nodiscard]] bool market_valid(const TopOfBookTick& tick, Timestamp now_ns) const noexcept;
     [[nodiscard]] Volume executable_volume(const Pair& pair, Direction dir, int max_order_volume) const noexcept;
     [[nodiscard]] bool scan_best_opportunity(Timestamp now_ns,
                                              Pair* best_pair,

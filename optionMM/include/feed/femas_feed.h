@@ -12,7 +12,7 @@ namespace omm {
 class FEMASFeedHandler : public IFeedHandler, private CUstpFtdcMduserSpi {
 public:
     FEMASFeedHandler(const FemasMdConfig& cfg,
-                     SPSCRingBuffer<MarketTick, 1024>* tick_buf) noexcept
+                     SPSCRingBuffer<TopOfBookTick, 1024>* tick_buf) noexcept
         : IFeedHandler(tick_buf), cfg_(cfg) {}
 
     ~FEMASFeedHandler() override { stop(); }

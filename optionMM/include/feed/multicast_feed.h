@@ -17,7 +17,7 @@ namespace omm {
 class MulticastFeedHandler : public IFeedHandler {
 public:
     MulticastFeedHandler(const MulticastConfig& cfg,
-                         SPSCRingBuffer<MarketTick, 1024>* tick_buf) noexcept
+                         SPSCRingBuffer<TopOfBookTick, 1024>* tick_buf) noexcept
         : IFeedHandler(tick_buf), cfg_(cfg) {}
 
     void start() override;

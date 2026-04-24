@@ -67,7 +67,7 @@ public:
     [[nodiscard]] int product_count() const noexcept { return cfg_.product_count; }
     [[nodiscard]] int n_instruments() const noexcept { return n_instruments_; }
     [[nodiscard]] const Instrument* instruments() const noexcept { return instruments_; }
-    [[nodiscard]] const MarketTick* tick_snapshot() const noexcept { return tick_snapshot_; }
+    [[nodiscard]] const TopOfBookTick* tick_snapshot() const noexcept { return tick_snapshot_; }
     [[nodiscard]] const VolSurfaceManager<OrcWingVolSurface>& orc_wing_surface(int i) const noexcept {
         return orc_wing_surfaces_[i];
     }
@@ -84,7 +84,7 @@ public:
 
     // Greeks snapshot – last computed Greeks per instrument (written by pricer thread)
     [[nodiscard]] const Greeks* greeks_snapshot() const noexcept { return greeks_snapshot_; }
-    [[nodiscard]] const MonitoringTopic<MarketTick, 8192>& monitor_ticks() const noexcept {
+    [[nodiscard]] const MonitoringTopic<TopOfBookTick, 8192>& monitor_ticks() const noexcept {
         return monitor_ticks_;
     }
     [[nodiscard]] const MonitoringTopic<Order, 4096>& monitor_orders() const noexcept {
@@ -182,7 +182,7 @@ public:
     void persist_risk_limits_update(const SoftRiskConfig& cfg) noexcept;
 
     // Allow tests to push ticks directly
-    [[nodiscard]] SPSCRingBuffer<MarketTick, 1024>& tick_buf() noexcept {
+    [[nodiscard]] SPSCRingBuffer<TopOfBookTick, 1024>& tick_buf() noexcept {
         return tick_buf_;
     }
     // Allow tests to drain quotes
@@ -209,7 +209,7 @@ private:
     SystemConfig cfg_;
 
     // ── Ring buffers (engine owns all) ───────────────────────────────────────
-    alignas(64) SPSCRingBuffer<MarketTick,    1024> tick_buf_;
+    alignas(64) SPSCRingBuffer<TopOfBookTick, 1024> tick_buf_;
     alignas(64) SPSCRingBuffer<PricingSignal,  256> signal_buf_[MAX_PRODUCTS];
     alignas(64) SPSCRingBuffer<GatewayEvent,   512> gateway_event_buf_[MAX_PRODUCTS];
     alignas(64) SPSCRingBuffer<TimerEvent,      64> timer_buf_[MAX_PRODUCTS];
@@ -222,7 +222,7 @@ private:
     alignas(64) SPSCRingBuffer<Order,         4096> deferred_monitor_orders_;
     alignas(64) SPSCRingBuffer<Quote,         4096> deferred_monitor_quotes_;
     alignas(64) SPSCRingBuffer<Trade,         4096> deferred_monitor_trades_;
-    alignas(64) SPSCRingBuffer<MarketTick,    8192> deferred_monitor_ticks_;
+    alignas(64) SPSCRingBuffer<TopOfBookTick, 8192> deferred_monitor_ticks_;
     alignas(64) SPSCRingBuffer<uint16_t,      2048> coalesced_signal_index_buf_[MAX_PRODUCTS];
 
     alignas(64) PricingSignal coalesced_signal_mailbox_[MAX_PRODUCTS][MAX_INSTRUMENTS]{};
@@ -317,13 +317,13 @@ private:
     alignas(64) Greeks     greeks_snapshot_[MAX_INSTRUMENTS]{};
     // Tick snapshot — updated by pricer thread, read by vol fitter thread.
     // Written with relaxed stores (eventual consistency is fine for fitting).
-    alignas(64) MarketTick tick_snapshot_[MAX_INSTRUMENTS]{};
+    alignas(64) TopOfBookTick tick_snapshot_[MAX_INSTRUMENTS]{};
 
     // Manual order sequence counter (gRPC server thread)
     std::atomic<uint32_t> manual_order_seq_{1};
 
     // Monitoring histories for gRPC/UI readers. Single-writer per topic.
-    MonitoringTopic<MarketTick, 8192> monitor_ticks_;
+    MonitoringTopic<TopOfBookTick, 8192> monitor_ticks_;
     MonitoringTopic<Order, 4096>      monitor_orders_;
     MonitoringTopic<Quote, 4096>      monitor_quotes_;
     MonitoringTopic<Trade, 4096>      monitor_trades_;
@@ -396,7 +396,7 @@ private:
                              uint16_t instrument_id,
                              const PricingSignal& sig,
                              uint64_t surface_version) noexcept;
-    void publish_monitor_tick(const MarketTick& tick) noexcept;
+    void publish_monitor_tick(const TopOfBookTick& tick) noexcept;
     void publish_monitor_order(const Order& order) noexcept;
     void publish_monitor_quote(const Quote& quote) noexcept;
     void publish_monitor_trade(const Trade& trade) noexcept;

@@ -98,7 +98,7 @@ protected:
     SPSCRingBuffer<Order, 512> order_buf;
     MonitoringTopic<SystemAlert, 256> alert_topic;
     Instrument instruments[MAX_INSTRUMENTS]{};
-    MarketTick tick_snapshot[MAX_INSTRUMENTS]{};
+    TopOfBookTick tick_snapshot[MAX_INSTRUMENTS]{};
     OptionMMCoreStrategy strat;
 
     void SetUp() override {

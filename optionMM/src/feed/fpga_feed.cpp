@@ -68,7 +68,7 @@ void FPGAFeedHandler::decode_record(const FPGARecord& rec) noexcept {
         tick.ask_volume[i] = rec.ask_volume[i];
     }
 
-    if (!tick_buf_->try_push(tick))
+    if (!tick_buf_->try_push(to_top_of_book_tick(tick)))
         dropped_count_.fetch_add(1, std::memory_order_relaxed);
     else
         msg_count_.fetch_add(1, std::memory_order_relaxed);

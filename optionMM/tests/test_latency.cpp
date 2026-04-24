@@ -146,8 +146,8 @@ static Instrument make_option(uint16_t id,
     return o;
 }
 
-static MarketTick make_tick(uint16_t id, double last, double bid, double ask, uint64_t sequence_no = 0) {
-    MarketTick t{};
+static TopOfBookTick make_tick(uint16_t id, double last, double bid, double ask, uint64_t sequence_no = 0) {
+    TopOfBookTick t{};
     t.instrument_id = id;
     t.last_price = last;
     t.bid_price[0] = bid;
@@ -318,7 +318,7 @@ static void configure_option_mm_core_product(ProductConfig* cfg_product,
 
 static void push_option_market_ticks(TradingEngine* engine, const ProductScenario& product) {
     for (const auto& seed : product.options) {
-        MarketTick tick = make_tick(seed.id, seed.last, seed.bid, seed.ask);
+        TopOfBookTick tick = make_tick(seed.id, seed.last, seed.bid, seed.ask);
         while (!engine->tick_buf().try_push(tick)) spin_pause();
     }
 }
@@ -327,7 +327,7 @@ static int64_t push_future_tick(TradingEngine* engine,
                                 const ProductScenario& product,
                                 double future_price,
                                 uint64_t sequence_no) {
-    MarketTick tick{};
+    TopOfBookTick tick{};
     tick.instrument_id = product.future_id;
     tick.last_price = future_price;
     tick.bid_price[0] = future_price - product.future_tick;

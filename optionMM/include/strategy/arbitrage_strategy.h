@@ -121,7 +121,7 @@ protected:
     SPSCRingBuffer<ArbIntent, 256>* intent_buf_{nullptr};
     AtomicArbParams*              params_{nullptr};
     const Instrument*             instruments_{nullptr};
-    const MarketTick*             tick_snapshot_{nullptr};
+    const TopOfBookTick*          tick_snapshot_{nullptr};
     const Greeks*                 greeks_snapshot_{nullptr};
     AccountId                     account_id_{};
 };

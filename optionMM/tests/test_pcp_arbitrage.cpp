@@ -47,12 +47,12 @@ Instrument make_option(uint16_t id,
     return instr;
 }
 
-MarketTick make_tick(uint16_t instrument_id,
-                     double bid,
-                     double ask,
-                     int32_t bid_volume = 5,
-                     int32_t ask_volume = 5) {
-    MarketTick tick{};
+TopOfBookTick make_tick(uint16_t instrument_id,
+                        double bid,
+                        double ask,
+                        int32_t bid_volume = 5,
+                        int32_t ask_volume = 5) {
+    TopOfBookTick tick{};
     tick.instrument_id = instrument_id;
     tick.recv_ts_ns = get_monotonic_ns();
     tick.exchange_ts_ns = tick.recv_ts_ns;
@@ -87,7 +87,7 @@ protected:
     SPSCRingBuffer<ArbIntent, 256> intent_buf_;
     AtomicArbParams params_;
     std::array<Instrument, MAX_INSTRUMENTS> instruments_{};
-    std::array<MarketTick, MAX_INSTRUMENTS> ticks_{};
+    std::array<TopOfBookTick, MAX_INSTRUMENTS> ticks_{};
     std::array<Greeks, MAX_INSTRUMENTS> greeks_{};
     HardRiskConfig hard_risk_{};
     AccountId account_{};

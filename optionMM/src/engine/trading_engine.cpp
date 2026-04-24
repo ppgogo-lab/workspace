@@ -1084,7 +1084,7 @@ void TradingEngine::note_signal_emitted(uint8_t product_idx,
     }
 }
 
-void TradingEngine::publish_monitor_tick(const MarketTick& tick) noexcept {
+void TradingEngine::publish_monitor_tick(const TopOfBookTick& tick) noexcept {
     switch (cfg_.monitoring.hot_path_publish_mode) {
     case MonitoringPublishMode::Full:
         monitor_ticks_.publish(tick);
@@ -1218,8 +1218,8 @@ void TradingEngine::pricer_loop() noexcept {
                                  cfg_.scheduling.pricer_priority,
                                  "omm-pricer");
 
-    MarketTick tick{};
-    MarketTick pending_future_tick[MAX_PRODUCTS]{};
+    TopOfBookTick tick{};
+    TopOfBookTick pending_future_tick[MAX_PRODUCTS]{};
     bool pending_product[MAX_PRODUCTS]{};
     uint16_t next_option_offset[MAX_PRODUCTS]{};
     uint16_t cold_greeks_offset[MAX_PRODUCTS]{};
@@ -1264,7 +1264,7 @@ void TradingEngine::pricer_loop() noexcept {
             next_cold_greeks_due_ns[prod] = now + cold_greeks_interval_ns;
             return true;
         }
-        const MarketTick& future_tick = tick_snapshot_[future_id];
+        const TopOfBookTick& future_tick = tick_snapshot_[future_id];
         const double F_mid = future_tick.last_price;
         if (F_mid < 1e-10) {
             next_cold_greeks_due_ns[prod] = now + cold_greeks_interval_ns;
@@ -1385,7 +1385,7 @@ void TradingEngine::pricer_loop() noexcept {
         }
 
         const uint8_t prod = static_cast<uint8_t>(selected_prod);
-        const MarketTick& future_tick = pending_future_tick[prod];
+        const TopOfBookTick& future_tick = pending_future_tick[prod];
         const double F_mid = future_tick.last_price;
         const double F_bid = future_tick.bid_price[0] > 0.0 ? future_tick.bid_price[0] : F_mid;
         const double F_ask = future_tick.ask_price[0] > F_bid ? future_tick.ask_price[0] : F_mid;
@@ -2018,7 +2018,7 @@ void TradingEngine::monitor_publish_loop() noexcept {
            || !deferred_monitor_trades_.empty_approx()) {
         bool did_work = false;
 
-        MarketTick tick{};
+        TopOfBookTick tick{};
         for (int drained = 0;
              drained < kMonitorPublishBurstCap && deferred_monitor_ticks_.try_pop(tick);
              ++drained) {
@@ -2110,7 +2110,7 @@ void TradingEngine::vol_fitter_loop() noexcept {
                 if (instr.kind == InstrumentKind::Future) {
                     // Use this future's last price as forward for all expiries
                     // (in production, match by expiry; here use a single forward)
-                    const MarketTick& t = tick_snapshot_[id];
+                    const TopOfBookTick& t = tick_snapshot_[id];
                     if (t.last_price > 1e-10) {
                         for (int e = 0; e < MAX_EXPIRIES; ++e)
                             if (fwd_prices[e] < 1e-10) fwd_prices[e] = t.last_price;
@@ -2120,7 +2120,7 @@ void TradingEngine::vol_fitter_loop() noexcept {
 
                 if (instr.kind != InstrumentKind::Option) continue;
 
-                const MarketTick& t = tick_snapshot_[id];
+                const TopOfBookTick& t = tick_snapshot_[id];
                 if (t.recv_ts_ns == 0) continue;  // no tick yet
 
                 // Compute T for this instrument
@@ -2139,7 +2139,7 @@ void TradingEngine::vol_fitter_loop() noexcept {
                     expiry_Ts[ei] = T;
                     // Forward price for this expiry: use underlying's last tick
                     if (instr.underlying_id < n_instruments_) {
-                        const MarketTick& ut = tick_snapshot_[instr.underlying_id];
+                        const TopOfBookTick& ut = tick_snapshot_[instr.underlying_id];
                         if (ut.last_price > 1e-10) fwd_prices[ei] = ut.last_price;
                     }
                 }
@@ -2175,7 +2175,7 @@ void TradingEngine::vol_fitter_loop() noexcept {
                 if (instr.product_index != static_cast<uint8_t>(p)) continue;
                 if (instr.kind != InstrumentKind::Option) continue;
 
-                const MarketTick& t = tick_snapshot_[id];
+                const TopOfBookTick& t = tick_snapshot_[id];
                 if (t.recv_ts_ns == 0) continue;
 
                 double T = (instr.expiry_epoch_ns - t.recv_ts_ns)

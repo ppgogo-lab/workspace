@@ -104,6 +104,21 @@ static_assert(sizeof(Instrument) <= 192);
 // ─── Market data tick ─────────────────────────────────────────────────────────
 // Hot path: written by feed handler, read by pricer thread.
 // instrument_id is uint16_t — feed decoder maps exchange code → id exactly once.
+struct alignas(64) TopOfBookTick {
+    int64_t  recv_ts_ns;
+    int64_t  exchange_ts_ns;
+    uint16_t instrument_id;
+    uint8_t  _pad0[6];
+    double   last_price;
+    double   bid_price[1];
+    double   ask_price[1];
+    int32_t  bid_volume[1];
+    int32_t  ask_volume[1];
+    uint64_t sequence_no;
+};
+static_assert(sizeof(TopOfBookTick) == 64);
+static_assert(alignof(TopOfBookTick) == 64);
+
 struct alignas(64) MarketTick {
     int64_t  recv_ts_ns;                // hardware or software receive timestamp
     int64_t  exchange_ts_ns;            // exchange-reported timestamp
@@ -125,6 +140,20 @@ struct alignas(64) MarketTick {
 };
 static_assert(sizeof(MarketTick) == 256);
 static_assert(alignof(MarketTick) == 64);
+
+[[nodiscard]] inline TopOfBookTick to_top_of_book_tick(const MarketTick& src) noexcept {
+    TopOfBookTick dst{};
+    dst.recv_ts_ns = src.recv_ts_ns;
+    dst.exchange_ts_ns = src.exchange_ts_ns;
+    dst.instrument_id = src.instrument_id;
+    dst.last_price = src.last_price;
+    dst.bid_price[0] = src.bid_price[0];
+    dst.ask_price[0] = src.ask_price[0];
+    dst.bid_volume[0] = src.bid_volume[0];
+    dst.ask_volume[0] = src.ask_volume[0];
+    dst.sequence_no = src.sequence_no;
+    return dst;
+}
 
 // ─── Greeks + theoretical price (output of Black-76 pricer) ──────────────────
 struct alignas(64) Greeks {

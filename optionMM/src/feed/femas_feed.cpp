@@ -112,7 +112,7 @@ void FEMASFeedHandler::push_tick(const CUstpFtdcDepthMarketDataField& md) noexce
     tick.ask_price[3] = md.AskPrice4; tick.ask_volume[3] = md.AskVolume4;
     tick.ask_price[4] = md.AskPrice5; tick.ask_volume[4] = md.AskVolume5;
 
-    if (!tick_buf_->try_push(tick)) {
+    if (!tick_buf_->try_push(to_top_of_book_tick(tick))) {
         dropped_count_.fetch_add(1, std::memory_order_relaxed);
     } else {
         msg_count_.fetch_add(1, std::memory_order_relaxed);

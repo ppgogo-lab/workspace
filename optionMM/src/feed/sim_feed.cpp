@@ -34,19 +34,16 @@ double infer_reference_price(const Instrument& instrument,
     return 100.0 + 25.0 * instrument.product_index;
 }
 
-void fill_depth(MarketTick& tick,
-                double mid_price,
-                double spread,
-                Volume top_size,
-                double tick_size) noexcept {
+void fill_top_of_book(TopOfBookTick& tick,
+                      double mid_price,
+                      double spread,
+                      Volume top_size,
+                      double tick_size) noexcept {
     const double min_step = std::max(tick_size, spread * 0.5);
-    for (int level = 0; level < 5; ++level) {
-        const double step = min_step * (level + 1);
-        tick.bid_price[level] = round_to_tick(std::max(tick_size, mid_price - step), tick_size);
-        tick.ask_price[level] = round_to_tick(mid_price + step, tick_size);
-        tick.bid_volume[level] = std::max<Volume>(1, top_size - level * 2);
-        tick.ask_volume[level] = std::max<Volume>(1, top_size - level * 2);
-    }
+    tick.bid_price[0] = round_to_tick(std::max(tick_size, mid_price - min_step), tick_size);
+    tick.ask_price[0] = round_to_tick(mid_price + min_step, tick_size);
+    tick.bid_volume[0] = std::max<Volume>(1, top_size);
+    tick.ask_volume[0] = std::max<Volume>(1, top_size);
 }
 
 } // namespace
@@ -73,7 +70,6 @@ void SimFeedHandler::run_loop() noexcept {
     std::mt19937 rng(cfg_.random_seed);
     std::uniform_real_distribution<double> noise(-1.0, 1.0);
     std::array<double, MAX_PRODUCTS> future_mid{};
-    std::array<uint64_t, MAX_INSTRUMENTS> cumulative_volume{};
     const std::string_view scenario(cfg_.scenario);
     const bool scenario_vol_spike = scenario == "vol_spike";
     const bool scenario_selloff = scenario == "selloff";
@@ -88,16 +84,11 @@ void SimFeedHandler::run_loop() noexcept {
 
         for (uint16_t i = 0; i < n_instruments_; ++i) {
             const Instrument& instrument = instruments_[i];
-            MarketTick tick{};
+            TopOfBookTick tick{};
             tick.recv_ts_ns = now_ns;
             tick.exchange_ts_ns = now_ns;
             tick.instrument_id = instrument.instrument_id;
             tick.sequence_no = sequence_no++;
-            tick.pre_close = 0.0;
-            tick.pre_settlement = 0.0;
-            tick.open_price = 0.0;
-            tick.high_price = 0.0;
-            tick.low_price = 0.0;
 
             if (instrument.kind == InstrumentKind::Future) {
                 const double base = infer_reference_price(instrument, cfg_);
@@ -112,15 +103,7 @@ void SimFeedHandler::run_loop() noexcept {
 
                 future_mid[instrument.product_index] = mid;
                 tick.last_price = mid;
-                tick.open_interest = 1000.0 + instrument.product_index * 250.0;
-                cumulative_volume[i] += 1;
-                tick.volume = static_cast<int64_t>(cumulative_volume[i]);
-                tick.open_price = base;
-                tick.high_price = std::max(base, mid);
-                tick.low_price = std::min(base, mid);
-                tick.pre_close = base;
-                tick.pre_settlement = base;
-                fill_depth(tick, mid, spread, cfg_.top_level_volume, instrument.tick_size);
+                fill_top_of_book(tick, mid, spread, cfg_.top_level_volume, instrument.tick_size);
             } else {
                 const double underlying = std::max(instrument.tick_size,
                                                    future_mid[instrument.product_index]);
@@ -145,16 +128,8 @@ void SimFeedHandler::run_loop() noexcept {
                                                mid * (option_spread_bps / 10'000.0));
 
                 tick.last_price = mid;
-                tick.open_interest = 150.0 + (instrument.instrument_id % 17) * 8.0;
-                cumulative_volume[i] += 1 + (instrument.instrument_id % 3);
-                tick.volume = static_cast<int64_t>(cumulative_volume[i]);
-                tick.open_price = mid;
-                tick.high_price = mid + spread;
-                tick.low_price = std::max(instrument.tick_size, mid - spread);
-                tick.pre_close = mid;
-                tick.pre_settlement = mid;
-                fill_depth(tick, mid, spread, std::max<Volume>(4, cfg_.top_level_volume / 2),
-                           instrument.tick_size);
+                fill_top_of_book(tick, mid, spread, std::max<Volume>(4, cfg_.top_level_volume / 2),
+                                 instrument.tick_size);
             }
 
             if (sim_gateway_) {

@@ -24,7 +24,7 @@ namespace omm {
 
 class IFeedHandler {
 public:
-    explicit IFeedHandler(SPSCRingBuffer<MarketTick, 1024>* tick_buf) noexcept
+    explicit IFeedHandler(SPSCRingBuffer<TopOfBookTick, 1024>* tick_buf) noexcept
         : tick_buf_(tick_buf) {}
 
     virtual void start() = 0;
@@ -38,7 +38,7 @@ public:
     virtual ~IFeedHandler() = default;
 
 protected:
-    SPSCRingBuffer<MarketTick, 1024>* tick_buf_;
+    SPSCRingBuffer<TopOfBookTick, 1024>* tick_buf_;
     std::atomic<bool>    stop_flag_{false};
     std::atomic<bool>    connected_{false};
     std::atomic<uint64_t> msg_count_{0};
@@ -68,7 +68,7 @@ public:
 
     // Called by TradingEngine after it takes ownership of the feed,
     // so feed handlers can be constructed before the engine's tick_buf exists.
-    void set_tick_buf(SPSCRingBuffer<MarketTick, 1024>* buf) noexcept {
+    void set_tick_buf(SPSCRingBuffer<TopOfBookTick, 1024>* buf) noexcept {
         tick_buf_ = buf;
     }
 
