@@ -43,6 +43,7 @@ void PCPArbitrageStrategy::init(uint8_t product_idx,
     local_order_seq_ = 0;
     last_scan_ts_ns_ = 0;
     next_trigger_ts_ns_ = 0;
+    last_pair_monitor_publish_ts_ns_ = 0;
     attempt_active_ = false;
     cleanup_active_ = false;
     active_call_id_ = INVALID_INSTRUMENT_ID;
@@ -50,6 +51,10 @@ void PCPArbitrageStrategy::init(uint8_t product_idx,
     active_future_id_ = INVALID_INSTRUMENT_ID;
     last_suppress_flags_ = ArbSuppressNone;
     for (auto& order : working_orders_) order = WorkingOrder{};
+    first_pair_for_instrument_.fill(kInvalidPairIndex);
+    for (auto& links : next_pair_for_instrument_) {
+        links.fill(kInvalidPairIndex);
+    }
     build_pairs();
     refresh_monitor_state(pair_count_ == 0 ? ArbSuppressNoPairs : ArbSuppressNone, get_monotonic_ns());
 }
@@ -150,6 +155,13 @@ void PCPArbitrageStrategy::build_pairs() noexcept {
             pair.future_id = future_id;
             pair.expiry_date = call.expiry_date;
             pair.strike = call.strike;
+            const uint16_t pair_index = static_cast<uint16_t>(pair_count_ - 1);
+            next_pair_for_instrument_[pair_index][0] = first_pair_for_instrument_[call_id];
+            first_pair_for_instrument_[call_id] = pair_index;
+            next_pair_for_instrument_[pair_index][1] = first_pair_for_instrument_[put_id];
+            first_pair_for_instrument_[put_id] = pair_index;
+            next_pair_for_instrument_[pair_index][2] = first_pair_for_instrument_[future_id];
+            first_pair_for_instrument_[future_id] = pair_index;
             break;
         }
     }
@@ -203,26 +215,29 @@ Volume PCPArbitrageStrategy::executable_volume(const Pair& pair,
 
 bool PCPArbitrageStrategy::scan_best_opportunity(Timestamp now_ns,
                                                  Pair* best_pair,
+                                                 uint16_t* best_pair_index,
                                                  Direction* best_dir,
                                                  Volume* best_volume,
                                                  double* best_edge_ticks,
-                                                 uint32_t* suppress_flags) noexcept {
-    if (best_pair == nullptr || best_dir == nullptr || best_volume == nullptr
+                                                 uint32_t* suppress_flags,
+                                                 uint16_t trigger_instrument_id) noexcept {
+    if (best_pair == nullptr || best_pair_index == nullptr || best_dir == nullptr || best_volume == nullptr
         || best_edge_ticks == nullptr || suppress_flags == nullptr) {
         return false;
     }
 
     bool saw_valid_pair = false;
     *best_pair = Pair{};
+    *best_pair_index = static_cast<uint16_t>(pair_count_);
     *best_dir = Direction::None;
     *best_volume = 0;
     *best_edge_ticks = 0.0;
 
     const ArbParamsConfig cfg = params_->snapshot();
 
-    for (uint16_t i = 0; i < pair_count_; ++i) {
+    auto scan_pair = [&](uint16_t i) noexcept {
         const Pair& pair = pairs_[i];
-        if (!pair.active) continue;
+        if (!pair.active) return;
 
         const MarketTick& call_tick = tick_snapshot_[pair.call_id];
         const MarketTick& put_tick = tick_snapshot_[pair.put_id];
@@ -230,7 +245,7 @@ bool PCPArbitrageStrategy::scan_best_opportunity(Timestamp now_ns,
         if (!market_valid(call_tick, now_ns)
             || !market_valid(put_tick, now_ns)
             || !market_valid(future_tick, now_ns)) {
-            continue;
+            return;
         }
 
         saw_valid_pair = true;
@@ -262,6 +277,7 @@ bool PCPArbitrageStrategy::scan_best_opportunity(Timestamp now_ns,
             executable_volume(pair, Direction::LongSyntheticShortFuture, cfg.max_order_volume);
         if (long_synth_volume > 0 && long_synth_edge > *best_edge_ticks) {
             *best_pair = pair;
+            *best_pair_index = i;
             *best_dir = Direction::LongSyntheticShortFuture;
             *best_volume = long_synth_volume;
             *best_edge_ticks = long_synth_edge;
@@ -274,9 +290,22 @@ bool PCPArbitrageStrategy::scan_best_opportunity(Timestamp now_ns,
             executable_volume(pair, Direction::ShortSyntheticLongFuture, cfg.max_order_volume);
         if (short_synth_volume > 0 && short_synth_edge > *best_edge_ticks) {
             *best_pair = pair;
+            *best_pair_index = i;
             *best_dir = Direction::ShortSyntheticLongFuture;
             *best_volume = short_synth_volume;
             *best_edge_ticks = short_synth_edge;
+        }
+    };
+
+    if (trigger_instrument_id < MAX_INSTRUMENTS) {
+        for (uint16_t pair_index = first_pair_for_instrument_[trigger_instrument_id];
+             pair_index != kInvalidPairIndex && pair_index < pair_count_;
+             pair_index = next_pair_for_instrument(pair_index, trigger_instrument_id)) {
+            scan_pair(pair_index);
+        }
+    } else {
+        for (uint16_t i = 0; i < pair_count_; ++i) {
+            scan_pair(i);
         }
     }
 
@@ -285,6 +314,16 @@ bool PCPArbitrageStrategy::scan_best_opportunity(Timestamp now_ns,
         return false;
     }
     return *best_dir != Direction::None;
+}
+
+uint16_t PCPArbitrageStrategy::next_pair_for_instrument(uint16_t pair_index,
+                                                        uint16_t instrument_id) const noexcept {
+    if (pair_index >= pair_count_) return kInvalidPairIndex;
+    const Pair& pair = pairs_[pair_index];
+    if (pair.call_id == instrument_id) return next_pair_for_instrument_[pair_index][0];
+    if (pair.put_id == instrument_id) return next_pair_for_instrument_[pair_index][1];
+    if (pair.future_id == instrument_id) return next_pair_for_instrument_[pair_index][2];
+    return kInvalidPairIndex;
 }
 
 void PCPArbitrageStrategy::publish_pair_monitor_states(Timestamp now_ns,
@@ -689,7 +728,9 @@ void PCPArbitrageStrategy::maybe_finalize_attempt(Timestamp now_ns) noexcept {
     submit_cleanup_orders(now_ns);
 }
 
-void PCPArbitrageStrategy::evaluate(Timestamp now_ns) noexcept {
+void PCPArbitrageStrategy::evaluate_impl(Timestamp now_ns,
+                                         uint16_t trigger_instrument_id,
+                                         bool force_pair_monitor_publish) noexcept {
     uint32_t suppress_flags = ArbSuppressNone;
     if (!params_) {
         refresh_monitor_state(suppress_flags, now_ns);
@@ -726,28 +767,25 @@ void PCPArbitrageStrategy::evaluate(Timestamp now_ns) noexcept {
     //   3. scan all parity pairs
     //   4. if idle and above threshold, launch a new basket
     Pair best_pair{};
+    uint16_t selected_pair_index = static_cast<uint16_t>(pair_count_);
     Direction best_dir = Direction::None;
     Volume best_volume = 0;
     double best_edge_ticks = 0.0;
     (void)scan_best_opportunity(now_ns,
                                 &best_pair,
+                                &selected_pair_index,
                                 &best_dir,
                                 &best_volume,
                                 &best_edge_ticks,
-                                &suppress_flags);
-    uint16_t selected_pair_index = static_cast<uint16_t>(pair_count_);
-    for (uint16_t i = 0; i < pair_count_; ++i) {
-        const Pair& pair = pairs_[i];
-        if (pair.call_id == best_pair.call_id
-            && pair.put_id == best_pair.put_id
-            && pair.future_id == best_pair.future_id
-            && pair.expiry_date == best_pair.expiry_date
-            && std::fabs(pair.strike - best_pair.strike) <= 1e-9) {
-            selected_pair_index = i;
-            break;
-        }
+                                &suppress_flags,
+                                trigger_instrument_id);
+    const bool should_publish_pairs =
+        force_pair_monitor_publish
+        || now_ns - last_pair_monitor_publish_ts_ns_ >= kPairMonitorPublishIntervalNs;
+    if (should_publish_pairs) {
+        publish_pair_monitor_states(now_ns, selected_pair_index, best_dir, best_edge_ticks);
+        last_pair_monitor_publish_ts_ns_ = now_ns;
     }
-    publish_pair_monitor_states(now_ns, selected_pair_index, best_dir, best_edge_ticks);
     monitor_last_edge_ticks_.store(best_edge_ticks, std::memory_order_relaxed);
 
     if (cleanup_active_) suppress_flags |= ArbSuppressCleanupPending;
@@ -772,6 +810,33 @@ void PCPArbitrageStrategy::evaluate(Timestamp now_ns) noexcept {
     }
 
     start_attempt(best_pair, best_dir, best_volume, best_edge_ticks, now_ns);
+    if (!should_publish_pairs) {
+        publish_pair_monitor_states(now_ns, selected_pair_index, best_dir, best_edge_ticks);
+        last_pair_monitor_publish_ts_ns_ = now_ns;
+    }
+    refresh_monitor_state(suppress_flags, now_ns);
+}
+
+void PCPArbitrageStrategy::evaluate(Timestamp now_ns) noexcept {
+    evaluate_impl(now_ns, INVALID_INSTRUMENT_ID, true);
+}
+
+void PCPArbitrageStrategy::on_market_update(uint16_t instrument_id, Timestamp now_ns) noexcept {
+    evaluate_impl(now_ns, instrument_id, false);
+}
+
+void PCPArbitrageStrategy::on_timer(Timestamp now_ns) noexcept {
+    uint32_t suppress_flags = last_suppress_flags_;
+    if (!params_) {
+        refresh_monitor_state(suppress_flags, now_ns);
+        return;
+    }
+    const int64_t cleanup_timeout_ns = std::max<int64_t>(
+        1'000'000LL,
+        static_cast<int64_t>(params_->cleanup_timeout_ms.load(std::memory_order_relaxed) * 1'000'000.0));
+    cancel_stale_orders(now_ns, cleanup_timeout_ns);
+    maybe_finalize_attempt(now_ns);
+    if (cleanup_active_) suppress_flags |= ArbSuppressCleanupPending;
     refresh_monitor_state(suppress_flags, now_ns);
 }
 

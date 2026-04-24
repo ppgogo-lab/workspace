@@ -93,6 +93,13 @@ public:
     virtual ~IArbitrageStrategy() = default;
 
     virtual void evaluate(Timestamp now_ns) noexcept = 0;
+    virtual void on_market_update(uint16_t instrument_id, Timestamp now_ns) noexcept {
+        (void)instrument_id;
+        evaluate(now_ns);
+    }
+    virtual void on_timer(Timestamp now_ns) noexcept {
+        evaluate(now_ns);
+    }
     virtual void on_order_ack(const Order& order) noexcept = 0;
     virtual void on_fill(const Trade& trade) noexcept = 0;
     virtual void on_order_cancel(OrderId id) noexcept = 0;

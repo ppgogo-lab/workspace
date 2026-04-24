@@ -26,6 +26,8 @@ constexpr int kDispatcherQuoteBurstCap = 128;
 constexpr int kDispatcherArbIntentBurstCap = 16;
 constexpr int kCoalescedTimerSlotCount = 2;
 constexpr int kArbEventBurstCap = 32;
+constexpr int kArbMarketTriggerBurstCap = 128;
+constexpr int64_t kArbMaintenanceIntervalNs = 5'000'000LL;
 constexpr int64_t kTimerIdleSleepCapNs = 5'000'000LL;
 constexpr int64_t kRiskIdleSleepCapNs = 5'000'000LL;
 constexpr int64_t kRiskCheckIntervalNs = 5'000'000LL;
@@ -1335,8 +1337,19 @@ void TradingEngine::pricer_loop() noexcept {
                     tick_snapshot_[id] = tick;
                     publish_monitor_tick(tick);
 
+                    const uint8_t tick_prod = instr_to_product_[id];
+                    if (tick_prod < MAX_PRODUCTS
+                        && cfg_.products[tick_prod].arbitrage_strategy_count > 0) {
+                        ArbMarketTrigger trigger{};
+                        trigger.instrument_id = id;
+                        trigger.product_index = tick_prod;
+                        trigger.sequence_no = tick.sequence_no;
+                        trigger.recv_ts_ns = tick.recv_ts_ns;
+                        (void)arb_market_trigger_buf_[tick_prod].try_push(trigger);
+                    }
+
                     if (instr.kind == InstrumentKind::Future) {
-                        const uint8_t prod = instr_to_product_[id];
+                        const uint8_t prod = tick_prod;
                         if (prod < MAX_PRODUCTS && tick.last_price > 1e-10) {
                             pending_future_tick[prod] = tick;
                             if (pending_product[prod]) {
@@ -1630,6 +1643,8 @@ void TradingEngine::arb_loop(int idx) noexcept {
                                  "omm-arb");
 
     GatewayEvent ev{};
+    ArbMarketTrigger trigger{};
+    Timestamp next_maintenance_ns = get_monotonic_ns() + kArbMaintenanceIntervalNs;
     while (!stop_flag_.load(std::memory_order_relaxed)) {
         bool did_work = false;
 
@@ -1662,15 +1677,32 @@ void TradingEngine::arb_loop(int idx) noexcept {
         }
 
         const Timestamp now_ns = get_monotonic_ns();
-        for (int slot = 0; slot < cfg_.products[idx].arbitrage_strategy_count
-             && slot < MAX_ARBITRAGE_STRATEGIES_PER_PRODUCT; ++slot) {
-            auto& strategy = arbitrage_strategies_[idx][slot];
-            if (!strategy) continue;
-            strategy->evaluate(now_ns);
+        for (int drained = 0;
+             drained < kArbMarketTriggerBurstCap && arb_market_trigger_buf_[idx].try_pop(trigger);
+             ++drained) {
+            did_work = true;
+            const Timestamp eval_ts = get_monotonic_ns();
+            for (int slot = 0; slot < cfg_.products[idx].arbitrage_strategy_count
+                 && slot < MAX_ARBITRAGE_STRATEGIES_PER_PRODUCT; ++slot) {
+                auto& strategy = arbitrage_strategies_[idx][slot];
+                if (!strategy) continue;
+                strategy->on_market_update(trigger.instrument_id, eval_ts);
+            }
+        }
+
+        if (now_ns >= next_maintenance_ns) {
+            did_work = true;
+            next_maintenance_ns = now_ns + kArbMaintenanceIntervalNs;
+            for (int slot = 0; slot < cfg_.products[idx].arbitrage_strategy_count
+                 && slot < MAX_ARBITRAGE_STRATEGIES_PER_PRODUCT; ++slot) {
+                auto& strategy = arbitrage_strategies_[idx][slot];
+                if (!strategy) continue;
+                strategy->on_timer(now_ns);
+            }
         }
 
         if (!did_work) {
-            std::this_thread::sleep_for(std::chrono::microseconds(100));
+            spin_pause();
         }
     }
 }

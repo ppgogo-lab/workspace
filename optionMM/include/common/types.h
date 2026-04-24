@@ -273,6 +273,14 @@ struct alignas(64) ArbIntent {
     uint16_t              _pad1{0};
 };
 
+struct alignas(32) ArbMarketTrigger {
+    uint16_t  instrument_id{INVALID_INSTRUMENT_ID};
+    uint8_t   product_index{0xFF};
+    uint8_t   _pad0[5]{};
+    uint64_t  sequence_no{0};
+    Timestamp recv_ts_ns{0};
+};
+
 // ─── Position ─────────────────────────────────────────────────────────────────
 struct Position {
     uint16_t instrument_id;

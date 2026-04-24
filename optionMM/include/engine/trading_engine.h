@@ -218,6 +218,7 @@ private:
     alignas(64) SPSCRingBuffer<Trade,          256> risk_buf_;
     alignas(64) SPSCRingBuffer<ArbIntent,      256> arb_intent_buf_[MAX_PRODUCTS];
     alignas(64) SPSCRingBuffer<GatewayEvent,   256> arb_event_buf_[MAX_PRODUCTS];
+    alignas(64) SPSCRingBuffer<ArbMarketTrigger, 2048> arb_market_trigger_buf_[MAX_PRODUCTS];
     alignas(64) SPSCRingBuffer<Order,         4096> deferred_monitor_orders_;
     alignas(64) SPSCRingBuffer<Quote,         4096> deferred_monitor_quotes_;
     alignas(64) SPSCRingBuffer<Trade,         4096> deferred_monitor_trades_;

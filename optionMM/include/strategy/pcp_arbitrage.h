@@ -48,6 +48,8 @@ public:
               const AccountId& account_id) noexcept;
 
     void evaluate(Timestamp now_ns) noexcept override;
+    void on_market_update(uint16_t instrument_id, Timestamp now_ns) noexcept override;
+    void on_timer(Timestamp now_ns) noexcept override;
     void on_order_ack(const Order& order) noexcept override;
     void on_fill(const Trade& trade) noexcept override;
     void on_order_cancel(OrderId id) noexcept override;
@@ -96,8 +98,10 @@ private:
     };
 
     static constexpr int64_t kMarketStaleNs = 100'000'000LL;
+    static constexpr int64_t kPairMonitorPublishIntervalNs = 200'000'000LL;
     static constexpr int kMaxPairs = MAX_INSTRUMENTS;
     static constexpr int kMaxWorkingOrders = 24;
+    static constexpr uint16_t kInvalidPairIndex = 0xFFFF;
 
     void build_pairs() noexcept;
     [[nodiscard]] double discount_factor(const Pair& pair, Timestamp now_ns) const noexcept;
@@ -105,10 +109,17 @@ private:
     [[nodiscard]] Volume executable_volume(const Pair& pair, Direction dir, int max_order_volume) const noexcept;
     [[nodiscard]] bool scan_best_opportunity(Timestamp now_ns,
                                              Pair* best_pair,
+                                             uint16_t* best_pair_index,
                                              Direction* best_dir,
                                              Volume* best_volume,
                                              double* best_edge_ticks,
-                                             uint32_t* suppress_flags) noexcept;
+                                             uint32_t* suppress_flags,
+                                             uint16_t trigger_instrument_id = INVALID_INSTRUMENT_ID) noexcept;
+    [[nodiscard]] uint16_t next_pair_for_instrument(uint16_t pair_index,
+                                                    uint16_t instrument_id) const noexcept;
+    void evaluate_impl(Timestamp now_ns,
+                       uint16_t trigger_instrument_id,
+                       bool force_pair_monitor_publish) noexcept;
     void publish_pair_monitor_states(Timestamp now_ns,
                                      uint16_t selected_pair_index,
                                      Direction selected_dir,
@@ -144,6 +155,7 @@ private:
     double risk_free_rate_{0.025};
     Timestamp last_scan_ts_ns_{0};
     Timestamp next_trigger_ts_ns_{0};
+    Timestamp last_pair_monitor_publish_ts_ns_{0};
     bool attempt_active_{false};
     bool cleanup_active_{false};
     uint16_t active_call_id_{INVALID_INSTRUMENT_ID};
@@ -165,6 +177,8 @@ private:
     std::atomic<uint64_t> monitor_pair_snapshot_version_{0};
     std::array<PCPPairMonitorState, kMaxPairs> monitor_pairs_{};
     uint16_t monitor_pair_count_{0};
+    std::array<uint16_t, MAX_INSTRUMENTS> first_pair_for_instrument_{};
+    std::array<std::array<uint16_t, 3>, kMaxPairs> next_pair_for_instrument_{};
 };
 
 } // namespace omm
