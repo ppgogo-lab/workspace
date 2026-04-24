@@ -12,6 +12,8 @@
 #include <cstdint>
 #include <cstring>
 #include <mutex>
+#include <string>
+#include <unordered_map>
 
 namespace omm {
 
@@ -29,8 +31,12 @@ public:
         return trading_ready_.load(std::memory_order_relaxed);
     }
 
-    [[nodiscard]] bool send_order(const Order& order) noexcept override;
-    [[nodiscard]] bool send_quote(const Quote& quote) noexcept override;
+    [[nodiscard]] bool send_order(
+            const Order& order,
+            GatewayOrderRecoveryHandle* recovery = nullptr) noexcept override;
+    [[nodiscard]] bool send_quote(
+            const Quote& quote,
+            GatewayQuoteRecoveryHandle* recovery = nullptr) noexcept override;
     [[nodiscard]] bool cancel_order(OrderId id, uint16_t instrument_id) noexcept override;
     [[nodiscard]] bool cancel_quote(QuoteId id, uint16_t instrument_id) noexcept override;
     [[nodiscard]] bool supports_quote_replace() const noexcept override { return true; }
@@ -91,6 +97,12 @@ private:
     mutable std::mutex state_mutex_;
     std::array<OrderState, MAX_OPEN_ORDERS> order_states_{};
     std::array<QuoteState, MAX_OPEN_ORDERS / 2> quote_states_{};
+    std::unordered_map<OrderId, std::size_t> order_client_index_{};
+    std::unordered_map<std::string, std::size_t> order_local_index_{};
+    std::unordered_map<std::string, std::size_t> order_sys_index_{};
+    std::unordered_map<QuoteId, std::size_t> quote_client_index_{};
+    std::unordered_map<std::string, std::size_t> quote_local_index_{};
+    std::unordered_map<std::string, std::size_t> quote_sys_index_{};
 
     static void encode_local_id(char* buf, uint64_t id) noexcept {
         std::snprintf(buf, 13, "%012llu", static_cast<unsigned long long>(id & 0xFFFFFFFFFFFFULL));
@@ -116,6 +128,12 @@ private:
 
     OrderState* alloc_order_state() noexcept;
     QuoteState* alloc_quote_state() noexcept;
+    [[nodiscard]] std::size_t order_index(const OrderState* state) const noexcept;
+    [[nodiscard]] std::size_t quote_index(const QuoteState* state) const noexcept;
+    void index_order_state(OrderState* state) noexcept;
+    void index_quote_state(QuoteState* state) noexcept;
+    void unindex_order_state(OrderState* state) noexcept;
+    void unindex_quote_state(QuoteState* state) noexcept;
     OrderState* find_order_by_local_id(const char* local_id) noexcept;
     OrderState* find_order_by_sys_id(const char* order_sys_id) noexcept;
     QuoteState* find_quote_by_client_id(QuoteId quote_id) noexcept;

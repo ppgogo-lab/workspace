@@ -183,6 +183,8 @@ static SimConfig parse_sim(const YAML::Node& n) {
     c.gateway_slippage_ticks = get<int>(n["gateway_slippage_ticks"], "sim.gateway_slippage_ticks", 0);
     c.gateway_quote_near_touch_ticks = get<double>(n["gateway_quote_near_touch_ticks"],
                                                    "sim.gateway_quote_near_touch_ticks", 0.5);
+    c.gateway_benchmark_mode = get<bool>(n["gateway_benchmark_mode"],
+                                         "sim.gateway_benchmark_mode", false);
     return c;
 }
 

@@ -53,8 +53,12 @@ public:
         return connected_.load(std::memory_order_relaxed);
     }
 
-    [[nodiscard]] bool send_order(const Order& order) noexcept override;
-    [[nodiscard]] bool send_quote(const Quote& quote) noexcept override;
+    [[nodiscard]] bool send_order(
+            const Order& order,
+            GatewayOrderRecoveryHandle* recovery = nullptr) noexcept override;
+    [[nodiscard]] bool send_quote(
+            const Quote& quote,
+            GatewayQuoteRecoveryHandle* recovery = nullptr) noexcept override;
     [[nodiscard]] bool cancel_order(OrderId id,
                                      uint16_t instrument_id) noexcept override;
     [[nodiscard]] bool cancel_quote(QuoteId id,
@@ -95,6 +99,7 @@ private:
         int slippage_ticks{0};
         double quote_near_touch_ticks{0.5};
         uint32_t random_seed{42};
+        bool benchmark_mode{false};
     };
 
     struct ActiveOrder {

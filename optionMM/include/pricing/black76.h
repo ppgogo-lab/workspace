@@ -14,6 +14,13 @@ struct Black76Result {
     double rho;
 };
 
+struct Black76QuoteResult {
+    double price;
+    double delta;
+    double gamma;
+    double vega;
+};
+
 enum class Black76Backend : uint8_t {
     Scalar = 0,
     Avx2,
@@ -53,6 +60,17 @@ void compute_batch_precomputed(
     const double*  sigma,
     const uint8_t* is_call,
     Black76Result* out,
+    int            count
+) noexcept;
+
+void compute_batch_quote_precomputed(
+    const double*  F,
+    const double*  K,
+    const double*  sqrt_T,
+    const double*  disc,
+    const double*  sigma,
+    const uint8_t* is_call,
+    Black76QuoteResult* out,
     int            count
 ) noexcept;
 

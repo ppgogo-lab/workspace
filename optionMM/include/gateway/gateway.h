@@ -87,8 +87,12 @@ public:
     [[nodiscard]] virtual bool is_connected() const noexcept = 0;
 
     // ── Order routing (dispatcher thread, noexcept, no alloc) ────────────────
-    [[nodiscard]] virtual bool send_order (const Order& order) noexcept = 0;
-    [[nodiscard]] virtual bool send_quote (const Quote& quote) noexcept = 0;
+    [[nodiscard]] virtual bool send_order(
+            const Order& order,
+            GatewayOrderRecoveryHandle* recovery = nullptr) noexcept = 0;
+    [[nodiscard]] virtual bool send_quote(
+            const Quote& quote,
+            GatewayQuoteRecoveryHandle* recovery = nullptr) noexcept = 0;
     [[nodiscard]] virtual bool cancel_order(OrderId id,
                                             uint16_t instrument_id) noexcept = 0;
     [[nodiscard]] virtual bool cancel_quote(QuoteId id,

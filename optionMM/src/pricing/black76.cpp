@@ -227,6 +227,45 @@ void compute_batch_precomputed(const double*  F,
     get_dispatch().precomputed(F, K, T, sqrt_T, disc, sigma, is_call, out, count);
 }
 
+void compute_batch_quote_precomputed(const double*  F,
+                                     const double*  K,
+                                     const double*  sqrt_T,
+                                     const double*  disc,
+                                     const double*  sigma,
+                                     const uint8_t* is_call,
+                                     Black76QuoteResult* out,
+                                     int            count) noexcept {
+    for (int i = 0; i < count; ++i) {
+        Black76QuoteResult res{};
+        if (F[i] < 1e-10 || K[i] < 1e-10 || sigma[i] < 1e-10 || sqrt_T[i] < 1e-10) {
+            const bool call = is_call[i] != 0;
+            res.price = disc[i] * (call ? std::fmax(F[i] - K[i], 0.0)
+                                        : std::fmax(K[i] - F[i], 0.0));
+            res.delta = (call && F[i] > K[i]) ? disc[i]
+                      : (!call && K[i] > F[i]) ? -disc[i]
+                      : 0.0;
+            out[i] = res;
+            continue;
+        }
+
+        const double sigma_sqrt_T = sigma[i] * sqrt_T[i];
+        const double d1 = (std::log(F[i] / K[i]) + 0.5 * sigma[i] * sigma[i] * sqrt_T[i] * sqrt_T[i])
+                        / sigma_sqrt_T;
+        const double d2 = d1 - sigma_sqrt_T;
+        const double nd1 = norm_pdf(d1);
+        if (is_call[i] != 0) {
+            res.price = disc[i] * (F[i] * norm_cdf(d1) - K[i] * norm_cdf(d2));
+            res.delta = disc[i] * norm_cdf(d1);
+        } else {
+            res.price = disc[i] * (K[i] * norm_cdf(-d2) - F[i] * norm_cdf(-d1));
+            res.delta = -disc[i] * norm_cdf(-d1);
+        }
+        res.gamma = disc[i] * nd1 / (F[i] * sigma_sqrt_T);
+        res.vega = disc[i] * F[i] * nd1 * sqrt_T[i];
+        out[i] = res;
+    }
+}
+
 double implied_vol(double market_price, double F, double K, double T,
                    double r, bool is_call, double tol) noexcept {
     if (F < 1e-10 || K < 1e-10 || T < 1e-10) {

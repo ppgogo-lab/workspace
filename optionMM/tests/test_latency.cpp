@@ -51,7 +51,8 @@ const char* monitoring_mode_name(MonitoringPublishMode mode) {
 
 class LatencySimGateway : public SimGateway {
 public:
-    bool send_quote(const Quote& q) noexcept override {
+    bool send_quote(const Quote& q,
+                    GatewayQuoteRecoveryHandle* recovery = nullptr) noexcept override {
         if (q.instrument_id < MAX_INSTRUMENTS) {
             strategy_send_ts_[q.instrument_id].store(q.send_ts, std::memory_order_relaxed);
             gateway_recv_ts_[q.instrument_id].store(get_monotonic_ns(), std::memory_order_release);
@@ -68,7 +69,7 @@ public:
                 return true;
             }
         }
-        return SimGateway::send_quote(q);
+        return SimGateway::send_quote(q, recovery);
     }
 
     int64_t get_last_strategy_send_ts(uint16_t id) const noexcept {

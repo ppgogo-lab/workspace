@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 option(OMM_BUILD_TRADER_GUI "Build the optional Qt trader viewer" OFF)
 option(OMM_ENABLE_BLACK76_AVX512 "Build the AVX-512 Black76 backend" ON)
+option(OMM_ENABLE_NATIVE_RELEASE "Enable host-native release tuning (-march/-mtune=native)" OFF)
+option(OMM_ENABLE_IPO_RELEASE "Enable IPO/LTO for release builds when supported" OFF)
 set(OMM_PROTO_FILE "${CMAKE_SOURCE_DIR}/proto/trading.proto")
 set(OMM_PROTO_GEN_DIR "${CMAKE_CURRENT_BINARY_DIR}/proto/gen")
 file(MAKE_DIRECTORY "${OMM_PROTO_GEN_DIR}")
@@ -89,6 +91,20 @@ set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -fno-omit-frame-pointer ${OMM_COMMON_
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Debug)
+endif()
+
+if(OMM_ENABLE_NATIVE_RELEASE AND CMAKE_BUILD_TYPE STREQUAL "Release")
+  add_compile_options(-march=native -mtune=native)
+endif()
+
+if(OMM_ENABLE_IPO_RELEASE AND CMAKE_BUILD_TYPE STREQUAL "Release")
+  include(CheckIPOSupported)
+  check_ipo_supported(RESULT OMM_IPO_SUPPORTED OUTPUT OMM_IPO_ERROR)
+  if(OMM_IPO_SUPPORTED)
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
+  else()
+    message(WARNING "IPO/LTO requested but not supported: ${OMM_IPO_ERROR}")
+  endif()
 endif()
 
 # ─── Global include directory ─────────────────────────────────────────────────

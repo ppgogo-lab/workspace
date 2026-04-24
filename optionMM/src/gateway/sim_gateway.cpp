@@ -26,7 +26,10 @@ SimGateway::~SimGateway() {
 void SimGateway::set_sim_config(const SimConfig& cfg) noexcept {
     settings_.ack_latency_ms = std::max(0, cfg.gateway_ack_latency_ms);
     settings_.cancel_latency_ms = std::max(0, cfg.gateway_cancel_latency_ms);
-    settings_.fill_interval_ms = std::max(1, cfg.gateway_fill_interval_ms);
+    settings_.benchmark_mode = cfg.gateway_benchmark_mode;
+    settings_.fill_interval_ms = settings_.benchmark_mode
+        ? std::max(0, cfg.gateway_fill_interval_ms)
+        : std::max(1, cfg.gateway_fill_interval_ms);
     settings_.order_fill_probability = clamp_probability(cfg.gateway_order_fill_probability);
     settings_.quote_cross_fill_probability = clamp_probability(cfg.gateway_quote_cross_fill_probability);
     settings_.quote_passive_fill_probability = clamp_probability(cfg.gateway_quote_passive_fill_probability);
@@ -38,7 +41,9 @@ void SimGateway::set_sim_config(const SimConfig& cfg) noexcept {
     settings_.random_seed = cfg.random_seed;
 }
 
-bool SimGateway::send_order(const Order& order) noexcept {
+bool SimGateway::send_order(const Order& order,
+                            GatewayOrderRecoveryHandle* recovery) noexcept {
+    if (recovery != nullptr) *recovery = GatewayOrderRecoveryHandle{};
     if (!connected_.load(std::memory_order_relaxed)) return false;
 
     orders_sent_.fetch_add(1, std::memory_order_relaxed);
@@ -64,10 +69,19 @@ bool SimGateway::send_order(const Order& order) noexcept {
     slot.next_fill_due_ns = slot.ack_due_ns + static_cast<Timestamp>(settings_.fill_interval_ms) * 1'000'000LL;
     slot.reject_pending = order.volume <= 0
                        || (order.order_type != OrderType::Market && order.price <= 0.0);
+    if (recovery != nullptr) {
+        recovery->valid = true;
+        std::snprintf(recovery->order_sys_id,
+                      sizeof(recovery->order_sys_id),
+                      "%llu",
+                      static_cast<unsigned long long>(exch_id));
+    }
     return true;
 }
 
-bool SimGateway::send_quote(const Quote& quote) noexcept {
+bool SimGateway::send_quote(const Quote& quote,
+                            GatewayQuoteRecoveryHandle* recovery) noexcept {
+    if (recovery != nullptr) *recovery = GatewayQuoteRecoveryHandle{};
     if (!connected_.load(std::memory_order_relaxed)) return false;
     if (quote.instrument_id >= MAX_INSTRUMENTS) return false;
 
@@ -115,6 +129,13 @@ bool SimGateway::send_quote(const Quote& quote) noexcept {
     slot.exchange_quote_id = exch_id;
     slot.ack_due_ns = now_ns + static_cast<Timestamp>(settings_.ack_latency_ms) * 1'000'000LL;
     slot.next_fill_due_ns = slot.ack_due_ns + static_cast<Timestamp>(settings_.fill_interval_ms) * 1'000'000LL;
+    if (recovery != nullptr) {
+        recovery->valid = true;
+        std::snprintf(recovery->quote_sys_id,
+                      sizeof(recovery->quote_sys_id),
+                      "%llu",
+                      static_cast<unsigned long long>(exch_id));
+    }
     return true;
 }
 
@@ -243,7 +264,9 @@ void SimGateway::worker_loop() noexcept {
         const Timestamp now_ns = get_monotonic_ns();
         process_orders(now_ns, rng);
         process_quotes(now_ns, rng);
-        if (low_latency_poll) {
+        if (settings_.benchmark_mode) {
+            spin_pause();
+        } else if (low_latency_poll) {
             std::this_thread::sleep_for(std::chrono::microseconds(kFastWorkerSleepUs));
         } else {
             std::this_thread::sleep_for(std::chrono::milliseconds(kDefaultWorkerSleepMs));

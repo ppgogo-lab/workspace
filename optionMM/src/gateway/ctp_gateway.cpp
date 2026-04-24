@@ -48,7 +48,9 @@ void CTPGateway::disconnect() {
 
 // ─── send_order ───────────────────────────────────────────────────────────────
 
-bool CTPGateway::send_order(const Order& order) noexcept {
+bool CTPGateway::send_order(const Order& order,
+                            GatewayOrderRecoveryHandle* recovery) noexcept {
+    if (recovery != nullptr) *recovery = GatewayOrderRecoveryHandle{};
     if (!api_ || !trading_ready_.load(std::memory_order_relaxed)) return false;
 
     CThostFtdcInputOrderField req{};
@@ -84,6 +86,12 @@ bool CTPGateway::send_order(const Order& order) noexcept {
         OMM_LOG_WARN("ctp", "ReqOrderInsert failed ret={} order_id={}", ret, order.client_order_id);
         return false;
     }
+    if (recovery != nullptr) {
+        recovery->valid = true;
+        std::strncpy(recovery->exchange_local_id,
+                     req.OrderRef,
+                     sizeof(recovery->exchange_local_id) - 1);
+    }
     return true;
 }
 
@@ -91,7 +99,9 @@ bool CTPGateway::send_order(const Order& order) noexcept {
 // CTP does not have a native two-sided quote API for commodity options.
 // We simulate it by sending two separate limit orders (bid + ask).
 
-bool CTPGateway::send_quote(const Quote& quote) noexcept {
+bool CTPGateway::send_quote(const Quote& quote,
+                            GatewayQuoteRecoveryHandle* recovery) noexcept {
+    if (recovery != nullptr) *recovery = GatewayQuoteRecoveryHandle{};
     if (!api_ || !trading_ready_.load(std::memory_order_relaxed)) return false;
 
     if (quote.instrument_id >= MAX_INSTRUMENTS) return false;
@@ -169,7 +179,13 @@ bool CTPGateway::send_quote(const Quote& quote) noexcept {
         bid.order_type      = OrderType::Limit;
         bid.price           = quote.bid_price;
         bid.volume          = quote.bid_volume;
-        bid_submitted = send_order(bid);
+        GatewayOrderRecoveryHandle leg_recovery{};
+        bid_submitted = send_order(bid, &leg_recovery);
+        if (bid_submitted && recovery != nullptr) {
+            std::strncpy(recovery->bid_local_id,
+                         leg_recovery.exchange_local_id,
+                         sizeof(recovery->bid_local_id) - 1);
+        }
         ok &= bid_submitted;
     }
 
@@ -182,7 +198,13 @@ bool CTPGateway::send_quote(const Quote& quote) noexcept {
         ask.order_type      = OrderType::Limit;
         ask.price           = quote.ask_price;
         ask.volume          = quote.ask_volume;
-        ask_submitted = send_order(ask);
+        GatewayOrderRecoveryHandle leg_recovery{};
+        ask_submitted = send_order(ask, &leg_recovery);
+        if (ask_submitted && recovery != nullptr) {
+            std::strncpy(recovery->ask_local_id,
+                         leg_recovery.exchange_local_id,
+                         sizeof(recovery->ask_local_id) - 1);
+        }
         ok &= ask_submitted;
     }
 
@@ -221,6 +243,11 @@ bool CTPGateway::send_quote(const Quote& quote) noexcept {
     ev.quote         = quote;
     (void)callback_buf.try_push(ev);
 
+    if (recovery != nullptr) {
+        recovery->valid = true;
+        recovery->bid_order_id = bid_order_id;
+        recovery->ask_order_id = ask_order_id;
+    }
     return ok;
 }
 
@@ -516,10 +543,10 @@ void CTPGateway::OnRtnTrade(CThostFtdcTradeField* pTrade) {
     ev.trade.product_index   = ev.product_index;
     (void)callback_buf.try_push(ev);
 
-    OMM_LOG_INFO("ctp", "fill order_id={} side={} qty={} price={:.4f}",
-                 ev.trade.client_order_id,
-                 pTrade->Direction == THOST_FTDC_D_Buy ? "buy" : "sell",
-                 pTrade->Volume, pTrade->Price);
+    OMM_LOG_DEBUG("ctp", "fill order_id={} side={} qty={} price={:.4f}",
+                  ev.trade.client_order_id,
+                  pTrade->Direction == THOST_FTDC_D_Buy ? "buy" : "sell",
+                  pTrade->Volume, pTrade->Price);
 
     if (instrument_id < MAX_INSTRUMENTS) {
         std::lock_guard<std::mutex> lk(quote_state_mutex_);

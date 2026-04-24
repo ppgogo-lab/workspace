@@ -1299,9 +1299,9 @@ void TradingEngine::pricer_loop() noexcept {
         alignas(32) double disc_arr[MAX_BATCH];
         alignas(32) double sigma_arr[MAX_BATCH];
         alignas(32) uint8_t is_call_arr[MAX_BATCH];
-        alignas(32) Black76Result mid_results[MAX_BATCH];
-        alignas(32) Black76Result bid_results[MAX_BATCH];
-        alignas(32) Black76Result ask_results[MAX_BATCH];
+        alignas(32) Black76QuoteResult mid_results[MAX_BATCH];
+        alignas(32) Black76QuoteResult bid_results[MAX_BATCH];
+        alignas(32) Black76QuoteResult ask_results[MAX_BATCH];
         alignas(64) PricingSignal sigs[MAX_BATCH];
 
         const uint16_t start = next_option_offset[prod];
@@ -1327,12 +1327,12 @@ void TradingEngine::pricer_loop() noexcept {
             is_call_arr[bi] = (opt.option_type == OptionType::Call) ? 1 : 0;
         }
 
-        compute_batch_precomputed(F_mid_arr, K_arr, T_arr, sqrt_T_arr, disc_arr,
-                                  sigma_arr, is_call_arr, mid_results, batch_n);
-        compute_batch_precomputed(F_bid_arr, K_arr, T_arr, sqrt_T_arr, disc_arr,
-                                  sigma_arr, is_call_arr, bid_results, batch_n);
-        compute_batch_precomputed(F_ask_arr, K_arr, T_arr, sqrt_T_arr, disc_arr,
-                                  sigma_arr, is_call_arr, ask_results, batch_n);
+        compute_batch_quote_precomputed(F_mid_arr, K_arr, sqrt_T_arr, disc_arr,
+                                        sigma_arr, is_call_arr, mid_results, batch_n);
+        compute_batch_quote_precomputed(F_bid_arr, K_arr, sqrt_T_arr, disc_arr,
+                                        sigma_arr, is_call_arr, bid_results, batch_n);
+        compute_batch_quote_precomputed(F_ask_arr, K_arr, sqrt_T_arr, disc_arr,
+                                        sigma_arr, is_call_arr, ask_results, batch_n);
 
         alignas(64) PricingSignal emitted_sigs[MAX_BATCH];
         uint16_t emitted_slots[MAX_BATCH];
@@ -1342,7 +1342,7 @@ void TradingEngine::pricer_loop() noexcept {
             const uint16_t oi = start + bi;
             const uint16_t opt_id = option_ids_[prod][oi];
             const Instrument& opt = instruments_[opt_id];
-            const Black76Result& mid_res = mid_results[bi];
+            const Black76QuoteResult& mid_res = mid_results[bi];
 
             PricingSignal& sig = sigs[bi];
             sig.instrument_id = opt_id;
@@ -1363,8 +1363,8 @@ void TradingEngine::pricer_loop() noexcept {
             greek.delta = mid_res.delta;
             greek.gamma = mid_res.gamma;
             greek.vega = mid_res.vega;
-            greek.theta = mid_res.theta;
-            greek.rho = mid_res.rho;
+            greek.theta = 0.0;
+            greek.rho = 0.0;
             greek.iv = sigma_arr[bi];
             greek.T = T_arr[bi];
             greek.calc_ts_ns = now;
@@ -1777,12 +1777,11 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                 if (!order.is_manual) {
                     order.book_id = mm_book_ids_[i];
                 }
-                const bool sent = gateway_->send_order(order);
+                GatewayOrderRecoveryHandle recovery{};
+                const bool sent = gateway_->send_order(order, &recovery);
                 publish_monitor_order(order);
                 if (sent) {
-                    GatewayOrderRecoveryHandle recovery{};
-                    const bool has_recovery =
-                        gateway_->get_order_recovery_handle(order.client_order_id, &recovery);
+                    const bool has_recovery = has_order_recovery(recovery);
                     track_live_order_submit(order, has_recovery ? &recovery : nullptr);
                     if (has_recovery) {
                         persist_order_event(OrderPersistenceEventType::Submit, order, &recovery);
@@ -1809,11 +1808,11 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                     continue;
                 }
                 quote.book_id = mm_book_ids_[i];
-                const bool sent = gateway_->send_quote(quote);
+                GatewayQuoteRecoveryHandle recovery{};
+                const bool sent = gateway_->send_quote(quote, &recovery);
                 publish_monitor_quote(quote);
                 if (sent && (quote.bid_volume > 0 || quote.ask_volume > 0)) {
-                    GatewayQuoteRecoveryHandle recovery{};
-                    if (gateway_->get_quote_recovery_handle(quote.client_quote_id, &recovery)) {
+                    if (has_quote_recovery(recovery)) {
                         track_live_quote_submit(quote, &recovery);
                         persist_quote_event(QuotePersistenceEventType::Submit, quote, &recovery);
                     } else {
@@ -1842,12 +1841,11 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                 }
                 if (intent.kind == ArbIntentKind::SubmitOrder) {
                     intent.order.book_id = arb_book_id_for_type(i, intent.strategy_type);
-                    const bool sent = gateway_->send_order(intent.order);
+                    GatewayOrderRecoveryHandle recovery{};
+                    const bool sent = gateway_->send_order(intent.order, &recovery);
                     publish_monitor_order(intent.order);
                     if (sent) {
-                        GatewayOrderRecoveryHandle recovery{};
-                        const bool has_recovery =
-                            gateway_->get_order_recovery_handle(intent.order.client_order_id, &recovery);
+                        const bool has_recovery = has_order_recovery(recovery);
                         track_live_order_submit(intent.order, has_recovery ? &recovery : nullptr);
                         if (has_recovery) {
                             persist_order_event(OrderPersistenceEventType::Submit, intent.order, &recovery);

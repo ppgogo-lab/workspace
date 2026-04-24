@@ -88,6 +88,7 @@ struct SimConfig {
     Volume   gateway_max_fill_size{0};
     int      gateway_slippage_ticks{0};
     double   gateway_quote_near_touch_ticks{0.5};
+    bool     gateway_benchmark_mode{false};
 };
 
 // ─── Pricing configuration ────────────────────────────────────────────────────
