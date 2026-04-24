@@ -1220,7 +1220,108 @@ void TradingEngine::pricer_loop() noexcept {
     MarketTick pending_future_tick[MAX_PRODUCTS]{};
     bool pending_product[MAX_PRODUCTS]{};
     uint16_t next_option_offset[MAX_PRODUCTS]{};
+    uint16_t cold_greeks_offset[MAX_PRODUCTS]{};
+    int64_t next_cold_greeks_due_ns[MAX_PRODUCTS]{};
     int rr_cursor = 0;
+    int cold_rr_cursor = 0;
+    const int64_t cold_greeks_interval_ns =
+        static_cast<int64_t>(std::max(1, cfg_.pricing.cold_greeks_interval_ms)) * 1'000'000LL;
+    const uint16_t cold_greeks_batch_cap = static_cast<uint16_t>(
+        std::max(1, std::min(cfg_.pricing.cold_greeks_batch_size, 128)));
+
+    auto refresh_cold_greeks_batch = [&](int product_count) noexcept -> bool {
+        const int64_t now = get_monotonic_ns();
+        int selected = -1;
+        for (int scan = 0; scan < product_count; ++scan) {
+            const int p = (cold_rr_cursor + scan) % product_count;
+            if (option_count_[p] > 0 && now >= next_cold_greeks_due_ns[p]) {
+                selected = p;
+                cold_rr_cursor = (p + 1) % product_count;
+                break;
+            }
+        }
+        if (selected < 0) return false;
+
+        const uint8_t prod = static_cast<uint8_t>(selected);
+        const uint16_t n = option_count_[prod];
+        const uint16_t start = cold_greeks_offset[prod];
+        const uint16_t batch_n = std::min<uint16_t>(cold_greeks_batch_cap, n - start);
+        if (batch_n == 0) {
+            cold_greeks_offset[prod] = 0;
+            next_cold_greeks_due_ns[prod] = now + cold_greeks_interval_ns;
+            return true;
+        }
+
+        const uint16_t first_opt_id = option_ids_[prod][0];
+        if (first_opt_id >= MAX_INSTRUMENTS) {
+            next_cold_greeks_due_ns[prod] = now + cold_greeks_interval_ns;
+            return true;
+        }
+        const uint16_t future_id = instruments_[first_opt_id].underlying_id;
+        if (future_id >= MAX_INSTRUMENTS) {
+            next_cold_greeks_due_ns[prod] = now + cold_greeks_interval_ns;
+            return true;
+        }
+        const MarketTick& future_tick = tick_snapshot_[future_id];
+        const double F_mid = future_tick.last_price;
+        if (F_mid < 1e-10) {
+            next_cold_greeks_due_ns[prod] = now + cold_greeks_interval_ns;
+            return true;
+        }
+
+        const IVolSurface* surf = nullptr;
+        if (cfg_.pricing.vol_method == VolMethod::Wing) {
+            surf = wing_surfaces_[prod].get();
+        } else if (cfg_.pricing.vol_method == VolMethod::OrcWing) {
+            surf = orc_wing_surfaces_[prod].get();
+        } else {
+            surf = vol_surfaces_[prod].get();
+        }
+
+        alignas(32) double F_arr[128];
+        alignas(32) double K_arr[128];
+        alignas(32) double T_arr[128];
+        alignas(32) double sqrt_T_arr[128];
+        alignas(32) double disc_arr[128];
+        alignas(32) double sigma_arr[128];
+        alignas(32) uint8_t is_call_arr[128];
+        alignas(32) Black76Result results[128];
+        const double log_F_mid = std::log(F_mid);
+
+        for (uint16_t bi = 0; bi < batch_n; ++bi) {
+            const uint16_t oi = start + bi;
+            const uint16_t opt_id = option_ids_[prod][oi];
+            const Instrument& opt = instruments_[opt_id];
+            F_arr[bi] = F_mid;
+            K_arr[bi] = opt.strike;
+            T_arr[bi] = option_T_[prod][oi];
+            sqrt_T_arr[bi] = option_sqrt_T_[prod][oi];
+            disc_arr[bi] = option_disc_[prod][oi];
+            sigma_arr[bi] = (cfg_.pricing.vol_method == VolMethod::OrcWing)
+                ? surf->get_vol_by_strike(F_mid, opt.strike, T_arr[bi])
+                : surf->get_vol(option_log_K_[prod][oi] - log_F_mid, T_arr[bi]);
+            is_call_arr[bi] = (opt.option_type == OptionType::Call) ? 1 : 0;
+        }
+
+        compute_batch_precomputed(F_arr, K_arr, T_arr, sqrt_T_arr, disc_arr,
+                                  sigma_arr, is_call_arr, results, batch_n);
+
+        for (uint16_t bi = 0; bi < batch_n; ++bi) {
+            const uint16_t opt_id = option_ids_[prod][start + bi];
+            Greeks greek = greeks_snapshot_[opt_id];
+            greek.theta = results[bi].theta;
+            greek.rho = results[bi].rho;
+            greek.T = T_arr[bi];
+            greeks_snapshot_[opt_id] = greek;
+        }
+
+        cold_greeks_offset[prod] = static_cast<uint16_t>(start + batch_n);
+        if (cold_greeks_offset[prod] >= n) {
+            cold_greeks_offset[prod] = 0;
+            next_cold_greeks_due_ns[prod] = now + cold_greeks_interval_ns;
+        }
+        return true;
+    };
 
     while (!stop_flag_.load(std::memory_order_relaxed)) {
         bool did_work = false;
@@ -1263,6 +1364,9 @@ void TradingEngine::pricer_loop() noexcept {
         }
 
         if (selected_prod < 0) {
+            if (refresh_cold_greeks_batch(product_count)) {
+                did_work = true;
+            }
             if (!did_work) spin_pause();
             continue;
         }
@@ -1357,14 +1461,12 @@ void TradingEngine::pricer_loop() noexcept {
             sig.underlying_ref_bid = static_cast<float>(future_tick.bid_price[0]);
             sig.underlying_ref_ask = static_cast<float>(future_tick.ask_price[0]);
 
-            Greeks greek{};
+            Greeks greek = greeks_snapshot_[opt_id];
             greek.instrument_id = opt_id;
             greek.theo_price = mid_res.price;
             greek.delta = mid_res.delta;
             greek.gamma = mid_res.gamma;
             greek.vega = mid_res.vega;
-            greek.theta = 0.0;
-            greek.rho = 0.0;
             greek.iv = sigma_arr[bi];
             greek.T = T_arr[bi];
             greek.calc_ts_ns = now;

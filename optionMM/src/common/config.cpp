@@ -211,6 +211,14 @@ static PricingConfig parse_pricing(const YAML::Node& n) {
         n["signal_emit_vega_epsilon"],
         "pricing.signal_emit_vega_epsilon",
         0.0);
+    c.cold_greeks_interval_ms = get<int>(
+        n["cold_greeks_interval_ms"],
+        "pricing.cold_greeks_interval_ms",
+        1000);
+    c.cold_greeks_batch_size = get<int>(
+        n["cold_greeks_batch_size"],
+        "pricing.cold_greeks_batch_size",
+        64);
 
     std::string method = get<std::string>(n["vol_surface"]["method"],
                                           "pricing.vol_surface.method", "svi");

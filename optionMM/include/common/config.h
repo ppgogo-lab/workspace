@@ -103,6 +103,8 @@ struct PricingConfig {
     double    signal_emit_underlying_epsilon_ticks{0.0};
     double    signal_emit_delta_epsilon{0.0};
     double    signal_emit_vega_epsilon{0.0};
+    int       cold_greeks_interval_ms{1000};
+    int       cold_greeks_batch_size{64};
 };
 
 // ─── Risk configuration ───────────────────────────────────────────────────────
