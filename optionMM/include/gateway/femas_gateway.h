@@ -13,6 +13,8 @@
 #include <cstdint>
 #include <cstring>
 #include <mutex>
+#include <shared_mutex>
+#include <shared_mutex>
 
 namespace omm {
 
@@ -52,7 +54,7 @@ public:
 
 private:
     struct OrderState {
-        bool       used{false};
+        std::atomic<bool> used{false};  // Atomic for lock-free allocation
         bool       acked{false};
         bool       is_quote_leg{false};
         OrderId    client_order_id{0};
@@ -68,7 +70,7 @@ private:
     };
 
     struct QuoteState {
-        bool    used{false};
+        std::atomic<bool> used{false};  // Atomic for lock-free allocation
         bool    acked{false};
         Quote   quote{};
         char    quote_local_id[16]{};
@@ -85,6 +87,9 @@ private:
     std::atomic<bool> trading_ready_{false};
     std::atomic<int> request_id_{1};
     std::atomic<uint64_t> local_id_seq_{1};
+    // Lock-free slot allocation: round-robin starting point for finding free slots
+    std::atomic<uint32_t> next_order_slot_hint_{0};
+    std::atomic<uint32_t> next_quote_slot_hint_{0};
 
     std::mutex qry_mutex_;
     std::condition_variable qry_cv_;
@@ -93,7 +98,9 @@ private:
     uint16_t qry_max_{0};
     bool qry_done_{false};
 
-    mutable std::mutex state_mutex_;
+    // Read-write lock for state tables: allows concurrent reads (lookups) but exclusive writes (indexing/updates)
+    // This eliminates reader-reader contention in callback path while maintaining safety
+    mutable std::shared_mutex state_rw_lock_;
     std::array<OrderState, MAX_OPEN_ORDERS> order_states_{};
     std::array<QuoteState, MAX_OPEN_ORDERS / 2> quote_states_{};
     FixedHashTable<OrderId, std::size_t, MAX_OPEN_ORDERS * 2> order_client_index_{};
@@ -126,7 +133,9 @@ private:
     static uint64_t parse_numeric_id(const char* text) noexcept;
 
     OrderState* alloc_order_state() noexcept;
+    OrderState* alloc_order_state_lockfree() noexcept;  // Lock-free version for send path
     QuoteState* alloc_quote_state() noexcept;
+    QuoteState* alloc_quote_state_lockfree() noexcept;  // Lock-free version for send path
     [[nodiscard]] std::size_t order_index(const OrderState* state) const noexcept;
     [[nodiscard]] std::size_t quote_index(const QuoteState* state) const noexcept;
     void index_order_state(OrderState* state) noexcept;

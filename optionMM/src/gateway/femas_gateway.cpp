@@ -98,21 +98,100 @@ uint64_t FEMASGateway::parse_numeric_id(const char* text) noexcept {
 
 FEMASGateway::OrderState* FEMASGateway::alloc_order_state() noexcept {
     for (auto& state : order_states_) {
-        if (!state.used) {
-            state = OrderState{};
-            state.used = true;
+        if (!state.used.load(std::memory_order_relaxed)) {
+            // Reset fields manually (can't use assignment with atomic)
+            state.used.store(true, std::memory_order_relaxed);
+            state.acked = false;
+            state.is_quote_leg = false;
+            state.client_order_id = 0;
+            state.client_quote_id = 0;
+            state.instrument_id = INVALID_INSTRUMENT_ID;
+            state.product_index = 0xFF;
+            state.side = Side::Buy;
+            state.offset = OffsetFlag::Open;
+            state.price = 0.0;
+            state.volume = 0;
+            std::memset(state.exchange_local_id, 0, sizeof(state.exchange_local_id));
+            std::memset(state.order_sys_id, 0, sizeof(state.order_sys_id));
             return &state;
         }
     }
     return nullptr;
 }
 
+// Lock-free allocation for send path: uses atomic CAS to claim slots without mutex.
+// This eliminates contention between send path (dispatcher thread) and callback path
+// (gateway internal thread). The hint provides a starting point to reduce collisions.
+FEMASGateway::OrderState* FEMASGateway::alloc_order_state_lockfree() noexcept {
+    const uint32_t start_hint = next_order_slot_hint_.fetch_add(1, std::memory_order_relaxed);
+    // Try MAX_OPEN_ORDERS slots starting from hint (wraps around)
+    for (uint32_t attempt = 0; attempt < MAX_OPEN_ORDERS; ++attempt) {
+        const uint32_t slot = (start_hint + attempt) % MAX_OPEN_ORDERS;
+        OrderState* state = &order_states_[slot];
+        bool expected = false;
+        // Atomic CAS: only succeeds if slot is free, no lock needed
+        if (state->used.compare_exchange_strong(expected, true,
+                                                std::memory_order_acquire,
+                                                std::memory_order_relaxed)) {
+            // Reset state fields (keep 'used' as true)
+            state->acked = false;
+            state->is_quote_leg = false;
+            state->client_order_id = 0;
+            state->client_quote_id = 0;
+            state->instrument_id = INVALID_INSTRUMENT_ID;
+            state->product_index = 0xFF;
+            state->side = Side::Buy;
+            state->offset = OffsetFlag::Open;
+            state->price = 0.0;
+            state->volume = 0;
+            std::memset(state->exchange_local_id, 0, sizeof(state->exchange_local_id));
+            std::memset(state->order_sys_id, 0, sizeof(state->order_sys_id));
+            return state;
+        }
+    }
+    return nullptr;  // All slots full
+}
+
 FEMASGateway::QuoteState* FEMASGateway::alloc_quote_state() noexcept {
     for (auto& state : quote_states_) {
-        if (!state.used) {
-            state = QuoteState{};
-            state.used = true;
+        if (!state.used.load(std::memory_order_relaxed)) {
+            // Reset fields manually (can't use assignment with atomic)
+            state.used.store(true, std::memory_order_relaxed);
+            state.acked = false;
+            state.quote = Quote{};
+            std::memset(state.quote_local_id, 0, sizeof(state.quote_local_id));
+            std::memset(state.quote_sys_id, 0, sizeof(state.quote_sys_id));
+            std::memset(state.bid_local_id, 0, sizeof(state.bid_local_id));
+            std::memset(state.ask_local_id, 0, sizeof(state.ask_local_id));
+            std::memset(state.bid_order_sys_id, 0, sizeof(state.bid_order_sys_id));
+            std::memset(state.ask_order_sys_id, 0, sizeof(state.ask_order_sys_id));
             return &state;
+        }
+    }
+    return nullptr;
+}
+
+// Lock-free allocation for send path (quotes)
+FEMASGateway::QuoteState* FEMASGateway::alloc_quote_state_lockfree() noexcept {
+    const uint32_t start_hint = next_quote_slot_hint_.fetch_add(1, std::memory_order_relaxed);
+    const uint32_t max_slots = static_cast<uint32_t>(quote_states_.size());
+    for (uint32_t attempt = 0; attempt < max_slots; ++attempt) {
+        const uint32_t slot = (start_hint + attempt) % max_slots;
+        QuoteState* state = &quote_states_[slot];
+        bool expected = false;
+        if (state->used.compare_exchange_strong(expected, true,
+                                                std::memory_order_acquire,
+                                                std::memory_order_relaxed)) {
+            // Reset state fields (keep 'used' as true)
+            state->acked = false;
+            state->quote = Quote{};
+            std::memset(state->quote_local_id, 0, sizeof(state->quote_local_id));
+            std::memset(state->quote_sys_id, 0, sizeof(state->quote_sys_id));
+            std::memset(state->bid_local_id, 0, sizeof(state->bid_local_id));
+            std::memset(state->ask_local_id, 0, sizeof(state->ask_local_id));
+            std::memset(state->bid_order_sys_id, 0, sizeof(state->bid_order_sys_id));
+            std::memset(state->ask_order_sys_id, 0, sizeof(state->ask_order_sys_id));
+            return state;
         }
     }
     return nullptr;
@@ -217,7 +296,16 @@ FEMASGateway::QuoteState* FEMASGateway::find_quote_by_sys_id(const char* quote_s
 void FEMASGateway::clear_order_state(const char* local_id) noexcept {
     if (OrderState* state = find_order_by_local_id(local_id)) {
         unindex_order_state(state);
-        *state = OrderState{};
+        // Reset fields manually (can't use assignment with atomic)
+        state->used.store(false, std::memory_order_relaxed);
+        state->acked = false;
+        state->is_quote_leg = false;
+        state->client_order_id = 0;
+        state->client_quote_id = 0;
+        state->instrument_id = INVALID_INSTRUMENT_ID;
+        state->product_index = 0xFF;
+        std::memset(state->exchange_local_id, 0, sizeof(state->exchange_local_id));
+        std::memset(state->order_sys_id, 0, sizeof(state->order_sys_id));
     }
 }
 
@@ -227,7 +315,16 @@ void FEMASGateway::clear_quote_state(QuoteId quote_id) noexcept {
     clear_order_state(quote->bid_local_id);
     clear_order_state(quote->ask_local_id);
     unindex_quote_state(quote);
-    *quote = QuoteState{};
+    // Reset fields manually (can't use assignment with atomic)
+    quote->used.store(false, std::memory_order_relaxed);
+    quote->acked = false;
+    quote->quote = Quote{};
+    std::memset(quote->quote_local_id, 0, sizeof(quote->quote_local_id));
+    std::memset(quote->quote_sys_id, 0, sizeof(quote->quote_sys_id));
+    std::memset(quote->bid_local_id, 0, sizeof(quote->bid_local_id));
+    std::memset(quote->ask_local_id, 0, sizeof(quote->ask_local_id));
+    std::memset(quote->bid_order_sys_id, 0, sizeof(quote->bid_order_sys_id));
+    std::memset(quote->ask_order_sys_id, 0, sizeof(quote->ask_order_sys_id));
 }
 
 void FEMASGateway::push_order_event(GatewayEventType type,
@@ -292,9 +389,30 @@ bool FEMASGateway::connect(const GatewayConfig& cfg) {
 void FEMASGateway::disconnect() {
     trading_ready_.store(false, std::memory_order_release);
     {
-        std::lock_guard<std::mutex> lk(state_mutex_);
-        for (auto& state : order_states_) state = OrderState{};
-        for (auto& state : quote_states_) state = QuoteState{};
+        std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
+        // Reset all states manually (can't use assignment with atomic)
+        for (auto& state : order_states_) {
+            state.used.store(false, std::memory_order_relaxed);
+            state.acked = false;
+            state.is_quote_leg = false;
+            state.client_order_id = 0;
+            state.client_quote_id = 0;
+            state.instrument_id = INVALID_INSTRUMENT_ID;
+            state.product_index = 0xFF;
+            std::memset(state.exchange_local_id, 0, sizeof(state.exchange_local_id));
+            std::memset(state.order_sys_id, 0, sizeof(state.order_sys_id));
+        }
+        for (auto& state : quote_states_) {
+            state.used.store(false, std::memory_order_relaxed);
+            state.acked = false;
+            state.quote = Quote{};
+            std::memset(state.quote_local_id, 0, sizeof(state.quote_local_id));
+            std::memset(state.quote_sys_id, 0, sizeof(state.quote_sys_id));
+            std::memset(state.bid_local_id, 0, sizeof(state.bid_local_id));
+            std::memset(state.ask_local_id, 0, sizeof(state.ask_local_id));
+            std::memset(state.bid_order_sys_id, 0, sizeof(state.bid_order_sys_id));
+            std::memset(state.ask_order_sys_id, 0, sizeof(state.ask_order_sys_id));
+        }
         order_client_index_.clear();
         order_local_index_.clear();
         order_sys_index_.clear();
@@ -345,27 +463,33 @@ bool FEMASGateway::send_order(const Order& order,
     req.MinVolume = 1;
     req.ForceCloseReason = USTP_FTDC_FCR_NotForceClose;
 
+    // Lock-free state allocation: no mutex needed, uses atomic CAS
+    // This eliminates contention with callback thread that reads state
+    OrderState* state = alloc_order_state_lockfree();
+    if (!state) {
+        OMM_LOG_WARN("femas", "order state table full");
+        return false;
+    }
+
+    // Populate state fields (no lock needed - we own this slot exclusively)
+    state->client_order_id = order.client_order_id;
+    state->instrument_id = order.instrument_id;
+    state->product_index = order.product_index;
+    state->side = order.side;
+    state->offset = order.offset;
+    state->price = order.price;
+    state->volume = order.volume;
+    std::strncpy(state->exchange_local_id, req.UserOrderLocalID, sizeof(state->exchange_local_id) - 1);
+
+    // Index state for callback lookups (still needs lock, but much shorter critical section)
     {
-        std::lock_guard<std::mutex> lk(state_mutex_);
-        OrderState* state = alloc_order_state();
-        if (!state) {
-            OMM_LOG_WARN("femas", "order state table full");
-            return false;
-        }
-        state->client_order_id = order.client_order_id;
-        state->instrument_id = order.instrument_id;
-        state->product_index = order.product_index;
-        state->side = order.side;
-        state->offset = order.offset;
-        state->price = order.price;
-        state->volume = order.volume;
-        std::strncpy(state->exchange_local_id, req.UserOrderLocalID, sizeof(state->exchange_local_id) - 1);
+        std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
         index_order_state(state);
     }
 
     const int ret = api_->ReqOrderInsert(&req, next_req_id());
     if (ret != 0) {
-        std::lock_guard<std::mutex> lk(state_mutex_);
+        std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
         clear_order_state(local_id);
         OMM_LOG_WARN("femas", "ReqOrderInsert failed ret={} order_id={}", ret, order.client_order_id);
         return false;
@@ -420,43 +544,48 @@ bool FEMASGateway::send_quote(const Quote& quote,
     req.BidVolume = quote.bid_volume;
     req.AskVolume = quote.ask_volume;
 
+    // Lock-free state allocation for quote and its two legs
+    QuoteState* quote_state = alloc_quote_state_lockfree();
+    OrderState* bid_state = alloc_order_state_lockfree();
+    OrderState* ask_state = alloc_order_state_lockfree();
+    if (!quote_state || !bid_state || !ask_state) {
+        // Rollback: release any allocated slots
+        if (quote_state) quote_state->used.store(false, std::memory_order_release);
+        if (bid_state) bid_state->used.store(false, std::memory_order_release);
+        if (ask_state) ask_state->used.store(false, std::memory_order_release);
+        OMM_LOG_WARN("femas", "quote state table full");
+        return false;
+    }
+
+    // Populate state fields (no lock needed - we own these slots exclusively)
+    quote_state->quote = quote;
+    std::strncpy(quote_state->quote_local_id, req.UserQuoteLocalID, sizeof(quote_state->quote_local_id) - 1);
+    std::strncpy(quote_state->bid_local_id, req.BidUserOrderLocalID, sizeof(quote_state->bid_local_id) - 1);
+    std::strncpy(quote_state->ask_local_id, req.AskUserOrderLocalID, sizeof(quote_state->ask_local_id) - 1);
+
+    bid_state->is_quote_leg = true;
+    bid_state->client_quote_id = quote.client_quote_id;
+    bid_state->instrument_id = quote.instrument_id;
+    bid_state->product_index = quote.product_index;
+    bid_state->side = Side::Buy;
+    bid_state->offset = quote.bid_offset;
+    bid_state->price = quote.bid_price;
+    bid_state->volume = quote.bid_volume;
+    std::strncpy(bid_state->exchange_local_id, req.BidUserOrderLocalID, sizeof(bid_state->exchange_local_id) - 1);
+
+    ask_state->is_quote_leg = true;
+    ask_state->client_quote_id = quote.client_quote_id;
+    ask_state->instrument_id = quote.instrument_id;
+    ask_state->product_index = quote.product_index;
+    ask_state->side = Side::Sell;
+    ask_state->offset = quote.ask_offset;
+    ask_state->price = quote.ask_price;
+    ask_state->volume = quote.ask_volume;
+    std::strncpy(ask_state->exchange_local_id, req.AskUserOrderLocalID, sizeof(ask_state->exchange_local_id) - 1);
+
+    // Index states for callback lookups (still needs lock, but much shorter critical section)
     {
-        std::lock_guard<std::mutex> lk(state_mutex_);
-        QuoteState* quote_state = alloc_quote_state();
-        OrderState* bid_state = alloc_order_state();
-        OrderState* ask_state = alloc_order_state();
-        if (!quote_state || !bid_state || !ask_state) {
-            if (quote_state) *quote_state = QuoteState{};
-            if (bid_state) *bid_state = OrderState{};
-            if (ask_state) *ask_state = OrderState{};
-            OMM_LOG_WARN("femas", "quote state table full");
-            return false;
-        }
-
-        quote_state->quote = quote;
-        std::strncpy(quote_state->quote_local_id, req.UserQuoteLocalID, sizeof(quote_state->quote_local_id) - 1);
-        std::strncpy(quote_state->bid_local_id, req.BidUserOrderLocalID, sizeof(quote_state->bid_local_id) - 1);
-        std::strncpy(quote_state->ask_local_id, req.AskUserOrderLocalID, sizeof(quote_state->ask_local_id) - 1);
-
-        bid_state->is_quote_leg = true;
-        bid_state->client_quote_id = quote.client_quote_id;
-        bid_state->instrument_id = quote.instrument_id;
-        bid_state->product_index = quote.product_index;
-        bid_state->side = Side::Buy;
-        bid_state->offset = quote.bid_offset;
-        bid_state->price = quote.bid_price;
-        bid_state->volume = quote.bid_volume;
-        std::strncpy(bid_state->exchange_local_id, req.BidUserOrderLocalID, sizeof(bid_state->exchange_local_id) - 1);
-
-        ask_state->is_quote_leg = true;
-        ask_state->client_quote_id = quote.client_quote_id;
-        ask_state->instrument_id = quote.instrument_id;
-        ask_state->product_index = quote.product_index;
-        ask_state->side = Side::Sell;
-        ask_state->offset = quote.ask_offset;
-        ask_state->price = quote.ask_price;
-        ask_state->volume = quote.ask_volume;
-        std::strncpy(ask_state->exchange_local_id, req.AskUserOrderLocalID, sizeof(ask_state->exchange_local_id) - 1);
+        std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
         index_quote_state(quote_state);
         index_order_state(bid_state);
         index_order_state(ask_state);
@@ -464,7 +593,7 @@ bool FEMASGateway::send_quote(const Quote& quote,
 
     const int ret = api_->ReqQuoteInsert(&req, next_req_id());
     if (ret != 0) {
-        std::lock_guard<std::mutex> lk(state_mutex_);
+        std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
         clear_quote_state(quote.client_quote_id);
         OMM_LOG_WARN("femas", "ReqQuoteInsert failed ret={} quote_id={}", ret, quote.client_quote_id);
         return false;
@@ -490,7 +619,7 @@ bool FEMASGateway::cancel_order(OrderId id, uint16_t instrument_id) noexcept {
     if (!api_ || !trading_ready_.load(std::memory_order_relaxed)) return false;
 
     {
-        std::lock_guard<std::mutex> lk(state_mutex_);
+        std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
         if (QuoteState* quote = find_quote_by_client_id(id)) {
             CUstpFtdcQuoteActionField req{};
             std::strncpy(req.BrokerID, cfg_.femas.broker_id, sizeof(req.BrokerID) - 1);
@@ -515,7 +644,7 @@ bool FEMASGateway::cancel_order(OrderId id, uint16_t instrument_id) noexcept {
 
     CUstpFtdcOrderActionField req{};
     {
-        std::lock_guard<std::mutex> lk(state_mutex_);
+        std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
         const OrderState* order_state = nullptr;
         for (auto& candidate : order_states_) {
             if (!candidate.used || candidate.is_quote_leg) continue;
@@ -559,7 +688,7 @@ bool FEMASGateway::get_order_recovery_handle(
     if (out == nullptr) return false;
     *out = GatewayOrderRecoveryHandle{};
 
-    std::lock_guard<std::mutex> lk(state_mutex_);
+    std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
     const std::size_t* idx = order_client_index_.find(id);
     if (idx != nullptr && *idx < order_states_.size()) {
         const auto& state = order_states_[*idx];
@@ -583,7 +712,7 @@ bool FEMASGateway::get_quote_recovery_handle(
     if (out == nullptr) return false;
     *out = GatewayQuoteRecoveryHandle{};
 
-    std::lock_guard<std::mutex> lk(state_mutex_);
+    std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
     const std::size_t* idx = quote_client_index_.find(id);
     if (idx != nullptr && *idx < quote_states_.size()) {
         const auto& state = quote_states_[*idx];
@@ -613,7 +742,7 @@ bool FEMASGateway::get_quote_recovery_handle(
 }
 
 void FEMASGateway::restore_order_recovery(const GatewayRecoveredOrder& recovered) noexcept {
-    std::lock_guard<std::mutex> lk(state_mutex_);
+    std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
     OrderState* state = alloc_order_state();
     if (!state) return;
 
@@ -635,14 +764,15 @@ void FEMASGateway::restore_order_recovery(const GatewayRecoveredOrder& recovered
 }
 
 void FEMASGateway::restore_quote_recovery(const GatewayRecoveredQuote& recovered) noexcept {
-    std::lock_guard<std::mutex> lk(state_mutex_);
+    std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
     QuoteState* quote_state = alloc_quote_state();
     OrderState* bid_state = alloc_order_state();
     OrderState* ask_state = alloc_order_state();
     if (!quote_state || !bid_state || !ask_state) {
-        if (quote_state) *quote_state = QuoteState{};
-        if (bid_state) *bid_state = OrderState{};
-        if (ask_state) *ask_state = OrderState{};
+        // Rollback: release any allocated slots
+        if (quote_state) quote_state->used.store(false, std::memory_order_relaxed);
+        if (bid_state) bid_state->used.store(false, std::memory_order_relaxed);
+        if (ask_state) ask_state->used.store(false, std::memory_order_relaxed);
         return;
     }
 
@@ -777,7 +907,7 @@ void FEMASGateway::OnRspOrderInsert(CUstpFtdcInputOrderField* pOrder,
                                     bool) {
     if (!pOrder) return;
 
-    std::lock_guard<std::mutex> lk(state_mutex_);
+    std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
     OrderState* state = find_order_by_local_id(pOrder->UserOrderLocalID);
     if (!state) return;
 
@@ -792,14 +922,23 @@ void FEMASGateway::OnRspOrderInsert(CUstpFtdcInputOrderField* pOrder,
                      pRspInfo->ErrorID, pRspInfo->ErrorMsg, state->client_order_id);
         push_order_event(GatewayEventType::OrderReject, *state, OrderStatus::Rejected);
         unindex_order_state(state);
-        *state = OrderState{};
+        // Reset fields manually (can't use assignment with atomic)
+        state->used.store(false, std::memory_order_relaxed);
+        state->acked = false;
+        state->is_quote_leg = false;
+        state->client_order_id = 0;
+        state->client_quote_id = 0;
+        state->instrument_id = INVALID_INSTRUMENT_ID;
+        state->product_index = 0xFF;
+        std::memset(state->exchange_local_id, 0, sizeof(state->exchange_local_id));
+        std::memset(state->order_sys_id, 0, sizeof(state->order_sys_id));
     }
 }
 
 void FEMASGateway::OnRtnOrder(CUstpFtdcOrderField* pOrder) {
     if (!pOrder) return;
 
-    std::lock_guard<std::mutex> lk(state_mutex_);
+    std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
     OrderState* state = find_order_by_local_id(pOrder->UserOrderLocalID);
     if (!state) state = find_order_by_sys_id(pOrder->OrderSysID);
     if (!state) {
@@ -822,7 +961,16 @@ void FEMASGateway::OnRtnOrder(CUstpFtdcOrderField* pOrder) {
         push_order_event(GatewayEventType::OrderCancel, *state, status, pOrder->VolumeTraded);
         if (!state->is_quote_leg) {
             unindex_order_state(state);
-            *state = OrderState{};
+            // Reset fields manually (can't use assignment with atomic)
+            state->used.store(false, std::memory_order_relaxed);
+            state->acked = false;
+            state->is_quote_leg = false;
+            state->client_order_id = 0;
+            state->client_quote_id = 0;
+            state->instrument_id = INVALID_INSTRUMENT_ID;
+            state->product_index = 0xFF;
+            std::memset(state->exchange_local_id, 0, sizeof(state->exchange_local_id));
+            std::memset(state->order_sys_id, 0, sizeof(state->order_sys_id));
         }
     }
 }
@@ -830,7 +978,7 @@ void FEMASGateway::OnRtnOrder(CUstpFtdcOrderField* pOrder) {
 void FEMASGateway::OnRtnTrade(CUstpFtdcTradeField* pTrade) {
     if (!pTrade) return;
 
-    std::lock_guard<std::mutex> lk(state_mutex_);
+    std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
     OrderState* state = find_order_by_local_id(pTrade->UserOrderLocalID);
     if (!state) state = find_order_by_sys_id(pTrade->OrderSysID);
     if (!state) {
@@ -859,7 +1007,7 @@ void FEMASGateway::OnErrRtnOrderInsert(CUstpFtdcInputOrderField* pOrder,
                                        CUstpFtdcRspInfoField* pRspInfo) {
     if (!pOrder) return;
 
-    std::lock_guard<std::mutex> lk(state_mutex_);
+    std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
     OrderState* state = find_order_by_local_id(pOrder->UserOrderLocalID);
     if (!state) return;
 
@@ -869,7 +1017,16 @@ void FEMASGateway::OnErrRtnOrderInsert(CUstpFtdcInputOrderField* pOrder,
                  state->client_order_id);
     push_order_event(GatewayEventType::OrderReject, *state, OrderStatus::Rejected);
     unindex_order_state(state);
-    *state = OrderState{};
+    // Reset fields manually (can't use assignment with atomic)
+    state->used.store(false, std::memory_order_relaxed);
+    state->acked = false;
+    state->is_quote_leg = false;
+    state->client_order_id = 0;
+    state->client_quote_id = 0;
+    state->instrument_id = INVALID_INSTRUMENT_ID;
+    state->product_index = 0xFF;
+    std::memset(state->exchange_local_id, 0, sizeof(state->exchange_local_id));
+    std::memset(state->order_sys_id, 0, sizeof(state->order_sys_id));
 }
 
 void FEMASGateway::OnRspOrderAction(CUstpFtdcOrderActionField* pOrderAction,
@@ -890,7 +1047,7 @@ void FEMASGateway::OnRspQuoteInsert(CUstpFtdcInputQuoteField* pQuote,
                                     bool) {
     if (!pQuote) return;
 
-    std::lock_guard<std::mutex> lk(state_mutex_);
+    std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
     QuoteState* state = find_quote_by_local_id(pQuote->UserQuoteLocalID);
     if (!state) return;
 
@@ -917,7 +1074,7 @@ void FEMASGateway::OnRspQuoteInsert(CUstpFtdcInputQuoteField* pQuote,
 void FEMASGateway::OnRtnQuote(CUstpFtdcRtnQuoteField* pQuote) {
     if (!pQuote) return;
 
-    std::lock_guard<std::mutex> lk(state_mutex_);
+    std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
     QuoteState* state = find_quote_by_local_id(pQuote->UserQuoteLocalID);
     if (!state) state = find_quote_by_sys_id(pQuote->QuoteSysID);
     if (!state) {
@@ -975,7 +1132,7 @@ void FEMASGateway::OnErrRtnQuoteInsert(CUstpFtdcInputQuoteField* pQuote,
                                        CUstpFtdcRspInfoField* pRspInfo) {
     if (!pQuote) return;
 
-    std::lock_guard<std::mutex> lk(state_mutex_);
+    std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
     QuoteState* state = find_quote_by_local_id(pQuote->UserQuoteLocalID);
     if (!state) return;
 
