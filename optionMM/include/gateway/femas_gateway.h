@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common/fixed_hash_table.h"
 #include "gateway/gateway.h"
 #include "common/thread_utils.h"
 #include "femas/api_wrapper.h"
@@ -12,8 +13,6 @@
 #include <cstdint>
 #include <cstring>
 #include <mutex>
-#include <string>
-#include <unordered_map>
 
 namespace omm {
 
@@ -97,12 +96,12 @@ private:
     mutable std::mutex state_mutex_;
     std::array<OrderState, MAX_OPEN_ORDERS> order_states_{};
     std::array<QuoteState, MAX_OPEN_ORDERS / 2> quote_states_{};
-    std::unordered_map<OrderId, std::size_t> order_client_index_{};
-    std::unordered_map<std::string, std::size_t> order_local_index_{};
-    std::unordered_map<std::string, std::size_t> order_sys_index_{};
-    std::unordered_map<QuoteId, std::size_t> quote_client_index_{};
-    std::unordered_map<std::string, std::size_t> quote_local_index_{};
-    std::unordered_map<std::string, std::size_t> quote_sys_index_{};
+    FixedHashTable<OrderId, std::size_t, MAX_OPEN_ORDERS * 2> order_client_index_{};
+    FixedStringHashTable<16, std::size_t, MAX_OPEN_ORDERS * 2> order_local_index_{};
+    FixedStringHashTable<32, std::size_t, MAX_OPEN_ORDERS * 2> order_sys_index_{};
+    FixedHashTable<QuoteId, std::size_t, MAX_OPEN_ORDERS> quote_client_index_{};
+    FixedStringHashTable<16, std::size_t, MAX_OPEN_ORDERS> quote_local_index_{};
+    FixedStringHashTable<32, std::size_t, MAX_OPEN_ORDERS> quote_sys_index_{};
 
     static void encode_local_id(char* buf, uint64_t id) noexcept {
         std::snprintf(buf, 13, "%012llu", static_cast<unsigned long long>(id & 0xFFFFFFFFFFFFULL));

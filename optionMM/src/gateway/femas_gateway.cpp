@@ -130,13 +130,13 @@ void FEMASGateway::index_order_state(OrderState* state) noexcept {
     if (!state || !state->used) return;
     const std::size_t idx = order_index(state);
     if (!state->is_quote_leg && state->client_order_id != 0) {
-        order_client_index_[state->client_order_id] = idx;
+        (void)order_client_index_.insert(state->client_order_id, idx);
     }
     if (state->exchange_local_id[0]) {
-        order_local_index_[state->exchange_local_id] = idx;
+        (void)order_local_index_.insert(state->exchange_local_id, idx);
     }
     if (state->order_sys_id[0]) {
-        order_sys_index_[state->order_sys_id] = idx;
+        (void)order_sys_index_.insert(state->order_sys_id, idx);
     }
 }
 
@@ -144,13 +144,13 @@ void FEMASGateway::index_quote_state(QuoteState* state) noexcept {
     if (!state || !state->used) return;
     const std::size_t idx = quote_index(state);
     if (state->quote.client_quote_id != 0) {
-        quote_client_index_[state->quote.client_quote_id] = idx;
+        (void)quote_client_index_.insert(state->quote.client_quote_id, idx);
     }
     if (state->quote_local_id[0]) {
-        quote_local_index_[state->quote_local_id] = idx;
+        (void)quote_local_index_.insert(state->quote_local_id, idx);
     }
     if (state->quote_sys_id[0]) {
-        quote_sys_index_[state->quote_sys_id] = idx;
+        (void)quote_sys_index_.insert(state->quote_sys_id, idx);
     }
 }
 
@@ -182,35 +182,35 @@ void FEMASGateway::unindex_quote_state(QuoteState* state) noexcept {
 
 FEMASGateway::OrderState* FEMASGateway::find_order_by_local_id(const char* local_id) noexcept {
     if (!local_id || !local_id[0]) return nullptr;
-    const auto it = order_local_index_.find(local_id);
-    if (it != order_local_index_.end() && it->second < order_states_.size()) return &order_states_[it->second];
+    const std::size_t* idx = order_local_index_.find(local_id);
+    if (idx != nullptr && *idx < order_states_.size()) return &order_states_[*idx];
     return nullptr;
 }
 
 FEMASGateway::OrderState* FEMASGateway::find_order_by_sys_id(const char* order_sys_id) noexcept {
     if (!order_sys_id || !order_sys_id[0]) return nullptr;
-    const auto it = order_sys_index_.find(order_sys_id);
-    if (it != order_sys_index_.end() && it->second < order_states_.size()) return &order_states_[it->second];
+    const std::size_t* idx = order_sys_index_.find(order_sys_id);
+    if (idx != nullptr && *idx < order_states_.size()) return &order_states_[*idx];
     return nullptr;
 }
 
 FEMASGateway::QuoteState* FEMASGateway::find_quote_by_client_id(QuoteId quote_id) noexcept {
-    const auto it = quote_client_index_.find(quote_id);
-    if (it != quote_client_index_.end() && it->second < quote_states_.size()) return &quote_states_[it->second];
+    const std::size_t* idx = quote_client_index_.find(quote_id);
+    if (idx != nullptr && *idx < quote_states_.size()) return &quote_states_[*idx];
     return nullptr;
 }
 
 FEMASGateway::QuoteState* FEMASGateway::find_quote_by_local_id(const char* local_id) noexcept {
     if (!local_id || !local_id[0]) return nullptr;
-    const auto it = quote_local_index_.find(local_id);
-    if (it != quote_local_index_.end() && it->second < quote_states_.size()) return &quote_states_[it->second];
+    const std::size_t* idx = quote_local_index_.find(local_id);
+    if (idx != nullptr && *idx < quote_states_.size()) return &quote_states_[*idx];
     return nullptr;
 }
 
 FEMASGateway::QuoteState* FEMASGateway::find_quote_by_sys_id(const char* quote_sys_id) noexcept {
     if (!quote_sys_id || !quote_sys_id[0]) return nullptr;
-    const auto it = quote_sys_index_.find(quote_sys_id);
-    if (it != quote_sys_index_.end() && it->second < quote_states_.size()) return &quote_states_[it->second];
+    const std::size_t* idx = quote_sys_index_.find(quote_sys_id);
+    if (idx != nullptr && *idx < quote_states_.size()) return &quote_states_[*idx];
     return nullptr;
 }
 
@@ -272,15 +272,6 @@ void FEMASGateway::push_trade_event(GatewayEventType type,
 
 bool FEMASGateway::connect(const GatewayConfig& cfg) {
     cfg_ = cfg;
-    {
-        std::lock_guard<std::mutex> lk(state_mutex_);
-        order_client_index_.reserve(MAX_OPEN_ORDERS);
-        order_local_index_.reserve(MAX_OPEN_ORDERS);
-        order_sys_index_.reserve(MAX_OPEN_ORDERS);
-        quote_client_index_.reserve(MAX_OPEN_ORDERS / 2);
-        quote_local_index_.reserve(MAX_OPEN_ORDERS / 2);
-        quote_sys_index_.reserve(MAX_OPEN_ORDERS / 2);
-    }
 
     api_ = create_femas_trader_api(cfg_.femas.front_addr);
     if (!api_) {
@@ -569,9 +560,9 @@ bool FEMASGateway::get_order_recovery_handle(
     *out = GatewayOrderRecoveryHandle{};
 
     std::lock_guard<std::mutex> lk(state_mutex_);
-    const auto it = order_client_index_.find(id);
-    if (it != order_client_index_.end() && it->second < order_states_.size()) {
-        const auto& state = order_states_[it->second];
+    const std::size_t* idx = order_client_index_.find(id);
+    if (idx != nullptr && *idx < order_states_.size()) {
+        const auto& state = order_states_[*idx];
         if (!state.used || state.is_quote_leg || state.client_order_id != id) return false;
         out->valid = true;
         out->client_quote_id = state.client_quote_id;
@@ -593,9 +584,9 @@ bool FEMASGateway::get_quote_recovery_handle(
     *out = GatewayQuoteRecoveryHandle{};
 
     std::lock_guard<std::mutex> lk(state_mutex_);
-    const auto it = quote_client_index_.find(id);
-    if (it != quote_client_index_.end() && it->second < quote_states_.size()) {
-        const auto& state = quote_states_[it->second];
+    const std::size_t* idx = quote_client_index_.find(id);
+    if (idx != nullptr && *idx < quote_states_.size()) {
+        const auto& state = quote_states_[*idx];
         if (!state.used || state.quote.client_quote_id != id) return false;
         out->valid = true;
         std::strncpy(out->quote_local_id,
@@ -793,7 +784,7 @@ void FEMASGateway::OnRspOrderInsert(CUstpFtdcInputOrderField* pOrder,
     if (pOrder->OrderSysID[0]) {
         if (state->order_sys_id[0]) order_sys_index_.erase(state->order_sys_id);
         std::strncpy(state->order_sys_id, pOrder->OrderSysID, sizeof(state->order_sys_id) - 1);
-        order_sys_index_[state->order_sys_id] = order_index(state);
+        (void)order_sys_index_.insert(state->order_sys_id, order_index(state));
     }
 
     if (pRspInfo && pRspInfo->ErrorID != 0) {
@@ -820,7 +811,7 @@ void FEMASGateway::OnRtnOrder(CUstpFtdcOrderField* pOrder) {
     if (pOrder->OrderSysID[0]) {
         if (state->order_sys_id[0]) order_sys_index_.erase(state->order_sys_id);
         std::strncpy(state->order_sys_id, pOrder->OrderSysID, sizeof(state->order_sys_id) - 1);
-        order_sys_index_[state->order_sys_id] = order_index(state);
+        (void)order_sys_index_.insert(state->order_sys_id, order_index(state));
     }
 
     const OrderStatus status = decode_order_status(pOrder->OrderStatus);
@@ -851,7 +842,7 @@ void FEMASGateway::OnRtnTrade(CUstpFtdcTradeField* pTrade) {
     if (pTrade->OrderSysID[0]) {
         if (state->order_sys_id[0]) order_sys_index_.erase(state->order_sys_id);
         std::strncpy(state->order_sys_id, pTrade->OrderSysID, sizeof(state->order_sys_id) - 1);
-        order_sys_index_[state->order_sys_id] = order_index(state);
+        (void)order_sys_index_.insert(state->order_sys_id, order_index(state));
     }
 
     push_trade_event(state->is_quote_leg ? GatewayEventType::QuoteFill : GatewayEventType::OrderFill,
@@ -906,7 +897,7 @@ void FEMASGateway::OnRspQuoteInsert(CUstpFtdcInputQuoteField* pQuote,
     if (pQuote->QuoteSysID[0]) {
         if (state->quote_sys_id[0]) quote_sys_index_.erase(state->quote_sys_id);
         std::strncpy(state->quote_sys_id, pQuote->QuoteSysID, sizeof(state->quote_sys_id) - 1);
-        quote_sys_index_[state->quote_sys_id] = quote_index(state);
+        (void)quote_sys_index_.insert(state->quote_sys_id, quote_index(state));
     }
     if (pRspInfo && pRspInfo->ErrorID != 0) {
         OMM_LOG_WARN("femas", "quote rejected ErrorID={} Msg={} quote_id={}",
@@ -937,18 +928,18 @@ void FEMASGateway::OnRtnQuote(CUstpFtdcRtnQuoteField* pQuote) {
 
     if (state->quote_sys_id[0]) quote_sys_index_.erase(state->quote_sys_id);
     std::strncpy(state->quote_sys_id, pQuote->QuoteSysID, sizeof(state->quote_sys_id) - 1);
-    if (state->quote_sys_id[0]) quote_sys_index_[state->quote_sys_id] = quote_index(state);
+    if (state->quote_sys_id[0]) (void)quote_sys_index_.insert(state->quote_sys_id, quote_index(state));
     std::strncpy(state->bid_order_sys_id, pQuote->BidOrderSysID, sizeof(state->bid_order_sys_id) - 1);
     std::strncpy(state->ask_order_sys_id, pQuote->AskOrderSysID, sizeof(state->ask_order_sys_id) - 1);
     if (OrderState* bid_state = find_order_by_local_id(state->bid_local_id)) {
         if (bid_state->order_sys_id[0]) order_sys_index_.erase(bid_state->order_sys_id);
         std::strncpy(bid_state->order_sys_id, pQuote->BidOrderSysID, sizeof(bid_state->order_sys_id) - 1);
-        if (bid_state->order_sys_id[0]) order_sys_index_[bid_state->order_sys_id] = order_index(bid_state);
+        if (bid_state->order_sys_id[0]) (void)order_sys_index_.insert(bid_state->order_sys_id, order_index(bid_state));
     }
     if (OrderState* ask_state = find_order_by_local_id(state->ask_local_id)) {
         if (ask_state->order_sys_id[0]) order_sys_index_.erase(ask_state->order_sys_id);
         std::strncpy(ask_state->order_sys_id, pQuote->AskOrderSysID, sizeof(ask_state->order_sys_id) - 1);
-        if (ask_state->order_sys_id[0]) order_sys_index_[ask_state->order_sys_id] = order_index(ask_state);
+        if (ask_state->order_sys_id[0]) (void)order_sys_index_.insert(ask_state->order_sys_id, order_index(ask_state));
     }
 
     state->quote.exchange_quote_id = parse_numeric_id(pQuote->QuoteSysID);

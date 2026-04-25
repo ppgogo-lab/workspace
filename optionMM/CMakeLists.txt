@@ -428,6 +428,10 @@ add_executable(test_latest_snapshot tests/test_latest_snapshot.cpp)
 target_link_libraries(test_latest_snapshot PRIVATE GTest::gtest_main Threads::Threads)
 add_test(NAME test_latest_snapshot COMMAND test_latest_snapshot)
 
+add_executable(test_fixed_hash_table tests/test_fixed_hash_table.cpp)
+target_link_libraries(test_fixed_hash_table PRIVATE GTest::gtest_main)
+add_test(NAME test_fixed_hash_table COMMAND test_fixed_hash_table)
+
 add_executable(test_trading_calendar tests/test_trading_calendar.cpp)
 target_link_libraries(test_trading_calendar PRIVATE common_lib GTest::gtest_main Threads::Threads)
 add_test(NAME test_trading_calendar COMMAND test_trading_calendar)

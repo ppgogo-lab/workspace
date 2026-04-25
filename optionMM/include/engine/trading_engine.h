@@ -2,6 +2,7 @@
 
 #include "common/types.h"
 #include "common/config.h"
+#include "common/fixed_hash_table.h"
 #include "common/latest_snapshot.h"
 #include "common/ring_buffer.h"
 #include "feed/feed_handler.h"
@@ -338,9 +339,9 @@ private:
     MonitoringTopic<Trade, 4096>      monitor_trades_;
     std::array<MonitoringTopic<SystemAlert, 256>, MAX_PRODUCTS> monitor_alerts_;
     mutable std::mutex live_state_mutex_;
-    std::unordered_map<OrderId, LiveOrderState> live_orders_;
-    std::unordered_map<QuoteId, LiveQuoteState> live_quotes_;
-    std::unordered_map<OrderId, QuoteId> quote_leg_to_quote_;
+    FixedHashTable<OrderId, LiveOrderState, MAX_OPEN_ORDERS * 2> live_orders_;
+    FixedHashTable<QuoteId, LiveQuoteState, MAX_OPEN_ORDERS> live_quotes_;
+    FixedHashTable<OrderId, QuoteId, MAX_OPEN_ORDERS * 2> quote_leg_to_quote_;
     mutable std::mutex book_state_mutex_;
     std::unordered_map<uint64_t, BookPosition> book_positions_;
 
