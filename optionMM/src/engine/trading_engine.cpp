@@ -3,6 +3,7 @@
 #include "strategy/pcp_arbitrage.h"
 #include "strategy/simple_mm.h"
 #include "common/huge_pages.h"
+#include "common/numa_utils.h"
 #include "common/thread_utils.h"
 #include "logger/logger.h"
 #include "pricing/black76.h"
@@ -322,6 +323,53 @@ int TradingEngine::enable_huge_pages_for_large_arrays() noexcept {
 
     OMM_LOG_INFO("hugepages", "Enabled transparent huge pages for {} memory regions", enabled_count);
     return enabled_count;
+}
+
+bool TradingEngine::enable_numa_awareness() noexcept {
+    if (!numa_available_multi_node()) {
+        OMM_LOG_INFO("numa", "NUMA not available or single-node system - skipping NUMA optimization");
+        return false;
+    }
+
+    const int node_count = numa_node_count();
+    OMM_LOG_INFO("numa", "NUMA available: {} nodes detected", node_count);
+
+    // Log NUMA topology
+    for (int node = 0; node < node_count; ++node) {
+        std::size_t total_bytes = 0;
+        if (numa_get_memory_stats(node, nullptr, &total_bytes)) {
+            OMM_LOG_INFO("numa", "  Node {}: {} MB total memory",
+                        node, total_bytes / (1024 * 1024));
+        }
+    }
+
+    // Log core-to-node mapping for configured cores
+    if (cfg_.affinity.feed_core >= 0) {
+        int node = get_numa_node_for_core(cfg_.affinity.feed_core);
+        OMM_LOG_INFO("numa", "Feed thread: core {} -> NUMA node {}",
+                    cfg_.affinity.feed_core, node);
+    }
+    if (cfg_.affinity.pricer_core >= 0) {
+        int node = get_numa_node_for_core(cfg_.affinity.pricer_core);
+        OMM_LOG_INFO("numa", "Pricer thread: core {} -> NUMA node {}",
+                    cfg_.affinity.pricer_core, node);
+    }
+    if (cfg_.affinity.gateway_dispatcher_core >= 0) {
+        int node = get_numa_node_for_core(cfg_.affinity.gateway_dispatcher_core);
+        OMM_LOG_INFO("numa", "Gateway dispatcher: core {} -> NUMA node {}",
+                    cfg_.affinity.gateway_dispatcher_core, node);
+    }
+
+    for (int p = 0; p < cfg_.product_count && p < MAX_PRODUCTS; ++p) {
+        if (cfg_.products[p].strategy_core >= 0) {
+            int node = get_numa_node_for_core(cfg_.products[p].strategy_core);
+            OMM_LOG_INFO("numa", "Strategy[{}]: core {} -> NUMA node {}",
+                        p, cfg_.products[p].strategy_core, node);
+        }
+    }
+
+    OMM_LOG_INFO("numa", "NUMA awareness enabled - threads will bind to local nodes");
+    return true;
 }
 
 // ─── Startup ──────────────────────────────────────────────────────────────────
@@ -1335,6 +1383,11 @@ void TradingEngine::pricer_loop() noexcept {
                                  cfg_.scheduling.pricer_priority,
                                  "omm-pricer");
 
+    // Bind to local NUMA node for optimal memory access
+    if (numa_available_multi_node()) {
+        bind_thread_to_local_numa_node();
+    }
+
     TopOfBookTick tick{};
     TopOfBookTick pending_future_tick[MAX_PRODUCTS]{};
     bool pending_product[MAX_PRODUCTS]{};
@@ -1663,6 +1716,11 @@ void TradingEngine::strategy_loop(int idx) noexcept {
                                  cfg_.scheduling.strategy_priority,
                                  "omm-strat");
 
+    // Bind to local NUMA node for optimal memory access
+    if (numa_available_multi_node()) {
+        bind_thread_to_local_numa_node();
+    }
+
     GatewayEvent ev{};
     TimerEvent timer_ev{};
     uint64_t coalesced_signal_seen_versions[MAX_INSTRUMENTS]{};
@@ -1783,6 +1841,11 @@ void TradingEngine::arb_loop(int idx) noexcept {
                                  cfg_.scheduling.arbitrage_priority,
                                  "omm-arb");
 
+    // Bind to local NUMA node for optimal memory access
+    if (numa_available_multi_node()) {
+        bind_thread_to_local_numa_node();
+    }
+
     GatewayEvent ev{};
     ArbMarketTrigger trigger{};
     Timestamp next_maintenance_ns = get_monotonic_ns() + kArbMaintenanceIntervalNs;
@@ -1856,6 +1919,11 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
     apply_realtime_if_configured(cfg_.scheduling.enable_realtime,
                                  cfg_.scheduling.gateway_dispatcher_priority,
                                  "omm-gw-disp");
+
+    // Bind to local NUMA node for optimal memory access
+    if (numa_available_multi_node()) {
+        bind_thread_to_local_numa_node();
+    }
 
     struct DeferredCallbackSideEffect {
         GatewayEvent event{};
@@ -2150,6 +2218,11 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
 void TradingEngine::monitor_publish_loop() noexcept {
     set_thread_name("omm-monitor");
 
+    // Bind to local NUMA node for optimal memory access
+    if (numa_available_multi_node()) {
+        bind_thread_to_local_numa_node();
+    }
+
     constexpr int kMonitorPublishBurstCap = 128;
     constexpr int kMonitorBatchSize = 16;  // Larger batch for monitoring (less latency-sensitive)
 
@@ -2273,6 +2346,11 @@ void TradingEngine::vol_fitter_loop() noexcept {
                                  cfg_.scheduling.vol_fitter_priority,
                                  "omm-volfitter");
     pin_if_configured(cfg_.affinity.vol_fitter_core);
+
+    // Bind to local NUMA node for optimal memory access
+    if (numa_available_multi_node()) {
+        bind_thread_to_local_numa_node();
+    }
 
     // Working buffers (stack-allocated, reused each iteration)
     double  strikes[MAX_STRIKES];
@@ -2628,6 +2706,11 @@ void TradingEngine::timer_loop() noexcept {
     apply_realtime_if_configured(cfg_.scheduling.enable_realtime,
                                  cfg_.scheduling.timer_priority,
                                  "omm-timer");
+
+    // Bind to local NUMA node for optimal memory access
+    if (numa_available_multi_node()) {
+        bind_thread_to_local_numa_node();
+    }
 
     int64_t last_hedge_ns   = get_monotonic_ns();
     int64_t last_quote_refresh_ns = last_hedge_ns;

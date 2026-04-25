@@ -66,6 +66,12 @@ public:
     // Returns the number of regions successfully enabled for huge pages.
     int enable_huge_pages_for_large_arrays() noexcept;
 
+    // Enable NUMA-aware thread placement for multi-socket systems.
+    // Binds each thread to its local NUMA node to reduce remote memory access.
+    // Should be called after construction but before start().
+    // Returns true if NUMA awareness was successfully enabled.
+    bool enable_numa_awareness() noexcept;
+
     // Access for testing / gRPC server
     [[nodiscard]] IGateway*   gateway()    const noexcept { return gateway_.get(); }
     [[nodiscard]] AtomicMMParams& mm_params(int i) noexcept { return mm_params_[i]; }

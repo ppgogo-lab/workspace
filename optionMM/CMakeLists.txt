@@ -332,14 +332,14 @@ add_library(engine_lib STATIC
     src/engine/trading_engine.cpp
 )
 target_link_libraries(engine_lib PUBLIC
-    common_lib pricing_lib risk_lib strategy_lib feed_lib gateway_lib logger_lib persistence_lib)
+    common_lib pricing_lib risk_lib strategy_lib feed_lib gateway_lib logger_lib persistence_lib numa)
 
 # Test-only engine: links sim_gateway_lib (no CTP/FEMAS SDK dependencies).
 add_library(engine_lib_test STATIC
     src/engine/trading_engine.cpp
 )
 target_link_libraries(engine_lib_test PUBLIC
-    common_lib pricing_lib risk_lib strategy_lib sim_gateway_lib logger_lib persistence_lib)
+    common_lib pricing_lib risk_lib strategy_lib sim_gateway_lib logger_lib persistence_lib numa)
 
 # ─── monitoring_lib (gRPC server) ─────────────────────────────────────────────
 add_library(monitoring_lib STATIC
