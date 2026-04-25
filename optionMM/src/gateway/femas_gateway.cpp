@@ -950,95 +950,154 @@ void FEMASGateway::OnRspOrderInsert(CUstpFtdcInputOrderField* pOrder,
 void FEMASGateway::OnRtnOrder(CUstpFtdcOrderField* pOrder) {
     if (!pOrder) return;
 
-    std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
-    OrderState* state = find_order_by_local_id(pOrder->UserOrderLocalID);
-    if (!state) state = find_order_by_sys_id(pOrder->OrderSysID);
-    if (!state) {
-        OMM_LOG_WARN("femas", "unmatched OnRtnOrder local_id={} sys_id={}",
-                     pOrder->UserOrderLocalID, pOrder->OrderSysID);
-        return;
-    }
+    // Copy data for deferred logging (reduces lock hold time)
+    bool should_log_warn = false;
+    char local_id_copy[32] = {};
+    char sys_id_copy[32] = {};
 
-    if (pOrder->OrderSysID[0]) {
-        if (state->order_sys_id[0]) order_sys_index_.erase(state->order_sys_id);
-        std::strncpy(state->order_sys_id, pOrder->OrderSysID, sizeof(state->order_sys_id) - 1);
-        (void)order_sys_index_.insert(state->order_sys_id, order_index(state));
-    }
+    {
+        std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
+        OrderState* state = find_order_by_local_id(pOrder->UserOrderLocalID);
+        if (!state) state = find_order_by_sys_id(pOrder->OrderSysID);
+        if (!state) {
+            should_log_warn = true;
+            std::strncpy(local_id_copy, pOrder->UserOrderLocalID, sizeof(local_id_copy) - 1);
+            std::strncpy(sys_id_copy, pOrder->OrderSysID, sizeof(sys_id_copy) - 1);
+            // Release lock before logging
+        } else {
+            if (pOrder->OrderSysID[0]) {
+                if (state->order_sys_id[0]) order_sys_index_.erase(state->order_sys_id);
+                std::strncpy(state->order_sys_id, pOrder->OrderSysID, sizeof(state->order_sys_id) - 1);
+                (void)order_sys_index_.insert(state->order_sys_id, order_index(state));
+            }
 
-    const OrderStatus status = decode_order_status(pOrder->OrderStatus);
-    if (!state->acked && status != OrderStatus::Cancelled) {
-        state->acked = true;
-        push_order_event(GatewayEventType::OrderAck, *state, status, pOrder->VolumeTraded);
-    } else if (status == OrderStatus::Cancelled) {
-        push_order_event(GatewayEventType::OrderCancel, *state, status, pOrder->VolumeTraded);
-        if (!state->is_quote_leg) {
-            unindex_order_state(state);
-            // Reset fields manually (can't use assignment with atomic)
-            state->used.store(false, std::memory_order_relaxed);
-            state->acked = false;
-            state->is_quote_leg = false;
-            state->client_order_id = 0;
-            state->client_quote_id = 0;
-            state->instrument_id = INVALID_INSTRUMENT_ID;
-            state->product_index = 0xFF;
-            std::memset(state->exchange_local_id, 0, sizeof(state->exchange_local_id));
-            std::memset(state->order_sys_id, 0, sizeof(state->order_sys_id));
+            const OrderStatus status = decode_order_status(pOrder->OrderStatus);
+            if (!state->acked && status != OrderStatus::Cancelled) {
+                state->acked = true;
+                push_order_event(GatewayEventType::OrderAck, *state, status, pOrder->VolumeTraded);
+            } else if (status == OrderStatus::Cancelled) {
+                push_order_event(GatewayEventType::OrderCancel, *state, status, pOrder->VolumeTraded);
+                if (!state->is_quote_leg) {
+                    unindex_order_state(state);
+                    // Reset fields manually (can't use assignment with atomic)
+                    state->used.store(false, std::memory_order_relaxed);
+                    state->acked = false;
+                    state->is_quote_leg = false;
+                    state->client_order_id = 0;
+                    state->client_quote_id = 0;
+                    state->instrument_id = INVALID_INSTRUMENT_ID;
+                    state->product_index = 0xFF;
+                    std::memset(state->exchange_local_id, 0, sizeof(state->exchange_local_id));
+                    std::memset(state->order_sys_id, 0, sizeof(state->order_sys_id));
+                }
+            }
         }
+    }  // Lock released here
+
+    // Deferred logging (outside lock)
+    if (should_log_warn) {
+        OMM_LOG_WARN("femas", "unmatched OnRtnOrder local_id={} sys_id={}",
+                     local_id_copy, sys_id_copy);
     }
 }
 
 void FEMASGateway::OnRtnTrade(CUstpFtdcTradeField* pTrade) {
     if (!pTrade) return;
 
-    std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
-    OrderState* state = find_order_by_local_id(pTrade->UserOrderLocalID);
-    if (!state) state = find_order_by_sys_id(pTrade->OrderSysID);
-    if (!state) {
+    // Copy data for deferred logging (reduces lock hold time)
+    bool should_log_warn = false;
+    bool should_log_debug = false;
+    char local_id_copy[32] = {};
+    char sys_id_copy[32] = {};
+    uint64_t order_id_copy = 0;
+    bool is_quote_leg_copy = false;
+    char direction_copy = 0;
+    int volume_copy = 0;
+    double price_copy = 0.0;
+
+    {
+        std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
+        OrderState* state = find_order_by_local_id(pTrade->UserOrderLocalID);
+        if (!state) state = find_order_by_sys_id(pTrade->OrderSysID);
+        if (!state) {
+            should_log_warn = true;
+            std::strncpy(local_id_copy, pTrade->UserOrderLocalID, sizeof(local_id_copy) - 1);
+            std::strncpy(sys_id_copy, pTrade->OrderSysID, sizeof(sys_id_copy) - 1);
+            // Release lock before logging
+        } else {
+            if (pTrade->OrderSysID[0]) {
+                if (state->order_sys_id[0]) order_sys_index_.erase(state->order_sys_id);
+                std::strncpy(state->order_sys_id, pTrade->OrderSysID, sizeof(state->order_sys_id) - 1);
+                (void)order_sys_index_.insert(state->order_sys_id, order_index(state));
+            }
+
+            push_trade_event(state->is_quote_leg ? GatewayEventType::QuoteFill : GatewayEventType::OrderFill,
+                             *state, *pTrade);
+
+            // Copy data for deferred debug logging
+            should_log_debug = true;
+            order_id_copy = state->is_quote_leg ? state->client_quote_id : state->client_order_id;
+            is_quote_leg_copy = state->is_quote_leg;
+            direction_copy = pTrade->Direction;
+            volume_copy = pTrade->TradeVolume;
+            price_copy = pTrade->TradePrice;
+        }
+    }  // Lock released here
+
+    // Deferred logging (outside lock)
+    if (should_log_warn) {
         OMM_LOG_WARN("femas", "unmatched OnRtnTrade local_id={} sys_id={}",
-                     pTrade->UserOrderLocalID, pTrade->OrderSysID);
-        return;
+                     local_id_copy, sys_id_copy);
     }
-
-    if (pTrade->OrderSysID[0]) {
-        if (state->order_sys_id[0]) order_sys_index_.erase(state->order_sys_id);
-        std::strncpy(state->order_sys_id, pTrade->OrderSysID, sizeof(state->order_sys_id) - 1);
-        (void)order_sys_index_.insert(state->order_sys_id, order_index(state));
+    if (should_log_debug) {
+        OMM_LOG_DEBUG("femas", "fill order_id={} quote_leg={} side={} qty={} price={:.4f}",
+                      order_id_copy, is_quote_leg_copy ? 1 : 0,
+                      direction_copy == USTP_FTDC_D_Buy ? "buy" : "sell",
+                      volume_copy, price_copy);
     }
-
-    push_trade_event(state->is_quote_leg ? GatewayEventType::QuoteFill : GatewayEventType::OrderFill,
-                     *state, *pTrade);
-
-    OMM_LOG_DEBUG("femas", "fill order_id={} quote_leg={} side={} qty={} price={:.4f}",
-                  state->is_quote_leg ? state->client_quote_id : state->client_order_id,
-                  state->is_quote_leg ? 1 : 0,
-                  pTrade->Direction == USTP_FTDC_D_Buy ? "buy" : "sell",
-                  pTrade->TradeVolume, pTrade->TradePrice);
 }
 
 void FEMASGateway::OnErrRtnOrderInsert(CUstpFtdcInputOrderField* pOrder,
                                        CUstpFtdcRspInfoField* pRspInfo) {
     if (!pOrder) return;
 
-    std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
-    OrderState* state = find_order_by_local_id(pOrder->UserOrderLocalID);
-    if (!state) return;
+    // Copy data for deferred logging (reduces lock hold time)
+    bool should_log = false;
+    int error_id = 0;
+    char error_msg[128] = {};
+    uint64_t order_id_copy = 0;
 
-    OMM_LOG_WARN("femas", "order insert error ErrorID={} Msg={} order_id={}",
-                 pRspInfo ? pRspInfo->ErrorID : -1,
-                 pRspInfo ? pRspInfo->ErrorMsg : "",
-                 state->client_order_id);
-    push_order_event(GatewayEventType::OrderReject, *state, OrderStatus::Rejected);
-    unindex_order_state(state);
-    // Reset fields manually (can't use assignment with atomic)
-    state->used.store(false, std::memory_order_relaxed);
-    state->acked = false;
-    state->is_quote_leg = false;
-    state->client_order_id = 0;
-    state->client_quote_id = 0;
-    state->instrument_id = INVALID_INSTRUMENT_ID;
-    state->product_index = 0xFF;
-    std::memset(state->exchange_local_id, 0, sizeof(state->exchange_local_id));
-    std::memset(state->order_sys_id, 0, sizeof(state->order_sys_id));
+    {
+        std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
+        OrderState* state = find_order_by_local_id(pOrder->UserOrderLocalID);
+        if (!state) return;
+
+        should_log = true;
+        error_id = pRspInfo ? pRspInfo->ErrorID : -1;
+        if (pRspInfo && pRspInfo->ErrorMsg[0]) {
+            std::strncpy(error_msg, pRspInfo->ErrorMsg, sizeof(error_msg) - 1);
+        }
+        order_id_copy = state->client_order_id;
+
+        push_order_event(GatewayEventType::OrderReject, *state, OrderStatus::Rejected);
+        unindex_order_state(state);
+        // Reset fields manually (can't use assignment with atomic)
+        state->used.store(false, std::memory_order_relaxed);
+        state->acked = false;
+        state->is_quote_leg = false;
+        state->client_order_id = 0;
+        state->client_quote_id = 0;
+        state->instrument_id = INVALID_INSTRUMENT_ID;
+        state->product_index = 0xFF;
+        std::memset(state->exchange_local_id, 0, sizeof(state->exchange_local_id));
+        std::memset(state->order_sys_id, 0, sizeof(state->order_sys_id));
+    }  // Lock released here
+
+    // Deferred logging (outside lock)
+    if (should_log) {
+        OMM_LOG_WARN("femas", "order insert error ErrorID={} Msg={} order_id={}",
+                     error_id, error_msg, order_id_copy);
+    }
 }
 
 void FEMASGateway::OnRspOrderAction(CUstpFtdcOrderActionField* pOrderAction,
@@ -1059,68 +1118,90 @@ void FEMASGateway::OnRspQuoteInsert(CUstpFtdcInputQuoteField* pQuote,
                                     bool) {
     if (!pQuote) return;
 
-    std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
-    QuoteState* state = find_quote_by_local_id(pQuote->UserQuoteLocalID);
-    if (!state) return;
+    // Copy data for deferred logging (reduces lock hold time)
+    bool should_log_warn = false;
+    int error_id = 0;
+    char error_msg[128] = {};
+    uint64_t quote_id_copy = 0;
 
-    if (pQuote->QuoteSysID[0]) {
-        if (state->quote_sys_id[0]) quote_sys_index_.erase(state->quote_sys_id);
-        std::strncpy(state->quote_sys_id, pQuote->QuoteSysID, sizeof(state->quote_sys_id) - 1);
-        (void)quote_sys_index_.insert(state->quote_sys_id, quote_index(state));
-    }
-    if (pRspInfo && pRspInfo->ErrorID != 0) {
+    {
+        std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
+        QuoteState* state = find_quote_by_local_id(pQuote->UserQuoteLocalID);
+        if (!state) return;
+
+        if (pQuote->QuoteSysID[0]) {
+            if (state->quote_sys_id[0]) quote_sys_index_.erase(state->quote_sys_id);
+            std::strncpy(state->quote_sys_id, pQuote->QuoteSysID, sizeof(state->quote_sys_id) - 1);
+            (void)quote_sys_index_.insert(state->quote_sys_id, quote_index(state));
+        }
+        if (pRspInfo && pRspInfo->ErrorID != 0) {
+            should_log_warn = true;
+            error_id = pRspInfo->ErrorID;
+            std::strncpy(error_msg, pRspInfo->ErrorMsg, sizeof(error_msg) - 1);
+            quote_id_copy = state->quote.client_quote_id;
+
+            GatewayEvent ev{};
+            ev.type = GatewayEventType::QuoteReject;
+            ev.product_index = state->quote.product_index;
+            ev.quote = state->quote;
+            ev.quote.ack_ts = get_monotonic_ns();
+            (void)callback_buf.try_push(ev);
+
+            clear_quote_state(state->quote.client_quote_id);
+        }
+    }  // Lock released here
+
+    // Deferred logging (outside lock)
+    if (should_log_warn) {
         OMM_LOG_WARN("femas", "quote rejected ErrorID={} Msg={} quote_id={}",
-                     pRspInfo->ErrorID, pRspInfo->ErrorMsg, state->quote.client_quote_id);
-
-        GatewayEvent ev{};
-        ev.type = GatewayEventType::QuoteReject;
-        ev.product_index = state->quote.product_index;
-        ev.quote = state->quote;
-        ev.quote.ack_ts = get_monotonic_ns();
-        (void)callback_buf.try_push(ev);
-
-        clear_quote_state(state->quote.client_quote_id);
+                     error_id, error_msg, quote_id_copy);
     }
 }
 
 void FEMASGateway::OnRtnQuote(CUstpFtdcRtnQuoteField* pQuote) {
     if (!pQuote) return;
 
-    std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
-    QuoteState* state = find_quote_by_local_id(pQuote->UserQuoteLocalID);
-    if (!state) state = find_quote_by_sys_id(pQuote->QuoteSysID);
-    if (!state) {
-        OMM_LOG_WARN("femas", "unmatched OnRtnQuote local_id={} sys_id={}",
-                     pQuote->UserQuoteLocalID, pQuote->QuoteSysID);
-        return;
-    }
+    // Copy data for deferred logging (reduces lock hold time)
+    bool should_log_warn = false;
+    char local_id_copy[32] = {};
+    char sys_id_copy[32] = {};
 
-    if (state->quote_sys_id[0]) quote_sys_index_.erase(state->quote_sys_id);
-    std::strncpy(state->quote_sys_id, pQuote->QuoteSysID, sizeof(state->quote_sys_id) - 1);
-    if (state->quote_sys_id[0]) (void)quote_sys_index_.insert(state->quote_sys_id, quote_index(state));
-    std::strncpy(state->bid_order_sys_id, pQuote->BidOrderSysID, sizeof(state->bid_order_sys_id) - 1);
-    std::strncpy(state->ask_order_sys_id, pQuote->AskOrderSysID, sizeof(state->ask_order_sys_id) - 1);
-    if (OrderState* bid_state = find_order_by_local_id(state->bid_local_id)) {
-        if (bid_state->order_sys_id[0]) order_sys_index_.erase(bid_state->order_sys_id);
-        std::strncpy(bid_state->order_sys_id, pQuote->BidOrderSysID, sizeof(bid_state->order_sys_id) - 1);
-        if (bid_state->order_sys_id[0]) (void)order_sys_index_.insert(bid_state->order_sys_id, order_index(bid_state));
-    }
-    if (OrderState* ask_state = find_order_by_local_id(state->ask_local_id)) {
-        if (ask_state->order_sys_id[0]) order_sys_index_.erase(ask_state->order_sys_id);
-        std::strncpy(ask_state->order_sys_id, pQuote->AskOrderSysID, sizeof(ask_state->order_sys_id) - 1);
-        if (ask_state->order_sys_id[0]) (void)order_sys_index_.insert(ask_state->order_sys_id, order_index(ask_state));
-    }
+    {
+        std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
+        QuoteState* state = find_quote_by_local_id(pQuote->UserQuoteLocalID);
+        if (!state) state = find_quote_by_sys_id(pQuote->QuoteSysID);
+        if (!state) {
+            should_log_warn = true;
+            std::strncpy(local_id_copy, pQuote->UserQuoteLocalID, sizeof(local_id_copy) - 1);
+            std::strncpy(sys_id_copy, pQuote->QuoteSysID, sizeof(sys_id_copy) - 1);
+            // Release lock before logging
+        } else {
+            if (state->quote_sys_id[0]) quote_sys_index_.erase(state->quote_sys_id);
+            std::strncpy(state->quote_sys_id, pQuote->QuoteSysID, sizeof(state->quote_sys_id) - 1);
+            if (state->quote_sys_id[0]) (void)quote_sys_index_.insert(state->quote_sys_id, quote_index(state));
+            std::strncpy(state->bid_order_sys_id, pQuote->BidOrderSysID, sizeof(state->bid_order_sys_id) - 1);
+            std::strncpy(state->ask_order_sys_id, pQuote->AskOrderSysID, sizeof(state->ask_order_sys_id) - 1);
+            if (OrderState* bid_state = find_order_by_local_id(state->bid_local_id)) {
+                if (bid_state->order_sys_id[0]) order_sys_index_.erase(bid_state->order_sys_id);
+                std::strncpy(bid_state->order_sys_id, pQuote->BidOrderSysID, sizeof(bid_state->order_sys_id) - 1);
+                if (bid_state->order_sys_id[0]) (void)order_sys_index_.insert(bid_state->order_sys_id, order_index(bid_state));
+            }
+            if (OrderState* ask_state = find_order_by_local_id(state->ask_local_id)) {
+                if (ask_state->order_sys_id[0]) order_sys_index_.erase(ask_state->order_sys_id);
+                std::strncpy(ask_state->order_sys_id, pQuote->AskOrderSysID, sizeof(ask_state->order_sys_id) - 1);
+                if (ask_state->order_sys_id[0]) (void)order_sys_index_.insert(ask_state->order_sys_id, order_index(ask_state));
+            }
 
-    state->quote.exchange_quote_id = parse_numeric_id(pQuote->QuoteSysID);
-    state->quote.bid_status = OrderStatus::New;
-    state->quote.ask_status = OrderStatus::New;
-    state->quote.ack_ts = get_monotonic_ns();
+            state->quote.exchange_quote_id = parse_numeric_id(pQuote->QuoteSysID);
+            state->quote.bid_status = OrderStatus::New;
+            state->quote.ask_status = OrderStatus::New;
+            state->quote.ack_ts = get_monotonic_ns();
 
-    if (!state->acked) {
-        state->acked = true;
-        GatewayEvent ev{};
-        ev.type = GatewayEventType::QuoteAck;
-        ev.product_index = state->quote.product_index;
+            if (!state->acked) {
+                state->acked = true;
+                GatewayEvent ev{};
+                ev.type = GatewayEventType::QuoteAck;
+                ev.product_index = state->quote.product_index;
         ev.quote = state->quote;
 
         // Populate recovery handle (eliminates post-send lookup)
@@ -1146,16 +1227,80 @@ void FEMASGateway::OnRtnQuote(CUstpFtdcRtnQuoteField* pQuote) {
                      state->ask_order_sys_id,
                      sizeof(ev.quote_recovery.ask_order_sys_id) - 1);
 
-        (void)callback_buf.try_push(ev);
-    }
+                (void)callback_buf.try_push(ev);
+            }
 
-    if (pQuote->CancelTime[0]) {
+            if (pQuote->CancelTime[0]) {
+                GatewayEvent ev{};
+                ev.type = GatewayEventType::QuoteCancel;
+                ev.product_index = state->quote.product_index;
+                ev.quote = state->quote;
+                ev.quote.bid_volume = 0;
+                ev.quote.ask_volume = 0;
+                ev.quote.ack_ts = get_monotonic_ns();
+
+                // Populate recovery handle (eliminates post-send lookup)
+                ev.quote_recovery.valid = true;
+                std::strncpy(ev.quote_recovery.quote_local_id,
+                             state->quote_local_id,
+                             sizeof(ev.quote_recovery.quote_local_id) - 1);
+                std::strncpy(ev.quote_recovery.quote_sys_id,
+                             state->quote_sys_id,
+                             sizeof(ev.quote_recovery.quote_sys_id) - 1);
+                std::strncpy(ev.quote_recovery.bid_local_id,
+                             state->bid_local_id,
+                             sizeof(ev.quote_recovery.bid_local_id) - 1);
+                std::strncpy(ev.quote_recovery.ask_local_id,
+                             state->ask_local_id,
+                             sizeof(ev.quote_recovery.ask_local_id) - 1);
+                std::strncpy(ev.quote_recovery.bid_order_sys_id,
+                             state->bid_order_sys_id,
+                             sizeof(ev.quote_recovery.bid_order_sys_id) - 1);
+                std::strncpy(ev.quote_recovery.ask_order_sys_id,
+                             state->ask_order_sys_id,
+                             sizeof(ev.quote_recovery.ask_order_sys_id) - 1);
+
+                (void)callback_buf.try_push(ev);
+                clear_quote_state(state->quote.client_quote_id);
+            } else if (pQuote->TradeTime[0]) {
+                clear_quote_state(state->quote.client_quote_id);
+            }
+        }
+    }  // Lock released here
+
+    // Deferred logging (outside lock)
+    if (should_log_warn) {
+        OMM_LOG_WARN("femas", "unmatched OnRtnQuote local_id={} sys_id={}",
+                     local_id_copy, sys_id_copy);
+    }
+}
+
+void FEMASGateway::OnErrRtnQuoteInsert(CUstpFtdcInputQuoteField* pQuote,
+                                       CUstpFtdcRspInfoField* pRspInfo) {
+    if (!pQuote) return;
+
+    // Copy data for deferred logging (reduces lock hold time)
+    bool should_log = false;
+    int error_id = 0;
+    char error_msg[128] = {};
+    uint64_t quote_id_copy = 0;
+
+    {
+        std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
+        QuoteState* state = find_quote_by_local_id(pQuote->UserQuoteLocalID);
+        if (!state) return;
+
+        should_log = true;
+        error_id = pRspInfo ? pRspInfo->ErrorID : -1;
+        if (pRspInfo && pRspInfo->ErrorMsg[0]) {
+            std::strncpy(error_msg, pRspInfo->ErrorMsg, sizeof(error_msg) - 1);
+        }
+        quote_id_copy = state->quote.client_quote_id;
+
         GatewayEvent ev{};
-        ev.type = GatewayEventType::QuoteCancel;
+        ev.type = GatewayEventType::QuoteReject;
         ev.product_index = state->quote.product_index;
         ev.quote = state->quote;
-        ev.quote.bid_volume = 0;
-        ev.quote.ask_volume = 0;
         ev.quote.ack_ts = get_monotonic_ns();
 
         // Populate recovery handle (eliminates post-send lookup)
@@ -1180,55 +1325,15 @@ void FEMASGateway::OnRtnQuote(CUstpFtdcRtnQuoteField* pQuote) {
                      sizeof(ev.quote_recovery.ask_order_sys_id) - 1);
 
         (void)callback_buf.try_push(ev);
+
         clear_quote_state(state->quote.client_quote_id);
-    } else if (pQuote->TradeTime[0]) {
-        clear_quote_state(state->quote.client_quote_id);
+    }  // Lock released here
+
+    // Deferred logging (outside lock)
+    if (should_log) {
+        OMM_LOG_WARN("femas", "quote insert error ErrorID={} Msg={} quote_id={}",
+                     error_id, error_msg, quote_id_copy);
     }
-}
-
-void FEMASGateway::OnErrRtnQuoteInsert(CUstpFtdcInputQuoteField* pQuote,
-                                       CUstpFtdcRspInfoField* pRspInfo) {
-    if (!pQuote) return;
-
-    std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
-    QuoteState* state = find_quote_by_local_id(pQuote->UserQuoteLocalID);
-    if (!state) return;
-
-    OMM_LOG_WARN("femas", "quote insert error ErrorID={} Msg={} quote_id={}",
-                 pRspInfo ? pRspInfo->ErrorID : -1,
-                 pRspInfo ? pRspInfo->ErrorMsg : "",
-                 state->quote.client_quote_id);
-
-    GatewayEvent ev{};
-    ev.type = GatewayEventType::QuoteReject;
-    ev.product_index = state->quote.product_index;
-    ev.quote = state->quote;
-    ev.quote.ack_ts = get_monotonic_ns();
-
-    // Populate recovery handle (eliminates post-send lookup)
-    ev.quote_recovery.valid = true;
-    std::strncpy(ev.quote_recovery.quote_local_id,
-                 state->quote_local_id,
-                 sizeof(ev.quote_recovery.quote_local_id) - 1);
-    std::strncpy(ev.quote_recovery.quote_sys_id,
-                 state->quote_sys_id,
-                 sizeof(ev.quote_recovery.quote_sys_id) - 1);
-    std::strncpy(ev.quote_recovery.bid_local_id,
-                 state->bid_local_id,
-                 sizeof(ev.quote_recovery.bid_local_id) - 1);
-    std::strncpy(ev.quote_recovery.ask_local_id,
-                 state->ask_local_id,
-                 sizeof(ev.quote_recovery.ask_local_id) - 1);
-    std::strncpy(ev.quote_recovery.bid_order_sys_id,
-                 state->bid_order_sys_id,
-                 sizeof(ev.quote_recovery.bid_order_sys_id) - 1);
-    std::strncpy(ev.quote_recovery.ask_order_sys_id,
-                 state->ask_order_sys_id,
-                 sizeof(ev.quote_recovery.ask_order_sys_id) - 1);
-
-    (void)callback_buf.try_push(ev);
-
-    clear_quote_state(state->quote.client_quote_id);
 }
 
 void FEMASGateway::OnRspQuoteAction(CUstpFtdcQuoteActionField* pQuoteAction,

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gateway/gateway.h"
+#include "common/fixed_hash_table.h"
 #include <array>
 #include <atomic>
 #include <mutex>
@@ -152,6 +153,11 @@ private:
     SimSettings           settings_{};
     std::array<ActiveOrder, MAX_OPEN_ORDERS> active_orders_{};
     std::array<ActiveQuote, MAX_INSTRUMENTS> active_quotes_{};
+
+    // O(1) lookup indices (eliminates linear scans in recovery handle lookups)
+    FixedHashTable<OrderId, std::size_t, MAX_OPEN_ORDERS * 2> order_client_index_{};
+    FixedHashTable<QuoteId, std::size_t, MAX_INSTRUMENTS> quote_client_index_{};
+
     mutable std::mutex    state_mutex_;
     std::atomic<bool>     worker_running_{false};
     std::thread           worker_thread_;

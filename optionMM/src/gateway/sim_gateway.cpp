@@ -58,6 +58,8 @@ bool SimGateway::send_order(const Order& order,
     if (slot_it == active_orders_.end()) return false;
 
     ActiveOrder& slot = *slot_it;
+    const std::size_t slot_index = static_cast<std::size_t>(std::distance(active_orders_.begin(), slot_it));
+
     slot = ActiveOrder{};
     slot.used = true;
     slot.order = order;
@@ -69,6 +71,10 @@ bool SimGateway::send_order(const Order& order,
     slot.next_fill_due_ns = slot.ack_due_ns + static_cast<Timestamp>(settings_.fill_interval_ms) * 1'000'000LL;
     slot.reject_pending = order.volume <= 0
                        || (order.order_type != OrderType::Market && order.price <= 0.0);
+
+    // Add to hash index for O(1) lookup
+    (void)order_client_index_.insert(order.client_order_id, slot_index);
+
     if (recovery != nullptr) {
         recovery->valid = true;
         std::snprintf(recovery->order_sys_id,
@@ -101,6 +107,7 @@ bool SimGateway::send_quote(const Quote& quote,
         cancel.quote.ask_volume = 0;
         cancel.quote.ack_ts = now_ns;
         (void)callback_buf.try_push(cancel);
+        quote_client_index_.erase(quote.client_quote_id);  // Remove from hash index
         slot = ActiveQuote{};
         return true;
     }
@@ -129,6 +136,10 @@ bool SimGateway::send_quote(const Quote& quote,
     slot.exchange_quote_id = exch_id;
     slot.ack_due_ns = now_ns + static_cast<Timestamp>(settings_.ack_latency_ms) * 1'000'000LL;
     slot.next_fill_due_ns = slot.ack_due_ns + static_cast<Timestamp>(settings_.fill_interval_ms) * 1'000'000LL;
+
+    // Add to hash index for O(1) lookup
+    (void)quote_client_index_.insert(quote.client_quote_id, static_cast<std::size_t>(quote.instrument_id));
+
     if (recovery != nullptr) {
         recovery->valid = true;
         std::snprintf(recovery->quote_sys_id,
@@ -179,16 +190,22 @@ bool SimGateway::get_order_recovery_handle(
     *out = GatewayOrderRecoveryHandle{};
 
     std::lock_guard<std::mutex> lock(state_mutex_);
-    for (const auto& order : active_orders_) {
-        if (!order.used || order.order.client_order_id != id) continue;
-        out->valid = true;
-        std::snprintf(out->order_sys_id,
-                      sizeof(out->order_sys_id),
-                      "%llu",
-                      static_cast<unsigned long long>(order.exchange_order_id));
-        return true;
-    }
-    return false;
+
+    // O(1) hash lookup (eliminates linear scan)
+    const std::size_t* slot_index_ptr = order_client_index_.find(id);
+    if (!slot_index_ptr) return false;
+    const std::size_t slot_index = *slot_index_ptr;
+    if (slot_index >= active_orders_.size()) return false;
+
+    const ActiveOrder& order = active_orders_[slot_index];
+    if (!order.used || order.order.client_order_id != id) return false;
+
+    out->valid = true;
+    std::snprintf(out->order_sys_id,
+                  sizeof(out->order_sys_id),
+                  "%llu",
+                  static_cast<unsigned long long>(order.exchange_order_id));
+    return true;
 }
 
 bool SimGateway::get_quote_recovery_handle(
@@ -198,16 +215,22 @@ bool SimGateway::get_quote_recovery_handle(
     *out = GatewayQuoteRecoveryHandle{};
 
     std::lock_guard<std::mutex> lock(state_mutex_);
-    for (const auto& quote : active_quotes_) {
-        if (!quote.used || quote.quote.client_quote_id != id) continue;
-        out->valid = true;
-        std::snprintf(out->quote_sys_id,
-                      sizeof(out->quote_sys_id),
-                      "%llu",
-                      static_cast<unsigned long long>(quote.exchange_quote_id));
-        return true;
-    }
-    return false;
+
+    // O(1) hash lookup (eliminates linear scan)
+    const std::size_t* slot_index_ptr = quote_client_index_.find(id);
+    if (!slot_index_ptr) return false;
+    const std::size_t slot_index = *slot_index_ptr;
+    if (slot_index >= active_quotes_.size()) return false;
+
+    const ActiveQuote& quote = active_quotes_[slot_index];
+    if (!quote.used || quote.quote.client_quote_id != id) return false;
+
+    out->valid = true;
+    std::snprintf(out->quote_sys_id,
+                  sizeof(out->quote_sys_id),
+                  "%llu",
+                  static_cast<unsigned long long>(quote.exchange_quote_id));
+    return true;
 }
 
 void SimGateway::restore_order_recovery(const GatewayRecoveredOrder& recovered) noexcept {
@@ -295,6 +318,7 @@ void SimGateway::process_orders(Timestamp now_ns, std::mt19937& rng) noexcept {
                 reject.order.status = OrderStatus::Rejected;
                 reject.order.ack_ts = now_ns;
                 (void)callback_buf.try_push(reject);
+                order_client_index_.erase(active.order.client_order_id);  // Remove from hash index
                 active = ActiveOrder{};
                 continue;
             }
@@ -333,6 +357,7 @@ void SimGateway::process_orders(Timestamp now_ns, std::mt19937& rng) noexcept {
                 : 0.0;
             cancel.order.ack_ts = now_ns;
             (void)callback_buf.try_push(cancel);
+            order_client_index_.erase(active.order.client_order_id);  // Remove from hash index
             active = ActiveOrder{};
             continue;
         }
@@ -371,7 +396,10 @@ void SimGateway::process_orders(Timestamp now_ns, std::mt19937& rng) noexcept {
         active.remaining_volume -= fill_volume;
         active.fill_notional += fill_price * static_cast<double>(fill_volume);
         active.next_fill_due_ns = now_ns + static_cast<Timestamp>(settings_.fill_interval_ms) * 1'000'000LL;
-        if (active.remaining_volume <= 0) active = ActiveOrder{};
+        if (active.remaining_volume <= 0) {
+            order_client_index_.erase(active.order.client_order_id);  // Remove from hash index
+            active = ActiveOrder{};
+        }
     }
 }
 
@@ -412,6 +440,7 @@ void SimGateway::process_quotes(Timestamp now_ns, std::mt19937& rng) noexcept {
             cancel.quote.bid_status = OrderStatus::Cancelled;
             cancel.quote.ask_status = OrderStatus::Cancelled;
             (void)callback_buf.try_push(cancel);
+            quote_client_index_.erase(active.quote.client_quote_id);  // Remove from hash index
             active = ActiveQuote{};
             continue;
         }
@@ -481,6 +510,7 @@ void SimGateway::process_quotes(Timestamp now_ns, std::mt19937& rng) noexcept {
 
         active.next_fill_due_ns = now_ns + static_cast<Timestamp>(settings_.fill_interval_ms) * 1'000'000LL;
         if (active.remaining_bid <= 0 && active.remaining_ask <= 0) {
+            quote_client_index_.erase(active.quote.client_quote_id);  // Remove from hash index
             active = ActiveQuote{};
         } else if (!filled_any) {
             continue;
