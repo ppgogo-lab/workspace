@@ -356,6 +356,9 @@ private:
     // across all options in a product (same expiry, same r).
     alignas(64) double option_sqrt_T_[MAX_PRODUCTS][MAX_INSTRUMENTS]{};
     alignas(64) double option_disc_[MAX_PRODUCTS][MAX_INSTRUMENTS]{};
+    // Cached expiry slice indices for vol surface lookups (eliminates linear scan)
+    // Precomputed once during option registration, used in hot path
+    alignas(64) int8_t option_expiry_slice_[MAX_PRODUCTS][MAX_INSTRUMENTS]{};
 
     // Greeks snapshot — updated by pricer thread, read by gRPC server
     alignas(64) SnapshotArray<Greeks, MAX_INSTRUMENTS> greeks_snapshot_;

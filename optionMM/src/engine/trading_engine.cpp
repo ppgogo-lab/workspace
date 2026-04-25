@@ -7,6 +7,9 @@
 #include "common/thread_utils.h"
 #include "logger/logger.h"
 #include "pricing/black76.h"
+#include "pricing/svi.h"
+#include "pricing/orc_wing.h"
+#include "pricing/wing.h"
 
 #include <cstring>
 #include <cmath>
@@ -425,12 +428,31 @@ void TradingEngine::populate_instrument_registry() noexcept {
 void TradingEngine::refresh_option_T() noexcept {
     const double r = cfg_.pricing.risk_free_rate;
     for (int p = 0; p < cfg_.product_count && p < MAX_PRODUCTS; ++p) {
+        // Get vol surface for slice index caching
+        const IVolSurface* surf = nullptr;
+        if (cfg_.pricing.vol_method == VolMethod::Wing) {
+            surf = wing_surfaces_[p].get();
+        } else if (cfg_.pricing.vol_method == VolMethod::OrcWing) {
+            surf = orc_wing_surfaces_[p].get();
+        } else {
+            surf = vol_surfaces_[p].get();
+        }
+
         for (uint16_t oi = 0; oi < option_count_[p]; ++oi) {
             const Instrument& opt = instruments_[option_ids_[p][oi]];
             const double T = option_time_to_expiry_years(opt);
             option_T_[p][oi]      = T;
             option_sqrt_T_[p][oi] = std::sqrt(T);
             option_disc_[p][oi]   = std::exp(-r * T);
+
+            // Cache expiry slice index (eliminates linear scan in hot path)
+            if (surf && cfg_.pricing.vol_method == VolMethod::SVI) {
+                const auto* svi_surf = static_cast<const SVIVolSurface*>(surf);
+                option_expiry_slice_[p][oi] = static_cast<int8_t>(
+                    svi_surf->find_expiry_slice_index(T));
+            } else {
+                option_expiry_slice_[p][oi] = -1;  // Not applicable for other methods
+            }
         }
     }
 }
@@ -1599,6 +1621,7 @@ void TradingEngine::pricer_loop() noexcept {
         const double log_F_mid = std::log(F_mid);
         const uint64_t surface_version = surface_versions_[prod];  // Plain read (eventual consistency OK)
 
+        // Populate arrays (F, K, T, sqrt_T, disc, is_call)
         for (uint16_t bi = 0; bi < batch_n; ++bi) {
             const uint16_t oi = start + bi;
             const uint16_t opt_id = option_ids_[prod][oi];
@@ -1611,10 +1634,39 @@ void TradingEngine::pricer_loop() noexcept {
             T_arr[bi] = option_T_[prod][oi];
             sqrt_T_arr[bi] = option_sqrt_T_[prod][oi];
             disc_arr[bi] = option_disc_[prod][oi];
-            sigma_arr[bi] = (cfg_.pricing.vol_method == VolMethod::OrcWing)
-                ? surf->get_vol_by_strike(F_mid, opt.strike, T_arr[bi])
-                : surf->get_vol(option_log_K_[prod][oi] - log_F_mid, T_arr[bi]);
             is_call_arr[bi] = (opt.option_type == OptionType::Call) ? 1 : 0;
+        }
+
+        // Compute volatilities (hoisted vol method dispatch eliminates branch misprediction + virtual calls)
+        if (cfg_.pricing.vol_method == VolMethod::SVI) {
+            const auto* svi_surf = static_cast<const SVIVolSurface*>(surf);
+            for (uint16_t bi = 0; bi < batch_n; ++bi) {
+                const uint16_t oi = start + bi;
+                const int8_t slice_idx = option_expiry_slice_[prod][oi];
+                if (slice_idx >= 0) {
+                    sigma_arr[bi] = svi_surf->get_vol_cached(
+                        option_log_K_[prod][oi] - log_F_mid, T_arr[bi], slice_idx);
+                } else {
+                    sigma_arr[bi] = svi_surf->get_vol(
+                        option_log_K_[prod][oi] - log_F_mid, T_arr[bi]);
+                }
+            }
+        } else if (cfg_.pricing.vol_method == VolMethod::OrcWing) {
+            const auto* orc_surf = static_cast<const OrcWingVolSurface*>(surf);
+            for (uint16_t bi = 0; bi < batch_n; ++bi) {
+                sigma_arr[bi] = orc_surf->get_vol_by_strike(F_mid, K_arr[bi], T_arr[bi]);
+            }
+        } else if (cfg_.pricing.vol_method == VolMethod::Wing) {
+            const auto* wing_surf = static_cast<const WingVolSurface*>(surf);
+            for (uint16_t bi = 0; bi < batch_n; ++bi) {
+                sigma_arr[bi] = wing_surf->get_vol_by_strike(F_mid, K_arr[bi], T_arr[bi]);
+            }
+        } else {
+            // SABR, CubicSpline, or other generic surfaces
+            for (uint16_t bi = 0; bi < batch_n; ++bi) {
+                const uint16_t oi = start + bi;
+                sigma_arr[bi] = surf->get_vol(option_log_K_[prod][oi] - log_F_mid, T_arr[bi]);
+            }
         }
 
         // Fused batch pricing: computes bid, mid, ask in single pass (3× → 1×)

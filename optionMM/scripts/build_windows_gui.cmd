@@ -10,6 +10,9 @@ set "NINJA_DIR=%LOCALAPPDATA%\Microsoft\WinGet\Packages\Ninja-build.Ninja_Micros
 set "QT_DIR=C:\Qt\6.8.3\msvc2022_64"
 set "APP_VCPKG_ROOT=%APP_ROOT%\..\vcpkg"
 set "APP_BUILD_DIR=%APP_ROOT%\build-win-gui"
+set "APP_VCPKG_INSTALLED=!APP_VCPKG_ROOT!\installed\x64-windows"
+set "APP_PROTOBUF_DIR=!APP_VCPKG_INSTALLED!\share\protobuf"
+set "APP_GRPC_DIR=!APP_VCPKG_INSTALLED!\share\grpc"
 
 if not exist "!VS_VCVARS!" (
   echo Missing MSVC environment script:
@@ -35,6 +38,18 @@ if not exist "!APP_VCPKG_ROOT!\scripts\buildsystems\vcpkg.cmake" (
   exit /b 1
 )
 
+if not exist "!APP_PROTOBUF_DIR!\protobuf-config.cmake" (
+  echo Missing protobuf package config:
+  echo   !APP_PROTOBUF_DIR!
+  exit /b 1
+)
+
+if not exist "!APP_GRPC_DIR!\gRPCConfig.cmake" (
+  echo Missing gRPC package config:
+  echo   !APP_GRPC_DIR!
+  exit /b 1
+)
+
 call "!VS_VCVARS!" || exit /b 1
 set "PATH=!NINJA_DIR!;%PATH%"
 set "CXX=cl"
@@ -45,6 +60,9 @@ set "CXX=cl"
   -DCMAKE_CXX_COMPILER=cl ^
   -DCMAKE_TOOLCHAIN_FILE=!APP_VCPKG_ROOT!\scripts\buildsystems\vcpkg.cmake ^
   -DVCPKG_TARGET_TRIPLET=x64-windows ^
+  -DCMAKE_PREFIX_PATH=!APP_VCPKG_INSTALLED! ^
+  -DProtobuf_DIR=!APP_PROTOBUF_DIR! ^
+  -DgRPC_DIR=!APP_GRPC_DIR! ^
   -DQt6_DIR=!QT_DIR!\lib\cmake\Qt6 || exit /b 1
 
 "!CMAKE_EXE!" --build "!APP_BUILD_DIR!" --config Release --target optionmm_trader_gui -j 8 || exit /b 1

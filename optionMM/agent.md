@@ -16,7 +16,57 @@ OptionMM is an ultra-low latency (<2μs tick-to-trade), high-frequency trading s
 - Code: add detail comments for every task, especially special design for low latency
 - Build: when in dev stage, build backend in WSL + Ubuntu, while building ui in windows.
 
-## 3. Think Before Coding
+## 3. Architecture
+
+### Thread Pipeline (Critical Path)
+
+```
+[Feed Thread] ──tick_buf──► [Pricer Thread] ──signal_buf[i]──► [Strategy Thread i]
+                                                                        │
+                           [Gateway Dispatcher] ◄── order_buf[i] / quote_buf[i]
+```
+
+All stages use lock-free SPSC ring buffers
+
+### 4. Key Components
+
+**Pricing (`src/pricing/`, `include/pricing/`):**
+- `black76.cpp`: SIMD-optimized Black-76 pricer (AVX2/AVX-512)
+- `vol_surface.cpp`: Volatility surface manager, supports 5 models
+- `orc_wing.cpp`: Core Vol surface fitting model used in production
+
+**Strategy (`src/strategy/`, `include/strategy/`):**
+- `mm_framework.cpp`: Base market making framework
+- `simple_mm.cpp`: Simple two-sided quoting strategy
+- `option_mm_core.cpp`: core option market making strategy used in production
+- `pcp_arbitrage.cpp`: Put-Call Parity (PCP) Arbitrage Strategy implementation
+
+**Risk (`src/risk/`, `include/risk/`):**
+- `pre_trade_risk.cpp`: Per-strategy-thread hard limits (max order volume)
+- `post_trade_risk.cpp`: Portfolio-level soft limits (delta/gamma/vega)
+
+**Gateway (`src/gateway/`, `include/gateway/`):**
+- `ctp_gateway.cpp`: CTP (SimNow) gateway implementation
+- `femas_gateway.cpp`: FEMAS gateway implementation
+- `sim_gateway.cpp`: Simulated gateway for testing (no external SDK)
+
+**Feed (`src/feed/`, `include/feed/`):**
+- `multicast_feed.cpp`: UDP multicast market data receiver
+- `fpga_feed.cpp`: FPGA-accelerated feed (placeholder)
+- `femas_feed.cpp`: FEMAS gateway feed 
+
+**Engine (`src/engine/`, `include/engine/`):**
+- `trading_engine.cpp`: Main orchestrator, owns all threads and ring buffers
+
+**Common (`src/common/`, `include/common/`):**
+- `types.h`: Core types (MarketTick, Order, Quote, Greeks, Position, etc.)
+- `ring_buffer.h`: Lock-free SPSC ring buffer template
+- `config.h`: YAML config parser
+- `thread_utils.cpp`: Core pinning utilities
+- `instrument_lookup.h`: Fixed-capacity code -> instrument_id lookup
+
+
+## 5. Think Before Coding
 
 **Don't assume. Don't hide confusion. Surface tradeoffs.**
 
@@ -25,15 +75,8 @@ Before implementing:
 - If multiple interpretations exist, present them - don't pick silently.
 - If something is unclear, stop. Name what's confusing. Ask.
 
-## 4. Simplicity First
 
-**Minimum code that solves the problem. Nothing speculative.**
-
-- No features beyond what was asked.
-- No "flexibility" or "configurability" that wasn't requested.
-- No error handling for impossible scenarios.
-
-## 5. Goal-Driven Execution
+## 6. Goal-Driven Execution
 
 **Define success criteria. Loop until verified.**
 

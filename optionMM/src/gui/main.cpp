@@ -11,6 +11,7 @@ int main(int argc, char* argv[]) {
     if (argc > 1) endpoint = argv[1];
 
     omm::gui::TraderMainWindow window(endpoint);
+    if (!window.initialize_session()) return 0;
     window.resize(1800, 1100);
     window.show();
     return app.exec();
