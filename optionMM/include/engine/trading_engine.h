@@ -61,6 +61,11 @@ public:
     void start();
     void stop() noexcept;
 
+    // Enable transparent huge pages for large memory regions to reduce TLB misses.
+    // Should be called after construction but before start().
+    // Returns the number of regions successfully enabled for huge pages.
+    int enable_huge_pages_for_large_arrays() noexcept;
+
     // Access for testing / gRPC server
     [[nodiscard]] IGateway*   gateway()    const noexcept { return gateway_.get(); }
     [[nodiscard]] AtomicMMParams& mm_params(int i) noexcept { return mm_params_[i]; }
@@ -126,6 +131,15 @@ public:
     [[nodiscard]] uint64_t total_signal_emit_count() const noexcept;
     [[nodiscard]] uint64_t total_signal_suppressed_count() const noexcept;
     [[nodiscard]] uint64_t total_pending_future_tick_overwrites() const noexcept;
+    [[nodiscard]] uint64_t deferred_monitor_drops() const noexcept {
+        return deferred_monitor_drops_.load(std::memory_order_relaxed);
+    }
+    [[nodiscard]] uint64_t deferred_persistence_drops() const noexcept {
+        return deferred_persistence_drops_.load(std::memory_order_relaxed);
+    }
+    [[nodiscard]] uint64_t live_state_drops() const noexcept {
+        return live_state_drops_.load(std::memory_order_relaxed);
+    }
     [[nodiscard]] uint32_t max_signal_queue_depth() const noexcept;
     [[nodiscard]] uint32_t max_signal_mailbox_depth() const noexcept;
     [[nodiscard]] uint32_t max_timer_queue_depth() const noexcept;
@@ -231,6 +245,9 @@ private:
     alignas(64) SPSCRingBuffer<Quote,         4096> deferred_monitor_quotes_;
     alignas(64) SPSCRingBuffer<Trade,         4096> deferred_monitor_trades_;
     alignas(64) SPSCRingBuffer<TopOfBookTick, 8192> deferred_monitor_ticks_;
+    alignas(64) SPSCRingBuffer<OrderPersistenceEvent, 4096> deferred_persist_order_events_;
+    alignas(64) SPSCRingBuffer<QuotePersistenceEvent, 2048> deferred_persist_quote_events_;
+    alignas(64) SPSCRingBuffer<Trade,         4096> deferred_persist_trades_;
     alignas(64) SPSCRingBuffer<uint16_t,      2048> coalesced_signal_index_buf_[MAX_PRODUCTS];
 
     alignas(64) PricingSignal coalesced_signal_mailbox_[MAX_PRODUCTS][MAX_INSTRUMENTS]{};
@@ -247,6 +264,9 @@ private:
     alignas(64) std::atomic<uint64_t> signal_emit_count_[MAX_PRODUCTS]{};
     alignas(64) std::atomic<uint64_t> signal_suppressed_count_[MAX_PRODUCTS]{};
     alignas(64) std::atomic<uint64_t> pending_future_tick_overwrites_[MAX_PRODUCTS]{};
+    alignas(64) std::atomic<uint64_t> deferred_monitor_drops_{0};
+    alignas(64) std::atomic<uint64_t> deferred_persistence_drops_{0};
+    alignas(64) std::atomic<uint64_t> live_state_drops_{0};
     alignas(64) std::atomic<uint64_t> surface_versions_[MAX_PRODUCTS]{};
     alignas(64) std::atomic<uint32_t> max_signal_queue_depth_[MAX_PRODUCTS]{};
     alignas(64) std::atomic<uint32_t> max_signal_mailbox_depth_[MAX_PRODUCTS]{};
@@ -387,7 +407,7 @@ private:
     // Called once at startup and then every second from timer_loop.
     void refresh_option_T() noexcept;
     [[nodiscard]] bool monitoring_deferred_mode() const noexcept {
-        return cfg_.monitoring.hot_path_publish_mode == MonitoringPublishMode::Deferred;
+        return cfg_.monitoring.hot_path_publish_mode != MonitoringPublishMode::Off;
     }
     void coalesce_signal(uint8_t product_idx, uint16_t option_slot,
                          const PricingSignal& sig) noexcept;
@@ -411,13 +431,13 @@ private:
     void publish_monitor_order(const Order& order) noexcept;
     void publish_monitor_quote(const Quote& quote) noexcept;
     void publish_monitor_trade(const Trade& trade) noexcept;
-    void persist_order_event(OrderPersistenceEventType type,
-                             const Order& order,
-                             const GatewayOrderRecoveryHandle* recovery = nullptr) noexcept;
-    void persist_quote_event(QuotePersistenceEventType type,
-                             const Quote& quote,
-                             const GatewayQuoteRecoveryHandle* recovery = nullptr) noexcept;
-    void persist_trade(const Trade& trade) noexcept;
+    void defer_order_persistence(OrderPersistenceEventType type,
+                                 const Order& order,
+                                 const GatewayOrderRecoveryHandle* recovery = nullptr) noexcept;
+    void defer_quote_persistence(QuotePersistenceEventType type,
+                                 const Quote& quote,
+                                 const GatewayQuoteRecoveryHandle* recovery = nullptr) noexcept;
+    void defer_trade_persistence(const Trade& trade) noexcept;
     void rebuild_book_position_locked(const Trade& trade) noexcept;
     void track_live_order_submit(const Order& order,
                                  const GatewayOrderRecoveryHandle* recovery) noexcept;

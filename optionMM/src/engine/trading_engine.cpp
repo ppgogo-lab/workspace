@@ -2,6 +2,7 @@
 #include "strategy/option_mm_core.h"
 #include "strategy/pcp_arbitrage.h"
 #include "strategy/simple_mm.h"
+#include "common/huge_pages.h"
 #include "common/thread_utils.h"
 #include "logger/logger.h"
 #include "pricing/black76.h"
@@ -264,6 +265,64 @@ TradingEngine::TradingEngine(const SystemConfig& cfg,
 }
 
 TradingEngine::~TradingEngine() { stop(); }
+
+int TradingEngine::enable_huge_pages_for_large_arrays() noexcept {
+    if (!huge_pages_available()) {
+        OMM_LOG_INFO("hugepages", "Transparent huge pages not available on this system");
+        return 0;
+    }
+
+    int enabled_count = 0;
+
+    // Enable huge pages for large arrays (>= 2MB)
+    // These are the hot data structures that benefit most from reduced TLB misses
+
+    // Ring buffers (if large enough)
+    if (enable_huge_pages(&tick_buf_, sizeof(tick_buf_))) ++enabled_count;
+    if (enable_huge_pages(&deferred_monitor_ticks_, sizeof(deferred_monitor_ticks_))) ++enabled_count;
+    if (enable_huge_pages(&deferred_monitor_orders_, sizeof(deferred_monitor_orders_))) ++enabled_count;
+    if (enable_huge_pages(&deferred_monitor_quotes_, sizeof(deferred_monitor_quotes_))) ++enabled_count;
+    if (enable_huge_pages(&deferred_monitor_trades_, sizeof(deferred_monitor_trades_))) ++enabled_count;
+    if (enable_huge_pages(&deferred_persist_order_events_, sizeof(deferred_persist_order_events_))) ++enabled_count;
+    if (enable_huge_pages(&deferred_persist_quote_events_, sizeof(deferred_persist_quote_events_))) ++enabled_count;
+    if (enable_huge_pages(&deferred_persist_trades_, sizeof(deferred_persist_trades_))) ++enabled_count;
+
+    // Per-product arrays
+    for (int p = 0; p < MAX_PRODUCTS; ++p) {
+        if (enable_huge_pages(&signal_buf_[p], sizeof(signal_buf_[p]))) ++enabled_count;
+        if (enable_huge_pages(&gateway_event_buf_[p], sizeof(gateway_event_buf_[p]))) ++enabled_count;
+        if (enable_huge_pages(&order_buf_[p], sizeof(order_buf_[p]))) ++enabled_count;
+        if (enable_huge_pages(&quote_buf_[p], sizeof(quote_buf_[p]))) ++enabled_count;
+        if (enable_huge_pages(&arb_market_trigger_buf_[p], sizeof(arb_market_trigger_buf_[p]))) ++enabled_count;
+    }
+
+    // Coalesced signal mailboxes (large 2D arrays)
+    if (enable_huge_pages(&coalesced_signal_mailbox_, sizeof(coalesced_signal_mailbox_))) ++enabled_count;
+    if (enable_huge_pages(&coalesced_signal_versions_, sizeof(coalesced_signal_versions_))) ++enabled_count;
+    if (enable_huge_pages(&last_emitted_signal_, sizeof(last_emitted_signal_))) ++enabled_count;
+
+    // Option data arrays (hot path)
+    if (enable_huge_pages(&option_ids_, sizeof(option_ids_))) ++enabled_count;
+    if (enable_huge_pages(&option_log_K_, sizeof(option_log_K_))) ++enabled_count;
+    if (enable_huge_pages(&option_T_, sizeof(option_T_))) ++enabled_count;
+    if (enable_huge_pages(&option_sqrt_T_, sizeof(option_sqrt_T_))) ++enabled_count;
+    if (enable_huge_pages(&option_disc_, sizeof(option_disc_))) ++enabled_count;
+
+    // Snapshots
+    if (enable_huge_pages(&greeks_snapshot_, sizeof(greeks_snapshot_))) ++enabled_count;
+    if (enable_huge_pages(&tick_snapshot_, sizeof(tick_snapshot_))) ++enabled_count;
+
+    // Timestamp arrays
+    if (enable_huge_pages(&last_signal_emit_ts_, sizeof(last_signal_emit_ts_))) ++enabled_count;
+    if (enable_huge_pages(&last_strategy_signal_ts_, sizeof(last_strategy_signal_ts_))) ++enabled_count;
+    if (enable_huge_pages(&last_quote_ack_route_ts_, sizeof(last_quote_ack_route_ts_))) ++enabled_count;
+    if (enable_huge_pages(&last_quote_cancel_route_ts_, sizeof(last_quote_cancel_route_ts_))) ++enabled_count;
+    if (enable_huge_pages(&last_quote_ack_route_latency_ns_, sizeof(last_quote_ack_route_latency_ns_))) ++enabled_count;
+    if (enable_huge_pages(&last_quote_cancel_route_latency_ns_, sizeof(last_quote_cancel_route_latency_ns_))) ++enabled_count;
+
+    OMM_LOG_INFO("hugepages", "Enabled transparent huge pages for {} memory regions", enabled_count);
+    return enabled_count;
+}
 
 // ─── Startup ──────────────────────────────────────────────────────────────────
 
