@@ -87,8 +87,8 @@ protected:
     SPSCRingBuffer<ArbIntent, 256> intent_buf_;
     AtomicArbParams params_;
     std::array<Instrument, MAX_INSTRUMENTS> instruments_{};
-    std::array<TopOfBookTick, MAX_INSTRUMENTS> ticks_{};
-    std::array<Greeks, MAX_INSTRUMENTS> greeks_{};
+    SnapshotArray<TopOfBookTick, MAX_INSTRUMENTS> ticks_;
+    SnapshotArray<Greeks, MAX_INSTRUMENTS> greeks_;
     HardRiskConfig hard_risk_{};
     AccountId account_{};
     PCPArbitrageStrategy strategy_;
@@ -110,16 +110,16 @@ protected:
         instruments_[1] = make_option(1, 0, kProduct, OptionType::Call, 100.0);
         instruments_[2] = make_option(2, 0, kProduct, OptionType::Put, 100.0);
 
-        ticks_[0] = make_tick(0, 105.0, 106.0);
-        ticks_[1] = make_tick(1, 0.5, 1.0);
-        ticks_[2] = make_tick(2, 0.1, 0.2);
+        ticks_.publish(0, make_tick(0, 105.0, 106.0));
+        ticks_.publish(1, make_tick(1, 0.5, 1.0));
+        ticks_.publish(2, make_tick(2, 0.1, 0.2));
 
         strategy_.init(kProduct,
                        &intent_buf_,
                        &params_,
                        instruments_.data(),
-                       ticks_.data(),
-                       greeks_.data(),
+                       &ticks_,
+                       &greeks_,
                        0.0,
                        hard_risk_,
                        account_);

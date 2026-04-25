@@ -2,6 +2,7 @@
 
 #include "common/types.h"
 #include "common/config.h"
+#include "common/latest_snapshot.h"
 #include "common/ring_buffer.h"
 #include "feed/feed_handler.h"
 #include "pricing/black76.h"
@@ -67,7 +68,9 @@ public:
     [[nodiscard]] int product_count() const noexcept { return cfg_.product_count; }
     [[nodiscard]] int n_instruments() const noexcept { return n_instruments_; }
     [[nodiscard]] const Instrument* instruments() const noexcept { return instruments_; }
-    [[nodiscard]] const TopOfBookTick* tick_snapshot() const noexcept { return tick_snapshot_; }
+    [[nodiscard]] bool read_tick_snapshot(uint16_t id, TopOfBookTick* out) const noexcept {
+        return tick_snapshot_.read(id, out);
+    }
     [[nodiscard]] const VolSurfaceManager<OrcWingVolSurface>& orc_wing_surface(int i) const noexcept {
         return orc_wing_surfaces_[i];
     }
@@ -83,7 +86,10 @@ public:
     }
 
     // Greeks snapshot – last computed Greeks per instrument (written by pricer thread)
-    [[nodiscard]] const Greeks* greeks_snapshot() const noexcept { return greeks_snapshot_; }
+    [[nodiscard]] bool read_greeks_snapshot(uint16_t id, Greeks* out) const noexcept {
+        return greeks_snapshot_.read(id, out);
+    }
+    [[nodiscard]] int read_all_greeks(Greeks* out, int max_count) const noexcept;
     [[nodiscard]] const MonitoringTopic<TopOfBookTick, 8192>& monitor_ticks() const noexcept {
         return monitor_ticks_;
     }
@@ -317,10 +323,10 @@ private:
     alignas(64) double option_disc_[MAX_PRODUCTS][MAX_INSTRUMENTS]{};
 
     // Greeks snapshot — updated by pricer thread, read by gRPC server
-    alignas(64) Greeks     greeks_snapshot_[MAX_INSTRUMENTS]{};
+    alignas(64) SnapshotArray<Greeks, MAX_INSTRUMENTS> greeks_snapshot_;
     // Tick snapshot — updated by pricer thread, read by vol fitter thread.
     // Written with relaxed stores (eventual consistency is fine for fitting).
-    alignas(64) TopOfBookTick tick_snapshot_[MAX_INSTRUMENTS]{};
+    alignas(64) SnapshotArray<TopOfBookTick, MAX_INSTRUMENTS> tick_snapshot_;
 
     // Manual order sequence counter (gRPC server thread)
     std::atomic<uint32_t> manual_order_seq_{1};

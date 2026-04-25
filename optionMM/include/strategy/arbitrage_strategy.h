@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common/ring_buffer.h"
+#include "common/latest_snapshot.h"
 #include "common/types.h"
 #include "risk/pre_trade_risk.h"
 #include "strategy/arb_params.h"
@@ -121,8 +122,8 @@ protected:
     SPSCRingBuffer<ArbIntent, 256>* intent_buf_{nullptr};
     AtomicArbParams*              params_{nullptr};
     const Instrument*             instruments_{nullptr};
-    const TopOfBookTick*          tick_snapshot_{nullptr};
-    const Greeks*                 greeks_snapshot_{nullptr};
+    const SnapshotArray<TopOfBookTick, MAX_INSTRUMENTS>* tick_snapshot_{nullptr};
+    const SnapshotArray<Greeks, MAX_INSTRUMENTS>*        greeks_snapshot_{nullptr};
     AccountId                     account_id_{};
 };
 

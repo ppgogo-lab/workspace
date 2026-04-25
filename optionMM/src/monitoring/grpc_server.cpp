@@ -695,9 +695,9 @@ public:
         PersistedUser user{};
         grpc::Status auth_status = authenticate(ctx, &user, nullptr);
         if (!auth_status.ok()) return auth_status;
-        const auto* greeks_snap = engine_.greeks_snapshot();
         for (int i = 0; i < engine_.n_instruments(); ++i) {
-            const auto& g = greeks_snap[i];
+            Greeks g{};
+            if (!engine_.read_greeks_snapshot(static_cast<uint16_t>(i), &g)) continue;
             if (g.instrument_id == INVALID_INSTRUMENT_ID) continue;
             auto* pg = resp->add_greeks();
             pg->set_instrument_id(g.instrument_id);
@@ -942,9 +942,9 @@ public:
             if (!session_manager_.is_active(token)) {
                 return grpc::Status(grpc::StatusCode::UNAUTHENTICATED, "session expired");
             }
-            const auto* snap = engine_.greeks_snapshot();
             for (int i = 0; i < engine_.n_instruments(); ++i) {
-                const auto& g = snap[i];
+                Greeks g{};
+                if (!engine_.read_greeks_snapshot(static_cast<uint16_t>(i), &g)) continue;
                 if (g.instrument_id == INVALID_INSTRUMENT_ID) continue;
                 if (!instrument_in_scope(engine_, req->product_index(), g.instrument_id)) continue;
                 omm::proto::Greeks msg;
@@ -1215,7 +1215,9 @@ public:
                         instr.kind != InstrumentKind::Future) {
                         continue;
                     }
-                    F = engine_.tick_snapshot()[i].last_price;
+                    TopOfBookTick tick{};
+                    if (!engine_.read_tick_snapshot(static_cast<uint16_t>(i), &tick)) continue;
+                    F = tick.last_price;
                     if (F > 0.0) break;
                 }
                 if (F <= 0.0) F = 100.0;

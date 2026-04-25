@@ -424,6 +424,10 @@ add_executable(test_instrument_lookup tests/test_instrument_lookup.cpp)
 target_link_libraries(test_instrument_lookup PRIVATE GTest::gtest_main Threads::Threads)
 add_test(NAME test_instrument_lookup COMMAND test_instrument_lookup)
 
+add_executable(test_latest_snapshot tests/test_latest_snapshot.cpp)
+target_link_libraries(test_latest_snapshot PRIVATE GTest::gtest_main Threads::Threads)
+add_test(NAME test_latest_snapshot COMMAND test_latest_snapshot)
+
 add_executable(test_trading_calendar tests/test_trading_calendar.cpp)
 target_link_libraries(test_trading_calendar PRIVATE common_lib GTest::gtest_main Threads::Threads)
 add_test(NAME test_trading_calendar COMMAND test_trading_calendar)

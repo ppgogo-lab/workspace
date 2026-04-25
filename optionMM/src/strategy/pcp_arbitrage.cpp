@@ -25,8 +25,8 @@ void PCPArbitrageStrategy::init(uint8_t product_idx,
                                 SPSCRingBuffer<ArbIntent, 256>* intent_buf,
                                 AtomicArbParams* params,
                                 const Instrument* instruments,
-                                const TopOfBookTick* tick_snapshot,
-                                const Greeks* greeks_snapshot,
+                                const SnapshotArray<TopOfBookTick, MAX_INSTRUMENTS>* tick_snapshot,
+                                const SnapshotArray<Greeks, MAX_INSTRUMENTS>* greeks_snapshot,
                                 double risk_free_rate,
                                 const HardRiskConfig& hard_risk_cfg,
                                 const AccountId& account_id) noexcept {
@@ -191,9 +191,15 @@ Volume PCPArbitrageStrategy::executable_volume(const Pair& pair,
                                                Direction dir,
                                                int max_order_volume) const noexcept {
     if (!pair.active || max_order_volume <= 0) return 0;
-    const TopOfBookTick& call_tick = tick_snapshot_[pair.call_id];
-    const TopOfBookTick& put_tick = tick_snapshot_[pair.put_id];
-    const TopOfBookTick& future_tick = tick_snapshot_[pair.future_id];
+    TopOfBookTick call_tick{};
+    TopOfBookTick put_tick{};
+    TopOfBookTick future_tick{};
+    if (!tick_snapshot_
+        || !tick_snapshot_->read(pair.call_id, &call_tick)
+        || !tick_snapshot_->read(pair.put_id, &put_tick)
+        || !tick_snapshot_->read(pair.future_id, &future_tick)) {
+        return 0;
+    }
 
     if (dir == Direction::LongSyntheticShortFuture) {
         // Buy call at ask, sell put at bid, sell future at bid. Size is bounded
@@ -239,9 +245,15 @@ bool PCPArbitrageStrategy::scan_best_opportunity(Timestamp now_ns,
         const Pair& pair = pairs_[i];
         if (!pair.active) return;
 
-        const TopOfBookTick& call_tick = tick_snapshot_[pair.call_id];
-        const TopOfBookTick& put_tick = tick_snapshot_[pair.put_id];
-        const TopOfBookTick& future_tick = tick_snapshot_[pair.future_id];
+        TopOfBookTick call_tick{};
+        TopOfBookTick put_tick{};
+        TopOfBookTick future_tick{};
+        if (!tick_snapshot_
+            || !tick_snapshot_->read(pair.call_id, &call_tick)
+            || !tick_snapshot_->read(pair.put_id, &put_tick)
+            || !tick_snapshot_->read(pair.future_id, &future_tick)) {
+            return;
+        }
         if (!market_valid(call_tick, now_ns)
             || !market_valid(put_tick, now_ns)
             || !market_valid(future_tick, now_ns)) {
@@ -353,9 +365,16 @@ void PCPArbitrageStrategy::publish_pair_monitor_states(Timestamp now_ns,
             continue;
         }
 
-        const TopOfBookTick& call_tick = tick_snapshot_[pair.call_id];
-        const TopOfBookTick& put_tick = tick_snapshot_[pair.put_id];
-        const TopOfBookTick& future_tick = tick_snapshot_[pair.future_id];
+        TopOfBookTick call_tick{};
+        TopOfBookTick put_tick{};
+        TopOfBookTick future_tick{};
+        if (!tick_snapshot_
+            || !tick_snapshot_->read(pair.call_id, &call_tick)
+            || !tick_snapshot_->read(pair.put_id, &put_tick)
+            || !tick_snapshot_->read(pair.future_id, &future_tick)) {
+            monitor_pairs_[i] = row;
+            continue;
+        }
         const bool valid_call = market_valid(call_tick, now_ns);
         const bool valid_put = market_valid(put_tick, now_ns);
         const bool valid_future = market_valid(future_tick, now_ns);
@@ -509,9 +528,16 @@ void PCPArbitrageStrategy::start_attempt(const Pair& pair,
     monitor_last_trigger_edge_ticks_.store(edge_ticks, std::memory_order_relaxed);
     monitor_last_trigger_ts_ns_.store(now_ns, std::memory_order_relaxed);
 
-    const TopOfBookTick& call_tick = tick_snapshot_[pair.call_id];
-    const TopOfBookTick& put_tick = tick_snapshot_[pair.put_id];
-    const TopOfBookTick& future_tick = tick_snapshot_[pair.future_id];
+    TopOfBookTick call_tick{};
+    TopOfBookTick put_tick{};
+    TopOfBookTick future_tick{};
+    if (!tick_snapshot_
+        || !tick_snapshot_->read(pair.call_id, &call_tick)
+        || !tick_snapshot_->read(pair.put_id, &put_tick)
+        || !tick_snapshot_->read(pair.future_id, &future_tick)) {
+        last_suppress_flags_ |= ArbSuppressInvalidMarket;
+        return;
+    }
 
     if (dir == Direction::LongSyntheticShortFuture) {
         // Synthetic long future = +Call - Put. We hedge that by shorting the
@@ -591,7 +617,11 @@ void PCPArbitrageStrategy::submit_cleanup_orders(Timestamp now_ns) noexcept {
     for (std::size_t i = 0; i < instruments.size(); ++i) {
         if (net_qty[i] == 0) continue;
         const uint16_t instrument_id = instruments[i];
-        const TopOfBookTick& tick = tick_snapshot_[instrument_id];
+        TopOfBookTick tick{};
+        if (!tick_snapshot_ || !tick_snapshot_->read(instrument_id, &tick)) {
+            last_suppress_flags_ |= ArbSuppressCleanupPending | ArbSuppressInvalidMarket;
+            continue;
+        }
         if (!market_valid(tick, now_ns)) {
             last_suppress_flags_ |= ArbSuppressCleanupPending | ArbSuppressInvalidMarket;
             continue;

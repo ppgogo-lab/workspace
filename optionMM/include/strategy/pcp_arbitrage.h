@@ -41,8 +41,8 @@ public:
               SPSCRingBuffer<ArbIntent, 256>* intent_buf,
               AtomicArbParams* params,
               const Instrument* instruments,
-              const TopOfBookTick* tick_snapshot,
-              const Greeks* greeks_snapshot,
+              const SnapshotArray<TopOfBookTick, MAX_INSTRUMENTS>* tick_snapshot,
+              const SnapshotArray<Greeks, MAX_INSTRUMENTS>* greeks_snapshot,
               double risk_free_rate,
               const HardRiskConfig& hard_risk_cfg,
               const AccountId& account_id) noexcept;

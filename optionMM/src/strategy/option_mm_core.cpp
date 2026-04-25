@@ -55,7 +55,7 @@ void OptionMMCoreStrategy::init(uint8_t product_idx,
                                 PreTradeRisk* pre_risk,
                                 AtomicMMParams* params,
                                 const Instrument* instruments,
-                                const TopOfBookTick* tick_snapshot,
+                                const SnapshotArray<TopOfBookTick, MAX_INSTRUMENTS>* tick_snapshot,
                                 const PostTradeRisk* post_risk,
                                 MonitoringTopic<SystemAlert, 256>* alert_topic) noexcept {
     product_idx_ = product_idx;
@@ -475,7 +475,12 @@ OptionMMCoreStrategy::build_decision(OptionState& state, int64_t now_ns) const n
         return decision;
     }
 
-    const TopOfBookTick& md = tick_snapshot_[state.instrument_id];
+    TopOfBookTick md{};
+    if (!tick_snapshot_ || !tick_snapshot_->read(state.instrument_id, &md)) {
+        decision.cancel_only = cancel_tracked_quote;
+        decision.suppress_flags |= SuppressInvalidMarket;
+        return decision;
+    }
     const bool has_market = md.recv_ts_ns > 0
         && md.bid_price[0] > 0.0
         && md.ask_price[0] > md.bid_price[0];
@@ -755,7 +760,7 @@ void OptionMMCoreStrategy::publish_cancel_failed_alert(const OptionState& state,
 
 void OptionMMCoreStrategy::maybe_trigger_hedge(int64_t now_ns) noexcept {
     if (!params_ || !session_open_ || !params_->enabled.load(std::memory_order_relaxed)) return;
-    if (!order_buf_ || !pre_risk_ || underlying_id_ >= MAX_INSTRUMENTS) return;
+    if (!order_buf_ || !pre_risk_ || !tick_snapshot_ || underlying_id_ >= MAX_INSTRUMENTS) return;
     if (live_hedge_order_id_ != 0 && live_hedge_remaining_ > 0) return;
 
     // Hedge threshold uses total product delta including the already-filled future hedge,
@@ -772,7 +777,10 @@ void OptionMMCoreStrategy::maybe_trigger_hedge(int64_t now_ns) noexcept {
         static_cast<int64_t>(params_->min_quote_interval_ms.load(std::memory_order_relaxed) * 1'000'000.0));
     if (now_ns - last_hedge_ts_ns_ < min_hedge_interval_ns) return;
 
-    const TopOfBookTick& underlying_md = tick_snapshot_[underlying_id_];
+    TopOfBookTick underlying_md{};
+    if (!tick_snapshot_->read(underlying_id_, &underlying_md)) {
+        return;
+    }
     if (underlying_md.recv_ts_ns == 0
         || now_ns - underlying_md.recv_ts_ns > STALE_NS
         || underlying_md.bid_price[0] <= 0.0

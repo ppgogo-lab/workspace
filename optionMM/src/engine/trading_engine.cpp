@@ -9,6 +9,7 @@
 #include <cstring>
 #include <cmath>
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <ctime>
 #include <stdexcept>
@@ -354,7 +355,7 @@ void TradingEngine::init_strategies() noexcept {
                     &pre_risk_[i],
                     &mm_params_[i],
                     instruments_,
-                    tick_snapshot_,
+                    &tick_snapshot_,
                     &post_risk_,
                     &monitor_alerts_[i]);
             strategies_[i].reset(s);
@@ -434,8 +435,8 @@ void TradingEngine::init_arbitrage_strategies() noexcept {
                            &arb_intent_buf_[product],
                            &arb_params_[product][slot],
                            instruments_,
-                           tick_snapshot_,
-                           greeks_snapshot_,
+                           &tick_snapshot_,
+                           &greeks_snapshot_,
                            cfg_.pricing.risk_free_rate,
                            cfg_.risk.hard,
                            cfg_.instance.account_id);
@@ -747,6 +748,21 @@ void TradingEngine::stop() noexcept {
     persist_shutdown_state();
 
     if (gateway_) gateway_->disconnect();
+}
+
+int TradingEngine::read_all_greeks(Greeks* out, int max_count) const noexcept {
+    if (out == nullptr || max_count <= 0) return 0;
+    const int count = std::min<int>(max_count, n_instruments_);
+    for (int i = 0; i < count; ++i) {
+        Greeks greek{};
+        if (greeks_snapshot_.read(static_cast<uint16_t>(i), &greek)) {
+            out[i] = greek;
+        } else {
+            out[i] = Greeks{};
+            out[i].instrument_id = static_cast<uint16_t>(i);
+        }
+    }
+    return count;
 }
 
 uint64_t TradingEngine::total_coalesced_signal_writes() const noexcept {
@@ -1212,11 +1228,13 @@ void TradingEngine::persist_trade(const Trade& trade) noexcept {
 
 void TradingEngine::persist_end_of_day_snapshot() noexcept {
     if (!repository_) return;
+    std::array<Greeks, MAX_INSTRUMENTS> greeks{};
+    (void)read_all_greeks(greeks.data(), n_instruments_);
     const EndOfDaySnapshot snapshot = build_end_of_day_snapshot(
         0,
         instruments_,
         n_instruments_,
-        greeks_snapshot_,
+        greeks.data(),
         cfg_.pricing.vol_method,
         vol_surfaces_,
         wing_surfaces_,
@@ -1302,7 +1320,11 @@ void TradingEngine::pricer_loop() noexcept {
             next_cold_greeks_due_ns[prod] = now + cold_greeks_interval_ns;
             return true;
         }
-        const TopOfBookTick& future_tick = tick_snapshot_[future_id];
+        TopOfBookTick future_tick{};
+        if (!tick_snapshot_.read(future_id, &future_tick)) {
+            next_cold_greeks_due_ns[prod] = now + cold_greeks_interval_ns;
+            return true;
+        }
         const double F_mid = future_tick.last_price;
         if (F_mid < 1e-10) {
             next_cold_greeks_due_ns[prod] = now + cold_greeks_interval_ns;
@@ -1348,11 +1370,12 @@ void TradingEngine::pricer_loop() noexcept {
 
         for (uint16_t bi = 0; bi < batch_n; ++bi) {
             const uint16_t opt_id = option_ids_[prod][start + bi];
-            Greeks greek = greeks_snapshot_[opt_id];
+            Greeks greek{};
+            (void)greeks_snapshot_.read(opt_id, &greek);
             greek.theta = results[bi].theta;
             greek.rho = results[bi].rho;
             greek.T = T_arr[bi];
-            greeks_snapshot_[opt_id] = greek;
+            greeks_snapshot_.publish(opt_id, greek);
         }
 
         cold_greeks_offset[prod] = static_cast<uint16_t>(start + batch_n);
@@ -1372,7 +1395,7 @@ void TradingEngine::pricer_loop() noexcept {
             if (id < MAX_INSTRUMENTS) {
                 const Instrument& instr = instruments_[id];
                 if (instr.instrument_id != INVALID_INSTRUMENT_ID) {
-                    tick_snapshot_[id] = tick;
+                    tick_snapshot_.publish(id, tick);
                     publish_monitor_tick(tick);
 
                     const uint8_t tick_prod = instr_to_product_[id];
@@ -1512,7 +1535,8 @@ void TradingEngine::pricer_loop() noexcept {
             sig.underlying_ref_bid = static_cast<float>(future_tick.bid_price[0]);
             sig.underlying_ref_ask = static_cast<float>(future_tick.ask_price[0]);
 
-            Greeks greek = greeks_snapshot_[opt_id];
+            Greeks greek{};
+            (void)greeks_snapshot_.read(opt_id, &greek);
             greek.instrument_id = opt_id;
             greek.theo_price = mid_res.price;
             greek.delta = mid_res.delta;
@@ -1521,7 +1545,7 @@ void TradingEngine::pricer_loop() noexcept {
             greek.iv = sigma_arr[bi];
             greek.T = T_arr[bi];
             greek.calc_ts_ns = now;
-            greeks_snapshot_[opt_id] = greek;
+            greeks_snapshot_.publish(opt_id, greek);
 
             if (!should_emit_signal(prod, oi, sig, surface_version)) {
                 signal_suppressed_count_[prod].fetch_add(1, std::memory_order_relaxed);
@@ -2148,7 +2172,8 @@ void TradingEngine::vol_fitter_loop() noexcept {
                 if (instr.kind == InstrumentKind::Future) {
                     // Use this future's last price as forward for all expiries
                     // (in production, match by expiry; here use a single forward)
-                    const TopOfBookTick& t = tick_snapshot_[id];
+                    TopOfBookTick t{};
+                    if (!tick_snapshot_.read(id, &t)) continue;
                     if (t.last_price > 1e-10) {
                         for (int e = 0; e < MAX_EXPIRIES; ++e)
                             if (fwd_prices[e] < 1e-10) fwd_prices[e] = t.last_price;
@@ -2158,7 +2183,8 @@ void TradingEngine::vol_fitter_loop() noexcept {
 
                 if (instr.kind != InstrumentKind::Option) continue;
 
-                const TopOfBookTick& t = tick_snapshot_[id];
+                TopOfBookTick t{};
+                if (!tick_snapshot_.read(id, &t)) continue;
                 if (t.recv_ts_ns == 0) continue;  // no tick yet
 
                 // Compute trading-session-adjusted T for this instrument.
@@ -2176,7 +2202,8 @@ void TradingEngine::vol_fitter_loop() noexcept {
                     expiry_Ts[ei] = T;
                     // Forward price for this expiry: use underlying's last tick
                     if (instr.underlying_id < n_instruments_) {
-                        const TopOfBookTick& ut = tick_snapshot_[instr.underlying_id];
+                        TopOfBookTick ut{};
+                        if (!tick_snapshot_.read(instr.underlying_id, &ut)) continue;
                         if (ut.last_price > 1e-10) fwd_prices[ei] = ut.last_price;
                     }
                 }
@@ -2212,7 +2239,8 @@ void TradingEngine::vol_fitter_loop() noexcept {
                 if (instr.product_index != static_cast<uint8_t>(p)) continue;
                 if (instr.kind != InstrumentKind::Option) continue;
 
-                const TopOfBookTick& t = tick_snapshot_[id];
+                TopOfBookTick t{};
+                if (!tick_snapshot_.read(id, &t)) continue;
                 if (t.recv_ts_ns == 0) continue;
 
                 double T = option_time_to_expiry_years(instr);
@@ -2403,7 +2431,9 @@ void TradingEngine::risk_monitor_loop() noexcept {
 
         const int64_t now_ns = get_monotonic_ns();
         if (did_work || now_ns - last_limit_check_ts >= kRiskCheckIntervalNs) {
-            post_risk_.check_limits(greeks_snapshot_, n_instruments_);
+            std::array<Greeks, MAX_INSTRUMENTS> greeks{};
+            (void)read_all_greeks(greeks.data(), n_instruments_);
+            post_risk_.check_limits(greeks.data(), n_instruments_);
             last_limit_check_ts = now_ns;
 
             const uint8_t breach_mask =
@@ -2570,7 +2600,8 @@ int TradingEngine::book_portfolios_snapshot(BookPortfolioGreeks* out,
     for (const auto& entry : book_positions_) {
         const BookPosition& pos = entry.second;
         if (pos.instrument_id >= MAX_INSTRUMENTS || pos.book_id == INVALID_BOOK_ID) continue;
-        const Greeks& greeks = greeks_snapshot_[pos.instrument_id];
+        Greeks greeks{};
+        (void)greeks_snapshot_.read(pos.instrument_id, &greeks);
         const double net = static_cast<double>(pos.net_position);
         const double avg_entry = pos.net_position > 0 ? pos.avg_long_price : pos.avg_short_price;
         const double unrealized = net * (greeks.theo_price - avg_entry);

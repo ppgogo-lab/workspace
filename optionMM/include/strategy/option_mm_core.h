@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common/thread_utils.h"
+#include "common/latest_snapshot.h"
 #include "monitoring/topic.h"
 #include "risk/post_trade_risk.h"
 #include "strategy/mm_framework.h"
@@ -26,7 +27,7 @@ public:
               PreTradeRisk* pre_risk,
               AtomicMMParams* params,
               const Instrument* instruments,
-              const TopOfBookTick* tick_snapshot,
+              const SnapshotArray<TopOfBookTick, MAX_INSTRUMENTS>* tick_snapshot,
               const PostTradeRisk* post_risk,
               MonitoringTopic<SystemAlert, 256>* alert_topic) noexcept;
 
@@ -103,7 +104,7 @@ private:
     static constexpr int64_t CANCEL_RETRY_NS = 1'000'000'000LL;  // Minimum spacing between repeated cancel attempts.
     static constexpr uint8_t MAX_CANCEL_ATTEMPTS = 3;  // Stop retrying cancels after this many sends.
 
-    const TopOfBookTick* tick_snapshot_{nullptr};  // Shared TOB snapshot for options and the product future.
+    const SnapshotArray<TopOfBookTick, MAX_INSTRUMENTS>* tick_snapshot_{nullptr};
     const PostTradeRisk* post_risk_{nullptr};  // Portfolio soft-risk gate shared with the monitor.
     MonitoringTopic<SystemAlert, 256>* alert_topic_{nullptr};  // Alert sink for operator-visible failures.
     OptionState option_state_[MAX_INSTRUMENTS]{};  // Per-instrument quote state machine storage.
