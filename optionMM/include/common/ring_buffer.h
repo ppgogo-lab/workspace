@@ -119,6 +119,28 @@ public:
         return true;
     }
 
+    // Pop up to max_count items atomically: reads all available slots, then ONE release-store.
+    // Returns the actual number of items popped (0 if empty, up to max_count if available).
+    // NOTE: consumer-side only; max_count must be >= 1.
+    [[nodiscard]] int try_pop_batch(T* items, int max_count) noexcept {
+        if (max_count <= 0) return 0;
+        const std::size_t tail = tail_.load(std::memory_order_relaxed);
+        const std::size_t head = head_.load(std::memory_order_acquire);
+        // Check available items
+        const std::size_t avail = (head - tail) & MASK;
+        if (avail == 0) return 0;  // empty
+        // Pop min(avail, max_count) items
+        const int count = (avail < static_cast<std::size_t>(max_count))
+                          ? static_cast<int>(avail)
+                          : max_count;
+        // Read all items without any fence
+        for (int i = 0; i < count; ++i)
+            items[i] = buffer_[(tail + i) & MASK].data;
+        // Single release-store updates tail atomically for all N items
+        tail_.store((tail + count) & MASK, std::memory_order_release);
+        return count;
+    }
+
     // ── Shared (approximate, not linearizable) ───────────────────────────────
 
     // Returns an approximate item count. Not linearizable — only use for
