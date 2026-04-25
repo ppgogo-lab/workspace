@@ -64,6 +64,33 @@ timer:
   hedge_check_interval_ms: 1000
   quote_refresh_interval_ms: 500
 
+exchange_calendars:
+  - exchange_id: "SHFE"
+    ranges:
+      - start: 20260420
+        end: 20261231
+        trading: true
+
+exchange_trading_times:
+  - exchange_id: "SHFE"
+    sessions:
+      - start_day_offset: -1
+        start: "21:00:00"
+        end_day_offset: 0
+        end: "02:00:00"
+      - start_day_offset: 0
+        start: "09:00:00"
+        end_day_offset: 0
+        end: "10:15:00"
+      - start_day_offset: 0
+        start: "10:30:00"
+        end_day_offset: 0
+        end: "11:30:00"
+      - start_day_offset: 0
+        start: "13:00:00"
+        end_day_offset: 0
+        end: "15:00:00"
+
 monitoring:
   grpc_listen_addr: "0.0.0.0:50051"
 

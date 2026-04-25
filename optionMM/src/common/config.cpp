@@ -1,4 +1,5 @@
 #include "common/config.h"
+#include "common/trading_calendar.h"
 
 #include <yaml-cpp/yaml.h>
 #include <cstring>
@@ -378,6 +379,80 @@ static TimerConfig parse_timer(const YAML::Node& n) {
     return c;
 }
 
+static ExchangeCalendarConfig parse_exchange_calendar(const YAML::Node& n,
+                                                      std::size_t index) {
+    ExchangeCalendarConfig c{};
+    const std::string base = "exchange_calendars[" + std::to_string(index) + "]";
+    str_copy(c.exchange_id.data, sizeof(c.exchange_id.data),
+             n["exchange_id"], (base + ".exchange_id").c_str());
+    if (auto ranges = n["ranges"]) {
+        if (!ranges.IsSequence()) {
+            throw std::runtime_error("config: " + base + ".ranges must be a sequence");
+        }
+        for (auto range : ranges) {
+            const int32_t start = get<int32_t>(range["start"], (base + ".ranges[].start").c_str(), 0);
+            const int32_t end = get<int32_t>(range["end"], (base + ".ranges[].end").c_str(), 0);
+            const bool trading = get<bool>(range["trading"], (base + ".ranges[].trading").c_str(), true);
+            for (int32_t d = start; d <= end; d = add_days_yyyymmdd(d, 1)) {
+                if (c.day_count >= MAX_EXCHANGE_CALENDAR_DAYS) {
+                    throw std::runtime_error("config: too many exchange calendar days");
+                }
+                c.days[c.day_count++] = {d, trading};
+            }
+        }
+    }
+    auto days = n["days"];
+    if (days && !days.IsSequence()) {
+        throw std::runtime_error("config: " + base + ".days must be a sequence");
+    }
+    if (days) {
+        for (auto day : days) {
+            if (c.day_count >= MAX_EXCHANGE_CALENDAR_DAYS) {
+                throw std::runtime_error("config: too many exchange calendar days");
+            }
+            ExchangeCalendarDayConfig& out = c.days[c.day_count++];
+            out.date = get<int32_t>(day["date"], (base + ".days[].date").c_str(), 0);
+            out.is_trading_day = get<bool>(day["trading"], (base + ".days[].trading").c_str(), false);
+            if (out.date <= 0) {
+                throw std::runtime_error("config: invalid exchange calendar date");
+            }
+        }
+    }
+    if (c.day_count == 0) {
+        throw std::runtime_error("config: " + base + " must define days or ranges");
+    }
+    return c;
+}
+
+static ExchangeTradingTimeConfig parse_exchange_trading_time(const YAML::Node& n,
+                                                             std::size_t index) {
+    ExchangeTradingTimeConfig c{};
+    const std::string base = "exchange_trading_times[" + std::to_string(index) + "]";
+    str_copy(c.exchange_id.data, sizeof(c.exchange_id.data),
+             n["exchange_id"], (base + ".exchange_id").c_str());
+    auto sessions = n["sessions"];
+    if (!sessions || !sessions.IsSequence()) {
+        throw std::runtime_error("config: " + base + ".sessions must be a sequence");
+    }
+    for (auto sess : sessions) {
+        if (c.session_count >= MAX_TRADING_SESSIONS_PER_EXCHANGE) {
+            throw std::runtime_error("config: too many trading sessions per exchange");
+        }
+        ExchangeTradingSessionConfig& out = c.sessions[c.session_count++];
+        out.start_day_offset = get<int>(sess["start_day_offset"],
+                                        (base + ".sessions[].start_day_offset").c_str(),
+                                        0);
+        out.end_day_offset = get<int>(sess["end_day_offset"],
+                                      (base + ".sessions[].end_day_offset").c_str(),
+                                      0);
+        str_copy(out.start_time, sizeof(out.start_time),
+                 sess["start"], (base + ".sessions[].start").c_str());
+        str_copy(out.end_time, sizeof(out.end_time),
+                 sess["end"], (base + ".sessions[].end").c_str());
+    }
+    return c;
+}
+
 static ThreadAffinityConfig parse_affinity(const YAML::Node& n) {
     ThreadAffinityConfig c;
     if (!n) return c;
@@ -576,6 +651,36 @@ SystemConfig load_config(std::string_view path) {
             }
             cfg.users[cfg.user_count] = parse_user(un, static_cast<std::size_t>(cfg.user_count));
             ++cfg.user_count;
+        }
+    }
+
+    cfg.exchange_calendar_count = 0;
+    if (auto calendars_node = root["exchange_calendars"]) {
+        if (!calendars_node.IsSequence()) {
+            throw std::runtime_error("config: 'exchange_calendars' must be a sequence");
+        }
+        for (auto cn : calendars_node) {
+            if (cfg.exchange_calendar_count >= MAX_EXCHANGE_CALENDARS) {
+                throw std::runtime_error("config: too many exchange calendars");
+            }
+            cfg.exchange_calendars[cfg.exchange_calendar_count] =
+                parse_exchange_calendar(cn, static_cast<std::size_t>(cfg.exchange_calendar_count));
+            ++cfg.exchange_calendar_count;
+        }
+    }
+
+    cfg.exchange_trading_time_count = 0;
+    if (auto times_node = root["exchange_trading_times"]) {
+        if (!times_node.IsSequence()) {
+            throw std::runtime_error("config: 'exchange_trading_times' must be a sequence");
+        }
+        for (auto tn : times_node) {
+            if (cfg.exchange_trading_time_count >= MAX_EXCHANGE_CALENDARS) {
+                throw std::runtime_error("config: too many exchange trading time entries");
+            }
+            cfg.exchange_trading_times[cfg.exchange_trading_time_count] =
+                parse_exchange_trading_time(tn, static_cast<std::size_t>(cfg.exchange_trading_time_count));
+            ++cfg.exchange_trading_time_count;
         }
     }
 

@@ -16,6 +16,9 @@ static constexpr uint8_t  MAX_ARBITRAGE_STRATEGIES_PER_PRODUCT = 4;
 static constexpr uint16_t MAX_OPEN_ORDERS = 4096;
 static constexpr uint16_t MAX_USERS = 64;
 static constexpr uint16_t MAX_BOOKS = 128;
+static constexpr uint8_t  MAX_EXCHANGE_CALENDARS = 8;
+static constexpr uint16_t MAX_EXCHANGE_CALENDAR_DAYS = 4096;
+static constexpr uint8_t  MAX_TRADING_SESSIONS_PER_EXCHANGE = 8;
 
 // ─── Primitive aliases ────────────────────────────────────────────────────────
 // Price stays as double. Set FTZ/DAZ flags at startup (see main.cpp) to prevent

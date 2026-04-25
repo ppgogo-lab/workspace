@@ -9,6 +9,7 @@
 #include <cstring>
 #include <filesystem>
 #include <string>
+#include <vector>
 
 using namespace omm;
 
@@ -377,6 +378,48 @@ TEST(DataRepositoryTest, PersistsInstrumentsAndEndOfDaySnapshots) {
         0.22);
 
     sqlite3_close(db);
+    remove_db_artifacts(db_path);
+}
+
+TEST(DataRepositoryTest, SeedsAndLoadsExchangeCalendars) {
+    const auto db_path = make_test_db_path("calendar");
+    remove_db_artifacts(db_path);
+
+    PersistenceConfig cfg{};
+    cfg.enabled = true;
+    copy_cstr(cfg.data_path, sizeof(cfg.data_path), db_path.string().c_str());
+
+    SystemConfig system_cfg{};
+    system_cfg.exchange_calendar_count = 1;
+    system_cfg.exchange_calendars[0].exchange_id = ExchangeId("SHFE");
+    system_cfg.exchange_calendars[0].days[0] = {20260424, true};
+    system_cfg.exchange_calendars[0].days[1] = {20260425, false};
+    system_cfg.exchange_calendars[0].day_count = 2;
+    system_cfg.exchange_trading_time_count = 1;
+    system_cfg.exchange_trading_times[0].exchange_id = ExchangeId("SHFE");
+    auto& night = system_cfg.exchange_trading_times[0].sessions[0];
+    night.start_day_offset = -1;
+    night.end_day_offset = 0;
+    copy_cstr(night.start_time, sizeof(night.start_time), "21:00:00");
+    copy_cstr(night.end_time, sizeof(night.end_time), "02:00:00");
+    auto& day = system_cfg.exchange_trading_times[0].sessions[1];
+    copy_cstr(day.start_time, sizeof(day.start_time), "09:00:00");
+    copy_cstr(day.end_time, sizeof(day.end_time), "15:00:00");
+    system_cfg.exchange_trading_times[0].session_count = 2;
+
+    DataRepository repo(cfg, GatewayType::Sim, VolMethod::Wing);
+    ASSERT_TRUE(repo.open());
+    ASSERT_TRUE(repo.seed_exchange_calendar(system_cfg));
+
+    std::vector<ExchangeTradingCalendar> calendars;
+    ASSERT_TRUE(repo.load_exchange_calendars(&calendars));
+    ASSERT_EQ(calendars.size(), 1u);
+    EXPECT_EQ(calendars[0].exchange_id, "SHFE");
+    ASSERT_EQ(calendars[0].days.size(), 2u);
+    EXPECT_TRUE(calendars[0].days[0].is_trading_day);
+    ASSERT_EQ(calendars[0].sessions.size(), 2u);
+    EXPECT_EQ(calendars[0].sessions[0].start_day_offset, -1);
+
     remove_db_artifacts(db_path);
 }
 

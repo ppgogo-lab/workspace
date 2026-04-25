@@ -158,6 +158,7 @@ public:
     [[nodiscard]] AtomicArbParams* arbitrage_params(int product_idx,
                                                     ArbitrageStrategyType type) noexcept;
     [[nodiscard]] const IdentityState& identity_state() const noexcept { return identity_state_; }
+    [[nodiscard]] double option_time_to_expiry_years(const Instrument& opt) const noexcept;
     [[nodiscard]] bool zero_session_shutdown_active() const noexcept {
         return strategy_dispatch_suspended_.load(std::memory_order_acquire);
     }
@@ -267,6 +268,8 @@ private:
     std::unique_ptr<IGateway>      gateway_;
     std::unique_ptr<IFeedHandler>  feed_;
     std::unique_ptr<DataRepository> repository_;
+    TradingCalendarService trading_calendar_;
+    bool trading_calendar_ready_{false};
 
     // Strategy slots (one per product)
     std::array<std::unique_ptr<IMarketMaker>, MAX_PRODUCTS> strategies_;
@@ -365,6 +368,7 @@ private:
     void init_arbitrage_strategies() noexcept;
     void init_vol_surfaces() noexcept;
     void init_persistence() noexcept;
+    [[nodiscard]] bool init_trading_calendar() noexcept;
     void init_identity_from_config() noexcept;
     void apply_identity_state(const IdentityState& state) noexcept;
     void apply_recovery_state(const RecoveryState& state) noexcept;

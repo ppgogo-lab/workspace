@@ -197,6 +197,7 @@ add_library(common_lib STATIC
     src/common/auth.cpp
     src/common/config.cpp
     src/common/thread_utils.cpp
+    src/common/trading_calendar.cpp
     src/sim/sim_instruments.cpp
 )
 target_link_libraries(common_lib PUBLIC
@@ -422,6 +423,10 @@ add_test(NAME test_monitoring_topic COMMAND test_monitoring_topic)
 add_executable(test_instrument_lookup tests/test_instrument_lookup.cpp)
 target_link_libraries(test_instrument_lookup PRIVATE GTest::gtest_main Threads::Threads)
 add_test(NAME test_instrument_lookup COMMAND test_instrument_lookup)
+
+add_executable(test_trading_calendar tests/test_trading_calendar.cpp)
+target_link_libraries(test_trading_calendar PRIVATE common_lib GTest::gtest_main Threads::Threads)
+add_test(NAME test_trading_calendar COMMAND test_trading_calendar)
 
 # test_simple_mm (strategy + gateway + engine integration)
 # Uses engine_lib_test which does not pull in CTP/FEMAS SDK shared libraries.

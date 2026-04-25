@@ -8,6 +8,7 @@
 #include "pricing/svi.h"
 #include "pricing/vol_surface.h"
 #include "pricing/wing.h"
+#include "common/trading_calendar.h"
 
 #include <array>
 #include <atomic>
@@ -195,6 +196,8 @@ public:
     bool load_recovery_state(RecoveryState* out);
     bool load_trade_history(std::vector<Trade>* out);
     bool persist_end_of_day_snapshot(const EndOfDaySnapshot& snapshot);
+    bool seed_exchange_calendar(const SystemConfig& cfg);
+    bool load_exchange_calendars(std::vector<ExchangeTradingCalendar>* out);
 
     bool enqueue_order_event(const OrderPersistenceEvent& event) noexcept;
     bool enqueue_quote_event(const QuotePersistenceEvent& event) noexcept;

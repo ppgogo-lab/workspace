@@ -212,6 +212,142 @@ bool DataRepository::persist_instruments() {
     return exec_sql(db_, "COMMIT;");
 }
 
+bool DataRepository::seed_exchange_calendar(const SystemConfig& cfg) {
+    if (!cfg_.enabled) return false;
+    std::lock_guard<std::mutex> lock(db_mutex_);
+    if (db_ == nullptr) return false;
+
+    if (!exec_sql(db_, "BEGIN IMMEDIATE TRANSACTION;")) return false;
+
+    sqlite3_stmt* day_stmt = nullptr;
+    sqlite3_stmt* session_stmt = nullptr;
+    const bool prepared =
+        sqlite3_prepare_v2(
+            db_,
+            "INSERT OR REPLACE INTO exchange_trade_calendar "
+            "(exchange_id, trade_date, is_trading_day) VALUES (?, ?, ?)",
+            -1, &day_stmt, nullptr) == SQLITE_OK
+        && sqlite3_prepare_v2(
+            db_,
+            "INSERT OR REPLACE INTO exchange_trading_sessions "
+            "(exchange_id, session_index, start_day_offset, start_time, end_day_offset, end_time) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            -1, &session_stmt, nullptr) == SQLITE_OK;
+    if (!prepared) {
+        sqlite3_finalize(day_stmt);
+        sqlite3_finalize(session_stmt);
+        (void)exec_sql(db_, "ROLLBACK;");
+        return false;
+    }
+
+    for (int i = 0; i < cfg.exchange_calendar_count; ++i) {
+        for (int d = 0; d < cfg.exchange_calendars[i].day_count; ++d) {
+            reset_stmt(day_stmt);
+            bind_text(day_stmt, 1, cfg.exchange_calendars[i].exchange_id.data);
+            bind_integer(day_stmt, 2, cfg.exchange_calendars[i].days[d].date);
+            bind_integer(day_stmt, 3, cfg.exchange_calendars[i].days[d].is_trading_day ? 1 : 0);
+            if (!step_done(db_, day_stmt, "upsert exchange_trade_calendar")) {
+                sqlite3_finalize(day_stmt);
+                sqlite3_finalize(session_stmt);
+                (void)exec_sql(db_, "ROLLBACK;");
+                return false;
+            }
+        }
+    }
+
+    for (int i = 0; i < cfg.exchange_trading_time_count; ++i) {
+        for (int s = 0; s < cfg.exchange_trading_times[i].session_count; ++s) {
+            const auto& session = cfg.exchange_trading_times[i].sessions[s];
+            reset_stmt(session_stmt);
+            bind_text(session_stmt, 1, cfg.exchange_trading_times[i].exchange_id.data);
+            bind_integer(session_stmt, 2, s);
+            bind_integer(session_stmt, 3, session.start_day_offset);
+            bind_text(session_stmt, 4, session.start_time);
+            bind_integer(session_stmt, 5, session.end_day_offset);
+            bind_text(session_stmt, 6, session.end_time);
+            if (!step_done(db_, session_stmt, "upsert exchange_trading_sessions")) {
+                sqlite3_finalize(day_stmt);
+                sqlite3_finalize(session_stmt);
+                (void)exec_sql(db_, "ROLLBACK;");
+                return false;
+            }
+        }
+    }
+
+    sqlite3_finalize(day_stmt);
+    sqlite3_finalize(session_stmt);
+    return exec_sql(db_, "COMMIT;");
+}
+
+bool DataRepository::load_exchange_calendars(std::vector<ExchangeTradingCalendar>* out) {
+    if (out == nullptr) return false;
+    out->clear();
+    if (!cfg_.enabled) return false;
+
+    std::lock_guard<std::mutex> lock(db_mutex_);
+    if (db_ == nullptr) return false;
+
+    std::unordered_map<std::string, std::size_t> index;
+    sqlite3_stmt* stmt = nullptr;
+    if (sqlite3_prepare_v2(db_,
+                           "SELECT exchange_id, trade_date, is_trading_day "
+                           "FROM exchange_trade_calendar ORDER BY exchange_id, trade_date",
+                           -1, &stmt, nullptr) != SQLITE_OK) {
+        return false;
+    }
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        const auto* ex_text = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+        if (ex_text == nullptr || ex_text[0] == '\0') continue;
+        const std::string exchange_id(ex_text);
+        auto [it, inserted] = index.emplace(exchange_id, out->size());
+        if (inserted) {
+            ExchangeTradingCalendar cal{};
+            cal.exchange_id = exchange_id;
+            out->push_back(std::move(cal));
+        }
+        ExchangeTradingCalendar& cal = (*out)[it->second];
+        cal.days.push_back({
+            sqlite3_column_int(stmt, 1),
+            sqlite3_column_int(stmt, 2) != 0,
+        });
+    }
+    sqlite3_finalize(stmt);
+    stmt = nullptr;
+
+    if (sqlite3_prepare_v2(db_,
+                           "SELECT exchange_id, start_day_offset, start_time, end_day_offset, end_time "
+                           "FROM exchange_trading_sessions ORDER BY exchange_id, session_index",
+                           -1, &stmt, nullptr) != SQLITE_OK) {
+        return false;
+    }
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        const auto* ex_text = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+        if (ex_text == nullptr || ex_text[0] == '\0') continue;
+        const std::string exchange_id(ex_text);
+        auto it = index.find(exchange_id);
+        if (it == index.end()) {
+            ExchangeTradingCalendar cal{};
+            cal.exchange_id = exchange_id;
+            out->push_back(std::move(cal));
+            it = index.emplace(exchange_id, out->size() - 1).first;
+        }
+
+        const auto* start_text = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
+        const auto* end_text = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4));
+        TradingSessionWindow session{};
+        session.start_day_offset = static_cast<int8_t>(sqlite3_column_int(stmt, 1));
+        session.end_day_offset = static_cast<int8_t>(sqlite3_column_int(stmt, 3));
+        if (!parse_hhmmss(start_text ? start_text : "", &session.start_seconds)
+            || !parse_hhmmss(end_text ? end_text : "", &session.end_seconds)) {
+            sqlite3_finalize(stmt);
+            return false;
+        }
+        (*out)[it->second].sessions.push_back(session);
+    }
+    sqlite3_finalize(stmt);
+    return true;
+}
+
 bool DataRepository::sync_identity_state(const SystemConfig& cfg, IdentityState* out) {
     if (out == nullptr) return false;
     out->users.clear();
@@ -848,6 +984,21 @@ bool DataRepository::ensure_schema_locked() {
         " expiry_epoch_ns INTEGER NOT NULL,"
         " product_index INTEGER NOT NULL,"
         " underlying_instrument_code TEXT NOT NULL"
+        ");"
+        "CREATE TABLE IF NOT EXISTS exchange_trade_calendar ("
+        " exchange_id TEXT NOT NULL,"
+        " trade_date INTEGER NOT NULL,"
+        " is_trading_day INTEGER NOT NULL,"
+        " PRIMARY KEY(exchange_id, trade_date)"
+        ");"
+        "CREATE TABLE IF NOT EXISTS exchange_trading_sessions ("
+        " exchange_id TEXT NOT NULL,"
+        " session_index INTEGER NOT NULL,"
+        " start_day_offset INTEGER NOT NULL,"
+        " start_time TEXT NOT NULL,"
+        " end_day_offset INTEGER NOT NULL,"
+        " end_time TEXT NOT NULL,"
+        " PRIMARY KEY(exchange_id, session_index)"
         ");"
         "CREATE TABLE IF NOT EXISTS trades ("
         " id INTEGER PRIMARY KEY AUTOINCREMENT,"

@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <chrono>
 #include <ctime>
+#include <stdexcept>
 
 namespace omm {
 
@@ -317,24 +318,29 @@ void TradingEngine::populate_instrument_registry() noexcept {
     if (gateway_)
         gateway_->set_instruments(instruments_, n_instruments_);
 
-    // Seed option_T_ so pricer_loop has valid values before timer fires
-    refresh_option_T();
 }
 
 void TradingEngine::refresh_option_T() noexcept {
-    const int64_t now_ns = get_monotonic_ns();
-    static constexpr double NS_PER_YEAR = 365.0 * 24.0 * 3600.0 * 1e9;
     const double r = cfg_.pricing.risk_free_rate;
     for (int p = 0; p < cfg_.product_count && p < MAX_PRODUCTS; ++p) {
         for (uint16_t oi = 0; oi < option_count_[p]; ++oi) {
             const Instrument& opt = instruments_[option_ids_[p][oi]];
-            double T = (opt.expiry_epoch_ns - now_ns) / NS_PER_YEAR;
-            if (T < 1e-4) T = 1e-4;
+            const double T = option_time_to_expiry_years(opt);
             option_T_[p][oi]      = T;
             option_sqrt_T_[p][oi] = std::sqrt(T);
             option_disc_[p][oi]   = std::exp(-r * T);
         }
     }
+}
+
+double TradingEngine::option_time_to_expiry_years(const Instrument& opt) const noexcept {
+    if (trading_calendar_ready_) {
+        return trading_calendar_.time_to_expiry_years(
+            opt.exchange_id.view(), std::time(nullptr), opt.expiry_date);
+    }
+    static constexpr double NS_PER_YEAR = 365.0 * 24.0 * 3600.0 * 1e9;
+    const double fallback = (opt.expiry_epoch_ns - get_monotonic_ns()) / NS_PER_YEAR;
+    return fallback > 1e-4 ? fallback : 1e-4;
 }
 
 void TradingEngine::init_strategies() noexcept {
@@ -559,6 +565,34 @@ void TradingEngine::init_persistence() noexcept {
     request_recovery_cancels(recovery);
 }
 
+bool TradingEngine::init_trading_calendar() noexcept {
+    std::string error;
+    if (repository_) {
+        if (cfg_.exchange_calendar_count > 0 || cfg_.exchange_trading_time_count > 0) {
+            if (!repository_->seed_exchange_calendar(cfg_)) {
+                OMM_LOG_ERROR("calendar", "failed to seed exchange calendar from config");
+                return false;
+            }
+        }
+        std::vector<ExchangeTradingCalendar> calendars;
+        if (!repository_->load_exchange_calendars(&calendars)
+            || !trading_calendar_.load(std::move(calendars))) {
+            OMM_LOG_ERROR("calendar", "failed to load exchange calendar from repository");
+            return false;
+        }
+    } else if (!trading_calendar_.load_from_config(cfg_)) {
+        OMM_LOG_ERROR("calendar", "failed to load exchange calendar from config");
+        return false;
+    }
+
+    if (!trading_calendar_.validate_products(cfg_, &error)) {
+        OMM_LOG_ERROR("calendar", "{}", error);
+        return false;
+    }
+    trading_calendar_ready_ = true;
+    return true;
+}
+
 void TradingEngine::apply_recovery_state(const RecoveryState& state) noexcept {
     if (!state.positions.empty()) {
         post_risk_.restore_positions(state.positions.data(),
@@ -658,6 +692,10 @@ void TradingEngine::start() {
     setup_fp_environment();
     populate_instrument_registry();
     init_persistence();
+    if (!init_trading_calendar()) {
+        throw std::runtime_error("failed to initialize exchange trading calendar");
+    }
+    refresh_option_T();
     init_strategies();
     init_arbitrage_strategies();
     init_vol_surfaces();
@@ -2123,9 +2161,8 @@ void TradingEngine::vol_fitter_loop() noexcept {
                 const TopOfBookTick& t = tick_snapshot_[id];
                 if (t.recv_ts_ns == 0) continue;  // no tick yet
 
-                // Compute T for this instrument
-                double T = (instr.expiry_epoch_ns - t.recv_ts_ns)
-                           / (365.0 * 24.0 * 3600.0 * 1e9);
+                // Compute trading-session-adjusted T for this instrument.
+                double T = option_time_to_expiry_years(instr);
                 if (T < 1.0 / 365.0) continue;  // skip expiries < 1 day out
 
                 // Find or create expiry bucket (match within 1 day = 1/365 years)
@@ -2178,8 +2215,7 @@ void TradingEngine::vol_fitter_loop() noexcept {
                 const TopOfBookTick& t = tick_snapshot_[id];
                 if (t.recv_ts_ns == 0) continue;
 
-                double T = (instr.expiry_epoch_ns - t.recv_ts_ns)
-                           / (365.0 * 24.0 * 3600.0 * 1e9);
+                double T = option_time_to_expiry_years(instr);
                 if (T < 1.0 / 365.0) continue;
 
                 // Find expiry bucket

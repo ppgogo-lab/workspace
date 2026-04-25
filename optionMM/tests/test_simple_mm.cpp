@@ -30,6 +30,9 @@ static Instrument make_option(uint16_t id, uint16_t underlying_id,
     instr.strike          = strike;
     instr.tick_size       = tick_size;
     instr.multiplier      = 1.0;
+    instr.exchange        = Exchange::SHFE;
+    instr.exchange_id     = ExchangeId("SHFE");
+    instr.expiry_date     = 20260428;
     // expiry ~3 months from now (in ns)
     instr.expiry_epoch_ns = get_monotonic_ns()
                           + static_cast<int64_t>(0.25 * 365.0 * 24.0 * 3600.0 * 1e9);
@@ -45,8 +48,44 @@ static Instrument make_future(uint16_t id, uint8_t product_idx,
     instr.kind          = InstrumentKind::Future;
     instr.tick_size     = tick_size;
     instr.multiplier    = 1.0;
+    instr.exchange      = Exchange::SHFE;
+    instr.exchange_id   = ExchangeId("SHFE");
+    instr.expiry_date   = 20260428;
     std::strncpy(instr.code.data, code, sizeof(instr.code.data) - 1);
     return instr;
+}
+
+static void add_test_calendar(SystemConfig& cfg) {
+    cfg.exchange_calendar_count = 1;
+    cfg.exchange_calendars[0].exchange_id = ExchangeId("SHFE");
+    const int32_t dates[] = {20260423, 20260424, 20260425, 20260426, 20260427, 20260428};
+    const bool trading[] = {true, true, false, false, true, true};
+    for (int i = 0; i < 6; ++i) {
+        cfg.exchange_calendars[0].days[i].date = dates[i];
+        cfg.exchange_calendars[0].days[i].is_trading_day = trading[i];
+    }
+    cfg.exchange_calendars[0].day_count = 6;
+
+    cfg.exchange_trading_time_count = 1;
+    cfg.exchange_trading_times[0].exchange_id = ExchangeId("SHFE");
+    auto set_session = [&](int idx, int8_t start_offset, const char* start,
+                           int8_t end_offset, const char* end) {
+        auto& s = cfg.exchange_trading_times[0].sessions[idx];
+        s.start_day_offset = start_offset;
+        s.end_day_offset = end_offset;
+        std::strncpy(s.start_time, start, sizeof(s.start_time) - 1);
+        std::strncpy(s.end_time, end, sizeof(s.end_time) - 1);
+    };
+    set_session(0, -1, "21:00:00", 0, "02:00:00");
+    set_session(1, 0, "09:00:00", 0, "10:15:00");
+    set_session(2, 0, "10:30:00", 0, "11:30:00");
+    set_session(3, 0, "13:00:00", 0, "15:00:00");
+    cfg.exchange_trading_times[0].session_count = 4;
+    for (int i = 0; i < cfg.product_count; ++i) {
+        if (cfg.products[i].exchange_id.empty()) {
+            cfg.products[i].exchange_id = ExchangeId("SHFE");
+        }
+    }
 }
 
 static PricingSignal make_signal(uint16_t instrument_id, double theo,
@@ -414,6 +453,7 @@ TEST(TradingEngineIntegration, TickToQuote) {
     cfg.timer.hedge_check_interval_ms = 10000;
     cfg.risk.hard.max_volume_per_order = 100;
     cfg.risk.soft.max_net_position = 500;
+    add_test_calendar(cfg);
 
     auto gw = std::make_unique<SimGateway>();
     // Add one option instrument — strike at-the-money relative to last_price
@@ -467,6 +507,7 @@ TEST(TradingEngineIntegration, DeferredMonitoringStillStreamsQuotes) {
     cfg.timer.hedge_check_interval_ms = 10000;
     cfg.risk.hard.max_volume_per_order = 100;
     cfg.risk.soft.max_net_position = 500;
+    add_test_calendar(cfg);
 
     auto gw = std::make_unique<SimGateway>();
     Instrument fut = make_future(1, 0, "cu2501", 0.01);
@@ -517,6 +558,7 @@ TEST(TradingEngineIntegration, DeferredMonitoringStillStreamsTicks) {
     cfg.timer.hedge_check_interval_ms = 10000;
     cfg.risk.hard.max_volume_per_order = 100;
     cfg.risk.soft.max_net_position = 500;
+    add_test_calendar(cfg);
 
     auto gw = std::make_unique<SimGateway>();
     Instrument fut = make_future(1, 0, "cu2501", 0.01);
@@ -582,6 +624,7 @@ TEST(TradingEngineIntegration, PricingSignalSuppressionSkipsSubThresholdUpdates)
     cfg.risk.soft.max_delta = 100000.0;
     cfg.risk.soft.max_gamma = 100000.0;
     cfg.risk.soft.max_vega = 100000.0;
+    add_test_calendar(cfg);
 
     auto gw = std::make_unique<SimGateway>();
     Instrument fut = make_future(0, 0, "cu2501", 0.01);
@@ -672,6 +715,7 @@ TEST(TradingEngineIntegration, PricingSignalOverflowUsesBackpressureMitigation) 
     cfg.timer.quote_refresh_interval_ms = 60000;
     cfg.risk.hard.max_volume_per_order = 100;
     cfg.risk.soft.max_net_position = 5000;
+    add_test_calendar(cfg);
 
     auto gw = std::make_unique<SimGateway>();
     Instrument fut = make_future(0, 0, "cu2501", 0.01);
@@ -746,6 +790,7 @@ TEST(TradingEngineIntegration, TimerRefreshesUseCoalescedMailbox) {
     cfg.timer.quote_refresh_interval_ms = 10;
     cfg.risk.hard.max_volume_per_order = 100;
     cfg.risk.soft.max_net_position = 500;
+    add_test_calendar(cfg);
 
     auto gw = std::make_unique<SimGateway>();
     Instrument fut = make_future(0, 0, "cu2501", 0.01);

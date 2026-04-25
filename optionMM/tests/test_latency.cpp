@@ -116,6 +116,7 @@ static Instrument make_future(uint16_t id,
     std::strncpy(f.code.data, code, sizeof(f.code.data) - 1);
     std::strncpy(f.underlying_code.data, code, sizeof(f.underlying_code.data) - 1);
     std::strncpy(f.exchange_id.data, exchange_name(exchange), sizeof(f.exchange_id.data) - 1);
+    f.expiry_date = 20260428;
     f.expiry_epoch_ns = get_monotonic_ns()
                       + static_cast<int64_t>(0.25 * 365.0 * 24.0 * 3600.0 * 1e9);
     return f;
@@ -141,9 +142,42 @@ static Instrument make_option(uint16_t id,
     o.exchange = exchange;
     std::strncpy(o.underlying_code.data, underlying_code, sizeof(o.underlying_code.data) - 1);
     std::strncpy(o.exchange_id.data, exchange_name(exchange), sizeof(o.exchange_id.data) - 1);
+    o.expiry_date = 20260428;
     o.expiry_epoch_ns = get_monotonic_ns()
                       + static_cast<int64_t>(0.25 * 365.0 * 24.0 * 3600.0 * 1e9);
     return o;
+}
+
+static void add_latency_calendar(SystemConfig& cfg) {
+    cfg.exchange_calendar_count = 2;
+    const int32_t dates[] = {20260423, 20260424, 20260425, 20260426, 20260427, 20260428};
+    const bool trading[] = {true, true, false, false, true, true};
+    for (int ex = 0; ex < cfg.exchange_calendar_count; ++ex) {
+        cfg.exchange_calendars[ex].exchange_id = ExchangeId(ex == 0 ? "SHFE" : "GFEX");
+        for (int i = 0; i < 6; ++i) {
+            cfg.exchange_calendars[ex].days[i].date = dates[i];
+            cfg.exchange_calendars[ex].days[i].is_trading_day = trading[i];
+        }
+        cfg.exchange_calendars[ex].day_count = 6;
+    }
+
+    cfg.exchange_trading_time_count = 2;
+    auto set_session = [&](int ex, int idx, int8_t start_offset, const char* start,
+                           int8_t end_offset, const char* end) {
+        auto& s = cfg.exchange_trading_times[ex].sessions[idx];
+        s.start_day_offset = start_offset;
+        s.end_day_offset = end_offset;
+        std::strncpy(s.start_time, start, sizeof(s.start_time) - 1);
+        std::strncpy(s.end_time, end, sizeof(s.end_time) - 1);
+    };
+    for (int ex = 0; ex < cfg.exchange_trading_time_count; ++ex) {
+        cfg.exchange_trading_times[ex].exchange_id = ExchangeId(ex == 0 ? "SHFE" : "GFEX");
+        set_session(ex, 0, -1, "21:00:00", 0, "02:00:00");
+        set_session(ex, 1, 0, "09:00:00", 0, "10:15:00");
+        set_session(ex, 2, 0, "10:30:00", 0, "11:30:00");
+        set_session(ex, 3, 0, "13:00:00", 0, "15:00:00");
+        cfg.exchange_trading_times[ex].session_count = 4;
+    }
 }
 
 static TopOfBookTick make_tick(uint16_t id, double last, double bid, double ask, uint64_t sequence_no = 0) {
@@ -372,6 +406,7 @@ static ScenarioResult run_latency_scenario(const ScenarioConfig& cfg) {
         products.push_back(build_product(static_cast<uint8_t>(p), &next_id, cfg));
         configure_option_mm_core_product(&sys.products[p], products.back());
     }
+    add_latency_calendar(sys);
 
     auto gw = std::make_unique<LatencySimGateway>();
     auto* lat_gw = gw.get();

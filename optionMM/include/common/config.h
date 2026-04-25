@@ -212,6 +212,31 @@ struct TimerConfig {
     int           session_count{0};
 };
 
+struct ExchangeCalendarDayConfig {
+    int32_t date{0};  // YYYYMMDD
+    bool    is_trading_day{false};
+    uint8_t _pad[3]{};
+};
+
+struct ExchangeTradingSessionConfig {
+    int8_t start_day_offset{0};  // relative to trading day, e.g. -1 for night session
+    int8_t end_day_offset{0};
+    char   start_time[9]{};      // "HH:MM:SS"
+    char   end_time[9]{};
+};
+
+struct ExchangeCalendarConfig {
+    ExchangeId exchange_id;
+    ExchangeCalendarDayConfig days[MAX_EXCHANGE_CALENDAR_DAYS]{};
+    int day_count{0};
+};
+
+struct ExchangeTradingTimeConfig {
+    ExchangeId exchange_id;
+    ExchangeTradingSessionConfig sessions[MAX_TRADING_SESSIONS_PER_EXCHANGE]{};
+    int session_count{0};
+};
+
 // ─── Thread affinity configuration ───────────────────────────────────────────
 struct ThreadAffinityConfig {
     int feed_core{2};
@@ -277,6 +302,10 @@ struct SystemConfig {
     int                 book_count{0};
     UserBootstrapConfig users[MAX_USERS]{};
     int                 user_count{0};
+    ExchangeCalendarConfig exchange_calendars[MAX_EXCHANGE_CALENDARS]{};
+    int                 exchange_calendar_count{0};
+    ExchangeTradingTimeConfig exchange_trading_times[MAX_EXCHANGE_CALENDARS]{};
+    int                 exchange_trading_time_count{0};
 };
 
 // ─── Loader ───────────────────────────────────────────────────────────────────

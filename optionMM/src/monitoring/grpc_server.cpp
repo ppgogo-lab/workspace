@@ -31,7 +31,6 @@ namespace omm {
 namespace {
 
 constexpr uint32_t kAllProducts = 0xFFu;
-constexpr double kNsPerYear = 365.0 * 24.0 * 3600.0 * 1e9;
 constexpr uint32_t kSuppressStaleTheo = 1u << 0;
 constexpr uint32_t kSuppressInvalidMarket = 1u << 1;
 constexpr uint32_t kSuppressPosition = 1u << 2;
@@ -244,11 +243,6 @@ void populate_tick(const TopOfBookTick& tick, omm::proto::Tick* msg) {
     msg->set_ask_volume(tick.ask_volume[0]);
     msg->set_exchange_ts_ns(tick.exchange_ts_ns);
     msg->set_recv_ts_ns(tick.recv_ts_ns);
-}
-
-double current_expiry_t(const Instrument& opt) noexcept {
-    double T = (opt.expiry_epoch_ns - get_monotonic_ns()) / kNsPerYear;
-    return std::max(1e-4, T);
 }
 
 omm::proto::RiskAlert::AlertType alert_type_to_proto(SystemAlertType type) noexcept {
@@ -1235,7 +1229,7 @@ public:
                 for (uint16_t oi = 0; oi < engine_.option_count(p); ++oi) {
                     const uint16_t opt_id = engine_.option_id(p, oi);
                     const Instrument& opt = engine_.instruments()[opt_id];
-                    const double T = current_expiry_t(opt);
+                    const double T = engine_.option_time_to_expiry_years(opt);
                     expiry_t_by_date[opt.expiry_date] = T;
                     vols_by_expiry[opt.expiry_date][opt.strike] =
                         surf->get_vol_by_strike(F, opt.strike, T);
