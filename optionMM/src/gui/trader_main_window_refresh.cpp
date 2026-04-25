@@ -423,6 +423,17 @@ QString current_time_text() {
     return QTime::currentTime().toString("hh:mm:ss");
 }
 
+QString book_label_from_map(const std::map<uint32_t, omm::proto::BookInfo>& books, uint32_t book_id) {
+    if (book_id == 0) return "-";
+    auto it = books.find(book_id);
+    if (it == books.end()) return QString("Book %1").arg(book_id);
+    const auto& book = it->second;
+    const QString display_name = QString::fromStdString(book.display_name());
+    if (!display_name.isEmpty()) return display_name;
+    const QString code = QString::fromStdString(book.book_code());
+    return code.isEmpty() ? QString("Book %1").arg(book_id) : code;
+}
+
 bool combo_matches(QComboBox* combo,
                    const std::vector<std::pair<QString, QVariant>>& items) {
     if (combo == nullptr) return false;
@@ -1474,6 +1485,23 @@ void TraderMainWindow::refresh_ui() {
         auto meta_it = impl_->state.instruments.find(instrument_id);
         return meta_it != impl_->state.instruments.end() && meta_it->second.product_index == selected_product;
     };
+    auto instrument_label_for = [&](uint32_t instrument_id) {
+        auto meta_it = impl_->state.instruments.find(instrument_id);
+        return meta_it != impl_->state.instruments.end()
+            ? QString::fromStdString(meta_it->second.code)
+            : QString::number(instrument_id);
+    };
+    auto exchange_label_for = [&](const omm::proto::OrderUpdate& update) {
+        QString exchange_label = update.exchange_id().empty()
+            ? "-"
+            : QString::fromStdString(update.exchange_id());
+        if (exchange_label != "-") return exchange_label;
+        auto meta_it = impl_->state.instruments.find(update.instrument_id());
+        if (meta_it == impl_->state.instruments.end()) return exchange_label;
+        if (!meta_it->second.exchange_id.empty()) return QString::fromStdString(meta_it->second.exchange_id);
+        const QString inferred = infer_exchange_from_code(meta_it->second.code);
+        return inferred.isEmpty() ? exchange_label : inferred;
+    };
 
     struct AggregatedOrder {
         omm::proto::OrderUpdate latest;
@@ -1526,7 +1554,8 @@ void TraderMainWindow::refresh_ui() {
             agg.seen_new = agg.seen_new || order.status() == "New";
         }
     }
-    orders_table_->setRowCount(static_cast<int>(orders.size()));
+    std::vector<OrderBlotterRow> order_rows;
+    order_rows.reserve(std::min<std::size_t>(orders.size(), 1000));
     for (int i = 0; i < static_cast<int>(orders.size()); ++i) {
         auto& agg = orders[i];
         auto& order = agg.latest;
@@ -1546,121 +1575,101 @@ void TraderMainWindow::refresh_ui() {
             order.set_status("New");
         }
 
-        QString instrument_label = QString::number(order.instrument_id());
-        if (auto meta_it = impl_->state.instruments.find(order.instrument_id());
-            meta_it != impl_->state.instruments.end()) {
-            instrument_label = QString::fromStdString(meta_it->second.code);
-        }
-        QColor status_color = order.status().find("Reject") != std::string::npos ? QColor("#ffb6b6") :
-                              order.status().find("Fill") != std::string::npos ? QColor("#c9f4d5") :
-                              QColor("#fff0b3");
-        QString exchange_label = order.exchange_id().empty()
-            ? "-"
-            : QString::fromStdString(order.exchange_id());
-        if (exchange_label == "-") {
-            if (auto meta_it = impl_->state.instruments.find(order.instrument_id());
-                meta_it != impl_->state.instruments.end() && !meta_it->second.exchange_id.empty()) {
-                exchange_label = QString::fromStdString(meta_it->second.exchange_id);
-            } else if (auto meta_it = impl_->state.instruments.find(order.instrument_id());
-                       meta_it != impl_->state.instruments.end()) {
-                const QString inferred = infer_exchange_from_code(meta_it->second.code);
-                if (!inferred.isEmpty()) exchange_label = inferred;
-            }
-        }
-        const QString side_label = order.side().empty()
-            ? "-"
-            : QString::fromStdString(order.side());
-        const QString price_label = order.price() > 0.0
-            ? QString::number(order.price(), 'f', 2)
-            : "-";
-        const QString volume_label = order.volume() > 0
-            ? QString::number(order.volume())
-            : "-";
-        const QString ts_label = format_monotonic_ts(order.ts_ns());
-        set_cell(orders_table_, i, 0, QString::number(order.client_order_id()), QColor("#eaeaea"));
-        set_cell(orders_table_, i, 1, instrument_label, QColor("#eaeaea"));
-        set_cell(orders_table_, i, 2, exchange_label, QColor("#f7f7f7"));
-        set_cell(orders_table_, i, 3, side_label, QColor("#f7f7f7"));
-        set_cell(orders_table_, i, 4, price_label, QColor("#f7f7f7"));
-        set_cell(orders_table_, i, 5, volume_label, QColor("#f7f7f7"));
-        set_cell(orders_table_, i, 6, QString::fromStdString(order.status()), status_color);
-        set_cell(orders_table_, i, 7, QString::number(order.fill_price(), 'f', 2), QColor("#f7f7f7"));
-        set_cell(orders_table_, i, 8, QString::number(order.fill_volume()), QColor("#f7f7f7"));
-        set_cell(orders_table_, i, 9, ts_label, QColor("#f7f7f7"));
-        if (auto* order_item = orders_table_->item(i, 0); order_item != nullptr) {
-            order_item->setData(Qt::UserRole, QVariant::fromValue(order.client_order_id()));
-            order_item->setData(Qt::UserRole + 1, QVariant::fromValue(order.instrument_id()));
-        }
+        if (order_rows.size() >= 1000) break;
+        OrderBlotterRow row;
+        row.order = order;
+        row.instrument = instrument_label_for(order.instrument_id());
+        row.book = book_label_from_map(impl_->state.books, order.book_id());
+        row.exchange = exchange_label_for(order);
+        row.side = order.side().empty() ? "-" : QString::fromStdString(order.side());
+        row.price = order.price() > 0.0 ? QString::number(order.price(), 'f', 2) : "-";
+        row.volume = order.volume() > 0 ? QString::number(order.volume()) : "-";
+        row.status = QString::fromStdString(order.status());
+        row.fill_price = QString::number(order.fill_price(), 'f', 2);
+        row.fill_volume = QString::number(order.fill_volume());
+        row.ts = format_monotonic_ts(order.ts_ns());
+        row.status_color = order.status().find("Reject") != std::string::npos ? QColor("#ffb6b6") :
+                           order.status().find("Fill") != std::string::npos ? QColor("#c9f4d5") :
+                           QColor("#fff0b3");
+        order_rows.push_back(std::move(row));
+    }
+    if (impl_->order_blotter_model != nullptr) {
+        impl_->order_blotter_model->replace_rows(std::move(order_rows));
     }
 
-    std::vector<omm::proto::QuoteUpdate> quotes;
-    quotes.reserve(impl_->state.quotes.size());
+    std::vector<QuoteBlotterRow> quote_rows;
+    quote_rows.reserve(std::min<std::size_t>(impl_->state.quotes.size(), 1000));
     for (const auto& quote : impl_->state.quotes) {
-        if (in_selected_product(quote.instrument_id())) quotes.push_back(quote);
-    }
-    quotes_table_->setRowCount(static_cast<int>(quotes.size()));
-    for (int i = 0; i < static_cast<int>(quotes.size()); ++i) {
-        const auto& quote = quotes[i];
-        QString instrument_label = QString::number(quote.instrument_id());
-        if (auto meta_it = impl_->state.instruments.find(quote.instrument_id());
-            meta_it != impl_->state.instruments.end()) {
-            instrument_label = QString::fromStdString(meta_it->second.code);
-        }
-        QString quote_state_label = "IDLE";
-        QString reason_label = "-";
-        QColor quote_state_color = QColor("#ececec");
-        QColor reason_color = QColor("#ececec");
+        if (!in_selected_product(quote.instrument_id())) continue;
+        if (quote_rows.size() >= 1000) break;
+        QuoteBlotterRow row;
+        row.quote = quote;
+        row.instrument = instrument_label_for(quote.instrument_id());
+        row.book = book_label_from_map(impl_->state.books, quote.book_id());
+        row.bid_price = QString::number(quote.bid_price(), 'f', 2);
+        row.bid_volume = QString::number(quote.bid_volume());
+        row.ask_price = QString::number(quote.ask_price(), 'f', 2);
+        row.ask_volume = QString::number(quote.ask_volume());
+        row.quote_state = "IDLE";
+        row.reason = "-";
+        row.status = QString::fromStdString(quote.status());
         if (auto mm_it = impl_->state.instrument_states.find(quote.instrument_id());
             mm_it != impl_->state.instrument_states.end()) {
             const auto& mm_state = mm_it->second;
-            quote_state_label = mm_quote_state_text(mm_state.quote_state());
-            reason_label = suppress_reason_text(mm_state.reasons(), mm_state.cancel_attempts());
-            quote_state_color = mm_quote_state_color(mm_state.quote_state());
-            reason_color = suppress_reason_color(mm_state.reasons());
+            row.quote_state = mm_quote_state_text(mm_state.quote_state());
+            row.reason = suppress_reason_text(mm_state.reasons(), mm_state.cancel_attempts());
+            row.quote_state_color = mm_quote_state_color(mm_state.quote_state());
+            row.reason_color = suppress_reason_color(mm_state.reasons());
         }
-        set_cell(quotes_table_, i, 0, instrument_label, QColor("#eaeaea"));
-        set_cell(quotes_table_, i, 1, QString::number(quote.bid_price(), 'f', 2), QColor("#ffe08a"));
-        set_cell(quotes_table_, i, 2, QString::number(quote.bid_volume()), QColor("#ffe08a"));
-        set_cell(quotes_table_, i, 3, QString::number(quote.ask_price(), 'f', 2), QColor("#ffc59c"));
-        set_cell(quotes_table_, i, 4, QString::number(quote.ask_volume()), QColor("#ffc59c"));
-        set_cell(quotes_table_, i, 5, quote_state_label, quote_state_color);
-        set_cell(quotes_table_, i, 6, reason_label, reason_color);
-        set_cell(quotes_table_, i, 7, QString::fromStdString(quote.status()), QColor("#e4f8f0"));
-        if (auto* quote_item = quotes_table_->item(i, 0); quote_item != nullptr) {
-            quote_item->setData(Qt::UserRole, QVariant::fromValue(quote.client_quote_id()));
-            quote_item->setData(Qt::UserRole + 1, QVariant::fromValue(quote.instrument_id()));
-        }
+        quote_rows.push_back(std::move(row));
+    }
+    if (impl_->quote_blotter_model != nullptr) {
+        impl_->quote_blotter_model->replace_rows(std::move(quote_rows));
     }
 
-    std::vector<omm::proto::OrderUpdate> trades;
-    trades.reserve(impl_->state.trades.size());
-    for (const auto& trade : impl_->state.trades) {
-        if (in_selected_product(trade.instrument_id())) trades.push_back(trade);
-    }
-    trades_table_->setRowCount(static_cast<int>(trades.size()));
-    for (int i = 0; i < static_cast<int>(trades.size()); ++i) {
-        const auto& trade = trades[i];
-        QString instrument_label = QString::number(trade.instrument_id());
-        if (auto meta_it = impl_->state.instruments.find(trade.instrument_id());
-            meta_it != impl_->state.instruments.end()) {
-            instrument_label = QString::fromStdString(meta_it->second.code);
-        }
-        QString exchange_label = trade.exchange_id().empty() ? "-" : QString::fromStdString(trade.exchange_id());
-        if (exchange_label == "-") {
-            if (auto meta_it = impl_->state.instruments.find(trade.instrument_id());
-                meta_it != impl_->state.instruments.end() && !meta_it->second.exchange_id.empty()) {
-                exchange_label = QString::fromStdString(meta_it->second.exchange_id);
+    auto make_trade_row = [&](const omm::proto::OrderUpdate& trade) {
+        TradeBlotterRow row;
+        row.trade = trade;
+        row.trade_id = QString::number(trade.exchange_trade_id());
+        row.order_id = QString::number(trade.client_order_id());
+        row.instrument = instrument_label_for(trade.instrument_id());
+        row.book = book_label_from_map(impl_->state.books, trade.book_id());
+        row.exchange = exchange_label_for(trade);
+        row.side = trade.side().empty() ? "-" : QString::fromStdString(trade.side());
+        row.price = QString::number(trade.fill_price(), 'f', 2);
+        row.qty = QString::number(trade.fill_volume());
+        row.ts = format_monotonic_ts(trade.ts_ns());
+        return row;
+    };
+    if (impl_->trade_blotter_model != nullptr) {
+        const bool rebuild_trades =
+            impl_->displayed_trade_product_index != selected_product ||
+            impl_->displayed_trade_seq > impl_->state.trades_seq ||
+            impl_->displayed_trade_seq == 0 ||
+            (impl_->state.trades.empty() && impl_->displayed_trade_seq != impl_->state.trades_seq);
+        if (rebuild_trades) {
+            std::vector<TradeBlotterRow> trade_rows;
+            trade_rows.reserve(std::min<std::size_t>(impl_->state.trades.size(), 100000));
+            for (const auto& trade : impl_->state.trades) {
+                if (!in_selected_product(trade.instrument_id())) continue;
+                if (trade_rows.size() >= 100000) break;
+                trade_rows.push_back(make_trade_row(trade));
             }
+            impl_->trade_blotter_model->replace_rows(std::move(trade_rows));
+        } else if (impl_->state.trades_seq > impl_->displayed_trade_seq) {
+            const uint64_t delta_seq = impl_->state.trades_seq - impl_->displayed_trade_seq;
+            const std::size_t scan_count =
+                std::min<std::size_t>(impl_->state.trades.size(), static_cast<std::size_t>(delta_seq));
+            std::vector<TradeBlotterRow> trade_rows;
+            trade_rows.reserve(scan_count);
+            for (std::size_t i = 0; i < scan_count; ++i) {
+                const auto& trade = impl_->state.trades[i];
+                if (in_selected_product(trade.instrument_id())) trade_rows.push_back(make_trade_row(trade));
+            }
+            impl_->trade_blotter_model->prepend_rows(std::move(trade_rows), 100000);
         }
-        const QString side_label = trade.side().empty() ? "-" : QString::fromStdString(trade.side());
-        set_cell(trades_table_, i, 0, QString::number(trade.exchange_trade_id()), QColor("#e8f4ff"));
-        set_cell(trades_table_, i, 1, QString::number(trade.client_order_id()), QColor("#f1f1f1"));
-        set_cell(trades_table_, i, 2, instrument_label, QColor("#eaeaea"));
-        set_cell(trades_table_, i, 3, exchange_label, QColor("#f7f7f7"));
-        set_cell(trades_table_, i, 4, side_label, QColor(side_label == "Buy" ? "#dff4df" : "#ffd9d1"));
-        set_cell(trades_table_, i, 5, QString::number(trade.fill_price(), 'f', 2), QColor("#f7f7f7"));
-        set_cell(trades_table_, i, 6, QString::number(trade.fill_volume()), QColor("#f7f7f7"));
-        set_cell(trades_table_, i, 7, format_monotonic_ts(trade.ts_ns()), QColor("#f7f7f7"));
+        impl_->displayed_trade_product_index = selected_product;
+        impl_->displayed_trade_seq = impl_->state.trades_seq;
     }
 
     auto populate_alert_table = [&](QTableWidget* table) {

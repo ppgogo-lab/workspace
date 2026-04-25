@@ -1,4 +1,6 @@
 #include "gui/trader_main_window.h"
+#include "trader_main_window_state.h"
+#include "trader_main_window_blotter_models.h"
 #include "trader_main_window_ui_helpers.h"
 
 #include <QAbstractItemView>
@@ -10,6 +12,7 @@
 #include <QMenuBar>
 #include <QSplitter>
 #include <QTabWidget>
+#include <QTableView>
 #include <QTableWidget>
 #include <QVBoxLayout>
 #include <QWidget>
@@ -122,9 +125,31 @@ void TraderMainWindow::build_main_workspace_panel() {
     quote_layout->addWidget(t_table_, 1);
     desk_splitter->addWidget(quote_panel);
 
-    orders_table_ = make_table({"OrderId", "Instrument", "Book", "Exchange", "Side", "Price", "Volume", "Status", "FillPx", "FillQty", "Ts"});
-    quotes_table_ = make_table({"Instrument", "Book", "BidPx", "BidQty", "AskPx", "AskQty", "QState", "Why", "Status"});
-    trades_table_ = make_table({"TradeId", "OrderId", "Instrument", "Book", "Exchange", "Side", "Price", "Qty", "Ts"});
+    auto configure_blotter_view = [](QTableView* table) {
+        table->setAlternatingRowColors(true);
+        table->setSelectionBehavior(QAbstractItemView::SelectRows);
+        table->setSelectionMode(QAbstractItemView::SingleSelection);
+        table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+        table->setSortingEnabled(false);
+        table->setWordWrap(false);
+        table->verticalHeader()->setVisible(false);
+        table->verticalHeader()->setDefaultSectionSize(22);
+        table->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+        table->horizontalHeader()->setStretchLastSection(true);
+    };
+
+    impl_->order_blotter_model = new OrderBlotterModel(this);
+    impl_->quote_blotter_model = new QuoteBlotterModel(this);
+    impl_->trade_blotter_model = new TradeBlotterModel(this);
+    orders_table_ = new QTableView();
+    quotes_table_ = new QTableView();
+    trades_table_ = new QTableView();
+    orders_table_->setModel(impl_->order_blotter_model);
+    quotes_table_->setModel(impl_->quote_blotter_model);
+    trades_table_->setModel(impl_->trade_blotter_model);
+    configure_blotter_view(orders_table_);
+    configure_blotter_view(quotes_table_);
+    configure_blotter_view(trades_table_);
     alerts_table_ = make_table({"Ts", "Type", "Message"});
     alerts_table_->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     alerts_table_->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);

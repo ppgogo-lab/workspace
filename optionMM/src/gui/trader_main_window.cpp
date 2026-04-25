@@ -36,6 +36,7 @@
 #include <QSpinBox>
 #include <QSplitter>
 #include <QTableWidget>
+#include <QTableView>
 #include <QTabWidget>
 #include <QStringList>
 #include <QTime>
@@ -57,6 +58,7 @@
 #include <string_view>
 #include <thread>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace omm::gui {
@@ -681,7 +683,8 @@ private:
             },
             [this](const omm::proto::OrderUpdate& order) {
                 state_->orders.push_front(order);
-                while (state_->orders.size() > 200) state_->orders.pop_back();
+                ++state_->orders_seq;
+                while (state_->orders.size() > 1000) state_->orders.pop_back();
             });
     }
 
@@ -692,7 +695,8 @@ private:
             },
             [this](const omm::proto::OrderUpdate& trade) {
                 state_->trades.push_front(trade);
-                while (state_->trades.size() > 200) state_->trades.pop_back();
+                ++state_->trades_seq;
+                while (state_->trades.size() > 100000) state_->trades.pop_back();
             });
     }
 
@@ -703,7 +707,8 @@ private:
             },
             [this](const omm::proto::QuoteUpdate& quote) {
                 state_->quotes.push_front(quote);
-                while (state_->quotes.size() > 200) state_->quotes.pop_back();
+                ++state_->quotes_seq;
+                while (state_->quotes.size() > 1000) state_->quotes.pop_back();
             });
     }
 
@@ -810,6 +815,9 @@ private:
         state_->orders.clear();
         state_->quotes.clear();
         state_->trades.clear();
+        ++state_->orders_seq;
+        ++state_->quotes_seq;
+        ++state_->trades_seq;
         state_->alerts.clear();
         state_->mm_params.clear();
         state_->arb_params.clear();
@@ -825,6 +833,24 @@ private:
         }
     }
 };
+
+TraderMainWindow::TraderMainWindow(std::string grpc_endpoint, QWidget* parent)
+    : QMainWindow(parent),
+      grpc_endpoint_(std::move(grpc_endpoint)),
+      impl_(std::make_unique<Impl>()) {
+    setWindowTitle(QString("optionMM Trader Dashboard - %1")
+                       .arg(QString::fromStdString(grpc_endpoint_)));
+    build_ui();
+    restore_ui_state();
+    impl_->client = std::make_unique<GrpcTraderClient>(grpc_endpoint_, &impl_->state);
+
+    auto* timer = new QTimer(this);
+    connect(timer, &QTimer::timeout, this, [this] { refresh_ui(); });
+    timer->start(120);
+    refresh_ui();
+}
+
+TraderMainWindow::~TraderMainWindow() = default;
 
 bool TraderMainWindow::initialize_session() {
     return prompt_for_login();
@@ -1272,22 +1298,22 @@ void TraderMainWindow::apply_strategy_params() {
 }
 
 void TraderMainWindow::cancel_selected_order() {
-    const int row = orders_table_ != nullptr ? orders_table_->currentRow() : -1;
-    if (row < 0) {
+    const QModelIndex index = orders_table_ != nullptr ? orders_table_->currentIndex() : QModelIndex{};
+    if (!index.isValid() || impl_->order_blotter_model == nullptr) {
         impl_->last_operator_status_text = "Select an order row before sending cancel";
         execution_status_label_->setText("Select an order row before sending cancel.");
         return;
     }
 
-    auto* order_item = orders_table_->item(row, 0);
-    if (order_item == nullptr || !order_item->data(Qt::UserRole).isValid()) {
+    const auto* row = impl_->order_blotter_model->row(index.row());
+    if (row == nullptr || row->order.client_order_id() == 0) {
         impl_->last_operator_status_text = "Selected row has no cancelable order id";
         execution_status_label_->setText("Selected row has no cancelable order id.");
         return;
     }
 
-    const uint64_t order_id = order_item->data(Qt::UserRole).toULongLong();
-    const uint32_t instrument_id = order_item->data(Qt::UserRole + 1).toUInt();
+    const uint64_t order_id = row->order.client_order_id();
+    const uint32_t instrument_id = row->order.instrument_id();
     const bool ok = impl_->client->cancel_order(order_id, instrument_id);
     execution_status_label_->setText(
         ok ? QString("Cancel sent for order %1").arg(order_id)
@@ -1338,22 +1364,22 @@ void TraderMainWindow::cancel_selected_product_orders() {
 }
 
 void TraderMainWindow::cancel_selected_quote() {
-    const int row = quotes_table_ != nullptr ? quotes_table_->currentRow() : -1;
-    if (row < 0) {
+    const QModelIndex index = quotes_table_ != nullptr ? quotes_table_->currentIndex() : QModelIndex{};
+    if (!index.isValid() || impl_->quote_blotter_model == nullptr) {
         impl_->last_operator_status_text = "Select a quote row before sending quote cancel";
         execution_status_label_->setText("Select a quote row before sending quote cancel.");
         return;
     }
 
-    auto* quote_item = quotes_table_->item(row, 0);
-    if (quote_item == nullptr || !quote_item->data(Qt::UserRole + 1).isValid()) {
+    const auto* row = impl_->quote_blotter_model->row(index.row());
+    if (row == nullptr || row->quote.instrument_id() == 0) {
         impl_->last_operator_status_text = "Selected quote row has no instrument id";
         execution_status_label_->setText("Selected quote row has no instrument id.");
         return;
     }
 
-    const uint32_t instrument_id = quote_item->data(Qt::UserRole + 1).toUInt();
-    const QString instrument_label = quote_item->text();
+    const uint32_t instrument_id = row->quote.instrument_id();
+    const QString instrument_label = row->instrument;
 
     uint64_t latest_quote_id = 0;
     bool quote_working = false;

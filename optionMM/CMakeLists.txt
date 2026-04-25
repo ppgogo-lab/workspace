@@ -54,6 +54,7 @@ if(WIN32)
       "${OMM_PROTO_GEN_DIR}/trading.grpc.pb.cc"
       src/gui/main.cpp
       src/gui/trader_main_window.cpp
+      src/gui/trader_main_window_blotter_models.cpp
       src/gui/trader_main_window_arbitrage_panel.cpp
       src/gui/trader_main_window_controls_panel.cpp
       src/gui/trader_main_window_panel_interactions.cpp
@@ -395,6 +396,7 @@ if(OMM_BUILD_TRADER_GUI)
   add_executable(optionmm_trader_gui
       src/gui/main.cpp
       src/gui/trader_main_window.cpp
+      src/gui/trader_main_window_blotter_models.cpp
       src/gui/trader_main_window_arbitrage_panel.cpp
       src/gui/trader_main_window_controls_panel.cpp
       src/gui/trader_main_window_panel_interactions.cpp

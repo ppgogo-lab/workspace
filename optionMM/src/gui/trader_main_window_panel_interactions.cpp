@@ -3,29 +3,29 @@
 
 #include <QComboBox>
 #include <QLabel>
+#include <QModelIndex>
+#include <QTableView>
 #include <QTableWidget>
 #include <QVariant>
 
 namespace omm::gui {
 
 void TraderMainWindow::connect_panel_interactions() {
-    connect(orders_table_, &QTableWidget::cellClicked, this, [this](int row, int) {
-        auto* order_item = orders_table_->item(row, 0);
-        auto* instrument_item = orders_table_->item(row, 1);
-        if (order_item == nullptr) return;
+    connect(orders_table_, &QTableView::clicked, this, [this](const QModelIndex& index) {
+        if (!index.isValid() || impl_->order_blotter_model == nullptr) return;
+        const auto* row = impl_->order_blotter_model->row(index.row());
+        if (row == nullptr) return;
         execution_status_label_->setText(
             QString("Selected order %1 on %2")
-                .arg(order_item->text(),
-                     instrument_item != nullptr ? instrument_item->text() : QString("-")));
+                .arg(QString::number(row->order.client_order_id()), row->instrument));
     });
-    connect(quotes_table_, &QTableWidget::cellClicked, this, [this](int row, int) {
-        auto* instrument_item = quotes_table_->item(row, 0);
-        auto* state_item = quotes_table_->item(row, 6);
-        if (instrument_item == nullptr) return;
+    connect(quotes_table_, &QTableView::clicked, this, [this](const QModelIndex& index) {
+        if (!index.isValid() || impl_->quote_blotter_model == nullptr) return;
+        const auto* row = impl_->quote_blotter_model->row(index.row());
+        if (row == nullptr) return;
         execution_status_label_->setText(
             QString("Selected quote on %1 [%2]")
-                .arg(instrument_item->text(),
-                     state_item != nullptr ? state_item->text() : QString("-")));
+                .arg(row->instrument, row->quote_state));
     });
     connect(arb_opportunity_table_, &QTableWidget::cellClicked, this, [this](int row, int) {
         auto* row_item = arb_opportunity_table_->item(row, 0);

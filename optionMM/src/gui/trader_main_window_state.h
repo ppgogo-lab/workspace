@@ -1,6 +1,7 @@
 #pragma once
 
 #include "trading.pb.h"
+#include "trader_main_window_blotter_models.h"
 
 #include <QString>
 
@@ -57,6 +58,9 @@ struct SharedState {
     std::deque<omm::proto::OrderUpdate> orders;
     std::deque<omm::proto::QuoteUpdate> quotes;
     std::deque<omm::proto::OrderUpdate> trades;
+    uint64_t orders_seq{0};
+    uint64_t quotes_seq{0};
+    uint64_t trades_seq{0};
     std::deque<omm::proto::RiskAlert> alerts;
     std::map<uint32_t, omm::proto::MMParams> mm_params;
     std::map<uint64_t, omm::proto::ArbParams> arb_params;
@@ -85,6 +89,11 @@ struct TraderMainWindow::Impl {
     QString last_risk_action_text{"Risk thresholds not updated yet"};
     QString last_operator_status_text{"Waiting for login"};
     QString last_login_username;
+    OrderBlotterModel* order_blotter_model{nullptr};
+    QuoteBlotterModel* quote_blotter_model{nullptr};
+    TradeBlotterModel* trade_blotter_model{nullptr};
+    uint64_t displayed_trade_seq{0};
+    uint32_t displayed_trade_product_index{0xFFFFFFFFu};
 };
 
 } // namespace omm::gui
