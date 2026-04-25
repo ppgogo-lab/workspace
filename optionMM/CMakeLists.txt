@@ -8,6 +8,7 @@ option(OMM_BUILD_TRADER_GUI "Build the optional Qt trader viewer" OFF)
 option(OMM_ENABLE_BLACK76_AVX512 "Build the AVX-512 Black76 backend" ON)
 option(OMM_ENABLE_NATIVE_RELEASE "Enable host-native release tuning (-march/-mtune=native)" OFF)
 option(OMM_ENABLE_IPO_RELEASE "Enable IPO/LTO for release builds when supported" OFF)
+option(OMM_ENABLE_DPDK "Enable DPDK support for kernel-bypass networking" OFF)
 set(OMM_PROTO_FILE "${CMAKE_SOURCE_DIR}/proto/trading.proto")
 set(OMM_PROTO_GEN_DIR "${CMAKE_CURRENT_BINARY_DIR}/proto/gen")
 file(MAKE_DIRECTORY "${OMM_PROTO_GEN_DIR}")
@@ -198,8 +199,23 @@ add_library(common_lib STATIC
     src/common/config.cpp
     src/common/thread_utils.cpp
     src/common/trading_calendar.cpp
+    src/common/network_transport.cpp
+    src/common/network_transport_dpdk.cpp
     src/sim/sim_instruments.cpp
 )
+
+# Add DPDK support if enabled
+if(OMM_ENABLE_DPDK)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(DPDK REQUIRED libdpdk)
+    target_compile_definitions(common_lib PUBLIC OMM_ENABLE_DPDK=1)
+    target_include_directories(common_lib PRIVATE ${DPDK_INCLUDE_DIRS})
+    target_link_libraries(common_lib PUBLIC ${DPDK_LIBRARIES})
+    message(STATUS "DPDK support enabled")
+else()
+    message(STATUS "DPDK support disabled (use -DOMM_ENABLE_DPDK=ON to enable)")
+endif()
+
 target_link_libraries(common_lib PUBLIC
     OpenSSL::Crypto
     yaml-cpp
