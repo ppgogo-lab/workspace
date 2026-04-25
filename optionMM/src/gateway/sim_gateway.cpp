@@ -306,6 +306,14 @@ void SimGateway::process_orders(Timestamp now_ns, std::mt19937& rng) noexcept {
             ack.order.exchange_order_id = active.exchange_order_id;
             ack.order.status = OrderStatus::New;
             ack.order.ack_ts = now_ns;
+
+            // Populate recovery handle (eliminates post-send lookup)
+            ack.order_recovery.valid = true;
+            std::snprintf(ack.order_recovery.order_sys_id,
+                          sizeof(ack.order_recovery.order_sys_id),
+                          "%llu",
+                          static_cast<unsigned long long>(active.exchange_order_id));
+
             (void)callback_buf.try_push(ack);
             active.ack_sent = true;
         }
@@ -381,6 +389,14 @@ void SimGateway::process_quotes(Timestamp now_ns, std::mt19937& rng) noexcept {
             ack.quote.ack_ts = now_ns;
             ack.quote.bid_status = active.remaining_bid > 0 ? OrderStatus::New : OrderStatus::Filled;
             ack.quote.ask_status = active.remaining_ask > 0 ? OrderStatus::New : OrderStatus::Filled;
+
+            // Populate recovery handle (eliminates post-send lookup)
+            ack.quote_recovery.valid = true;
+            std::snprintf(ack.quote_recovery.quote_sys_id,
+                          sizeof(ack.quote_recovery.quote_sys_id),
+                          "%llu",
+                          static_cast<unsigned long long>(active.exchange_quote_id));
+
             (void)callback_buf.try_push(ack);
             active.ack_sent = true;
         }

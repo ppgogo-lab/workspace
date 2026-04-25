@@ -35,18 +35,7 @@ enum class GatewayEventType : uint8_t {
     Disconnected,
 };
 
-struct GatewayEvent {
-    GatewayEventType type;
-    uint8_t          product_index;
-    uint8_t          _pad[6];
-    union {
-        Order  order;
-        Trade  trade;
-        Quote  quote;
-    };
-    GatewayEvent() noexcept : type{}, product_index{}, _pad{}, order{} {}
-};
-
+// Recovery handles (forward declarations needed by GatewayEvent)
 struct GatewayOrderRecoveryHandle {
     bool    valid{false};
     bool    is_quote_leg{false};
@@ -67,6 +56,22 @@ struct GatewayQuoteRecoveryHandle {
     char    ask_local_id[16]{};
     char    bid_order_sys_id[32]{};
     char    ask_order_sys_id[32]{};
+};
+
+struct GatewayEvent {
+    GatewayEventType type;
+    uint8_t          product_index;
+    uint8_t          _pad[6];
+    union {
+        Order  order;
+        Trade  trade;
+        Quote  quote;
+    };
+    // Recovery handles embedded in event (eliminates post-send lookups)
+    GatewayOrderRecoveryHandle order_recovery;
+    GatewayQuoteRecoveryHandle quote_recovery;
+
+    GatewayEvent() noexcept : type{}, product_index{}, _pad{}, order{}, order_recovery{}, quote_recovery{} {}
 };
 
 struct GatewayRecoveredOrder {

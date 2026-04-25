@@ -345,6 +345,18 @@ void FEMASGateway::push_order_event(GatewayEventType type,
     ev.order.volume = state.volume;
     ev.order.filled_volume = filled_volume;
     ev.order.ack_ts = get_monotonic_ns();
+
+    // Populate recovery handle (eliminates post-send lookup)
+    ev.order_recovery.valid = true;
+    ev.order_recovery.is_quote_leg = state.is_quote_leg;
+    ev.order_recovery.client_quote_id = state.client_quote_id;
+    std::strncpy(ev.order_recovery.exchange_local_id,
+                 state.exchange_local_id,
+                 sizeof(ev.order_recovery.exchange_local_id) - 1);
+    std::strncpy(ev.order_recovery.order_sys_id,
+                 state.order_sys_id,
+                 sizeof(ev.order_recovery.order_sys_id) - 1);
+
     (void)callback_buf.try_push(ev);
 }
 
@@ -1110,6 +1122,30 @@ void FEMASGateway::OnRtnQuote(CUstpFtdcRtnQuoteField* pQuote) {
         ev.type = GatewayEventType::QuoteAck;
         ev.product_index = state->quote.product_index;
         ev.quote = state->quote;
+
+        // Populate recovery handle (eliminates post-send lookup)
+        ev.quote_recovery.valid = true;
+        // Note: bid_order_id and ask_order_id are not available in QuoteState
+        // They would need to be added if required for recovery
+        std::strncpy(ev.quote_recovery.quote_local_id,
+                     state->quote_local_id,
+                     sizeof(ev.quote_recovery.quote_local_id) - 1);
+        std::strncpy(ev.quote_recovery.quote_sys_id,
+                     state->quote_sys_id,
+                     sizeof(ev.quote_recovery.quote_sys_id) - 1);
+        std::strncpy(ev.quote_recovery.bid_local_id,
+                     state->bid_local_id,
+                     sizeof(ev.quote_recovery.bid_local_id) - 1);
+        std::strncpy(ev.quote_recovery.ask_local_id,
+                     state->ask_local_id,
+                     sizeof(ev.quote_recovery.ask_local_id) - 1);
+        std::strncpy(ev.quote_recovery.bid_order_sys_id,
+                     state->bid_order_sys_id,
+                     sizeof(ev.quote_recovery.bid_order_sys_id) - 1);
+        std::strncpy(ev.quote_recovery.ask_order_sys_id,
+                     state->ask_order_sys_id,
+                     sizeof(ev.quote_recovery.ask_order_sys_id) - 1);
+
         (void)callback_buf.try_push(ev);
     }
 
@@ -1121,6 +1157,28 @@ void FEMASGateway::OnRtnQuote(CUstpFtdcRtnQuoteField* pQuote) {
         ev.quote.bid_volume = 0;
         ev.quote.ask_volume = 0;
         ev.quote.ack_ts = get_monotonic_ns();
+
+        // Populate recovery handle (eliminates post-send lookup)
+        ev.quote_recovery.valid = true;
+        std::strncpy(ev.quote_recovery.quote_local_id,
+                     state->quote_local_id,
+                     sizeof(ev.quote_recovery.quote_local_id) - 1);
+        std::strncpy(ev.quote_recovery.quote_sys_id,
+                     state->quote_sys_id,
+                     sizeof(ev.quote_recovery.quote_sys_id) - 1);
+        std::strncpy(ev.quote_recovery.bid_local_id,
+                     state->bid_local_id,
+                     sizeof(ev.quote_recovery.bid_local_id) - 1);
+        std::strncpy(ev.quote_recovery.ask_local_id,
+                     state->ask_local_id,
+                     sizeof(ev.quote_recovery.ask_local_id) - 1);
+        std::strncpy(ev.quote_recovery.bid_order_sys_id,
+                     state->bid_order_sys_id,
+                     sizeof(ev.quote_recovery.bid_order_sys_id) - 1);
+        std::strncpy(ev.quote_recovery.ask_order_sys_id,
+                     state->ask_order_sys_id,
+                     sizeof(ev.quote_recovery.ask_order_sys_id) - 1);
+
         (void)callback_buf.try_push(ev);
         clear_quote_state(state->quote.client_quote_id);
     } else if (pQuote->TradeTime[0]) {
@@ -1146,6 +1204,28 @@ void FEMASGateway::OnErrRtnQuoteInsert(CUstpFtdcInputQuoteField* pQuote,
     ev.product_index = state->quote.product_index;
     ev.quote = state->quote;
     ev.quote.ack_ts = get_monotonic_ns();
+
+    // Populate recovery handle (eliminates post-send lookup)
+    ev.quote_recovery.valid = true;
+    std::strncpy(ev.quote_recovery.quote_local_id,
+                 state->quote_local_id,
+                 sizeof(ev.quote_recovery.quote_local_id) - 1);
+    std::strncpy(ev.quote_recovery.quote_sys_id,
+                 state->quote_sys_id,
+                 sizeof(ev.quote_recovery.quote_sys_id) - 1);
+    std::strncpy(ev.quote_recovery.bid_local_id,
+                 state->bid_local_id,
+                 sizeof(ev.quote_recovery.bid_local_id) - 1);
+    std::strncpy(ev.quote_recovery.ask_local_id,
+                 state->ask_local_id,
+                 sizeof(ev.quote_recovery.ask_local_id) - 1);
+    std::strncpy(ev.quote_recovery.bid_order_sys_id,
+                 state->bid_order_sys_id,
+                 sizeof(ev.quote_recovery.bid_order_sys_id) - 1);
+    std::strncpy(ev.quote_recovery.ask_order_sys_id,
+                 state->ask_order_sys_id,
+                 sizeof(ev.quote_recovery.ask_order_sys_id) - 1);
+
     (void)callback_buf.try_push(ev);
 
     clear_quote_state(state->quote.client_quote_id);

@@ -2011,14 +2011,11 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                 DeferredCallbackSideEffect& side = deferred[i];
                 switch (side.event.type) {
                 case GatewayEventType::OrderAck:
-                    {
-                        GatewayOrderRecoveryHandle refreshed_recovery{};
-                        if (gateway_->get_order_recovery_handle(side.event.order.client_order_id,
-                                                                &refreshed_recovery)) {
-                            merge_order_recovery(&side.order_recovery, refreshed_recovery);
-                            update_live_order_recovery(side.event.order.client_order_id,
-                                                       side.order_recovery);
-                        }
+                    // Recovery handle already embedded in event (no lookup needed)
+                    if (side.event.order_recovery.valid) {
+                        merge_order_recovery(&side.order_recovery, side.event.order_recovery);
+                        update_live_order_recovery(side.event.order.client_order_id,
+                                                   side.order_recovery);
                     }
                     publish_monitor_order(side.event.order);
                     defer_order_persistence(OrderPersistenceEventType::Ack,
@@ -2028,10 +2025,9 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                                                 : nullptr);
                     break;
                 case GatewayEventType::QuoteAck: {
-                    GatewayQuoteRecoveryHandle refreshed_recovery{};
-                    if (gateway_->get_quote_recovery_handle(side.event.quote.client_quote_id,
-                                                            &refreshed_recovery)) {
-                        merge_quote_recovery(&side.quote_recovery, refreshed_recovery);
+                    // Recovery handle already embedded in event (no lookup needed)
+                    if (side.event.quote_recovery.valid) {
+                        merge_quote_recovery(&side.quote_recovery, side.event.quote_recovery);
                         update_live_quote_recovery(side.event.quote.client_quote_id,
                                                    side.quote_recovery);
                     }
