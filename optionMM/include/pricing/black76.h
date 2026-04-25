@@ -74,6 +74,23 @@ void compute_batch_quote_precomputed(
     int            count
 ) noexcept;
 
+// Fused batch pricing: computes bid, mid, ask in single pass
+// Reuses sigma lookup and d1/d2 computation (3× → 1×)
+void compute_batch_quote_fused(
+    const double*  F_bid,
+    const double*  F_mid,
+    const double*  F_ask,
+    const double*  K,
+    const double*  sqrt_T,
+    const double*  disc,
+    const double*  sigma,
+    const uint8_t* is_call,
+    Black76QuoteResult* bid_out,
+    Black76QuoteResult* mid_out,
+    Black76QuoteResult* ask_out,
+    int            count
+) noexcept;
+
 #ifdef OMM_BLACK76_AVX2_BACKEND
 void compute_batch_avx2(
     const double*  F,

@@ -1617,12 +1617,10 @@ void TradingEngine::pricer_loop() noexcept {
             is_call_arr[bi] = (opt.option_type == OptionType::Call) ? 1 : 0;
         }
 
-        compute_batch_quote_precomputed(F_mid_arr, K_arr, sqrt_T_arr, disc_arr,
-                                        sigma_arr, is_call_arr, mid_results, batch_n);
-        compute_batch_quote_precomputed(F_bid_arr, K_arr, sqrt_T_arr, disc_arr,
-                                        sigma_arr, is_call_arr, bid_results, batch_n);
-        compute_batch_quote_precomputed(F_ask_arr, K_arr, sqrt_T_arr, disc_arr,
-                                        sigma_arr, is_call_arr, ask_results, batch_n);
+        // Fused batch pricing: computes bid, mid, ask in single pass (3× → 1×)
+        compute_batch_quote_fused(F_bid_arr, F_mid_arr, F_ask_arr, K_arr,
+                                  sqrt_T_arr, disc_arr, sigma_arr, is_call_arr,
+                                  bid_results, mid_results, ask_results, batch_n);
 
         alignas(64) PricingSignal emitted_sigs[MAX_BATCH];
         uint16_t emitted_slots[MAX_BATCH];

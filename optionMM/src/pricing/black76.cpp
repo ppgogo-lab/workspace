@@ -301,3 +301,76 @@ double implied_vol(double market_price, double F, double K, double T,
 }
 
 } // namespace omm
+
+namespace omm {
+// Fused batch pricing: computes bid, mid, ask in single pass
+// Reuses sigma lookup and d1/d2 computation (3× → 1×)
+void compute_batch_quote_fused(const double* F_bid, const double* F_mid, const double* F_ask,
+                               const double* K, const double* sqrt_T, const double* disc,
+                               const double* sigma, const uint8_t* is_call,
+                               Black76QuoteResult* bid_out, Black76QuoteResult* mid_out,
+                               Black76QuoteResult* ask_out, int count) noexcept {
+    for (int i = 0; i < count; ++i) {
+        const double F_m = F_mid[i];
+
+        if (F_m < 1e-10 || K[i] < 1e-10 || sigma[i] < 1e-10 || sqrt_T[i] < 1e-10) {
+            const bool call = is_call[i] != 0;
+            bid_out[i].price = disc[i] * (call ? std::fmax(F_bid[i] - K[i], 0.0)
+                                               : std::fmax(K[i] - F_bid[i], 0.0));
+            mid_out[i].price = disc[i] * (call ? std::fmax(F_m - K[i], 0.0)
+                                               : std::fmax(K[i] - F_m, 0.0));
+            ask_out[i].price = disc[i] * (call ? std::fmax(F_ask[i] - K[i], 0.0)
+                                               : std::fmax(K[i] - F_ask[i], 0.0));
+            bid_out[i].delta = (call && F_bid[i] > K[i]) ? disc[i]
+                             : (!call && K[i] > F_bid[i]) ? -disc[i] : 0.0;
+            mid_out[i].delta = (call && F_m > K[i]) ? disc[i]
+                             : (!call && K[i] > F_m) ? -disc[i] : 0.0;
+            ask_out[i].delta = (call && F_ask[i] > K[i]) ? disc[i]
+                             : (!call && K[i] > F_ask[i]) ? -disc[i] : 0.0;
+            continue;
+        }
+
+        const double sigma_sqrt_T = sigma[i] * sqrt_T[i];
+        const bool call = is_call[i] != 0;
+
+        const double d1_mid = (std::log(F_m / K[i]) + 0.5 * sigma[i] * sigma[i] * sqrt_T[i] * sqrt_T[i])
+                            / sigma_sqrt_T;
+        const double d2_mid = d1_mid - sigma_sqrt_T;
+        const double nd1_mid = norm_pdf(d1_mid);
+
+        if (call) {
+            mid_out[i].price = disc[i] * (F_m * norm_cdf(d1_mid) - K[i] * norm_cdf(d2_mid));
+            mid_out[i].delta = disc[i] * norm_cdf(d1_mid);
+        } else {
+            mid_out[i].price = disc[i] * (K[i] * norm_cdf(-d2_mid) - F_m * norm_cdf(-d1_mid));
+            mid_out[i].delta = -disc[i] * norm_cdf(-d1_mid);
+        }
+        mid_out[i].gamma = disc[i] * nd1_mid / (F_m * sigma_sqrt_T);
+        mid_out[i].vega = disc[i] * F_m * nd1_mid * sqrt_T[i];
+
+        const double d1_bid = (std::log(F_bid[i] / K[i]) + 0.5 * sigma[i] * sigma[i] * sqrt_T[i] * sqrt_T[i])
+                            / sigma_sqrt_T;
+        const double d2_bid = d1_bid - sigma_sqrt_T;
+
+        if (call) {
+            bid_out[i].price = disc[i] * (F_bid[i] * norm_cdf(d1_bid) - K[i] * norm_cdf(d2_bid));
+            bid_out[i].delta = disc[i] * norm_cdf(d1_bid);
+        } else {
+            bid_out[i].price = disc[i] * (K[i] * norm_cdf(-d2_bid) - F_bid[i] * norm_cdf(-d1_bid));
+            bid_out[i].delta = -disc[i] * norm_cdf(-d1_bid);
+        }
+
+        const double d1_ask = (std::log(F_ask[i] / K[i]) + 0.5 * sigma[i] * sigma[i] * sqrt_T[i] * sqrt_T[i])
+                            / sigma_sqrt_T;
+        const double d2_ask = d1_ask - sigma_sqrt_T;
+
+        if (call) {
+            ask_out[i].price = disc[i] * (F_ask[i] * norm_cdf(d1_ask) - K[i] * norm_cdf(d2_ask));
+            ask_out[i].delta = disc[i] * norm_cdf(d1_ask);
+        } else {
+            ask_out[i].price = disc[i] * (K[i] * norm_cdf(-d2_ask) - F_ask[i] * norm_cdf(-d1_ask));
+            ask_out[i].delta = -disc[i] * norm_cdf(-d1_ask);
+        }
+    }
+}
+} // namespace omm
