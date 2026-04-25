@@ -125,12 +125,10 @@ bool has_quote_recovery(const GatewayQuoteRecoveryHandle& handle) noexcept {
         || handle.ask_order_sys_id[0] != '\0';
 }
 
-void update_max(std::atomic<uint32_t>& metric, uint32_t candidate) noexcept {
-    uint32_t prev = metric.load(std::memory_order_relaxed);
-    while (prev < candidate
-           && !metric.compare_exchange_weak(prev, candidate,
-                                            std::memory_order_relaxed,
-                                            std::memory_order_relaxed)) {
+// Helper to update max value (for single-writer statistics)
+void update_max(uint32_t& metric, uint32_t candidate) noexcept {
+    if (candidate > metric) {
+        metric = candidate;
     }
 }
 
@@ -520,7 +518,7 @@ void TradingEngine::init_vol_surfaces() noexcept {
             ow->slices[0].valid          = true;
             orc_wing_surfaces_[i].publish();
         }
-        surface_versions_[i].store(1, std::memory_order_relaxed);
+        surface_versions_[i] = 1;  // Plain store (single writer)
     }
 }
 
@@ -906,29 +904,28 @@ uint64_t TradingEngine::total_coalesced_timer_overwrites() const noexcept {
 uint64_t TradingEngine::total_signal_emit_count() const noexcept {
     uint64_t total = 0;
     for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i)
-        total += signal_emit_count_[i].load(std::memory_order_relaxed);
+        total += signal_emit_count_[i];  // Plain read (eventual consistency OK)
     return total;
 }
 
 uint64_t TradingEngine::total_signal_suppressed_count() const noexcept {
     uint64_t total = 0;
     for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i)
-        total += signal_suppressed_count_[i].load(std::memory_order_relaxed);
+        total += signal_suppressed_count_[i];  // Plain read (eventual consistency OK)
     return total;
 }
 
 uint64_t TradingEngine::total_pending_future_tick_overwrites() const noexcept {
     uint64_t total = 0;
     for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i)
-        total += pending_future_tick_overwrites_[i].load(std::memory_order_relaxed);
+        total += pending_future_tick_overwrites_[i];  // Plain read (eventual consistency OK)
     return total;
 }
 
 uint32_t TradingEngine::max_signal_queue_depth() const noexcept {
     uint32_t max_depth = 0;
     for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i) {
-        max_depth = std::max(max_depth,
-            max_signal_queue_depth_[i].load(std::memory_order_relaxed));
+        max_depth = std::max(max_depth, max_signal_queue_depth_[i]);  // Plain read
     }
     return max_depth;
 }
@@ -936,8 +933,7 @@ uint32_t TradingEngine::max_signal_queue_depth() const noexcept {
 uint32_t TradingEngine::max_signal_mailbox_depth() const noexcept {
     uint32_t max_depth = 0;
     for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i) {
-        max_depth = std::max(max_depth,
-            max_signal_mailbox_depth_[i].load(std::memory_order_relaxed));
+        max_depth = std::max(max_depth, max_signal_mailbox_depth_[i]);  // Plain read
     }
     return max_depth;
 }
@@ -945,40 +941,39 @@ uint32_t TradingEngine::max_signal_mailbox_depth() const noexcept {
 uint32_t TradingEngine::max_timer_queue_depth() const noexcept {
     uint32_t max_depth = 0;
     for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i) {
-        max_depth = std::max(max_depth,
-            max_timer_queue_depth_[i].load(std::memory_order_relaxed));
+        max_depth = std::max(max_depth, max_timer_queue_depth_[i]);  // Plain read
     }
     return max_depth;
 }
 
 int64_t TradingEngine::last_signal_emit_ts(uint16_t instrument_id) const noexcept {
     if (instrument_id >= MAX_INSTRUMENTS) return 0;
-    return last_signal_emit_ts_[instrument_id].load(std::memory_order_acquire);
+    return last_signal_emit_ts_[instrument_id];  // Plain read
 }
 
 int64_t TradingEngine::last_strategy_signal_ts(uint16_t instrument_id) const noexcept {
     if (instrument_id >= MAX_INSTRUMENTS) return 0;
-    return last_strategy_signal_ts_[instrument_id].load(std::memory_order_acquire);
+    return last_strategy_signal_ts_[instrument_id];  // Plain read (eventual consistency OK)
 }
 
 int64_t TradingEngine::last_quote_ack_route_ts(uint16_t instrument_id) const noexcept {
     if (instrument_id >= MAX_INSTRUMENTS) return 0;
-    return last_quote_ack_route_ts_[instrument_id].load(std::memory_order_acquire);
+    return last_quote_ack_route_ts_[instrument_id];  // Plain read (eventual consistency OK)
 }
 
 int64_t TradingEngine::last_quote_cancel_route_ts(uint16_t instrument_id) const noexcept {
     if (instrument_id >= MAX_INSTRUMENTS) return 0;
-    return last_quote_cancel_route_ts_[instrument_id].load(std::memory_order_acquire);
+    return last_quote_cancel_route_ts_[instrument_id];  // Plain read (eventual consistency OK)
 }
 
 int64_t TradingEngine::last_quote_ack_route_latency_ns(uint16_t instrument_id) const noexcept {
     if (instrument_id >= MAX_INSTRUMENTS) return 0;
-    return last_quote_ack_route_latency_ns_[instrument_id].load(std::memory_order_acquire);
+    return last_quote_ack_route_latency_ns_[instrument_id];  // Plain read (eventual consistency OK)
 }
 
 int64_t TradingEngine::last_quote_cancel_route_latency_ns(uint16_t instrument_id) const noexcept {
     if (instrument_id >= MAX_INSTRUMENTS) return 0;
-    return last_quote_cancel_route_latency_ns_[instrument_id].load(std::memory_order_acquire);
+    return last_quote_cancel_route_latency_ns_[instrument_id];  // Plain read (eventual consistency OK)
 }
 
 bool TradingEngine::strategy_runtime_stats(int product_idx,
@@ -1098,8 +1093,7 @@ int TradingEngine::drain_coalesced_signals(int product_idx,
         }
         seen_versions[slot] = published_version;
         if (sig.instrument_id < MAX_INSTRUMENTS) {
-            last_strategy_signal_ts_[sig.instrument_id].store(
-                get_monotonic_ns(), std::memory_order_release);
+            last_strategy_signal_ts_[sig.instrument_id] = get_monotonic_ns();  // Plain store (single writer)
         }
         strategies_[product_idx]->on_signal(sig);
         return true;
@@ -1242,9 +1236,9 @@ void TradingEngine::note_signal_emitted(uint8_t product_idx,
     last.underlying_ask = sig.underlying_ref_ask;
     last.surface_version = surface_version;
 
-    signal_emit_count_[product_idx].fetch_add(1, std::memory_order_relaxed);
+    ++signal_emit_count_[product_idx];  // Plain increment (single writer)
     if (instrument_id < MAX_INSTRUMENTS) {
-        last_signal_emit_ts_[instrument_id].store(sig.calc_ts_ns, std::memory_order_release);
+        last_signal_emit_ts_[instrument_id] = sig.calc_ts_ns;  // Plain store (single writer)
     }
 }
 
@@ -1528,8 +1522,7 @@ void TradingEngine::pricer_loop() noexcept {
                         if (prod < MAX_PRODUCTS && tick.last_price > 1e-10) {
                             pending_future_tick[prod] = tick;
                             if (pending_product[prod]) {
-                                pending_future_tick_overwrites_[prod].fetch_add(
-                                    1, std::memory_order_relaxed);
+                                ++pending_future_tick_overwrites_[prod];  // Plain increment (single writer)
                             } else {
                                 pending_product[prod] = true;
                                 next_option_offset[prod] = 0;
@@ -1599,7 +1592,7 @@ void TradingEngine::pricer_loop() noexcept {
         const uint16_t start = next_option_offset[prod];
         const uint16_t batch_n = std::min<uint16_t>(MAX_BATCH, n - start);
         const double log_F_mid = std::log(F_mid);
-        const uint64_t surface_version = surface_versions_[prod].load(std::memory_order_acquire);
+        const uint64_t surface_version = surface_versions_[prod];  // Plain read (eventual consistency OK)
 
         for (uint16_t bi = 0; bi < batch_n; ++bi) {
             const uint16_t oi = start + bi;
@@ -1662,7 +1655,7 @@ void TradingEngine::pricer_loop() noexcept {
             greeks_snapshot_.publish(opt_id, greek);
 
             if (!should_emit_signal(prod, oi, sig, surface_version)) {
-                signal_suppressed_count_[prod].fetch_add(1, std::memory_order_relaxed);
+                ++signal_suppressed_count_[prod];  // Plain increment (single writer)
                 continue;
             }
 
@@ -1754,22 +1747,18 @@ void TradingEngine::strategy_loop(int idx) noexcept {
                 case GatewayEventType::QuoteAck:
                     if (ev.quote.instrument_id < MAX_INSTRUMENTS) {
                         const int64_t now_ns = get_monotonic_ns();
-                        last_quote_ack_route_ts_[ev.quote.instrument_id].store(
-                            now_ns, std::memory_order_release);
-                        last_quote_ack_route_latency_ns_[ev.quote.instrument_id].store(
-                            ev.quote.ack_ts > 0 ? std::max<int64_t>(0, now_ns - ev.quote.ack_ts) : 0,
-                            std::memory_order_release);
+                        last_quote_ack_route_ts_[ev.quote.instrument_id] = now_ns;  // Plain store (single writer)
+                        last_quote_ack_route_latency_ns_[ev.quote.instrument_id] =
+                            ev.quote.ack_ts > 0 ? std::max<int64_t>(0, now_ns - ev.quote.ack_ts) : 0;  // Plain store (single writer)
                     }
                     strategies_[idx]->on_quote_ack(ev.quote);
                     break;
                 case GatewayEventType::QuoteCancel:
                     if (ev.quote.instrument_id < MAX_INSTRUMENTS) {
                         const int64_t now_ns = get_monotonic_ns();
-                        last_quote_cancel_route_ts_[ev.quote.instrument_id].store(
-                            now_ns, std::memory_order_release);
-                        last_quote_cancel_route_latency_ns_[ev.quote.instrument_id].store(
-                            ev.quote.ack_ts > 0 ? std::max<int64_t>(0, now_ns - ev.quote.ack_ts) : 0,
-                            std::memory_order_release);
+                        last_quote_cancel_route_ts_[ev.quote.instrument_id] = now_ns;  // Plain store (single writer)
+                        last_quote_cancel_route_latency_ns_[ev.quote.instrument_id] =
+                            ev.quote.ack_ts > 0 ? std::max<int64_t>(0, now_ns - ev.quote.ack_ts) : 0;  // Plain store (single writer)
                     }
                     strategies_[idx]->on_quote_cancel(ev.quote);
                     break;
@@ -1815,8 +1804,7 @@ void TradingEngine::strategy_loop(int idx) noexcept {
             for (int i = 0; i < batch_size; ++i) {
                 const PricingSignal& sig = sig_batch[i];
                 if (sig.instrument_id < MAX_INSTRUMENTS) {
-                    last_strategy_signal_ts_[sig.instrument_id].store(
-                        get_monotonic_ns(), std::memory_order_release);
+                    last_strategy_signal_ts_[sig.instrument_id] = get_monotonic_ns();  // Plain store (single writer)
                 }
                 strategies_[idx]->on_signal(sig);
             }
@@ -2545,7 +2533,7 @@ void TradingEngine::vol_fitter_loop() noexcept {
 
                 if (surf->n_slices > 0) {
                     wing_surfaces_[p].publish();
-                    surface_versions_[p].fetch_add(1, std::memory_order_release);
+                    ++surface_versions_[p];  // Plain increment (single writer)
                 }
             } else if (cfg_.pricing.vol_method == VolMethod::OrcWing) {
                 OrcWingVolSurface* surf = orc_wing_surfaces_[p].get_inactive();
@@ -2589,7 +2577,7 @@ void TradingEngine::vol_fitter_loop() noexcept {
 
                 if (surf->n_slices > 0) {
                     orc_wing_surfaces_[p].publish();
-                    surface_versions_[p].fetch_add(1, std::memory_order_release);
+                    ++surface_versions_[p];  // Plain increment (single writer)
                 }
             } else {
                 SVIVolSurface* surf = vol_surfaces_[p].get_inactive();
@@ -2631,7 +2619,7 @@ void TradingEngine::vol_fitter_loop() noexcept {
 
                 if (surf->n_slices > 0) {
                     vol_surfaces_[p].publish();
-                    surface_versions_[p].fetch_add(1, std::memory_order_release);
+                    ++surface_versions_[p];  // Plain increment (single writer)
                 }
             }
         }

@@ -267,16 +267,22 @@ private:
     alignas(64) std::atomic<uint64_t> coalesced_signal_overwrites_[MAX_PRODUCTS]{};
     alignas(64) std::atomic<uint64_t> coalesced_timer_writes_[MAX_PRODUCTS]{};
     alignas(64) std::atomic<uint64_t> coalesced_timer_overwrites_[MAX_PRODUCTS]{};
-    alignas(64) std::atomic<uint64_t> signal_emit_count_[MAX_PRODUCTS]{};
-    alignas(64) std::atomic<uint64_t> signal_suppressed_count_[MAX_PRODUCTS]{};
-    alignas(64) std::atomic<uint64_t> pending_future_tick_overwrites_[MAX_PRODUCTS]{};
+
+    // Single-writer statistics (no atomic needed - only pricer writes)
+    alignas(64) uint64_t signal_emit_count_[MAX_PRODUCTS]{};
+    alignas(64) uint64_t signal_suppressed_count_[MAX_PRODUCTS]{};
+    alignas(64) uint64_t pending_future_tick_overwrites_[MAX_PRODUCTS]{};
+
+    // Multi-writer statistics (must remain atomic)
     alignas(64) std::atomic<uint64_t> deferred_monitor_drops_{0};
     alignas(64) std::atomic<uint64_t> deferred_persistence_drops_{0};
     alignas(64) std::atomic<uint64_t> live_state_drops_{0};
-    alignas(64) std::atomic<uint64_t> surface_versions_[MAX_PRODUCTS]{};
-    alignas(64) std::atomic<uint32_t> max_signal_queue_depth_[MAX_PRODUCTS]{};
-    alignas(64) std::atomic<uint32_t> max_signal_mailbox_depth_[MAX_PRODUCTS]{};
-    alignas(64) std::atomic<uint32_t> max_timer_queue_depth_[MAX_PRODUCTS]{};
+
+    // Single-writer per-product statistics (no atomic needed - only pricer writes)
+    alignas(64) uint64_t surface_versions_[MAX_PRODUCTS]{};
+    alignas(64) uint32_t max_signal_queue_depth_[MAX_PRODUCTS]{};
+    alignas(64) uint32_t max_signal_mailbox_depth_[MAX_PRODUCTS]{};
+    alignas(64) uint32_t max_timer_queue_depth_[MAX_PRODUCTS]{};
 
     struct SignalEmitState {
         bool     valid{false};
@@ -290,12 +296,14 @@ private:
         uint64_t surface_version{0};
     };
     alignas(64) SignalEmitState last_emitted_signal_[MAX_PRODUCTS][MAX_INSTRUMENTS]{};
-    alignas(64) std::atomic<int64_t> last_signal_emit_ts_[MAX_INSTRUMENTS]{};
-    alignas(64) std::atomic<int64_t> last_strategy_signal_ts_[MAX_INSTRUMENTS]{};
-    alignas(64) std::atomic<int64_t> last_quote_ack_route_ts_[MAX_INSTRUMENTS]{};
-    alignas(64) std::atomic<int64_t> last_quote_cancel_route_ts_[MAX_INSTRUMENTS]{};
-    alignas(64) std::atomic<int64_t> last_quote_ack_route_latency_ns_[MAX_INSTRUMENTS]{};
-    alignas(64) std::atomic<int64_t> last_quote_cancel_route_latency_ns_[MAX_INSTRUMENTS]{};
+
+    // Single-writer per-instrument timestamps (no atomic needed - dedicated writer per instrument)
+    alignas(64) int64_t last_signal_emit_ts_[MAX_INSTRUMENTS]{};
+    alignas(64) int64_t last_strategy_signal_ts_[MAX_INSTRUMENTS]{};
+    alignas(64) int64_t last_quote_ack_route_ts_[MAX_INSTRUMENTS]{};
+    alignas(64) int64_t last_quote_cancel_route_ts_[MAX_INSTRUMENTS]{};
+    alignas(64) int64_t last_quote_ack_route_latency_ns_[MAX_INSTRUMENTS]{};
+    alignas(64) int64_t last_quote_cancel_route_latency_ns_[MAX_INSTRUMENTS]{};
 
     // ── Components ───────────────────────────────────────────────────────────
     std::unique_ptr<IGateway>      gateway_;
