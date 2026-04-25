@@ -54,6 +54,14 @@ if(WIN32)
       "${OMM_PROTO_GEN_DIR}/trading.grpc.pb.cc"
       src/gui/main.cpp
       src/gui/trader_main_window.cpp
+      src/gui/trader_main_window_arbitrage_panel.cpp
+      src/gui/trader_main_window_controls_panel.cpp
+      src/gui/trader_main_window_panel_interactions.cpp
+      src/gui/trader_main_window_positions_panel.cpp
+      src/gui/trader_main_window_primary_interactions.cpp
+      src/gui/trader_main_window_refresh.cpp
+      src/gui/trader_main_window_vol_panel.cpp
+      src/gui/trader_main_window_workspace.cpp
   )
   if(MSVC)
     target_compile_options(optionmm_trader_gui PRIVATE /EHsc)
@@ -387,6 +395,14 @@ if(OMM_BUILD_TRADER_GUI)
   add_executable(optionmm_trader_gui
       src/gui/main.cpp
       src/gui/trader_main_window.cpp
+      src/gui/trader_main_window_arbitrage_panel.cpp
+      src/gui/trader_main_window_controls_panel.cpp
+      src/gui/trader_main_window_panel_interactions.cpp
+      src/gui/trader_main_window_positions_panel.cpp
+      src/gui/trader_main_window_primary_interactions.cpp
+      src/gui/trader_main_window_refresh.cpp
+      src/gui/trader_main_window_vol_panel.cpp
+      src/gui/trader_main_window_workspace.cpp
   )
   target_include_directories(optionmm_trader_gui PRIVATE
       ${OMM_PROTO_GEN_DIR}

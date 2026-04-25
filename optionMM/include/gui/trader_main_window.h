@@ -18,6 +18,7 @@ class QTableWidget;
 class QTabWidget;
 class QTreeWidget;
 class QWidget;
+class QAction;
 
 namespace omm::proto {
 class MMParams;
@@ -29,11 +30,22 @@ class TraderMainWindow final : public QMainWindow {
 public:
     explicit TraderMainWindow(std::string grpc_endpoint, QWidget* parent = nullptr);
     ~TraderMainWindow() override;
+    [[nodiscard]] bool initialize_session();
 
 private:
     void closeEvent(QCloseEvent* event) override;
     void build_ui();
+    void build_main_workspace_panel();
+    QDockWidget* build_vol_curves_panel();
+    QDockWidget* build_trader_controls_panel();
+    QDockWidget* build_arbitrage_panel();
+    QDockWidget* build_positions_panel();
+    void connect_primary_interactions();
+    void connect_panel_interactions();
+    QWidget* create_vol_curve_grid_widget(QWidget* parent = nullptr);
     void refresh_ui();
+    [[nodiscard]] bool prompt_for_login(const QString& reason = {});
+    void perform_logout();
     void send_manual_order();
     void start_strategy(bool enabled);
     void start_arb_strategy(bool enabled);
@@ -58,11 +70,13 @@ private:
 
     QLabel* connection_label_{nullptr};
     QLabel* status_label_{nullptr};
+    QLabel* user_label_{nullptr};
     QLabel* desk_state_label_{nullptr};
     QLabel* global_risk_label_{nullptr};
     QLabel* alert_banner_label_{nullptr};
     QComboBox* product_selector_{nullptr};
     QComboBox* instrument_selector_{nullptr};
+    QComboBox* manual_book_selector_{nullptr};
     QComboBox* side_selector_{nullptr};
     QDoubleSpinBox* price_editor_{nullptr};
     QSpinBox* volume_editor_{nullptr};
@@ -122,6 +136,8 @@ private:
     QLabel* pms_limits_label_{nullptr};
     QLabel* pms_counts_label_{nullptr};
     QLabel* pms_alert_label_{nullptr};
+    QComboBox* pms_book_filter_{nullptr};
+    QComboBox* pms_product_filter_{nullptr};
     QTableWidget* t_table_{nullptr};
     QTreeWidget* positions_tree_{nullptr};
     QTableWidget* orders_table_{nullptr};
@@ -133,6 +149,7 @@ private:
     QMainWindow* vol_window_{nullptr};
     QWidget* vol_window_widget_{nullptr};
     QWidget* secondary_vol_widget_{nullptr};
+    QAction* logout_action_{nullptr};
     QLabel* secondary_gate_label_{nullptr};
     QLabel* secondary_greeks_label_{nullptr};
     QLabel* secondary_limits_label_{nullptr};
