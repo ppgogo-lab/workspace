@@ -207,6 +207,11 @@ public:
     bool enqueue_risk_params(const RiskParamsPersistenceEvent& event) noexcept;
     bool enqueue_positions_snapshot(const PositionSnapshotEvent& event) noexcept;
 
+    // Batch enqueue methods for improved throughput
+    int enqueue_order_events_batch(const OrderPersistenceEvent* events, int count) noexcept;
+    int enqueue_quote_events_batch(const QuotePersistenceEvent* events, int count) noexcept;
+    int enqueue_trades_batch(const Trade* trades, int count) noexcept;
+
 private:
     struct LiveOrderRecord {
         Order order{};

@@ -2290,35 +2290,51 @@ void TradingEngine::monitor_publish_loop() noexcept {
         }
 
         if (repository_) {
-            OrderPersistenceEvent order_event{};
-            for (int drained = 0;
-                 drained < kMonitorPublishBurstCap
-                 && deferred_persist_order_events_.try_pop(order_event);
-                 ++drained) {
+            // Batch-drain persistence events to reduce atomic overhead
+            constexpr int kPersistenceBatchSize = 16;
+
+            alignas(64) OrderPersistenceEvent order_event_batch[kPersistenceBatchSize];
+            int order_budget = kMonitorPublishBurstCap;
+            while (order_budget > 0) {
+                const int batch_size = deferred_persist_order_events_.try_pop_batch(
+                    order_event_batch, std::min(order_budget, kPersistenceBatchSize));
+                if (batch_size == 0) break;
                 did_work = true;
-                if (!repository_->enqueue_order_event(order_event)) {
-                    deferred_persistence_drops_.fetch_add(1, std::memory_order_relaxed);
+                order_budget -= batch_size;
+
+                const int enqueued = repository_->enqueue_order_events_batch(order_event_batch, batch_size);
+                if (enqueued < batch_size) {
+                    deferred_persistence_drops_.fetch_add(batch_size - enqueued, std::memory_order_relaxed);
                 }
             }
 
-            QuotePersistenceEvent quote_event{};
-            for (int drained = 0;
-                 drained < kMonitorPublishBurstCap
-                 && deferred_persist_quote_events_.try_pop(quote_event);
-                 ++drained) {
+            alignas(64) QuotePersistenceEvent quote_event_batch[kPersistenceBatchSize];
+            int quote_budget = kMonitorPublishBurstCap;
+            while (quote_budget > 0) {
+                const int batch_size = deferred_persist_quote_events_.try_pop_batch(
+                    quote_event_batch, std::min(quote_budget, kPersistenceBatchSize));
+                if (batch_size == 0) break;
                 did_work = true;
-                if (!repository_->enqueue_quote_event(quote_event)) {
-                    deferred_persistence_drops_.fetch_add(1, std::memory_order_relaxed);
+                quote_budget -= batch_size;
+
+                const int enqueued = repository_->enqueue_quote_events_batch(quote_event_batch, batch_size);
+                if (enqueued < batch_size) {
+                    deferred_persistence_drops_.fetch_add(batch_size - enqueued, std::memory_order_relaxed);
                 }
             }
 
-            Trade trade{};
-            for (int drained = 0;
-                 drained < kMonitorPublishBurstCap && deferred_persist_trades_.try_pop(trade);
-                 ++drained) {
+            alignas(64) Trade trade_batch[kPersistenceBatchSize];
+            int trade_budget = kMonitorPublishBurstCap;
+            while (trade_budget > 0) {
+                const int batch_size = deferred_persist_trades_.try_pop_batch(
+                    trade_batch, std::min(trade_budget, kPersistenceBatchSize));
+                if (batch_size == 0) break;
                 did_work = true;
-                if (!repository_->enqueue_trade(trade)) {
-                    deferred_persistence_drops_.fetch_add(1, std::memory_order_relaxed);
+                trade_budget -= batch_size;
+
+                const int enqueued = repository_->enqueue_trades_batch(trade_batch, batch_size);
+                if (enqueued < batch_size) {
+                    deferred_persistence_drops_.fetch_add(batch_size - enqueued, std::memory_order_relaxed);
                 }
             }
         }

@@ -924,6 +924,45 @@ bool DataRepository::enqueue_trade(const Trade& trade) noexcept {
     return trades_.try_push(trade);
 }
 
+int DataRepository::enqueue_order_events_batch(const OrderPersistenceEvent* events, int count) noexcept {
+    if (!cfg_.enabled) return count;
+    int enqueued = 0;
+    for (int i = 0; i < count; ++i) {
+        if (order_events_.try_push(events[i])) {
+            ++enqueued;
+        } else {
+            break;  // Stop on first failure to maintain order
+        }
+    }
+    return enqueued;
+}
+
+int DataRepository::enqueue_quote_events_batch(const QuotePersistenceEvent* events, int count) noexcept {
+    if (!cfg_.enabled) return count;
+    int enqueued = 0;
+    for (int i = 0; i < count; ++i) {
+        if (quote_events_.try_push(events[i])) {
+            ++enqueued;
+        } else {
+            break;  // Stop on first failure to maintain order
+        }
+    }
+    return enqueued;
+}
+
+int DataRepository::enqueue_trades_batch(const Trade* trades, int count) noexcept {
+    if (!cfg_.enabled) return count;
+    int enqueued = 0;
+    for (int i = 0; i < count; ++i) {
+        if (trades_.try_push(trades[i])) {
+            ++enqueued;
+        } else {
+            break;  // Stop on first failure to maintain order
+        }
+    }
+    return enqueued;
+}
+
 bool DataRepository::enqueue_mm_params(const MMParamsPersistenceEvent& event) noexcept {
     if (!cfg_.enabled) return true;
     return mm_param_events_.try_push(event);
