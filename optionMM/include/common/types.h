@@ -85,7 +85,8 @@ enum class ArbitrageStrategyType : uint8_t { None = 0, PCP = 1 };
 // ─── Instrument (registry entry, off hot path) ───────────────────────────────
 // Populated at startup: futures from config, options from gateway query.
 // Indexed by uint16_t instrument_id for O(1) lookup everywhere.
-struct Instrument {
+// Cache-line aligned for efficient lookup in hot path.
+struct alignas(64) Instrument {
     InstrumentCode code;                // exchange code, e.g. "cu2501-C-75000"
     InstrumentCode underlying_code;     // underlying futures code, e.g. "cu2501"
     ExchangeId     exchange_id;
@@ -184,7 +185,7 @@ enum PricingFlags : uint16_t {
     PricingFlagHasUnderlyingRef = 1u << 0,
 };
 
-struct alignas(32) PricingSignal {
+struct alignas(64) PricingSignal {
     uint16_t instrument_id{INVALID_INSTRUMENT_ID};
     uint16_t underlying_id{INVALID_INSTRUMENT_ID};
     uint16_t flags{PricingFlagNone};
@@ -199,7 +200,7 @@ struct alignas(32) PricingSignal {
     float    underlying_ref_ask{0.0F};
 };
 static_assert(sizeof(PricingSignal) == 64);
-static_assert(alignof(PricingSignal) == 32);
+static_assert(alignof(PricingSignal) == 64);
 
 // ─── Timer event (timer thread → strategy thread) ────────────────────────────
 enum class TimerEventType : uint8_t {
@@ -314,7 +315,8 @@ struct alignas(32) ArbMarketTrigger {
 };
 
 // ─── Position ─────────────────────────────────────────────────────────────────
-struct Position {
+// Cache-line aligned to prevent false sharing in position arrays.
+struct alignas(64) Position {
     uint16_t instrument_id;
     uint8_t  product_index;
     uint8_t  _pad[5];
