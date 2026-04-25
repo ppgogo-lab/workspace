@@ -1606,7 +1606,6 @@ void TradingEngine::strategy_loop(int idx) noexcept {
 
     GatewayEvent ev{};
     TimerEvent timer_ev{};
-    PricingSignal sig{};
     uint64_t coalesced_signal_seen_versions[MAX_INSTRUMENTS]{};
     uint64_t coalesced_timer_seen_versions[kCoalescedTimerSlotCount]{};
 
@@ -2093,6 +2092,7 @@ void TradingEngine::monitor_publish_loop() noexcept {
     set_thread_name("omm-monitor");
 
     constexpr int kMonitorPublishBurstCap = 128;
+    constexpr int kMonitorBatchSize = 16;  // Larger batch for monitoring (less latency-sensitive)
 
     while (gateway_dispatcher_running_.load(std::memory_order_acquire)
            || !deferred_monitor_ticks_.empty_approx()
@@ -2104,36 +2104,57 @@ void TradingEngine::monitor_publish_loop() noexcept {
            || !deferred_persist_trades_.empty_approx()) {
         bool did_work = false;
 
-        TopOfBookTick tick{};
-        for (int drained = 0;
-             drained < kMonitorPublishBurstCap && deferred_monitor_ticks_.try_pop(tick);
-             ++drained) {
+        // Batch-drain monitoring events to reduce atomic overhead
+        alignas(64) TopOfBookTick tick_batch[kMonitorBatchSize];
+        int tick_budget = kMonitorPublishBurstCap;
+        while (tick_budget > 0) {
+            const int batch_size = deferred_monitor_ticks_.try_pop_batch(tick_batch,
+                                                                          std::min(tick_budget, kMonitorBatchSize));
+            if (batch_size == 0) break;
             did_work = true;
-            monitor_ticks_.publish(tick);
+            tick_budget -= batch_size;
+            for (int i = 0; i < batch_size; ++i) {
+                monitor_ticks_.publish(tick_batch[i]);
+            }
         }
 
-        Order order{};
-        for (int drained = 0;
-             drained < kMonitorPublishBurstCap && deferred_monitor_orders_.try_pop(order);
-             ++drained) {
+        alignas(64) Order order_batch[kMonitorBatchSize];
+        int order_budget = kMonitorPublishBurstCap;
+        while (order_budget > 0) {
+            const int batch_size = deferred_monitor_orders_.try_pop_batch(order_batch,
+                                                                           std::min(order_budget, kMonitorBatchSize));
+            if (batch_size == 0) break;
             did_work = true;
-            monitor_orders_.publish(order);
+            order_budget -= batch_size;
+            for (int i = 0; i < batch_size; ++i) {
+                monitor_orders_.publish(order_batch[i]);
+            }
         }
 
-        Quote quote{};
-        for (int drained = 0;
-             drained < kMonitorPublishBurstCap && deferred_monitor_quotes_.try_pop(quote);
-             ++drained) {
+        alignas(64) Quote quote_batch[kMonitorBatchSize];
+        int quote_budget = kMonitorPublishBurstCap;
+        while (quote_budget > 0) {
+            const int batch_size = deferred_monitor_quotes_.try_pop_batch(quote_batch,
+                                                                           std::min(quote_budget, kMonitorBatchSize));
+            if (batch_size == 0) break;
             did_work = true;
-            monitor_quotes_.publish(quote);
+            quote_budget -= batch_size;
+            for (int i = 0; i < batch_size; ++i) {
+                monitor_quotes_.publish(quote_batch[i]);
+            }
         }
 
-        Trade trade{};
-        for (int drained = 0;
-             drained < kMonitorPublishBurstCap && deferred_monitor_trades_.try_pop(trade);
-             ++drained) {
+        alignas(64) Trade trade_batch[kMonitorBatchSize];
+        int trade_budget = kMonitorPublishBurstCap;
+        while (trade_budget > 0) {
+            const int batch_size = deferred_monitor_trades_.try_pop_batch(trade_batch,
+                                                                           std::min(trade_budget, kMonitorBatchSize));
+            if (batch_size == 0) break;
             did_work = true;
-            monitor_trades_.publish(trade);
+            trade_budget -= batch_size;
+            for (int i = 0; i < batch_size; ++i) {
+                monitor_trades_.publish(trade_batch[i]);
+            }
         }
 
         if (repository_) {
@@ -2159,6 +2180,7 @@ void TradingEngine::monitor_publish_loop() noexcept {
                 }
             }
 
+            Trade trade{};
             for (int drained = 0;
                  drained < kMonitorPublishBurstCap && deferred_persist_trades_.try_pop(trade);
                  ++drained) {
