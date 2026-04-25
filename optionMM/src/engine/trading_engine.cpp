@@ -1390,6 +1390,7 @@ void TradingEngine::pricer_loop() noexcept {
     int64_t next_cold_greeks_due_ns[MAX_PRODUCTS]{};
     int rr_cursor = 0;
     int cold_rr_cursor = 0;
+    int spin_count = 0;  // Adaptive spinning counter
     const int64_t cold_greeks_interval_ns =
         static_cast<int64_t>(std::max(1, cfg_.pricing.cold_greeks_interval_ms)) * 1'000'000LL;
     const uint16_t cold_greeks_batch_cap = static_cast<uint16_t>(
@@ -1548,7 +1549,11 @@ void TradingEngine::pricer_loop() noexcept {
             if (refresh_cold_greeks_batch(product_count)) {
                 did_work = true;
             }
-            if (!did_work) spin_pause();
+            if (!did_work) {
+                adaptive_spin_pause(spin_count);
+            } else {
+                spin_count = 0;  // Reset on work
+            }
             continue;
         }
 
@@ -1718,6 +1723,7 @@ void TradingEngine::strategy_loop(int idx) noexcept {
     TimerEvent timer_ev{};
     uint64_t coalesced_signal_seen_versions[MAX_INSTRUMENTS]{};
     uint64_t coalesced_timer_seen_versions[kCoalescedTimerSlotCount]{};
+    int spin_count = 0;  // Adaptive spinning counter
 
     while (!stop_flag_.load(std::memory_order_relaxed)) {
         bool did_work = false;
@@ -1813,7 +1819,11 @@ void TradingEngine::strategy_loop(int idx) noexcept {
             drain_coalesced_signals(idx, coalesced_signal_seen_versions, signal_budget);
         if (coalesced_signals > 0) did_work = true;
 
-        if (!did_work) spin_pause();
+        if (!did_work) {
+            adaptive_spin_pause(spin_count);
+        } else {
+            spin_count = 0;  // Reset on work
+        }
     }
 }
 
@@ -1837,6 +1847,7 @@ void TradingEngine::arb_loop(int idx) noexcept {
     GatewayEvent ev{};
     ArbMarketTrigger trigger{};
     Timestamp next_maintenance_ns = get_monotonic_ns() + kArbMaintenanceIntervalNs;
+    int spin_count = 0;  // Adaptive spinning counter
     while (!stop_flag_.load(std::memory_order_relaxed)) {
         bool did_work = false;
 
@@ -1894,7 +1905,9 @@ void TradingEngine::arb_loop(int idx) noexcept {
         }
 
         if (!did_work) {
-            spin_pause();
+            adaptive_spin_pause(spin_count);
+        } else {
+            spin_count = 0;  // Reset on work
         }
     }
 }
@@ -1919,6 +1932,7 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
         GatewayQuoteRecoveryHandle quote_recovery{};
     };
 
+    int spin_count = 0;  // Adaptive spinning counter
     while (!stop_flag_.load(std::memory_order_relaxed)) {
         bool did_work = false;
         auto drain_callbacks = [&](int burst_cap) {
@@ -2198,7 +2212,11 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
             }
             drain_callbacks(kDispatcherCallbackInterleaveBurstCap);
         }
-        if (!did_work) spin_pause();
+        if (!did_work) {
+            adaptive_spin_pause(spin_count);
+        } else {
+            spin_count = 0;  // Reset on work
+        }
     }
     gateway_dispatcher_running_.store(false, std::memory_order_release);
 }

@@ -4,7 +4,9 @@
 #include <cstddef>
 #include <cstring>
 #include <type_traits>
-#include <immintrin.h>  // _mm_pause
+#include <thread>
+#include <chrono>
+#include <immintrin.h>  // _mm_pause, _mm_prefetch
 
 namespace omm {
 
@@ -108,19 +110,33 @@ public:
     // ── Consumer interface (call from consumer thread only) ──────────────────
 
     // Try to pop one item. Returns false if the buffer is empty (non-blocking).
+    // Prefetches next slot to reduce cache miss latency.
     [[nodiscard]] bool try_pop(T& item) noexcept {
         const std::size_t tail = tail_.load(std::memory_order_relaxed);
         // Acquire: synchronizes with producer's release-store to head_.
-        if (tail == head_.load(std::memory_order_acquire))
+        const std::size_t head = head_.load(std::memory_order_acquire);
+        if (tail == head)
             return false;   // empty
+
+        // Prefetch next slot (if available) to reduce cache miss latency
+        const std::size_t next_tail = (tail + 1) & MASK;
+        if (next_tail != head) {
+            #if defined(__x86_64__) || defined(__i386__)
+                _mm_prefetch(reinterpret_cast<const char*>(&buffer_[next_tail & MASK]), _MM_HINT_T0);
+            #elif defined(__aarch64__) || defined(__arm__)
+                __builtin_prefetch(&buffer_[next_tail & MASK], 0, 3);
+            #endif
+        }
+
         item = buffer_[tail & MASK].data;
         // Release: makes our consumed position visible to the producer.
-        tail_.store((tail + 1) & MASK, std::memory_order_release);
+        tail_.store(next_tail, std::memory_order_release);
         return true;
     }
 
     // Pop up to max_count items atomically: reads all available slots, then ONE release-store.
     // Returns the actual number of items popped (0 if empty, up to max_count if available).
+    // Prefetches all slots in batch to reduce cache miss latency.
     // NOTE: consumer-side only; max_count must be >= 1.
     [[nodiscard]] int try_pop_batch(T* items, int max_count) noexcept {
         if (max_count <= 0) return 0;
@@ -133,6 +149,18 @@ public:
         const int count = (avail < static_cast<std::size_t>(max_count))
                           ? static_cast<int>(avail)
                           : max_count;
+
+        // Prefetch all slots in batch to reduce cache miss latency
+        #if defined(__x86_64__) || defined(__i386__)
+            for (int i = 0; i < count; ++i) {
+                _mm_prefetch(reinterpret_cast<const char*>(&buffer_[(tail + i) & MASK]), _MM_HINT_T0);
+            }
+        #elif defined(__aarch64__) || defined(__arm__)
+            for (int i = 0; i < count; ++i) {
+                __builtin_prefetch(&buffer_[(tail + i) & MASK], 0, 3);
+            }
+        #endif
+
         // Read all items without any fence
         for (int i = 0; i < count; ++i)
             items[i] = buffer_[(tail + i) & MASK].data;
@@ -173,6 +201,31 @@ inline void spin_pause() noexcept {
 #else
     // No-op fallback
 #endif
+}
+
+// Adaptive spin-pause with exponential backoff
+// Reduces CPU overhead when idle while maintaining low latency when active
+inline void adaptive_spin_pause(int& spin_count) noexcept {
+    constexpr int kFastSpins = 100;      // ~100ns of spinning (fast path)
+    constexpr int kYieldSpins = 1000;    // ~1μs before sleep (medium path)
+
+    if (spin_count < kFastSpins) {
+        // Fast path: CPU pause instruction (~1ns)
+        #if defined(__x86_64__) || defined(__i386__)
+            _mm_pause();
+        #elif defined(__aarch64__) || defined(__arm__)
+            __asm__ volatile("yield" ::: "memory");
+        #endif
+        ++spin_count;
+    } else if (spin_count < kYieldSpins) {
+        // Medium path: yield to scheduler (~100ns-1μs)
+        std::this_thread::yield();
+        ++spin_count;
+    } else {
+        // Slow path: brief sleep to reduce CPU usage (~1μs)
+        std::this_thread::sleep_for(std::chrono::microseconds(1));
+        spin_count = 0;  // Reset counter
+    }
 }
 
 } // namespace omm
