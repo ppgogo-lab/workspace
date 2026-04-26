@@ -32,23 +32,14 @@ public:
         return trading_ready_.load(std::memory_order_relaxed);
     }
 
-    [[nodiscard]] bool send_order(
-            const Order& order,
-            GatewayOrderRecoveryHandle* recovery = nullptr) noexcept override;
+    [[nodiscard]] bool send_order(const Order& order) noexcept override;
     [[nodiscard]] bool send_quote(
             const Quote& quote,
-            GatewayQuoteRecoveryHandle* recovery = nullptr) noexcept override;
+            OrderId* bid_order_id_out = nullptr,
+            OrderId* ask_order_id_out = nullptr) noexcept override;
     [[nodiscard]] bool cancel_order(OrderId id, uint16_t instrument_id) noexcept override;
     [[nodiscard]] bool cancel_quote(QuoteId id, uint16_t instrument_id) noexcept override;
     [[nodiscard]] bool supports_quote_replace() const noexcept override { return true; }
-    [[nodiscard]] bool get_order_recovery_handle(
-            OrderId id,
-            GatewayOrderRecoveryHandle* out) const noexcept override;
-    [[nodiscard]] bool get_quote_recovery_handle(
-            QuoteId id,
-            GatewayQuoteRecoveryHandle* out) const noexcept override;
-    void restore_order_recovery(const GatewayRecoveredOrder& order) noexcept override;
-    void restore_quote_recovery(const GatewayRecoveredQuote& quote) noexcept override;
 
     bool query_instruments(Instrument* out, uint16_t* count, uint16_t max_count) override;
 

@@ -97,26 +97,6 @@ void copy_text_field(char* dst, std::size_t dst_size, const unsigned char* src) 
     dst[dst_size - 1] = '\0';
 }
 
-bool any_quote_handle(const GatewayQuoteRecoveryHandle& handle) noexcept {
-    return handle.valid
-        || handle.bid_order_id != 0
-        || handle.ask_order_id != 0
-        || handle.quote_local_id[0] != '\0'
-        || handle.quote_sys_id[0] != '\0'
-        || handle.bid_local_id[0] != '\0'
-        || handle.ask_local_id[0] != '\0'
-        || handle.bid_order_sys_id[0] != '\0'
-        || handle.ask_order_sys_id[0] != '\0';
-}
-
-bool any_order_handle(const GatewayOrderRecoveryHandle& handle) noexcept {
-    return handle.valid
-        || handle.is_quote_leg
-        || handle.client_quote_id != 0
-        || handle.exchange_local_id[0] != '\0'
-        || handle.order_sys_id[0] != '\0';
-}
-
 const char* safe_code(const Instrument* instrument) noexcept {
     return instrument ? instrument->code.data : "";
 }
@@ -737,8 +717,7 @@ bool DataRepository::load_recovery_state(RecoveryState* out) {
         const char* sql =
             "SELECT client_order_id, instrument_code, product_index, account_id, exchange_id,"
             " side, offset_flag, order_type, status, price, volume, filled_volume, avg_fill_price,"
-            " send_ts, ack_ts, is_manual, is_hedge, book_id, exchange_order_id, is_quote_leg,"
-            " client_quote_id, exchange_local_id, order_sys_id"
+            " send_ts, ack_ts, is_manual, is_hedge, book_id, exchange_order_id"
             " FROM live_orders";
         if (sqlite3_prepare_v2(db_, sql, -1, &stmt, nullptr) != SQLITE_OK) return false;
         while (sqlite3_step(stmt) == SQLITE_ROW) {
@@ -746,41 +725,32 @@ bool DataRepository::load_recovery_state(RecoveryState* out) {
             const uint16_t instrument_id = find_instrument_id_by_code(code);
             if (instrument_id == INVALID_INSTRUMENT_ID) continue;
 
-            GatewayRecoveredOrder entry{};
-            entry.order.client_order_id = static_cast<OrderId>(sqlite3_column_int64(stmt, 0));
-            entry.order.instrument_id = instrument_id;
-            entry.order.product_index = static_cast<uint8_t>(sqlite3_column_int(stmt, 2));
-            copy_text_field(entry.order.account_id.data,
-                            sizeof(entry.order.account_id.data),
+            Order order{};
+            order.client_order_id = static_cast<OrderId>(sqlite3_column_int64(stmt, 0));
+            order.instrument_id = instrument_id;
+            order.product_index = static_cast<uint8_t>(sqlite3_column_int(stmt, 2));
+            copy_text_field(order.account_id.data,
+                            sizeof(order.account_id.data),
                             sqlite3_column_text(stmt, 3));
-            copy_text_field(entry.order.exchange_id.data,
-                            sizeof(entry.order.exchange_id.data),
+            copy_text_field(order.exchange_id.data,
+                            sizeof(order.exchange_id.data),
                             sqlite3_column_text(stmt, 4));
-            entry.order.side = static_cast<Side>(sqlite3_column_int(stmt, 5));
-            entry.order.offset = static_cast<OffsetFlag>(sqlite3_column_int(stmt, 6));
-            entry.order.order_type = static_cast<OrderType>(sqlite3_column_int(stmt, 7));
-            entry.order.status = static_cast<OrderStatus>(sqlite3_column_int(stmt, 8));
-            entry.order.price = sqlite3_column_double(stmt, 9);
-            entry.order.volume = sqlite3_column_int(stmt, 10);
-            entry.order.filled_volume = sqlite3_column_int(stmt, 11);
-            entry.order.avg_fill_price = sqlite3_column_double(stmt, 12);
-            entry.order.send_ts = sqlite3_column_int64(stmt, 13);
-            entry.order.ack_ts = sqlite3_column_int64(stmt, 14);
-            entry.order.is_manual = sqlite3_column_int(stmt, 15) != 0;
-            entry.order.is_hedge = sqlite3_column_int(stmt, 16) != 0;
-            entry.order.book_id = static_cast<BookId>(sqlite3_column_int64(stmt, 17));
-            entry.order.exchange_order_id = static_cast<OrderId>(sqlite3_column_int64(stmt, 18));
+            order.side = static_cast<Side>(sqlite3_column_int(stmt, 5));
+            order.offset = static_cast<OffsetFlag>(sqlite3_column_int(stmt, 6));
+            order.order_type = static_cast<OrderType>(sqlite3_column_int(stmt, 7));
+            order.status = static_cast<OrderStatus>(sqlite3_column_int(stmt, 8));
+            order.price = sqlite3_column_double(stmt, 9);
+            order.volume = sqlite3_column_int(stmt, 10);
+            order.filled_volume = sqlite3_column_int(stmt, 11);
+            order.avg_fill_price = sqlite3_column_double(stmt, 12);
+            order.send_ts = sqlite3_column_int64(stmt, 13);
+            order.ack_ts = sqlite3_column_int64(stmt, 14);
+            order.is_manual = sqlite3_column_int(stmt, 15) != 0;
+            order.is_hedge = sqlite3_column_int(stmt, 16) != 0;
+            order.book_id = static_cast<BookId>(sqlite3_column_int64(stmt, 17));
+            order.exchange_order_id = static_cast<OrderId>(sqlite3_column_int64(stmt, 18));
 
-            entry.recovery.valid = true;
-            entry.recovery.is_quote_leg = sqlite3_column_int(stmt, 19) != 0;
-            entry.recovery.client_quote_id = static_cast<QuoteId>(sqlite3_column_int64(stmt, 20));
-            copy_text_field(entry.recovery.exchange_local_id,
-                            sizeof(entry.recovery.exchange_local_id),
-                            sqlite3_column_text(stmt, 21));
-            copy_text_field(entry.recovery.order_sys_id,
-                            sizeof(entry.recovery.order_sys_id),
-                            sqlite3_column_text(stmt, 22));
-            out->live_orders.push_back(entry);
+            out->live_orders.push_back(order);
         }
         sqlite3_finalize(stmt);
         return true;
@@ -791,9 +761,7 @@ bool DataRepository::load_recovery_state(RecoveryState* out) {
         const char* sql =
             "SELECT client_quote_id, instrument_code, product_index, account_id, exchange_id,"
             " bid_offset, ask_offset, bid_price, ask_price, bid_volume, ask_volume,"
-            " bid_status, ask_status, send_ts, ack_ts, book_id, exchange_quote_id,"
-            " remaining_bid, remaining_ask, bid_order_id, ask_order_id, quote_local_id,"
-            " quote_sys_id, bid_local_id, ask_local_id, bid_order_sys_id, ask_order_sys_id"
+            " bid_status, ask_status, send_ts, ack_ts, book_id, exchange_quote_id"
             " FROM live_quotes";
         if (sqlite3_prepare_v2(db_, sql, -1, &stmt, nullptr) != SQLITE_OK) return false;
         while (sqlite3_step(stmt) == SQLITE_ROW) {
@@ -801,51 +769,30 @@ bool DataRepository::load_recovery_state(RecoveryState* out) {
             const uint16_t instrument_id = find_instrument_id_by_code(code);
             if (instrument_id == INVALID_INSTRUMENT_ID) continue;
 
-            GatewayRecoveredQuote entry{};
-            entry.quote.client_quote_id = static_cast<QuoteId>(sqlite3_column_int64(stmt, 0));
-            entry.quote.instrument_id = instrument_id;
-            entry.quote.product_index = static_cast<uint8_t>(sqlite3_column_int(stmt, 2));
-            copy_text_field(entry.quote.account_id.data,
-                            sizeof(entry.quote.account_id.data),
+            Quote quote{};
+            quote.client_quote_id = static_cast<QuoteId>(sqlite3_column_int64(stmt, 0));
+            quote.instrument_id = instrument_id;
+            quote.product_index = static_cast<uint8_t>(sqlite3_column_int(stmt, 2));
+            copy_text_field(quote.account_id.data,
+                            sizeof(quote.account_id.data),
                             sqlite3_column_text(stmt, 3));
-            copy_text_field(entry.quote.exchange_id.data,
-                            sizeof(entry.quote.exchange_id.data),
+            copy_text_field(quote.exchange_id.data,
+                            sizeof(quote.exchange_id.data),
                             sqlite3_column_text(stmt, 4));
-            entry.quote.bid_offset = static_cast<OffsetFlag>(sqlite3_column_int(stmt, 5));
-            entry.quote.ask_offset = static_cast<OffsetFlag>(sqlite3_column_int(stmt, 6));
-            entry.quote.bid_price = sqlite3_column_double(stmt, 7);
-            entry.quote.ask_price = sqlite3_column_double(stmt, 8);
-            entry.quote.bid_volume = sqlite3_column_int(stmt, 17);
-            entry.quote.ask_volume = sqlite3_column_int(stmt, 18);
-            entry.quote.bid_status = static_cast<OrderStatus>(sqlite3_column_int(stmt, 11));
-            entry.quote.ask_status = static_cast<OrderStatus>(sqlite3_column_int(stmt, 12));
-            entry.quote.send_ts = sqlite3_column_int64(stmt, 13);
-            entry.quote.ack_ts = sqlite3_column_int64(stmt, 14);
-            entry.quote.book_id = static_cast<BookId>(sqlite3_column_int64(stmt, 15));
-            entry.quote.exchange_quote_id = static_cast<QuoteId>(sqlite3_column_int64(stmt, 16));
+            quote.bid_offset = static_cast<OffsetFlag>(sqlite3_column_int(stmt, 5));
+            quote.ask_offset = static_cast<OffsetFlag>(sqlite3_column_int(stmt, 6));
+            quote.bid_price = sqlite3_column_double(stmt, 7);
+            quote.ask_price = sqlite3_column_double(stmt, 8);
+            quote.bid_volume = sqlite3_column_int(stmt, 9);
+            quote.ask_volume = sqlite3_column_int(stmt, 10);
+            quote.bid_status = static_cast<OrderStatus>(sqlite3_column_int(stmt, 11));
+            quote.ask_status = static_cast<OrderStatus>(sqlite3_column_int(stmt, 12));
+            quote.send_ts = sqlite3_column_int64(stmt, 13);
+            quote.ack_ts = sqlite3_column_int64(stmt, 14);
+            quote.book_id = static_cast<BookId>(sqlite3_column_int64(stmt, 15));
+            quote.exchange_quote_id = static_cast<QuoteId>(sqlite3_column_int64(stmt, 16));
 
-            entry.recovery.valid = true;
-            entry.recovery.bid_order_id = static_cast<OrderId>(sqlite3_column_int64(stmt, 19));
-            entry.recovery.ask_order_id = static_cast<OrderId>(sqlite3_column_int64(stmt, 20));
-            copy_text_field(entry.recovery.quote_local_id,
-                            sizeof(entry.recovery.quote_local_id),
-                            sqlite3_column_text(stmt, 21));
-            copy_text_field(entry.recovery.quote_sys_id,
-                            sizeof(entry.recovery.quote_sys_id),
-                            sqlite3_column_text(stmt, 22));
-            copy_text_field(entry.recovery.bid_local_id,
-                            sizeof(entry.recovery.bid_local_id),
-                            sqlite3_column_text(stmt, 23));
-            copy_text_field(entry.recovery.ask_local_id,
-                            sizeof(entry.recovery.ask_local_id),
-                            sqlite3_column_text(stmt, 24));
-            copy_text_field(entry.recovery.bid_order_sys_id,
-                            sizeof(entry.recovery.bid_order_sys_id),
-                            sqlite3_column_text(stmt, 25));
-            copy_text_field(entry.recovery.ask_order_sys_id,
-                            sizeof(entry.recovery.ask_order_sys_id),
-                            sqlite3_column_text(stmt, 26));
-            out->live_quotes.push_back(entry);
+            out->live_quotes.push_back(quote);
         }
         sqlite3_finalize(stmt);
         return true;
@@ -1558,18 +1505,11 @@ bool DataRepository::flush_once_locked(int max_rows) {
 }
 
 bool DataRepository::write_order_event_locked(const OrderPersistenceEvent& event) {
-    const bool is_ctp_quote_leg = gateway_type_ == GatewayType::CTP
-        && (is_ctp_ask_leg(event.order.client_order_id)
-            || live_quotes_.find(event.order.client_order_id) != live_quotes_.end());
-    const bool is_quote_leg = event.recovery.is_quote_leg || is_ctp_quote_leg;
+    // Check if this is a quote leg order (no longer using CTP-specific logic)
+    const bool is_quote_leg = live_quotes_.find(event.order.client_order_id) != live_quotes_.end();
 
     if (is_quote_leg) {
-        QuoteId quote_id = event.recovery.client_quote_id;
-        if (quote_id == 0) {
-            quote_id = is_ctp_ask_leg(event.order.client_order_id)
-                ? (event.order.client_order_id & ~kCtpSyntheticAskLegBit)
-                : event.order.client_order_id;
-        }
+        QuoteId quote_id = event.order.client_order_id;
         auto it = live_quotes_.find(quote_id);
         if (it == live_quotes_.end()) return true;
         LiveQuoteRecord& record = it->second;
@@ -1583,36 +1523,9 @@ bool DataRepository::write_order_event_locked(const OrderPersistenceEvent& event
             if (event.order.side == Side::Buy) record.remaining_bid = 0;
             else record.remaining_ask = 0;
         }
-        if (any_order_handle(event.recovery)) {
-            if (event.order.side == Side::Buy) {
-                if (event.recovery.order_sys_id[0]) {
-                    std::strncpy(record.recovery.bid_order_sys_id,
-                                 event.recovery.order_sys_id,
-                                 sizeof(record.recovery.bid_order_sys_id) - 1);
-                }
-                if (event.recovery.exchange_local_id[0]) {
-                    std::strncpy(record.recovery.bid_local_id,
-                                 event.recovery.exchange_local_id,
-                                 sizeof(record.recovery.bid_local_id) - 1);
-                }
-            } else {
-                if (event.recovery.order_sys_id[0]) {
-                    std::strncpy(record.recovery.ask_order_sys_id,
-                                 event.recovery.order_sys_id,
-                                 sizeof(record.recovery.ask_order_sys_id) - 1);
-                }
-                if (event.recovery.exchange_local_id[0]) {
-                    std::strncpy(record.recovery.ask_local_id,
-                                 event.recovery.exchange_local_id,
-                                 sizeof(record.recovery.ask_local_id) - 1);
-                }
-            }
-            record.recovery.valid = record.recovery.valid || any_order_handle(event.recovery);
-        }
         QuotePersistenceEvent quote_event{};
         quote_event.type = QuotePersistenceEventType::Ack;
         quote_event.quote = record.quote;
-        quote_event.recovery = record.recovery;
         return write_quote_event_locked(quote_event);
     }
 
@@ -1629,9 +1542,6 @@ bool DataRepository::write_order_event_locked(const OrderPersistenceEvent& event
             ? event.order.avg_fill_price : merged.avg_fill_price;
         merged.ack_ts = event.order.ack_ts != 0 ? event.order.ack_ts : merged.ack_ts;
         record.order = merged;
-    }
-    if (any_order_handle(event.recovery)) {
-        record.recovery = event.recovery;
     }
     if (event.type == OrderPersistenceEventType::Cancel
         || event.type == OrderPersistenceEventType::Reject) {
@@ -1659,10 +1569,10 @@ bool DataRepository::write_order_event_locked(const OrderPersistenceEvent& event
     bind_integer(stmt_upsert_live_order_, 17, record.order.is_hedge ? 1 : 0);
     bind_integer(stmt_upsert_live_order_, 18, record.order.book_id);
     bind_integer(stmt_upsert_live_order_, 19, record.order.exchange_order_id);
-    bind_integer(stmt_upsert_live_order_, 20, record.recovery.is_quote_leg ? 1 : 0);
-    bind_integer(stmt_upsert_live_order_, 21, record.recovery.client_quote_id);
-    bind_text(stmt_upsert_live_order_, 22, record.recovery.exchange_local_id);
-    bind_text(stmt_upsert_live_order_, 23, record.recovery.order_sys_id);
+    bind_integer(stmt_upsert_live_order_, 20, 0);  // is_quote_leg (removed)
+    bind_integer(stmt_upsert_live_order_, 21, 0);  // client_quote_id (removed)
+    bind_text(stmt_upsert_live_order_, 22, "");    // exchange_local_id (removed)
+    bind_text(stmt_upsert_live_order_, 23, "");    // order_sys_id (removed)
     return step_done(db_, stmt_upsert_live_order_, "upsert live_order");
 }
 
@@ -1684,16 +1594,6 @@ bool DataRepository::write_quote_event_locked(const QuotePersistenceEvent& event
         record.quote = event.quote;
         record.remaining_bid = event.quote.bid_volume;
         record.remaining_ask = event.quote.ask_volume;
-        record.recovery = event.recovery;
-        if (gateway_type_ == GatewayType::CTP) {
-            if (record.recovery.bid_order_id == 0) {
-                record.recovery.bid_order_id = event.quote.client_quote_id;
-            }
-            if (record.recovery.ask_order_id == 0) {
-                record.recovery.ask_order_id = event.quote.client_quote_id | kCtpSyntheticAskLegBit;
-            }
-            record.recovery.valid = true;
-        }
     } else {
         Quote merged = record.quote;
         merged.exchange_quote_id = event.quote.exchange_quote_id != 0
@@ -1702,41 +1602,6 @@ bool DataRepository::write_quote_event_locked(const QuotePersistenceEvent& event
         merged.ask_status = event.quote.ask_status;
         merged.ack_ts = event.quote.ack_ts != 0 ? event.quote.ack_ts : merged.ack_ts;
         record.quote = merged;
-        if (any_quote_handle(event.recovery)) {
-            if (event.recovery.bid_order_id != 0) record.recovery.bid_order_id = event.recovery.bid_order_id;
-            if (event.recovery.ask_order_id != 0) record.recovery.ask_order_id = event.recovery.ask_order_id;
-            if (event.recovery.quote_local_id[0]) {
-                std::strncpy(record.recovery.quote_local_id,
-                             event.recovery.quote_local_id,
-                             sizeof(record.recovery.quote_local_id) - 1);
-            }
-            if (event.recovery.quote_sys_id[0]) {
-                std::strncpy(record.recovery.quote_sys_id,
-                             event.recovery.quote_sys_id,
-                             sizeof(record.recovery.quote_sys_id) - 1);
-            }
-            if (event.recovery.bid_local_id[0]) {
-                std::strncpy(record.recovery.bid_local_id,
-                             event.recovery.bid_local_id,
-                             sizeof(record.recovery.bid_local_id) - 1);
-            }
-            if (event.recovery.ask_local_id[0]) {
-                std::strncpy(record.recovery.ask_local_id,
-                             event.recovery.ask_local_id,
-                             sizeof(record.recovery.ask_local_id) - 1);
-            }
-            if (event.recovery.bid_order_sys_id[0]) {
-                std::strncpy(record.recovery.bid_order_sys_id,
-                             event.recovery.bid_order_sys_id,
-                             sizeof(record.recovery.bid_order_sys_id) - 1);
-            }
-            if (event.recovery.ask_order_sys_id[0]) {
-                std::strncpy(record.recovery.ask_order_sys_id,
-                             event.recovery.ask_order_sys_id,
-                             sizeof(record.recovery.ask_order_sys_id) - 1);
-            }
-            record.recovery.valid = record.recovery.valid || any_quote_handle(event.recovery);
-        }
     }
 
     reset_stmt(stmt_upsert_live_quote_);
@@ -1759,14 +1624,14 @@ bool DataRepository::write_quote_event_locked(const QuotePersistenceEvent& event
     bind_integer(stmt_upsert_live_quote_, 17, record.quote.exchange_quote_id);
     bind_integer(stmt_upsert_live_quote_, 18, record.remaining_bid);
     bind_integer(stmt_upsert_live_quote_, 19, record.remaining_ask);
-    bind_integer(stmt_upsert_live_quote_, 20, record.recovery.bid_order_id);
-    bind_integer(stmt_upsert_live_quote_, 21, record.recovery.ask_order_id);
-    bind_text(stmt_upsert_live_quote_, 22, record.recovery.quote_local_id);
-    bind_text(stmt_upsert_live_quote_, 23, record.recovery.quote_sys_id);
-    bind_text(stmt_upsert_live_quote_, 24, record.recovery.bid_local_id);
-    bind_text(stmt_upsert_live_quote_, 25, record.recovery.ask_local_id);
-    bind_text(stmt_upsert_live_quote_, 26, record.recovery.bid_order_sys_id);
-    bind_text(stmt_upsert_live_quote_, 27, record.recovery.ask_order_sys_id);
+    bind_integer(stmt_upsert_live_quote_, 20, 0);  // bid_order_id (removed)
+    bind_integer(stmt_upsert_live_quote_, 21, 0);  // ask_order_id (removed)
+    bind_text(stmt_upsert_live_quote_, 22, "");    // quote_local_id (removed)
+    bind_text(stmt_upsert_live_quote_, 23, "");    // quote_sys_id (removed)
+    bind_text(stmt_upsert_live_quote_, 24, "");    // bid_local_id (removed)
+    bind_text(stmt_upsert_live_quote_, 25, "");    // ask_local_id (removed)
+    bind_text(stmt_upsert_live_quote_, 26, "");    // bid_order_sys_id (removed)
+    bind_text(stmt_upsert_live_quote_, 27, "");    // ask_order_sys_id (removed)
     return step_done(db_, stmt_upsert_live_quote_, "upsert live_quote");
 }
 
@@ -1810,7 +1675,6 @@ bool DataRepository::write_trade_locked(const Trade& trade) {
             OrderPersistenceEvent event{};
             event.type = OrderPersistenceEventType::Ack;
             event.order = order.order;
-            event.recovery = order.recovery;
             return write_order_event_locked(event);
         }
         return true;
@@ -1838,7 +1702,6 @@ bool DataRepository::write_trade_locked(const Trade& trade) {
     event.quote = quote.quote;
     event.quote.bid_volume = quote.remaining_bid;
     event.quote.ask_volume = quote.remaining_ask;
-    event.recovery = quote.recovery;
     return write_quote_event_locked(event);
 }
 
@@ -2055,17 +1918,15 @@ void DataRepository::prime_caches_locked(const RecoveryState& state) {
     live_quotes_.clear();
     for (const auto& order : state.live_orders) {
         LiveOrderRecord record{};
-        record.order = order.order;
-        record.recovery = order.recovery;
-        live_orders_.emplace(order.order.client_order_id, record);
+        record.order = order;
+        live_orders_.emplace(order.client_order_id, record);
     }
     for (const auto& quote : state.live_quotes) {
         LiveQuoteRecord record{};
-        record.quote = quote.quote;
-        record.recovery = quote.recovery;
-        record.remaining_bid = quote.quote.bid_volume;
-        record.remaining_ask = quote.quote.ask_volume;
-        live_quotes_.emplace(quote.quote.client_quote_id, record);
+        record.quote = quote;
+        record.remaining_bid = quote.bid_volume;
+        record.remaining_ask = quote.ask_volume;
+        live_quotes_.emplace(quote.client_quote_id, record);
     }
 }
 

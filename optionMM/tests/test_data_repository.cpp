@@ -187,12 +187,6 @@ TEST(DataRepositoryTest, PersistsAndRecoversLiveState) {
         quote_submit.quote.ask_volume = 4;
         quote_submit.quote.book_id = 201;
         quote_submit.quote.send_ts = 105;
-        quote_submit.recovery.valid = true;
-        quote_submit.recovery.bid_order_id = 1501;
-        quote_submit.recovery.ask_order_id = 1502;
-        copy_cstr(quote_submit.recovery.quote_sys_id,
-                  sizeof(quote_submit.recovery.quote_sys_id),
-                  "QSYS-1");
         EXPECT_TRUE(repo.enqueue_quote_event(quote_submit));
 
         Trade quote_fill{};
@@ -225,13 +219,6 @@ TEST(DataRepositoryTest, PersistsAndRecoversLiveState) {
         order_submit.order.volume = 7;
         order_submit.order.book_id = 202;
         order_submit.order.send_ts = 107;
-        order_submit.recovery.valid = true;
-        copy_cstr(order_submit.recovery.exchange_local_id,
-                  sizeof(order_submit.recovery.exchange_local_id),
-                  "LOC-601");
-        copy_cstr(order_submit.recovery.order_sys_id,
-                  sizeof(order_submit.recovery.order_sys_id),
-                  "SYS-601");
         EXPECT_TRUE(repo.enqueue_order_event(order_submit));
 
         Trade order_fill{};
@@ -281,21 +268,18 @@ TEST(DataRepositoryTest, PersistsAndRecoversLiveState) {
         EXPECT_DOUBLE_EQ(state.positions[0].realized_pnl, 12.75);
 
         ASSERT_EQ(state.live_quotes.size(), 1u);
-        EXPECT_EQ(state.live_quotes[0].quote.client_quote_id, 501u);
-        EXPECT_EQ(state.live_quotes[0].quote.book_id, 201u);
-        EXPECT_EQ(state.live_quotes[0].quote.bid_volume, 3);
-        EXPECT_EQ(state.live_quotes[0].quote.ask_volume, 4);
-        EXPECT_STREQ(state.live_quotes[0].recovery.quote_sys_id, "QSYS-1");
+        EXPECT_EQ(state.live_quotes[0].client_quote_id, 501u);
+        EXPECT_EQ(state.live_quotes[0].book_id, 201u);
+        EXPECT_EQ(state.live_quotes[0].bid_volume, 3);
+        EXPECT_EQ(state.live_quotes[0].ask_volume, 4);
 
         ASSERT_EQ(state.live_orders.size(), 1u);
-        EXPECT_EQ(state.live_orders[0].order.client_order_id, 601u);
-        EXPECT_EQ(state.live_orders[0].order.book_id, 202u);
-        EXPECT_EQ(state.live_orders[0].order.volume, 7);
-        EXPECT_EQ(state.live_orders[0].order.filled_volume, 3);
-        EXPECT_EQ(state.live_orders[0].order.status, OrderStatus::PartialFilled);
-        EXPECT_DOUBLE_EQ(state.live_orders[0].order.avg_fill_price, 12.8);
-        EXPECT_STREQ(state.live_orders[0].recovery.exchange_local_id, "LOC-601");
-        EXPECT_STREQ(state.live_orders[0].recovery.order_sys_id, "SYS-601");
+        EXPECT_EQ(state.live_orders[0].client_order_id, 601u);
+        EXPECT_EQ(state.live_orders[0].book_id, 202u);
+        EXPECT_EQ(state.live_orders[0].volume, 7);
+        EXPECT_EQ(state.live_orders[0].filled_volume, 3);
+        EXPECT_EQ(state.live_orders[0].status, OrderStatus::PartialFilled);
+        EXPECT_DOUBLE_EQ(state.live_orders[0].avg_fill_price, 12.8);
 
         std::vector<Trade> trades;
         ASSERT_TRUE(repo.load_trade_history(&trades));

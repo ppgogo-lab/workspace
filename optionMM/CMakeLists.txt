@@ -321,19 +321,17 @@ add_library(sim_gateway_lib STATIC
 target_include_directories(sim_gateway_lib PUBLIC ${CMAKE_SOURCE_DIR}/include)
 target_link_libraries(sim_gateway_lib PUBLIC common_lib logger_lib)
 
-# ─── gateway_lib (full: Sim + CTP + FEMAS — used by main binary) ─────────────
+# ─── gateway_lib (full: Sim + FEMAS — used by main binary) ───────────────────
 add_library(gateway_lib STATIC
     src/gateway/sim_gateway.cpp
-    src/gateway/ctp_gateway.cpp
     src/gateway/femas_gateway.cpp
 )
 target_include_directories(gateway_lib PUBLIC
     ${CMAKE_SOURCE_DIR}/include
-    ${CTP_SDK_DIR}
     ${FEMAS_SDK_DIR}
 )
 target_link_libraries(gateway_lib PUBLIC
-    common_lib logger_lib ctp_trader femas_api_lib
+    common_lib logger_lib femas_api_lib
 )
 
 # ─── logger_lib ───────────────────────────────────────────────────────────────

@@ -42,14 +42,12 @@ struct OrderPersistenceEvent {
     OrderPersistenceEventType  type{OrderPersistenceEventType::Submit};
     uint8_t                    _pad0[7]{};
     Order                      order{};
-    GatewayOrderRecoveryHandle recovery{};
 };
 
 struct QuotePersistenceEvent {
     QuotePersistenceEventType  type{QuotePersistenceEventType::Submit};
     uint8_t                    _pad0[7]{};
     Quote                      quote{};
-    GatewayQuoteRecoveryHandle recovery{};
 };
 
 struct MMParamsPersistenceEvent {
@@ -163,8 +161,8 @@ struct RecoveryState {
         ArbParamsConfig params{};
     };
 
-    std::vector<GatewayRecoveredOrder> live_orders;
-    std::vector<GatewayRecoveredQuote> live_quotes;
+    std::vector<Order> live_orders;
+    std::vector<Quote> live_quotes;
     std::vector<Position> positions;
     std::array<ProductParamsState, MAX_PRODUCTS> mm_params{};
     std::vector<ArbParamsState> arb_params;
@@ -215,13 +213,11 @@ public:
 private:
     struct LiveOrderRecord {
         Order order{};
-        GatewayOrderRecoveryHandle recovery{};
         bool terminal{false};
     };
 
     struct LiveQuoteRecord {
         Quote quote{};
-        GatewayQuoteRecoveryHandle recovery{};
         Volume remaining_bid{0};
         Volume remaining_ask{0};
     };

@@ -346,17 +346,6 @@ void FEMASGateway::push_order_event(GatewayEventType type,
     ev.order.filled_volume = filled_volume;
     ev.order.ack_ts = get_monotonic_ns();
 
-    // Populate recovery handle (eliminates post-send lookup)
-    ev.order_recovery.valid = true;
-    ev.order_recovery.is_quote_leg = state.is_quote_leg;
-    ev.order_recovery.client_quote_id = state.client_quote_id;
-    std::strncpy(ev.order_recovery.exchange_local_id,
-                 state.exchange_local_id,
-                 sizeof(ev.order_recovery.exchange_local_id) - 1);
-    std::strncpy(ev.order_recovery.order_sys_id,
-                 state.order_sys_id,
-                 sizeof(ev.order_recovery.order_sys_id) - 1);
-
     (void)callback_buf.try_push(ev);
 }
 
@@ -440,9 +429,7 @@ void FEMASGateway::disconnect() {
     }
 }
 
-bool FEMASGateway::send_order(const Order& order,
-                              GatewayOrderRecoveryHandle* recovery) noexcept {
-    if (recovery != nullptr) *recovery = GatewayOrderRecoveryHandle{};
+bool FEMASGateway::send_order(const Order& order) noexcept {
     if (!api_ || !trading_ready_.load(std::memory_order_relaxed)) return false;
 
     const Instrument* instr = instrument_by_id(order.instrument_id);
@@ -506,18 +493,12 @@ bool FEMASGateway::send_order(const Order& order,
         OMM_LOG_WARN("femas", "ReqOrderInsert failed ret={} order_id={}", ret, order.client_order_id);
         return false;
     }
-    if (recovery != nullptr) {
-        recovery->valid = true;
-        std::strncpy(recovery->exchange_local_id,
-                     local_id,
-                     sizeof(recovery->exchange_local_id) - 1);
-    }
     return true;
 }
 
 bool FEMASGateway::send_quote(const Quote& quote,
-                              GatewayQuoteRecoveryHandle* recovery) noexcept {
-    if (recovery != nullptr) *recovery = GatewayQuoteRecoveryHandle{};
+                              OrderId* bid_order_id_out,
+                              OrderId* ask_order_id_out) noexcept {
     if (!api_ || !trading_ready_.load(std::memory_order_relaxed)) return false;
     if (quote.bid_volume == 0 && quote.ask_volume == 0) {
         return cancel_order(quote.client_quote_id, quote.instrument_id);
@@ -610,20 +591,15 @@ bool FEMASGateway::send_quote(const Quote& quote,
         OMM_LOG_WARN("femas", "ReqQuoteInsert failed ret={} quote_id={}", ret, quote.client_quote_id);
         return false;
     }
-    if (recovery != nullptr) {
-        recovery->valid = true;
-        recovery->bid_order_id = quote.client_quote_id;
-        recovery->ask_order_id = quote.client_quote_id | (1ULL << 47);
-        std::strncpy(recovery->quote_local_id,
-                     quote_local_id,
-                     sizeof(recovery->quote_local_id) - 1);
-        std::strncpy(recovery->bid_local_id,
-                     bid_local_id,
-                     sizeof(recovery->bid_local_id) - 1);
-        std::strncpy(recovery->ask_local_id,
-                     ask_local_id,
-                     sizeof(recovery->ask_local_id) - 1);
+
+    // Return synthetic bid/ask order IDs for quote leg tracking
+    if (bid_order_id_out != nullptr) {
+        *bid_order_id_out = quote.client_quote_id;
     }
+    if (ask_order_id_out != nullptr) {
+        *ask_order_id_out = quote.client_quote_id | (1ULL << 47);
+    }
+
     return true;
 }
 
@@ -692,159 +668,6 @@ bool FEMASGateway::cancel_order(OrderId id, uint16_t instrument_id) noexcept {
 
 bool FEMASGateway::cancel_quote(QuoteId id, uint16_t instrument_id) noexcept {
     return cancel_order(id, instrument_id);
-}
-
-bool FEMASGateway::get_order_recovery_handle(
-        OrderId id,
-        GatewayOrderRecoveryHandle* out) const noexcept {
-    if (out == nullptr) return false;
-    *out = GatewayOrderRecoveryHandle{};
-
-    std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
-    const std::size_t* idx = order_client_index_.find(id);
-    if (idx != nullptr && *idx < order_states_.size()) {
-        const auto& state = order_states_[*idx];
-        if (!state.used || state.is_quote_leg || state.client_order_id != id) return false;
-        out->valid = true;
-        out->client_quote_id = state.client_quote_id;
-        std::strncpy(out->exchange_local_id,
-                     state.exchange_local_id,
-                     sizeof(out->exchange_local_id) - 1);
-        std::strncpy(out->order_sys_id,
-                     state.order_sys_id,
-                     sizeof(out->order_sys_id) - 1);
-        return true;
-    }
-    return false;
-}
-
-bool FEMASGateway::get_quote_recovery_handle(
-        QuoteId id,
-        GatewayQuoteRecoveryHandle* out) const noexcept {
-    if (out == nullptr) return false;
-    *out = GatewayQuoteRecoveryHandle{};
-
-    std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
-    const std::size_t* idx = quote_client_index_.find(id);
-    if (idx != nullptr && *idx < quote_states_.size()) {
-        const auto& state = quote_states_[*idx];
-        if (!state.used || state.quote.client_quote_id != id) return false;
-        out->valid = true;
-        std::strncpy(out->quote_local_id,
-                     state.quote_local_id,
-                     sizeof(out->quote_local_id) - 1);
-        std::strncpy(out->quote_sys_id,
-                     state.quote_sys_id,
-                     sizeof(out->quote_sys_id) - 1);
-        std::strncpy(out->bid_local_id,
-                     state.bid_local_id,
-                     sizeof(out->bid_local_id) - 1);
-        std::strncpy(out->ask_local_id,
-                     state.ask_local_id,
-                     sizeof(out->ask_local_id) - 1);
-        std::strncpy(out->bid_order_sys_id,
-                     state.bid_order_sys_id,
-                     sizeof(out->bid_order_sys_id) - 1);
-        std::strncpy(out->ask_order_sys_id,
-                     state.ask_order_sys_id,
-                     sizeof(out->ask_order_sys_id) - 1);
-        return true;
-    }
-    return false;
-}
-
-void FEMASGateway::restore_order_recovery(const GatewayRecoveredOrder& recovered) noexcept {
-    std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
-    OrderState* state = alloc_order_state();
-    if (!state) return;
-
-    state->client_order_id = recovered.order.client_order_id;
-    state->instrument_id = recovered.order.instrument_id;
-    state->product_index = recovered.order.product_index;
-    state->side = recovered.order.side;
-    state->offset = recovered.order.offset;
-    state->price = recovered.order.price;
-    state->volume = std::max<Volume>(0, recovered.order.volume - recovered.order.filled_volume);
-    state->acked = true;
-    std::strncpy(state->exchange_local_id,
-                 recovered.recovery.exchange_local_id,
-                 sizeof(state->exchange_local_id) - 1);
-    std::strncpy(state->order_sys_id,
-                 recovered.recovery.order_sys_id,
-                 sizeof(state->order_sys_id) - 1);
-    index_order_state(state);
-}
-
-void FEMASGateway::restore_quote_recovery(const GatewayRecoveredQuote& recovered) noexcept {
-    std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
-    QuoteState* quote_state = alloc_quote_state();
-    OrderState* bid_state = alloc_order_state();
-    OrderState* ask_state = alloc_order_state();
-    if (!quote_state || !bid_state || !ask_state) {
-        // Rollback: release any allocated slots
-        if (quote_state) quote_state->used.store(false, std::memory_order_relaxed);
-        if (bid_state) bid_state->used.store(false, std::memory_order_relaxed);
-        if (ask_state) ask_state->used.store(false, std::memory_order_relaxed);
-        return;
-    }
-
-    quote_state->acked = true;
-    quote_state->quote = recovered.quote;
-    std::strncpy(quote_state->quote_local_id,
-                 recovered.recovery.quote_local_id,
-                 sizeof(quote_state->quote_local_id) - 1);
-    std::strncpy(quote_state->quote_sys_id,
-                 recovered.recovery.quote_sys_id,
-                 sizeof(quote_state->quote_sys_id) - 1);
-    std::strncpy(quote_state->bid_local_id,
-                 recovered.recovery.bid_local_id,
-                 sizeof(quote_state->bid_local_id) - 1);
-    std::strncpy(quote_state->ask_local_id,
-                 recovered.recovery.ask_local_id,
-                 sizeof(quote_state->ask_local_id) - 1);
-    std::strncpy(quote_state->bid_order_sys_id,
-                 recovered.recovery.bid_order_sys_id,
-                 sizeof(quote_state->bid_order_sys_id) - 1);
-    std::strncpy(quote_state->ask_order_sys_id,
-                 recovered.recovery.ask_order_sys_id,
-                 sizeof(quote_state->ask_order_sys_id) - 1);
-
-    bid_state->used = true;
-    bid_state->acked = true;
-    bid_state->is_quote_leg = true;
-    bid_state->client_quote_id = recovered.quote.client_quote_id;
-    bid_state->instrument_id = recovered.quote.instrument_id;
-    bid_state->product_index = recovered.quote.product_index;
-    bid_state->side = Side::Buy;
-    bid_state->offset = recovered.quote.bid_offset;
-    bid_state->price = recovered.quote.bid_price;
-    bid_state->volume = recovered.quote.bid_volume;
-    std::strncpy(bid_state->exchange_local_id,
-                 recovered.recovery.bid_local_id,
-                 sizeof(bid_state->exchange_local_id) - 1);
-    std::strncpy(bid_state->order_sys_id,
-                 recovered.recovery.bid_order_sys_id,
-                 sizeof(bid_state->order_sys_id) - 1);
-
-    ask_state->used = true;
-    ask_state->acked = true;
-    ask_state->is_quote_leg = true;
-    ask_state->client_quote_id = recovered.quote.client_quote_id;
-    ask_state->instrument_id = recovered.quote.instrument_id;
-    ask_state->product_index = recovered.quote.product_index;
-    ask_state->side = Side::Sell;
-    ask_state->offset = recovered.quote.ask_offset;
-    ask_state->price = recovered.quote.ask_price;
-    ask_state->volume = recovered.quote.ask_volume;
-    std::strncpy(ask_state->exchange_local_id,
-                 recovered.recovery.ask_local_id,
-                 sizeof(ask_state->exchange_local_id) - 1);
-    std::strncpy(ask_state->order_sys_id,
-                 recovered.recovery.ask_order_sys_id,
-                 sizeof(ask_state->order_sys_id) - 1);
-    index_quote_state(quote_state);
-    index_order_state(bid_state);
-    index_order_state(ask_state);
 }
 
 bool FEMASGateway::query_instruments(Instrument* out, uint16_t* count, uint16_t max_count) {
@@ -1204,29 +1027,6 @@ void FEMASGateway::OnRtnQuote(CUstpFtdcRtnQuoteField* pQuote) {
                 ev.product_index = state->quote.product_index;
         ev.quote = state->quote;
 
-        // Populate recovery handle (eliminates post-send lookup)
-        ev.quote_recovery.valid = true;
-        // Note: bid_order_id and ask_order_id are not available in QuoteState
-        // They would need to be added if required for recovery
-        std::strncpy(ev.quote_recovery.quote_local_id,
-                     state->quote_local_id,
-                     sizeof(ev.quote_recovery.quote_local_id) - 1);
-        std::strncpy(ev.quote_recovery.quote_sys_id,
-                     state->quote_sys_id,
-                     sizeof(ev.quote_recovery.quote_sys_id) - 1);
-        std::strncpy(ev.quote_recovery.bid_local_id,
-                     state->bid_local_id,
-                     sizeof(ev.quote_recovery.bid_local_id) - 1);
-        std::strncpy(ev.quote_recovery.ask_local_id,
-                     state->ask_local_id,
-                     sizeof(ev.quote_recovery.ask_local_id) - 1);
-        std::strncpy(ev.quote_recovery.bid_order_sys_id,
-                     state->bid_order_sys_id,
-                     sizeof(ev.quote_recovery.bid_order_sys_id) - 1);
-        std::strncpy(ev.quote_recovery.ask_order_sys_id,
-                     state->ask_order_sys_id,
-                     sizeof(ev.quote_recovery.ask_order_sys_id) - 1);
-
                 (void)callback_buf.try_push(ev);
             }
 
@@ -1238,27 +1038,6 @@ void FEMASGateway::OnRtnQuote(CUstpFtdcRtnQuoteField* pQuote) {
                 ev.quote.bid_volume = 0;
                 ev.quote.ask_volume = 0;
                 ev.quote.ack_ts = get_monotonic_ns();
-
-                // Populate recovery handle (eliminates post-send lookup)
-                ev.quote_recovery.valid = true;
-                std::strncpy(ev.quote_recovery.quote_local_id,
-                             state->quote_local_id,
-                             sizeof(ev.quote_recovery.quote_local_id) - 1);
-                std::strncpy(ev.quote_recovery.quote_sys_id,
-                             state->quote_sys_id,
-                             sizeof(ev.quote_recovery.quote_sys_id) - 1);
-                std::strncpy(ev.quote_recovery.bid_local_id,
-                             state->bid_local_id,
-                             sizeof(ev.quote_recovery.bid_local_id) - 1);
-                std::strncpy(ev.quote_recovery.ask_local_id,
-                             state->ask_local_id,
-                             sizeof(ev.quote_recovery.ask_local_id) - 1);
-                std::strncpy(ev.quote_recovery.bid_order_sys_id,
-                             state->bid_order_sys_id,
-                             sizeof(ev.quote_recovery.bid_order_sys_id) - 1);
-                std::strncpy(ev.quote_recovery.ask_order_sys_id,
-                             state->ask_order_sys_id,
-                             sizeof(ev.quote_recovery.ask_order_sys_id) - 1);
 
                 (void)callback_buf.try_push(ev);
                 clear_quote_state(state->quote.client_quote_id);
@@ -1302,27 +1081,6 @@ void FEMASGateway::OnErrRtnQuoteInsert(CUstpFtdcInputQuoteField* pQuote,
         ev.product_index = state->quote.product_index;
         ev.quote = state->quote;
         ev.quote.ack_ts = get_monotonic_ns();
-
-        // Populate recovery handle (eliminates post-send lookup)
-        ev.quote_recovery.valid = true;
-        std::strncpy(ev.quote_recovery.quote_local_id,
-                     state->quote_local_id,
-                     sizeof(ev.quote_recovery.quote_local_id) - 1);
-        std::strncpy(ev.quote_recovery.quote_sys_id,
-                     state->quote_sys_id,
-                     sizeof(ev.quote_recovery.quote_sys_id) - 1);
-        std::strncpy(ev.quote_recovery.bid_local_id,
-                     state->bid_local_id,
-                     sizeof(ev.quote_recovery.bid_local_id) - 1);
-        std::strncpy(ev.quote_recovery.ask_local_id,
-                     state->ask_local_id,
-                     sizeof(ev.quote_recovery.ask_local_id) - 1);
-        std::strncpy(ev.quote_recovery.bid_order_sys_id,
-                     state->bid_order_sys_id,
-                     sizeof(ev.quote_recovery.bid_order_sys_id) - 1);
-        std::strncpy(ev.quote_recovery.ask_order_sys_id,
-                     state->ask_order_sys_id,
-                     sizeof(ev.quote_recovery.ask_order_sys_id) - 1);
 
         (void)callback_buf.try_push(ev);
 

@@ -4,7 +4,6 @@
 #include "monitoring/grpc_server.h"
 #include "logger/logger.h"
 #include "gateway/sim_gateway.h"
-#include "gateway/ctp_gateway.h"
 #include "gateway/femas_gateway.h"
 #include "feed/multicast_feed.h"
 #include "feed/fpga_feed.h"
@@ -55,10 +54,6 @@ int main(int argc, char* argv[]) {
     std::unique_ptr<omm::IGateway> gw;
     omm::SimGateway* sim_gw = nullptr;
     switch (cfg->gateway.type) {
-        case omm::GatewayType::CTP:
-            gw = std::make_unique<omm::CTPGateway>();
-            OMM_LOG_INFO("startup", "gateway: CTP front={}", cfg->gateway.ctp.front_addr);
-            break;
         case omm::GatewayType::FEMAS:
             gw = std::make_unique<omm::FEMASGateway>();
             OMM_LOG_INFO("startup", "gateway: FEMAS front={}", cfg->gateway.femas.front_addr);

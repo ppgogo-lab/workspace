@@ -224,14 +224,14 @@ public:
 private:
     struct LiveOrderState {
         Order order{};
-        GatewayOrderRecoveryHandle recovery{};
     };
 
     struct LiveQuoteState {
         Quote quote{};
-        GatewayQuoteRecoveryHandle recovery{};
         Volume remaining_bid{0};
         Volume remaining_ask{0};
+        OrderId bid_order_id{0};
+        OrderId ask_order_id{0};
     };
 
     SystemConfig cfg_;
@@ -415,10 +415,6 @@ private:
     [[nodiscard]] bool init_trading_calendar() noexcept;
     void init_identity_from_config() noexcept;
     void apply_identity_state(const IdentityState& state) noexcept;
-    void apply_recovery_state(const RecoveryState& state) noexcept;
-    void rebuild_book_state_from_history() noexcept;
-    void seed_gateway_recovery(const RecoveryState& state) noexcept;
-    void request_recovery_cancels(const RecoveryState& state) noexcept;
     void persist_shutdown_state() noexcept;
     // Recomputes option_T_ for all products using current monotonic time.
     // Called once at startup and then every second from timer_loop.
@@ -449,27 +445,20 @@ private:
     void publish_monitor_quote(const Quote& quote) noexcept;
     void publish_monitor_trade(const Trade& trade) noexcept;
     void defer_order_persistence(OrderPersistenceEventType type,
-                                 const Order& order,
-                                 const GatewayOrderRecoveryHandle* recovery = nullptr) noexcept;
+                                 const Order& order) noexcept;
     void defer_quote_persistence(QuotePersistenceEventType type,
                                  const Quote& quote,
-                                 const GatewayQuoteRecoveryHandle* recovery = nullptr) noexcept;
+                                 const void* unused = nullptr) noexcept;
     void defer_trade_persistence(const Trade& trade) noexcept;
     void rebuild_book_position_locked(const Trade& trade) noexcept;
-    void track_live_order_submit(const Order& order,
-                                 const GatewayOrderRecoveryHandle* recovery) noexcept;
+    void track_live_order_submit(const Order& order) noexcept;
     void track_live_quote_submit(const Quote& quote,
-                                 const GatewayQuoteRecoveryHandle* recovery) noexcept;
+                                 OrderId bid_order_id,
+                                 OrderId ask_order_id) noexcept;
     void handle_gateway_order_update(Order& order,
-                                     GatewayEventType type,
-                                     GatewayOrderRecoveryHandle* recovery = nullptr) noexcept;
+                                     GatewayEventType type) noexcept;
     void handle_gateway_quote_update(Quote& quote,
-                                     GatewayEventType type,
-                                     GatewayQuoteRecoveryHandle* recovery = nullptr) noexcept;
-    void update_live_order_recovery(OrderId order_id,
-                                    const GatewayOrderRecoveryHandle& recovery) noexcept;
-    void update_live_quote_recovery(QuoteId quote_id,
-                                    const GatewayQuoteRecoveryHandle& recovery) noexcept;
+                                     GatewayEventType type) noexcept;
     void handle_gateway_fill(Trade* trade, GatewayEventType* type) noexcept;
     void cancel_all_live_orders_and_quotes() noexcept;
     [[nodiscard]] BookId arb_book_id_for_type(int product_idx,

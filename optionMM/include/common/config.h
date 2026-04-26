@@ -40,7 +40,7 @@ struct FeedConfig {
 };
 
 // ─── Gateway configuration ────────────────────────────────────────────────────
-enum class GatewayType : uint8_t { CTP, FEMAS, Sim };
+enum class GatewayType : uint8_t { FEMAS, Sim };
 
 struct CtpConfig {
     char front_addr[128]{};    // e.g. "tcp://180.168.146.187:10201"
@@ -59,8 +59,7 @@ struct FemasConfig {
 };
 
 struct GatewayConfig {
-    GatewayType type{GatewayType::CTP};
-    CtpConfig   ctp;
+    GatewayType type{GatewayType::FEMAS};
     FemasConfig femas;
 };
 

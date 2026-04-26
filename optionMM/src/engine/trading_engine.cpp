@@ -70,64 +70,6 @@ void sleep_for_ns_interruptible(const std::atomic<bool>& stop_flag,
     }
 }
 
-void merge_order_recovery(GatewayOrderRecoveryHandle* dst,
-                          const GatewayOrderRecoveryHandle& src) noexcept {
-    if (dst == nullptr) return;
-    dst->valid = dst->valid || src.valid;
-    dst->is_quote_leg = dst->is_quote_leg || src.is_quote_leg;
-    if (dst->client_quote_id == 0) dst->client_quote_id = src.client_quote_id;
-    if (src.exchange_local_id[0] != '\0') {
-        std::strncpy(dst->exchange_local_id, src.exchange_local_id,
-                     sizeof(dst->exchange_local_id) - 1);
-        dst->exchange_local_id[sizeof(dst->exchange_local_id) - 1] = '\0';
-    }
-    if (src.order_sys_id[0] != '\0') {
-        std::strncpy(dst->order_sys_id, src.order_sys_id,
-                     sizeof(dst->order_sys_id) - 1);
-        dst->order_sys_id[sizeof(dst->order_sys_id) - 1] = '\0';
-    }
-}
-
-void merge_quote_recovery(GatewayQuoteRecoveryHandle* dst,
-                          const GatewayQuoteRecoveryHandle& src) noexcept {
-    if (dst == nullptr) return;
-    dst->valid = dst->valid || src.valid;
-    if (dst->bid_order_id == 0) dst->bid_order_id = src.bid_order_id;
-    if (dst->ask_order_id == 0) dst->ask_order_id = src.ask_order_id;
-
-    auto copy_if_present = [](char* dst_buf, std::size_t dst_size, const char* src_buf) noexcept {
-        if (src_buf == nullptr || src_buf[0] == '\0') return;
-        std::strncpy(dst_buf, src_buf, dst_size - 1);
-        dst_buf[dst_size - 1] = '\0';
-    };
-    copy_if_present(dst->quote_local_id, sizeof(dst->quote_local_id), src.quote_local_id);
-    copy_if_present(dst->quote_sys_id, sizeof(dst->quote_sys_id), src.quote_sys_id);
-    copy_if_present(dst->bid_local_id, sizeof(dst->bid_local_id), src.bid_local_id);
-    copy_if_present(dst->ask_local_id, sizeof(dst->ask_local_id), src.ask_local_id);
-    copy_if_present(dst->bid_order_sys_id, sizeof(dst->bid_order_sys_id), src.bid_order_sys_id);
-    copy_if_present(dst->ask_order_sys_id, sizeof(dst->ask_order_sys_id), src.ask_order_sys_id);
-}
-
-bool has_order_recovery(const GatewayOrderRecoveryHandle& handle) noexcept {
-    return handle.valid
-        || handle.is_quote_leg
-        || handle.client_quote_id != 0
-        || handle.exchange_local_id[0] != '\0'
-        || handle.order_sys_id[0] != '\0';
-}
-
-bool has_quote_recovery(const GatewayQuoteRecoveryHandle& handle) noexcept {
-    return handle.valid
-        || handle.bid_order_id != 0
-        || handle.ask_order_id != 0
-        || handle.quote_local_id[0] != '\0'
-        || handle.quote_sys_id[0] != '\0'
-        || handle.bid_local_id[0] != '\0'
-        || handle.ask_local_id[0] != '\0'
-        || handle.bid_order_sys_id[0] != '\0'
-        || handle.ask_order_sys_id[0] != '\0';
-}
-
 // Helper to update max value (for single-writer statistics)
 void update_max(uint32_t& metric, uint32_t candidate) noexcept {
     if (candidate > metric) {
@@ -634,20 +576,6 @@ void TradingEngine::apply_identity_state(const IdentityState& state) noexcept {
     }
 }
 
-void TradingEngine::rebuild_book_state_from_history() noexcept {
-    if (!repository_) return;
-    std::vector<Trade> trades;
-    if (!repository_->load_trade_history(&trades)) {
-        OMM_LOG_WARN("repo", "failed to load trade history for book rebuild");
-        return;
-    }
-    std::lock_guard<std::mutex> lock(book_state_mutex_);
-    book_positions_.clear();
-    for (const Trade& trade : trades) {
-        rebuild_book_position_locked(trade);
-    }
-}
-
 void TradingEngine::init_persistence() noexcept {
     if (!repository_) return;
 
@@ -665,16 +593,6 @@ void TradingEngine::init_persistence() noexcept {
     }
     (void)repository_->persist_instruments();
 
-    RecoveryState recovery{};
-    if (!repository_->load_recovery_state(&recovery)) {
-        OMM_LOG_WARN("repo", "failed to load recovery state");
-        repository_->start();
-        return;
-    }
-
-    apply_recovery_state(recovery);
-    rebuild_book_state_from_history();
-    seed_gateway_recovery(recovery);
     repository_->start();
     for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i) {
         persist_mm_params_update(i, mm_params_[i].snapshot());
@@ -686,7 +604,6 @@ void TradingEngine::init_persistence() noexcept {
         }
     }
     persist_risk_limits_update(post_risk_.limits());
-    request_recovery_cancels(recovery);
 }
 
 bool TradingEngine::init_trading_calendar() noexcept {
@@ -715,93 +632,6 @@ bool TradingEngine::init_trading_calendar() noexcept {
     }
     trading_calendar_ready_ = true;
     return true;
-}
-
-void TradingEngine::apply_recovery_state(const RecoveryState& state) noexcept {
-    if (!state.positions.empty()) {
-        post_risk_.restore_positions(state.positions.data(),
-                                     static_cast<uint16_t>(state.positions.size()));
-    }
-    if (state.has_risk_params) {
-        post_risk_.set_limits(state.risk_params);
-    }
-    for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i) {
-        if (state.mm_params[i].valid) {
-            mm_params_[i].apply(state.mm_params[i].params);
-        }
-    }
-    for (const auto& entry : state.arb_params) {
-        if (!entry.valid) continue;
-        AtomicArbParams* params = arbitrage_params(entry.product_index, entry.strategy_type);
-        if (params != nullptr) params->apply(entry.params);
-    }
-    {
-        std::lock_guard<std::mutex> lock(live_state_mutex_);
-        live_orders_.clear();
-        live_quotes_.clear();
-        quote_leg_to_quote_.clear();
-        for (const auto& order : state.live_orders) {
-            LiveOrderState live{};
-            live.order = order.order;
-            live.recovery = order.recovery;
-            if (!live_orders_.insert(order.order.client_order_id, live)) {
-                live_state_drops_.fetch_add(1, std::memory_order_relaxed);
-            }
-            if (order.recovery.is_quote_leg && order.recovery.client_quote_id != 0) {
-                (void)quote_leg_to_quote_.insert(order.order.client_order_id,
-                                                 order.recovery.client_quote_id);
-            }
-        }
-        for (const auto& quote : state.live_quotes) {
-            LiveQuoteState live{};
-            live.quote = quote.quote;
-            live.recovery = quote.recovery;
-            live.remaining_bid = quote.quote.bid_volume;
-            live.remaining_ask = quote.quote.ask_volume;
-            if (!live_quotes_.insert(quote.quote.client_quote_id, live)) {
-                live_state_drops_.fetch_add(1, std::memory_order_relaxed);
-            }
-            if (quote.recovery.bid_order_id != 0) {
-                (void)quote_leg_to_quote_.insert(quote.recovery.bid_order_id,
-                                                 quote.quote.client_quote_id);
-            }
-            if (quote.recovery.ask_order_id != 0) {
-                (void)quote_leg_to_quote_.insert(quote.recovery.ask_order_id,
-                                                 quote.quote.client_quote_id);
-            }
-        }
-    }
-}
-
-void TradingEngine::seed_gateway_recovery(const RecoveryState& state) noexcept {
-    if (!gateway_) return;
-
-    for (const auto& order : state.live_orders) {
-        gateway_->restore_order_recovery(order);
-    }
-    for (const auto& quote : state.live_quotes) {
-        gateway_->restore_quote_recovery(quote);
-    }
-}
-
-void TradingEngine::request_recovery_cancels(const RecoveryState& state) noexcept {
-    if (!gateway_ || !gateway_->is_connected()) return;
-
-    for (const auto& order : state.live_orders) {
-        (void)gateway_->cancel_order(order.order.client_order_id, order.order.instrument_id);
-    }
-    for (const auto& quote : state.live_quotes) {
-        if (cfg_.gateway.type == GatewayType::CTP) {
-            if (quote.recovery.bid_order_id != 0) {
-                (void)gateway_->cancel_order(quote.recovery.bid_order_id, quote.quote.instrument_id);
-            }
-            if (quote.recovery.ask_order_id != 0) {
-                (void)gateway_->cancel_order(quote.recovery.ask_order_id, quote.quote.instrument_id);
-            }
-        } else {
-            (void)gateway_->cancel_quote(quote.quote.client_quote_id, quote.quote.instrument_id);
-        }
-    }
 }
 
 void TradingEngine::persist_shutdown_state() noexcept {
@@ -1318,13 +1148,11 @@ void TradingEngine::publish_monitor_trade(const Trade& trade) noexcept {
 
 void TradingEngine::defer_order_persistence(
         OrderPersistenceEventType type,
-        const Order& order,
-        const GatewayOrderRecoveryHandle* recovery) noexcept {
+        const Order& order) noexcept {
     if (!repository_) return;
     OrderPersistenceEvent event{};
     event.type = type;
     event.order = order;
-    if (recovery != nullptr) event.recovery = *recovery;
     if (!deferred_persist_order_events_.try_push(event)) {
         deferred_persistence_drops_.fetch_add(1, std::memory_order_relaxed);
     }
@@ -1333,12 +1161,12 @@ void TradingEngine::defer_order_persistence(
 void TradingEngine::defer_quote_persistence(
         QuotePersistenceEventType type,
         const Quote& quote,
-        const GatewayQuoteRecoveryHandle* recovery) noexcept {
+        const void* unused) noexcept {
+    (void)unused;
     if (!repository_) return;
     QuotePersistenceEvent event{};
     event.type = type;
     event.quote = quote;
-    if (recovery != nullptr) event.recovery = *recovery;
     if (!deferred_persist_quote_events_.try_push(event)) {
         deferred_persistence_drops_.fetch_add(1, std::memory_order_relaxed);
     }
@@ -1978,8 +1806,6 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
 
     struct DeferredCallbackSideEffect {
         GatewayEvent event{};
-        GatewayOrderRecoveryHandle order_recovery{};
-        GatewayQuoteRecoveryHandle quote_recovery{};
     };
 
     int spin_count = 0;  // Adaptive spinning counter
@@ -2002,24 +1828,20 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                 switch (normalized.event.type) {
                 case GatewayEventType::OrderAck:
                     handle_gateway_order_update(normalized.event.order,
-                                                normalized.event.type,
-                                                &normalized.order_recovery);
+                                                normalized.event.type);
                     route_to_arbitrage = is_arb_order_id(normalized.event.order.client_order_id);
                     break;
                 case GatewayEventType::QuoteAck:
                     handle_gateway_quote_update(normalized.event.quote,
-                                                normalized.event.type,
-                                                &normalized.quote_recovery);
+                                                normalized.event.type);
                     break;
                 case GatewayEventType::QuoteCancel:
                     handle_gateway_quote_update(normalized.event.quote,
-                                                normalized.event.type,
-                                                &normalized.quote_recovery);
+                                                normalized.event.type);
                     break;
                 case GatewayEventType::QuoteReject:
                     handle_gateway_quote_update(normalized.event.quote,
-                                                normalized.event.type,
-                                                &normalized.quote_recovery);
+                                                normalized.event.type);
                     break;
                 case GatewayEventType::OrderFill:
                 case GatewayEventType::QuoteFill:
@@ -2028,14 +1850,12 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                     break;
                 case GatewayEventType::OrderCancel:
                     handle_gateway_order_update(normalized.event.order,
-                                                normalized.event.type,
-                                                &normalized.order_recovery);
+                                                normalized.event.type);
                     route_to_arbitrage = is_arb_order_id(normalized.event.order.client_order_id);
                     break;
                 case GatewayEventType::OrderReject:
                     handle_gateway_order_update(normalized.event.order,
-                                                normalized.event.type,
-                                                &normalized.order_recovery);
+                                                normalized.event.type);
                     route_to_arbitrage = is_arb_order_id(normalized.event.order.client_order_id);
                     break;
                 default:
@@ -2061,49 +1881,28 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                 DeferredCallbackSideEffect& side = deferred[i];
                 switch (side.event.type) {
                 case GatewayEventType::OrderAck:
-                    // Recovery handle already embedded in event (no lookup needed)
-                    if (side.event.order_recovery.valid) {
-                        merge_order_recovery(&side.order_recovery, side.event.order_recovery);
-                        update_live_order_recovery(side.event.order.client_order_id,
-                                                   side.order_recovery);
-                    }
                     publish_monitor_order(side.event.order);
                     defer_order_persistence(OrderPersistenceEventType::Ack,
-                                            side.event.order,
-                                            has_order_recovery(side.order_recovery)
-                                                ? &side.order_recovery
-                                                : nullptr);
+                                            side.event.order);
                     break;
                 case GatewayEventType::QuoteAck: {
-                    // Recovery handle already embedded in event (no lookup needed)
-                    if (side.event.quote_recovery.valid) {
-                        merge_quote_recovery(&side.quote_recovery, side.event.quote_recovery);
-                        update_live_quote_recovery(side.event.quote.client_quote_id,
-                                                   side.quote_recovery);
-                    }
                     publish_monitor_quote(side.event.quote);
                     defer_quote_persistence(QuotePersistenceEventType::Ack,
                                             side.event.quote,
-                                            has_quote_recovery(side.quote_recovery)
-                                                ? &side.quote_recovery
-                                                : nullptr);
+                                            nullptr);
                     break;
                 }
                 case GatewayEventType::QuoteCancel:
                     publish_monitor_quote(side.event.quote);
                     defer_quote_persistence(QuotePersistenceEventType::Cancel,
                                             side.event.quote,
-                                            has_quote_recovery(side.quote_recovery)
-                                                ? &side.quote_recovery
-                                                : nullptr);
+                                            nullptr);
                     break;
                 case GatewayEventType::QuoteReject:
                     publish_monitor_quote(side.event.quote);
                     defer_quote_persistence(QuotePersistenceEventType::Reject,
                                             side.event.quote,
-                                            has_quote_recovery(side.quote_recovery)
-                                                ? &side.quote_recovery
-                                                : nullptr);
+                                            nullptr);
                     break;
                 case GatewayEventType::OrderFill:
                 case GatewayEventType::QuoteFill: {
@@ -2130,18 +1929,12 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                 case GatewayEventType::OrderCancel:
                     publish_monitor_order(side.event.order);
                     defer_order_persistence(OrderPersistenceEventType::Cancel,
-                                            side.event.order,
-                                            has_order_recovery(side.order_recovery)
-                                                ? &side.order_recovery
-                                                : nullptr);
+                                            side.event.order);
                     break;
                 case GatewayEventType::OrderReject:
                     publish_monitor_order(side.event.order);
                     defer_order_persistence(OrderPersistenceEventType::Reject,
-                                            side.event.order,
-                                            has_order_recovery(side.order_recovery)
-                                                ? &side.order_recovery
-                                                : nullptr);
+                                            side.event.order);
                     break;
                 default:
                     break;
@@ -2168,17 +1961,11 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                 if (!order.is_manual) {
                     order.book_id = mm_book_ids_[i];
                 }
-                GatewayOrderRecoveryHandle recovery{};
-                const bool sent = gateway_->send_order(order, &recovery);
+                const bool sent = gateway_->send_order(order);
                 publish_monitor_order(order);
                 if (sent) {
-                    const bool has_recovery = has_order_recovery(recovery);
-                    track_live_order_submit(order, has_recovery ? &recovery : nullptr);
-                    if (has_recovery) {
-                        defer_order_persistence(OrderPersistenceEventType::Submit, order, &recovery);
-                    } else {
-                        defer_order_persistence(OrderPersistenceEventType::Submit, order);
-                    }
+                    track_live_order_submit(order);
+                    defer_order_persistence(OrderPersistenceEventType::Submit, order);
                 } else {
                     Order rejected = order;
                     rejected.status = OrderStatus::Rejected;
@@ -2199,23 +1986,19 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                     continue;
                 }
                 quote.book_id = mm_book_ids_[i];
-                GatewayQuoteRecoveryHandle recovery{};
-                const bool sent = gateway_->send_quote(quote, &recovery);
+                OrderId bid_order_id = 0;
+                OrderId ask_order_id = 0;
+                const bool sent = gateway_->send_quote(quote, &bid_order_id, &ask_order_id);
                 publish_monitor_quote(quote);
                 if (sent && (quote.bid_volume > 0 || quote.ask_volume > 0)) {
-                    if (has_quote_recovery(recovery)) {
-                        track_live_quote_submit(quote, &recovery);
-                        defer_quote_persistence(QuotePersistenceEventType::Submit, quote, &recovery);
-                    } else {
-                        track_live_quote_submit(quote, nullptr);
-                        defer_quote_persistence(QuotePersistenceEventType::Submit, quote);
-                    }
+                    track_live_quote_submit(quote, bid_order_id, ask_order_id);
+                    defer_quote_persistence(QuotePersistenceEventType::Submit, quote, nullptr);
                 } else if (!sent) {
                     Quote rejected = quote;
                     rejected.bid_status = OrderStatus::Rejected;
                     rejected.ask_status = OrderStatus::Rejected;
                     rejected.ack_ts = get_monotonic_ns();
-                    defer_quote_persistence(QuotePersistenceEventType::Reject, rejected);
+                    defer_quote_persistence(QuotePersistenceEventType::Reject, rejected, nullptr);
                 }
                 if (((drained + 1) % kDispatcherCallbackInterleaveBurstCap) == 0) {
                     drain_callbacks(kDispatcherCallbackInterleaveBurstCap);
@@ -2232,17 +2015,11 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                 }
                 if (intent.kind == ArbIntentKind::SubmitOrder) {
                     intent.order.book_id = arb_book_id_for_type(i, intent.strategy_type);
-                    GatewayOrderRecoveryHandle recovery{};
-                    const bool sent = gateway_->send_order(intent.order, &recovery);
+                    const bool sent = gateway_->send_order(intent.order);
                     publish_monitor_order(intent.order);
                     if (sent) {
-                        const bool has_recovery = has_order_recovery(recovery);
-                        track_live_order_submit(intent.order, has_recovery ? &recovery : nullptr);
-                        if (has_recovery) {
-                            defer_order_persistence(OrderPersistenceEventType::Submit, intent.order, &recovery);
-                        } else {
-                            defer_order_persistence(OrderPersistenceEventType::Submit, intent.order);
-                        }
+                        track_live_order_submit(intent.order);
+                        defer_order_persistence(OrderPersistenceEventType::Submit, intent.order);
                     } else {
                         Order rejected = intent.order;
                         rejected.status = OrderStatus::Rejected;
@@ -2949,29 +2726,27 @@ void TradingEngine::shutdown_on_zero_sessions() noexcept {
     cancel_all_live_orders_and_quotes();
 }
 
-void TradingEngine::track_live_order_submit(const Order& order,
-                                            const GatewayOrderRecoveryHandle* recovery) noexcept {
+void TradingEngine::track_live_order_submit(const Order& order) noexcept {
     std::lock_guard<std::mutex> lock(live_state_mutex_);
     LiveOrderState state{};
     state.order = order;
-    if (recovery != nullptr) {
-        state.recovery = *recovery;
-    }
     if (!live_orders_.insert(order.client_order_id, state)) {
         live_state_drops_.fetch_add(1, std::memory_order_relaxed);
     }
 }
 
 void TradingEngine::track_live_quote_submit(const Quote& quote,
-                                            const GatewayQuoteRecoveryHandle* recovery) noexcept {
+                                            OrderId bid_order_id,
+                                            OrderId ask_order_id) noexcept {
     std::lock_guard<std::mutex> lock(live_state_mutex_);
     LiveQuoteState* existing = live_quotes_.find(quote.client_quote_id);
     if (existing != nullptr) {
-        if (existing->recovery.bid_order_id != 0) {
-            quote_leg_to_quote_.erase(existing->recovery.bid_order_id);
+        // Remove old quote leg mappings if they exist
+        if (existing->bid_order_id != 0) {
+            quote_leg_to_quote_.erase(existing->bid_order_id);
         }
-        if (existing->recovery.ask_order_id != 0) {
-            quote_leg_to_quote_.erase(existing->recovery.ask_order_id);
+        if (existing->ask_order_id != 0) {
+            quote_leg_to_quote_.erase(existing->ask_order_id);
         }
     }
 
@@ -2979,22 +2754,15 @@ void TradingEngine::track_live_quote_submit(const Quote& quote,
     state.quote = quote;
     state.remaining_bid = quote.bid_volume;
     state.remaining_ask = quote.ask_volume;
-    if (recovery != nullptr) {
-        state.recovery = *recovery;
+    state.bid_order_id = bid_order_id;
+    state.ask_order_id = ask_order_id;
+
+    // Map quote leg order IDs to quote ID for tracking
+    if (bid_order_id != 0) {
+        (void)quote_leg_to_quote_.insert(bid_order_id, quote.client_quote_id);
     }
-    if (cfg_.gateway.type == GatewayType::CTP) {
-        if (state.recovery.bid_order_id == 0) {
-            state.recovery.bid_order_id = quote.client_quote_id;
-        }
-        if (state.recovery.ask_order_id == 0) {
-            state.recovery.ask_order_id = quote.client_quote_id | (1ULL << 47);
-        }
-    }
-    if (state.recovery.bid_order_id != 0) {
-        (void)quote_leg_to_quote_.insert(state.recovery.bid_order_id, quote.client_quote_id);
-    }
-    if (state.recovery.ask_order_id != 0) {
-        (void)quote_leg_to_quote_.insert(state.recovery.ask_order_id, quote.client_quote_id);
+    if (ask_order_id != 0) {
+        (void)quote_leg_to_quote_.insert(ask_order_id, quote.client_quote_id);
     }
     if (!live_quotes_.insert(quote.client_quote_id, state)) {
         live_state_drops_.fetch_add(1, std::memory_order_relaxed);
@@ -3002,9 +2770,7 @@ void TradingEngine::track_live_quote_submit(const Quote& quote,
 }
 
 void TradingEngine::handle_gateway_order_update(Order& order,
-                                                GatewayEventType type,
-                                                GatewayOrderRecoveryHandle* recovery) noexcept {
-    if (recovery != nullptr) *recovery = GatewayOrderRecoveryHandle{};
+                                                GatewayEventType type) noexcept {
     std::lock_guard<std::mutex> lock(live_state_mutex_);
     LiveOrderState* state = live_orders_.find(order.client_order_id);
     if (state != nullptr) {
@@ -3019,9 +2785,6 @@ void TradingEngine::handle_gateway_order_update(Order& order,
             live.exchange_order_id = order.exchange_order_id;
         } else {
             order.exchange_order_id = live.exchange_order_id;
-        }
-        if (recovery != nullptr) {
-            *recovery = state->recovery;
         }
         if (type == GatewayEventType::OrderCancel || type == GatewayEventType::OrderReject) {
             live_orders_.erase(order.client_order_id);
@@ -3039,33 +2802,10 @@ void TradingEngine::handle_gateway_order_update(Order& order,
     if (order.exchange_id.empty()) {
         order.exchange_id = live_quote->quote.exchange_id;
     }
-    if (recovery != nullptr) {
-        *recovery = GatewayOrderRecoveryHandle{};
-        recovery->valid = true;
-        recovery->is_quote_leg = true;
-        recovery->client_quote_id = live_quote->quote.client_quote_id;
-        if (order.side == Side::Buy) {
-            std::strncpy(recovery->exchange_local_id,
-                         live_quote->recovery.bid_local_id,
-                         sizeof(recovery->exchange_local_id) - 1);
-            std::strncpy(recovery->order_sys_id,
-                         live_quote->recovery.bid_order_sys_id,
-                         sizeof(recovery->order_sys_id) - 1);
-        } else {
-            std::strncpy(recovery->exchange_local_id,
-                         live_quote->recovery.ask_local_id,
-                         sizeof(recovery->exchange_local_id) - 1);
-            std::strncpy(recovery->order_sys_id,
-                         live_quote->recovery.ask_order_sys_id,
-                         sizeof(recovery->order_sys_id) - 1);
-        }
-    }
 }
 
 void TradingEngine::handle_gateway_quote_update(Quote& quote,
-                                                GatewayEventType type,
-                                                GatewayQuoteRecoveryHandle* recovery) noexcept {
-    if (recovery != nullptr) *recovery = GatewayQuoteRecoveryHandle{};
+                                                GatewayEventType type) noexcept {
     std::lock_guard<std::mutex> lock(live_state_mutex_);
     LiveQuoteState* state = live_quotes_.find(quote.client_quote_id);
     if (state == nullptr) return;
@@ -3083,48 +2823,9 @@ void TradingEngine::handle_gateway_quote_update(Quote& quote,
     live.quote.bid_status = quote.bid_status;
     live.quote.ask_status = quote.ask_status;
     live.quote.ack_ts = quote.ack_ts != 0 ? quote.ack_ts : live.quote.ack_ts;
-    if (recovery != nullptr) {
-        *recovery = live.recovery;
-    }
 
     if (type == GatewayEventType::QuoteCancel || type == GatewayEventType::QuoteReject) {
-        if (live.recovery.bid_order_id != 0) {
-            quote_leg_to_quote_.erase(live.recovery.bid_order_id);
-        }
-        if (live.recovery.ask_order_id != 0) {
-            quote_leg_to_quote_.erase(live.recovery.ask_order_id);
-        }
         live_quotes_.erase(quote.client_quote_id);
-    }
-}
-
-void TradingEngine::update_live_order_recovery(OrderId order_id,
-                                               const GatewayOrderRecoveryHandle& recovery) noexcept {
-    std::lock_guard<std::mutex> lock(live_state_mutex_);
-    LiveOrderState* state = live_orders_.find(order_id);
-    if (state == nullptr) return;
-    merge_order_recovery(&state->recovery, recovery);
-}
-
-void TradingEngine::update_live_quote_recovery(QuoteId quote_id,
-                                               const GatewayQuoteRecoveryHandle& recovery) noexcept {
-    std::lock_guard<std::mutex> lock(live_state_mutex_);
-    LiveQuoteState* state = live_quotes_.find(quote_id);
-    if (state == nullptr) return;
-
-    LiveQuoteState& live = *state;
-    if (live.recovery.bid_order_id != 0) {
-        quote_leg_to_quote_.erase(live.recovery.bid_order_id);
-    }
-    if (live.recovery.ask_order_id != 0) {
-        quote_leg_to_quote_.erase(live.recovery.ask_order_id);
-    }
-    merge_quote_recovery(&live.recovery, recovery);
-    if (live.recovery.bid_order_id != 0) {
-        (void)quote_leg_to_quote_.insert(live.recovery.bid_order_id, quote_id);
-    }
-    if (live.recovery.ask_order_id != 0) {
-        (void)quote_leg_to_quote_.insert(live.recovery.ask_order_id, quote_id);
     }
 }
 
@@ -3150,12 +2851,6 @@ void TradingEngine::handle_gateway_fill(Trade* trade,
                 live.remaining_ask = std::max<Volume>(0, live.remaining_ask - trade->fill_volume);
             }
             if (live.remaining_bid <= 0 && live.remaining_ask <= 0) {
-                if (live.recovery.bid_order_id != 0) {
-                    quote_leg_to_quote_.erase(live.recovery.bid_order_id);
-                }
-                if (live.recovery.ask_order_id != 0) {
-                    quote_leg_to_quote_.erase(live.recovery.ask_order_id);
-                }
                 live_quotes_.erase(direct_quote_id);
             }
             return;
@@ -3182,12 +2877,6 @@ void TradingEngine::handle_gateway_fill(Trade* trade,
                 live.remaining_ask = std::max<Volume>(0, live.remaining_ask - trade->fill_volume);
             }
             if (live.remaining_bid <= 0 && live.remaining_ask <= 0) {
-                if (live.recovery.bid_order_id != 0) {
-                    quote_leg_to_quote_.erase(live.recovery.bid_order_id);
-                }
-                if (live.recovery.ask_order_id != 0) {
-                    quote_leg_to_quote_.erase(live.recovery.ask_order_id);
-                }
                 live_quotes_.erase(quote_id);
             }
             return;
@@ -3239,16 +2928,7 @@ void TradingEngine::cancel_all_live_orders_and_quotes() noexcept {
     }
     for (std::size_t i = 0; i < quote_count; ++i) {
         const LiveQuoteState& quote = quotes[i];
-        if (cfg_.gateway.type == GatewayType::CTP) {
-            if (quote.recovery.bid_order_id != 0) {
-                (void)gateway_->cancel_order(quote.recovery.bid_order_id, quote.quote.instrument_id);
-            }
-            if (quote.recovery.ask_order_id != 0) {
-                (void)gateway_->cancel_order(quote.recovery.ask_order_id, quote.quote.instrument_id);
-            }
-        } else {
-            (void)gateway_->cancel_quote(quote.quote.client_quote_id, quote.quote.instrument_id);
-        }
+        (void)gateway_->cancel_quote(quote.quote.client_quote_id, quote.quote.instrument_id);
     }
 }
 

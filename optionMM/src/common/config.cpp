@@ -93,20 +93,11 @@ static FeedConfig parse_feed(const YAML::Node& n) {
 static GatewayConfig parse_gateway(const YAML::Node& n) {
     require(n, "gateway");
     GatewayConfig c;
-    std::string type = get<std::string>(n["type"], "gateway.type", "ctp");
-    if (type == "ctp")       c.type = GatewayType::CTP;
-    else if (type == "femas") c.type = GatewayType::FEMAS;
+    std::string type = get<std::string>(n["type"], "gateway.type", "femas");
+    if (type == "femas") c.type = GatewayType::FEMAS;
     else if (type == "sim") c.type = GatewayType::Sim;
-    else throw std::runtime_error("config: gateway.type must be 'ctp', 'femas', or 'sim', got: " + type);
+    else throw std::runtime_error("config: gateway.type must be 'femas' or 'sim', got: " + type);
 
-    if (auto ctp = n["ctp"]) {
-        str_copy(c.ctp.front_addr, sizeof(c.ctp.front_addr), ctp["front_addr"], "gateway.ctp.front_addr");
-        str_copy(c.ctp.broker_id,  sizeof(c.ctp.broker_id),  ctp["broker_id"],  "gateway.ctp.broker_id");
-        str_copy(c.ctp.user_id,    sizeof(c.ctp.user_id),    ctp["user_id"],    "gateway.ctp.user_id");
-        str_copy(c.ctp.password,   sizeof(c.ctp.password),   ctp["password"],   "gateway.ctp.password");
-        str_copy(c.ctp.app_id,     sizeof(c.ctp.app_id),     ctp["app_id"],     "gateway.ctp.app_id", "");
-        str_copy(c.ctp.auth_code,  sizeof(c.ctp.auth_code),  ctp["auth_code"],  "gateway.ctp.auth_code", "");
-    }
     if (auto fm = n["femas"]) {
         str_copy(c.femas.front_addr, sizeof(c.femas.front_addr), fm["front_addr"], "gateway.femas.front_addr");
         str_copy(c.femas.broker_id,  sizeof(c.femas.broker_id),  fm["broker_id"],  "gateway.femas.broker_id");

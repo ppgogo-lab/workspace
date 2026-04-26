@@ -1,0 +1,223 @@
+CFrdRegister.....Init...
+CFrdRegister.....Init...
+[2026-04-19 21:50:02.336723] [info] [startup] logger initialised path=logs/optionmm.log
+[2026-04-19 21:50:02.336760] [info] [startup] optionMM starting
+[2026-04-19 21:50:02.338763] [info] [startup] gateway: sim instruments=74
+[2026-04-19 21:50:02.339163] [info] [startup] feed: sim tick_interval_ms=80 seed=42
+[2026-04-19 21:50:02.374816] [info] [startup] TradingEngine starting: 2 products, 74 instruments
+[2026-04-19 21:50:02.384785] [info] [grpc] gRPC server listening on 0.0.0.0:50051
+optionMM running. gRPC monitor on 0.0.0.0:50051
+[2026-04-19 21:50:03.440237] [info] [fill] instr=41 side=buy qty=3 price=45.0000 order_id=4294967336
+[2026-04-19 21:50:03.440326] [info] [fill] instr=47 side=buy qty=3 price=47.0000 order_id=4294967342
+[2026-04-19 21:50:03.440359] [info] [fill] instr=50 side=buy qty=3 price=46.0000 order_id=4294967345
+[2026-04-19 21:50:03.440381] [info] [fill] instr=52 side=buy qty=3 price=45.0000 order_id=4294967347
+[2026-04-19 21:50:03.440398] [info] [fill] instr=55 side=buy qty=1 price=241.0000 order_id=4294967350
+[2026-04-19 21:50:03.440420] [info] [fill] instr=59 side=buy qty=3 price=60.0000 order_id=4294967354
+[2026-04-19 21:50:03.440438] [info] [fill] instr=61 side=buy qty=3 price=61.0000 order_id=4294967356
+[2026-04-19 21:50:03.441821] [info] [fill] instr=62 side=buy qty=3 price=60.0000 order_id=4294967357
+[2026-04-19 21:50:03.441942] [info] [fill] instr=67 side=buy qty=3 price=205.0000 order_id=4294967362
+[2026-04-19 21:50:03.441975] [info] [fill] instr=70 side=buy qty=3 price=56.0000 order_id=4294967365
+[2026-04-19 21:50:03.441996] [info] [fill] instr=72 side=buy qty=3 price=56.0000 order_id=4294967367
+[2026-04-19 21:50:03.442104] [info] [fill] instr=73 side=buy qty=1 price=353.0000 order_id=4294967368
+[2026-04-19 21:50:12.413999] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0555 sr=-0.2594 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:50:12.435381] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0493 sr=0.4306 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:50:12.452582] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0609 sr=-0.0053 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:50:12.473097] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0539 sr=0.4498 pc=50.0000 cc=28.9274 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:50:22.500775] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0604 sr=0.2791 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:50:22.517863] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0512 sr=0.7841 pc=50.0000 cc=43.9516 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:50:22.538313] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0625 sr=0.0117 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:50:22.558476] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0552 sr=0.5053 pc=50.0000 cc=27.1204 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:50:32.582601] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0604 sr=-0.3103 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:50:32.603130] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0545 sr=0.4171 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:50:32.616727] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0674 sr=-0.0692 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:50:32.637062] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0602 sr=0.2732 pc=50.0000 cc=35.8927 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:50:34.672966] [info] [fill] instr=9 side=buy qty=3 price=3.3800 order_id=513
+[2026-04-19 21:50:34.673022] [info] [fill] instr=18 side=sell qty=2 price=12.0600 order_id=522
+[2026-04-19 21:50:34.673048] [info] [fill] instr=34 side=sell qty=3 price=14.9600 order_id=538
+[2026-04-19 21:50:42.666919] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0555 sr=0.0591 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:50:42.689164] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0473 sr=0.5850 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:50:42.705192] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0630 sr=0.0216 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:50:42.728094] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0554 sr=0.5383 pc=50.0000 cc=26.3939 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:50:52.753867] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0587 sr=0.0103 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:50:52.783641] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0507 sr=0.5854 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:50:52.799782] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0609 sr=-0.0511 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:50:52.825390] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0541 sr=0.3055 pc=50.0000 cc=33.9989 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:50:55.145344] [info] [fill] instr=1 side=sell qty=1 price=10.0400 order_id=793
+[2026-04-19 21:50:55.145436] [info] [fill] instr=2 side=sell qty=3 price=3.0200 order_id=794
+[2026-04-19 21:50:55.145462] [info] [fill] instr=16 side=sell qty=1 price=10.0000 order_id=808
+[2026-04-19 21:50:55.145481] [info] [fill] instr=29 side=sell qty=3 price=3.9200 order_id=821
+[2026-04-19 21:51:02.859045] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0618 sr=-0.1699 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:51:02.884459] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0548 sr=0.4999 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:51:02.891761] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0587 sr=-0.0340 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:51:02.916462] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0590 sr=0.4316 pc=50.0000 cc=30.2572 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:51:12.941148] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0563 sr=0.2738 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:51:12.956586] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0472 sr=0.7734 pc=50.0000 cc=43.4271 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:51:12.975795] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0648 sr=-0.0060 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:51:12.999456] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0577 sr=0.4648 pc=50.0000 cc=28.7476 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:51:21.713645] [info] [fill] instr=7 side=buy qty=1 price=4.5800 order_id=1087
+[2026-04-19 21:51:21.713726] [info] [fill] instr=13 side=sell qty=3 price=3.4000 order_id=1093
+[2026-04-19 21:51:21.713744] [info] [fill] instr=19 side=sell qty=3 price=7.5400 order_id=1099
+[2026-04-19 21:51:23.021582] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0567 sr=-0.2232 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:51:23.043488] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0503 sr=0.4561 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:51:23.059110] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0604 sr=-0.0738 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:51:23.083104] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0538 sr=0.2250 pc=50.0000 cc=36.8697 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:51:33.107249] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0619 sr=0.0294 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:51:33.132111] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0536 sr=0.5997 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:51:33.145874] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0648 sr=0.0216 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:51:33.168653] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0571 sr=0.5563 pc=50.0000 cc=25.6313 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:51:43.193710] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0585 sr=0.0207 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:51:43.219726] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0504 sr=0.5868 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:51:43.246779] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0668 sr=-0.0667 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:51:43.267792] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0598 sr=0.2502 pc=50.0000 cc=36.8941 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:51:53.292487] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0555 sr=-0.1559 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:51:53.308238] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0456 sr=0.5556 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:51:53.327911] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0607 sr=-0.0192 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:51:53.351300] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0537 sr=0.4409 pc=50.0000 cc=29.4106 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:52:03.381121] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0607 sr=0.1483 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:52:03.405067] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0519 sr=0.6299 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:52:03.424846] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0622 sr=-0.0031 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:52:03.448050] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0552 sr=0.4811 pc=50.0000 cc=27.9621 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:52:13.462188] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0516 sr=-0.6837 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:52:13.483624] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0543 sr=0.4164 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:52:13.497635] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0674 sr=-0.0727 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:52:13.519953] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0602 sr=0.2610 pc=50.0000 cc=36.3210 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:52:23.544540] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0555 sr=0.0974 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:52:23.574927] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0471 sr=0.5977 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:52:23.591460] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0633 sr=0.0255 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:52:23.614943] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0555 sr=0.5707 pc=50.0000 cc=25.1475 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:52:33.637068] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0586 sr=-0.0478 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:52:33.663544] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0508 sr=0.5644 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:52:33.679606] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0609 sr=-0.0511 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:52:33.701971] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0539 sr=0.3259 pc=50.0000 cc=33.5002 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:52:43.727100] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0618 sr=-0.1528 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:52:43.753305] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0547 sr=0.5048 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:52:43.770882] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0660 sr=-0.0312 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:52:43.792546] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0588 sr=0.4136 pc=50.0000 cc=31.1287 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:52:53.823580] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0564 sr=0.2543 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:52:53.844122] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0474 sr=0.7424 pc=50.0000 cc=45.0307 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:52:53.864811] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0651 sr=-0.0052 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:52:53.898339] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0576 sr=0.4740 pc=50.0000 cc=28.7416 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:53:03.929651] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0566 sr=-0.2450 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:53:03.954160] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0503 sr=0.4429 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:53:03.969000] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0603 sr=-0.0615 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:53:03.991401] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0538 sr=0.2671 pc=50.0000 cc=35.2134 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:53:14.019243] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0619 sr=0.0798 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:53:14.040132] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0533 sr=0.6176 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:53:14.053640] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0647 sr=0.0321 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:53:14.077275] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0569 sr=0.6245 pc=50.0000 cc=23.4040 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:53:24.100848] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0586 sr=0.0141 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:53:24.125379] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0504 sr=0.5861 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:53:24.145319] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0668 sr=-0.0667 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:53:24.165120] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0599 sr=0.2653 pc=50.0000 cc=36.3701 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:53:34.189547] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0555 sr=-0.1242 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:53:34.213801] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0483 sr=0.5092 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:53:34.233233] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0611 sr=0.0086 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:53:34.257257] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0539 sr=0.4864 pc=50.0000 cc=27.8613 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:53:44.282442] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0605 sr=0.2015 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:53:44.298187] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0515 sr=0.6496 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:53:44.316522] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0622 sr=-0.0031 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:53:44.336932] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0551 sr=0.4663 pc=50.0000 cc=28.4769 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:53:54.361748] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0604 sr=-0.3455 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:53:54.381064] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0547 sr=0.4022 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:53:54.396186] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0673 sr=-0.0759 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:53:54.418608] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0602 sr=0.2732 pc=50.0000 cc=35.8934 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:54:04.441221] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0555 sr=0.0618 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:54:04.452270] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0459 sr=0.6322 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:54:04.466406] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0633 sr=0.0289 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:54:04.485834] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0557 sr=0.5715 pc=50.0000 cc=24.9558 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:54:14.507635] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0585 sr=0.0078 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:54:14.532378] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0505 sr=0.5830 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:54:14.545199] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0606 sr=-0.0564 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:54:14.567518] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0539 sr=0.3259 pc=50.0000 cc=33.5005 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:54:24.589851] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0618 sr=-0.1687 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:54:24.610221] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0548 sr=0.4990 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:54:24.615980] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0586 sr=-0.0507 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:54:24.636431] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0583 sr=0.4364 pc=50.0000 cc=30.8338 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:54:34.664959] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0567 sr=0.2208 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:54:34.680069] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0477 sr=0.6596 pc=50.0000 cc=48.9045 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:54:34.698847] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0648 sr=-0.0060 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:54:34.719757] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0577 sr=0.4648 pc=50.0000 cc=28.7481 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:54:44.741965] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0563 sr=-0.3409 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:54:44.762523] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0507 sr=0.3882 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:54:44.775767] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0602 sr=-0.0555 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:54:44.796953] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0537 sr=0.2908 pc=50.0000 cc=34.4124 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:54:54.818685] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0619 sr=0.0533 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:54:54.844787] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0536 sr=0.6032 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:54:54.861208] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0647 sr=0.0252 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:54:54.882140] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0569 sr=0.5948 pc=50.0000 cc=24.2957 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:55:04.905197] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0587 sr=-0.0748 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:55:04.928030] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0511 sr=0.5472 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:55:04.943258] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0666 sr=-0.0597 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:55:04.967083] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0595 sr=0.2995 pc=50.0000 cc=35.1236 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:55:14.992109] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0555 sr=-0.1330 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:55:15.019739] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0484 sr=0.5030 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:55:15.040573] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0608 sr=-0.0282 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:55:15.062214] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0537 sr=0.3997 pc=50.0000 cc=31.1524 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:55:25.088005] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0606 sr=0.2150 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:55:25.103884] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0515 sr=0.6560 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:55:25.122037] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0622 sr=0.0087 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:55:25.142086] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0549 sr=0.4760 pc=50.0000 cc=28.2606 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:55:35.167563] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0606 sr=-0.2213 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:55:35.187815] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0541 sr=0.4667 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:55:35.201612] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0673 sr=-0.0759 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:55:35.224780] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0602 sr=0.2732 pc=50.0000 cc=35.8937 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:55:45.246189] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0556 sr=0.1498 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:55:45.268654] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0470 sr=0.6124 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:55:45.282392] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0630 sr=0.0216 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:55:45.301754] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0554 sr=0.5383 pc=50.0000 cc=26.3945 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:55:55.322648] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0587 sr=-0.0001 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:55:55.347239] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0506 sr=0.5841 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:55:55.362818] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0606 sr=-0.0516 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:55:55.384665] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0540 sr=0.3018 pc=50.0000 cc=34.2920 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:56:05.409305] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0619 sr=-0.1821 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:56:05.430218] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0549 sr=0.4956 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:56:05.435296] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0586 sr=-0.0507 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:56:05.474503] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0582 sr=0.4208 pc=50.0000 cc=31.3204 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:56:15.495821] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0566 sr=0.2534 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:56:15.509282] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0476 sr=0.7382 pc=50.0000 cc=44.9917 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:56:15.521988] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0651 sr=0.0028 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:56:15.540601] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0577 sr=0.5133 pc=50.0000 cc=27.0459 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:56:25.561285] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0565 sr=-0.3060 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:56:25.580925] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0507 sr=0.4082 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:56:25.593580] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0603 sr=-0.0585 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:56:25.613209] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0537 sr=0.2790 pc=50.0000 cc=34.8108 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:56:35.635145] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0619 sr=0.0851 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:56:35.655633] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0535 sr=0.6097 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:56:35.668365] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0645 sr=0.0116 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:56:35.686949] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0569 sr=0.5258 pc=50.0000 cc=27.0750 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:56:45.707847] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0584 sr=-0.0567 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:56:45.725930] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0507 sr=0.5564 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:56:45.738341] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0667 sr=-0.0566 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:56:45.757037] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0596 sr=0.2865 pc=50.0000 cc=35.6536 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:56:55.782224] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0555 sr=-0.1712 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:56:55.805604] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0487 sr=0.4816 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:56:55.822606] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0608 sr=-0.0192 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:56:55.842045] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0537 sr=0.4409 pc=50.0000 cc=29.4113 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:57:05.870166] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0604 sr=0.2577 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:57:05.884161] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0512 sr=0.7549 pc=50.0000 cc=44.9458 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:57:05.901740] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0622 sr=-0.0031 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:57:05.921430] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0551 sr=0.4663 pc=50.0000 cc=28.4774 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:57:15.948503] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0603 sr=-0.2860 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:57:15.972627] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0542 sr=0.4318 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:57:15.987041] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0672 sr=-0.0655 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:57:16.008954] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0602 sr=0.2902 pc=50.0000 cc=35.1305 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:57:26.033158] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0555 sr=0.1178 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:57:26.060945] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0471 sr=0.6031 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:57:26.079654] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0630 sr=0.0172 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:57:26.107391] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0554 sr=0.5938 pc=50.0000 cc=24.0540 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:57:36.130113] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0585 sr=-0.0323 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:57:36.156367] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0506 sr=0.5744 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:57:36.170989] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0610 sr=-0.0602 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:57:36.195194] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0541 sr=0.2899 pc=50.0000 cc=34.6961 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:57:46.233993] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0619 sr=-0.1501 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:57:46.300189] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0547 sr=0.5181 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:57:46.335758] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0659 sr=0.0087 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:57:46.378522] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0584 sr=0.4865 pc=50.0000 cc=28.4342 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:57:56.402890] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0569 sr=0.2014 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:57:56.417290] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0479 sr=0.6402 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:57:56.421932] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0583 sr=-0.0203 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:57:56.441514] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0578 sr=0.4420 pc=50.0000 cc=30.0403 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:58:06.465430] [info] [volfitter] product=0 expiry_T=0.1233 n=18 vr=0.0564 sr=-0.2186 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:58:06.484161] [info] [volfitter] product=0 expiry_T=0.2055 n=18 vr=0.0499 sr=0.4560 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:58:06.497306] [info] [volfitter] product=1 expiry_T=0.1233 n=18 vr=0.0603 sr=-0.0646 pc=50.0000 cc=50.0000 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
+[2026-04-19 21:58:06.517791] [info] [volfitter] product=1 expiry_T=0.2055 n=18 vr=0.0538 sr=0.2554 pc=50.0000 cc=35.6231 dc=-0.1500 uc=0.1500 dsm=0.5000 usm=0.5000
