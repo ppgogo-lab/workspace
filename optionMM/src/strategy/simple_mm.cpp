@@ -3,7 +3,7 @@
 
 namespace omm {
 
-void SimpleMMStrategy::on_signal(const PricingSignal& signal) noexcept {
+void SimpleMMStrategy::on_signal_impl(const PricingSignal& signal) noexcept {
     if (!params_ || !params_->enabled.load(std::memory_order_relaxed)) return;
 
     // Staleness check: reject signals older than 500µs
@@ -12,6 +12,7 @@ void SimpleMMStrategy::on_signal(const PricingSignal& signal) noexcept {
 
     const uint16_t id = signal.instrument_id;
     if (id >= MAX_INSTRUMENTS) return;
+    if (!instrument_state_[id].active) return;
 
     // Load params (relaxed — eventual consistency acceptable)
     double bid_spread = params_->bid_spread.load(std::memory_order_relaxed);
@@ -37,85 +38,27 @@ void SimpleMMStrategy::on_signal(const PricingSignal& signal) noexcept {
     if (bid <= 0.0 || ask <= bid) return;
 
     // Inventory lean: if at position limit, only quote the reducing side
-    int32_t pos = net_position_[id];
+    int32_t pos = instrument_state_[id].net_position;
     Volume bid_vol = quote_vol, ask_vol = quote_vol;
     if (pos >= max_pos)  bid_vol = 0;   // long limit: stop buying
     if (pos <= -max_pos) ask_vol = 0;   // short limit: stop selling
     if (bid_vol == 0 && ask_vol == 0) return;
 
-    send_quote(signal, bid, ask, bid_vol, ask_vol);
+    // Submit quote (base class handles lifecycle and pre-trade risk)
+    request_quote(id, bid, ask, bid_vol, ask_vol, now);
 }
 
-void SimpleMMStrategy::send_quote(const PricingSignal& signal,
-                                   double bid, double ask,
-                                   Volume bid_vol, Volume ask_vol) noexcept {
-    const uint16_t id = signal.instrument_id;
-
-    Quote q{};
-    q.client_quote_id = next_order_id();
-    q.instrument_id   = id;
-    q.product_index   = product_idx_;
-    q.bid_price       = bid;
-    q.ask_price       = ask;
-    q.bid_volume      = bid_vol;
-    q.ask_volume      = ask_vol;
-    q.send_ts         = get_monotonic_ns();
-
-    // Pre-trade risk check
-    if (pre_risk_->check_quote(q) != PreTradeRisk::RejectReason::OK) return;
-
-    // Push to gateway dispatcher (non-blocking; drop if full — back-pressure)
-    if (quote_buf_->try_push(q)) {
-        last_quote_[id].bid  = bid;
-        last_quote_[id].ask  = ask;
-        last_quote_[id].id   = q.client_quote_id;
-        last_quote_[id].live = true;
-    }
-}
-
-void SimpleMMStrategy::on_fill(const Trade& trade) noexcept {
+void SimpleMMStrategy::on_fill_impl(const Trade& trade) noexcept {
+    // Base class has already updated instrument_state_[].net_position
     if (trade.instrument_id >= MAX_INSTRUMENTS) return;
-
-    int32_t qty = trade.fill_volume;
-    if (trade.side == Side::Buy)
-        net_position_[trade.instrument_id] += qty;
-    else
-        net_position_[trade.instrument_id] -= qty;
 
     // Update portfolio delta (approximate: delta ≈ 0.5 per option unit)
     // Exact delta is updated by the risk monitor via PostTradeRisk.
     // Here we just track a rough delta for hedge triggering.
-    portfolio_delta_ += (trade.side == Side::Buy ? 1.0 : -1.0) * qty * 0.5;
-
-    pre_risk_->on_order_fill(trade.client_order_id, qty, true);
+    portfolio_delta_ += (trade.side == Side::Buy ? 1.0 : -1.0) * trade.fill_volume * 0.5;
 }
 
-void SimpleMMStrategy::on_order_ack(const Order& order) noexcept {
-    pre_risk_->on_order_ack(order);
-}
-
-void SimpleMMStrategy::on_quote_ack(const Quote&) noexcept {}
-
-void SimpleMMStrategy::on_quote_cancel(const Quote& quote) noexcept {
-    if (quote.instrument_id >= MAX_INSTRUMENTS) return;
-    last_quote_[quote.instrument_id].live = false;
-}
-
-void SimpleMMStrategy::on_quote_reject(const Quote& quote) noexcept {
-    if (quote.instrument_id >= MAX_INSTRUMENTS) return;
-    last_quote_[quote.instrument_id].live = false;
-}
-
-void SimpleMMStrategy::on_order_cancel(OrderId id) noexcept {
-    pre_risk_->on_order_cancel(id);
-    // Mark quote as no longer live
-    for (auto& lq : last_quote_)
-        if (lq.id == id) { lq.live = false; break; }
-}
-
-void SimpleMMStrategy::on_order_reject(const Order&) noexcept {}
-
-void SimpleMMStrategy::on_timer(const TimerEvent& event) noexcept {
+void SimpleMMStrategy::on_timer_impl(const TimerEvent& event) noexcept {
     switch (event.type) {
     case TimerEventType::HedgeCheck: {
         if (!params_) break;
@@ -139,17 +82,11 @@ void SimpleMMStrategy::on_timer(const TimerEvent& event) noexcept {
         break;
     }
     case TimerEventType::SessionClose:
-        // Cancel all live quotes by sending zero-volume quotes
+        // Cancel all live quotes via base class helper
         for (uint16_t i = 0; i < MAX_INSTRUMENTS; ++i) {
-            if (!last_quote_[i].live) continue;
-            Quote cancel{};
-            cancel.client_quote_id = next_order_id();
-            cancel.instrument_id   = i;
-            cancel.product_index   = product_idx_;
-            cancel.bid_volume      = 0;
-            cancel.ask_volume      = 0;
-            (void)quote_buf_->try_push(cancel);
-            last_quote_[i].live = false;
+            if (instrument_state_[i].active) {
+                request_cancel(i, event.trigger_ts_ns);
+            }
         }
         break;
     default:
@@ -170,8 +107,8 @@ void SimpleMMStrategy::send_hedge_order(uint16_t underlying_id,
     o.is_hedge        = true;
     o.send_ts         = get_monotonic_ns();
 
-    if (pre_risk_->check_order(o) == PreTradeRisk::RejectReason::OK)
-        (void)order_buf_->try_push(o);
+    // Use base class helper for order submission with lifecycle tracking
+    submit_order(o);
 }
 
 } // namespace omm

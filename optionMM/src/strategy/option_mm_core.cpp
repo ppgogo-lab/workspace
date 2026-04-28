@@ -110,7 +110,11 @@ void OptionMMCoreStrategy::init(uint8_t product_idx,
         state.active = true;
         state.instrument_id = id;
         state.underlying_id = instr.underlying_id;
-        state.quote_lifecycle.replace_policy =
+
+        // Initialize base class instrument state
+        instrument_state_[id].active = true;
+        instrument_state_[id].instrument_id = id;
+        instrument_state_[id].quote_lifecycle.replace_policy =
             QuoteLifecycleController::policy_for_exchange(instr.exchange);
     }
 
@@ -174,7 +178,7 @@ bool OptionMMCoreStrategy::read_runtime_stats(StrategyRuntimeStats* out) const n
     return true;
 }
 
-void OptionMMCoreStrategy::on_signal(const PricingSignal& signal) noexcept {
+void OptionMMCoreStrategy::on_signal_impl(const PricingSignal& signal) noexcept {
     if (!params_) return;
     const uint16_t id = signal.instrument_id;
     if (id >= MAX_INSTRUMENTS) return;
@@ -229,19 +233,18 @@ void OptionMMCoreStrategy::on_signal(const PricingSignal& signal) noexcept {
     reevaluate_one(id, now_ns);
 }
 
-void OptionMMCoreStrategy::on_fill(const Trade& trade) noexcept {
+void OptionMMCoreStrategy::on_fill_impl(const Trade& trade) noexcept {
+    // Base class has already updated instrument_state_[].net_position and
+    // handled quote lifecycle fills. We handle strategy-specific logic here.
+
     if (trade.instrument_id >= MAX_INSTRUMENTS) return;
 
     const int signed_qty = (trade.side == Side::Buy ? 1 : -1) * trade.fill_volume;
 
+    // Handle hedge order fills
     if (trade.client_order_id != 0 && trade.client_order_id == live_hedge_order_id_) {
         underlying_net_position_ += signed_qty;
-        if (pre_risk_) {
-            live_hedge_remaining_ = std::max<Volume>(0, live_hedge_remaining_ - trade.fill_volume);
-            pre_risk_->on_order_fill(live_hedge_order_id_,
-                                     trade.fill_volume,
-                                     live_hedge_remaining_ <= 0);
-        }
+        live_hedge_remaining_ = std::max<Volume>(0, live_hedge_remaining_ - trade.fill_volume);
         if (live_hedge_remaining_ <= 0) {
             live_hedge_order_id_ = 0;
         }
@@ -250,19 +253,17 @@ void OptionMMCoreStrategy::on_fill(const Trade& trade) noexcept {
         return;
     }
 
+    // Handle option fills
     OptionState& state = option_state_[trade.instrument_id];
     if (!state.active) return;
 
-    state.net_position += signed_qty;
+    // Sync position from base class to option state
+    state.net_position = instrument_state_[trade.instrument_id].net_position;
+
+    // Update product exposure
     product_net_delta_ += state.last_delta * static_cast<double>(signed_qty);
     product_net_vega_ += state.last_vega * static_cast<double>(signed_qty);
-    if (trade.client_order_id != 0) {
-        (void)QuoteLifecycleController::note_quote_fill(state.quote_lifecycle,
-                                                        trade.client_order_id,
-                                                        trade.side,
-                                                        trade.fill_volume,
-                                                        state.quote_lifecycle.last_quote_ts);
-    }
+
     update_monitor_state(state);
 
     const int64_t now_ns = get_monotonic_ns();
@@ -273,84 +274,15 @@ void OptionMMCoreStrategy::on_fill(const Trade& trade) noexcept {
     reevaluate_one(trade.instrument_id, now_ns);
 }
 
-void OptionMMCoreStrategy::on_order_ack(const Order& order) noexcept {
-    if (pre_risk_) pre_risk_->on_order_ack(order);
-}
+// Note: Quote lifecycle event handlers (on_quote_ack, on_quote_cancel, on_quote_reject)
+// are now handled by BaseQuotingStrategy. The base class manages quote state transitions.
+// Strategy-specific logic (suppress flags, requote triggers) happens in maybe_quote() and
+// build_decision().
 
-void OptionMMCoreStrategy::on_quote_ack(const Quote& quote) noexcept {
-    if (quote.instrument_id >= MAX_INSTRUMENTS) return;
-    OptionState& state = option_state_[quote.instrument_id];
-    if (!state.active) return;
+// Note: Order lifecycle event handlers (on_order_ack, on_order_cancel, on_order_reject)
+// are now handled by BaseQuotingStrategy. We override on_fill_impl to handle hedge orders.
 
-    bool request_requote = false;
-    const int64_t now_ns = get_monotonic_ns();
-    if (!QuoteLifecycleController::on_quote_ack(state.quote_lifecycle,
-                                                quote,
-                                                now_ns,
-                                                &request_requote)) {
-        return;
-    }
-    state.suppress_flags = (state.quote_lifecycle.status == StrategyQuoteMonitorState::Live)
-        ? SuppressNone
-        : state.suppress_flags;
-    update_monitor_state(state);
-    if (request_requote) {
-        reevaluate_one(quote.instrument_id, now_ns);
-    }
-}
-
-void OptionMMCoreStrategy::on_quote_cancel(const Quote& quote) noexcept {
-    if (quote.instrument_id >= MAX_INSTRUMENTS) return;
-    OptionState& state = option_state_[quote.instrument_id];
-    if (!state.active) return;
-
-    bool request_requote = false;
-    const int64_t now_ns = get_monotonic_ns();
-    if (!QuoteLifecycleController::on_quote_cancel(state.quote_lifecycle,
-                                                   quote,
-                                                   &request_requote)) {
-        return;
-    }
-    update_monitor_state(state);
-    if (request_requote) {
-        reevaluate_one(quote.instrument_id, now_ns);
-    }
-}
-
-void OptionMMCoreStrategy::on_quote_reject(const Quote& quote) noexcept {
-    if (quote.instrument_id >= MAX_INSTRUMENTS) return;
-    OptionState& state = option_state_[quote.instrument_id];
-    if (!state.active) return;
-
-    bool request_requote = false;
-    if (!QuoteLifecycleController::on_quote_reject(state.quote_lifecycle,
-                                                   quote,
-                                                   &request_requote)) {
-        return;
-    }
-    state.suppress_flags |= SuppressInvalidMarket;
-    update_monitor_state(state);
-    if (request_requote) {
-        reevaluate_one(quote.instrument_id, get_monotonic_ns());
-    }
-}
-
-void OptionMMCoreStrategy::on_order_cancel(OrderId id) noexcept {
-    if (pre_risk_) pre_risk_->on_order_cancel(id);
-    if (id == live_hedge_order_id_) {
-        live_hedge_order_id_ = 0;
-        live_hedge_remaining_ = 0;
-    }
-}
-
-void OptionMMCoreStrategy::on_order_reject(const Order& order) noexcept {
-    if (order.client_order_id == live_hedge_order_id_) {
-        live_hedge_order_id_ = 0;
-        live_hedge_remaining_ = 0;
-    }
-}
-
-void OptionMMCoreStrategy::on_timer(const TimerEvent& event) noexcept {
+void OptionMMCoreStrategy::on_timer_impl(const TimerEvent& event) noexcept {
     switch (event.type) {
     case TimerEventType::QuoteRefresh:
         regime_state_ = capture_product_regime(event.trigger_ts_ns);
@@ -401,9 +333,7 @@ void OptionMMCoreStrategy::reevaluate_one(uint16_t instrument_id, int64_t now_ns
 
 void OptionMMCoreStrategy::cancel_all_live(int64_t now_ns) noexcept {
     for (uint16_t i = 0; i < option_count_; ++i) {
-        QuoteLifecycleController::discard_requote_after_update(
-            option_state_[option_ids_[i]].quote_lifecycle);
-        send_cancel(option_state_[option_ids_[i]], now_ns);
+        request_cancel(option_ids_[i], now_ns);
     }
 }
 
@@ -411,29 +341,33 @@ void OptionMMCoreStrategy::maybe_quote(uint16_t instrument_id, int64_t now_ns) n
     if (instrument_id >= MAX_INSTRUMENTS) return;
     OptionState& state = option_state_[instrument_id];
     if (!state.active) return;
-    // Replace/cancel acks are asynchronous. Mark the instrument for a second pass once
-    // the in-flight update resolves so we do not lose a fresh signal while waiting.
-    QuoteLifecycleController::mark_requote_after_update(state.quote_lifecycle);
-    if (manage_quote_lifecycle(state, now_ns)) return;
 
     QuoteDecision decision = build_decision(state, now_ns);
     state.suppress_flags = decision.suppress_flags;
     update_monitor_state(state);
-    if (QuoteLifecycleController::waiting_for_quote_update(state.quote_lifecycle)) {
-        return;
-    }
+
     if (decision.cancel_only) {
-        send_cancel(state, now_ns);
+        request_cancel(instrument_id, now_ns);
         return;
     }
     if (!decision.valid) return;
-    send_quote(state, decision, now_ns);
+
+    // Use base class helper to submit quote with lifecycle management
+    request_quote(instrument_id,
+                 decision.bid, decision.ask,
+                 decision.bid_vol, decision.ask_vol,
+                 now_ns);
 }
 
 OptionMMCoreStrategy::QuoteDecision
 OptionMMCoreStrategy::build_decision(OptionState& state, int64_t now_ns) const noexcept {
     QuoteDecision decision{};
-    const QuoteLifecycleState& quote_lifecycle = state.quote_lifecycle;
+
+    // Get quote lifecycle state from base class
+    const QuoteLifecycleState* quote_lifecycle_ptr = get_quote_state(state.instrument_id);
+    if (!quote_lifecycle_ptr) return decision;
+    const QuoteLifecycleState& quote_lifecycle = *quote_lifecycle_ptr;
+
     const bool cancel_tracked_quote =
         QuoteLifecycleController::should_cancel_current_quote(quote_lifecycle);
 
@@ -603,143 +537,9 @@ OptionMMCoreStrategy::build_decision(OptionState& state, int64_t now_ns) const n
     return decision;
 }
 
-void OptionMMCoreStrategy::send_quote(OptionState& state,
-                                      const QuoteDecision& decision,
-                                      int64_t now_ns) noexcept {
-    QuoteLifecycleState& quote_lifecycle = state.quote_lifecycle;
-
-    // Some gateways cannot replace a live quote in one step; cancel first, then re-enter
-    // when the cancel ack arrives.
-    if (quote_lifecycle.replace_policy == QuoteReplacePolicy::CancelFirst
-        && quote_lifecycle.status == StrategyQuoteMonitorState::Live
-        && quote_lifecycle.live_quote_id != 0) {
-        QuoteLifecycleController::mark_requote_after_update(quote_lifecycle);
-        send_cancel(state, now_ns);
-        return;
-    }
-
-    if (quote_lifecycle.status == StrategyQuoteMonitorState::AckPending
-        || quote_lifecycle.status == StrategyQuoteMonitorState::CancelPending
-        || quote_lifecycle.status == StrategyQuoteMonitorState::CancelFailed) {
-        return;
-    }
-
-    const double tick = instruments_[state.instrument_id].tick_size > 0.0
-        ? instruments_[state.instrument_id].tick_size
-        : 0.01;
-    const double epsilon_px =
-        params_->requote_price_epsilon_ticks.load(std::memory_order_relaxed) * tick;
-    const int64_t min_interval_ns = static_cast<int64_t>(
-        params_->min_quote_interval_ms.load(std::memory_order_relaxed) * 1'000'000.0);
-    const QuoteLifecycleIntent intent{
-        true,
-        decision.bid,
-        decision.ask,
-        decision.bid_vol,
-        decision.ask_vol,
-    };
-    if (!QuoteLifecycleController::is_material_change(quote_lifecycle,
-                                                      intent,
-                                                      epsilon_px,
-                                                      min_interval_ns,
-                                                      now_ns)) {
-        return;
-    }
-
-    Quote quote{};
-    quote.client_quote_id = next_order_id();
-    quote.instrument_id = state.instrument_id;
-    quote.product_index = product_idx_;
-    quote.bid_price = decision.bid;
-    quote.ask_price = decision.ask;
-    quote.bid_volume = decision.bid_vol;
-    quote.ask_volume = decision.ask_vol;
-    quote.bid_offset = OffsetFlag::Open;
-    quote.ask_offset = OffsetFlag::Open;
-    quote.send_ts = now_ns;
-
-    if (!pre_risk_ || pre_risk_->check_quote(quote) != PreTradeRisk::RejectReason::OK) {
-        return;
-    }
-    if (!quote_buf_ || !quote_buf_->try_push(quote)) {
-        return;
-    }
-
-    QuoteLifecycleController::note_quote_submitted(quote_lifecycle,
-                                                   quote.client_quote_id,
-                                                   intent,
-                                                   now_ns);
-    update_monitor_state(state);
-}
-
-void OptionMMCoreStrategy::send_cancel(OptionState& state, int64_t now_ns) noexcept {
-    QuoteLifecycleState& quote_lifecycle = state.quote_lifecycle;
-    if (quote_lifecycle.status == StrategyQuoteMonitorState::Idle
-        || quote_lifecycle.status == StrategyQuoteMonitorState::Suppressed
-        || quote_lifecycle.status == StrategyQuoteMonitorState::CancelFailed) {
-        return;
-    }
-    if (quote_lifecycle.status == StrategyQuoteMonitorState::CancelPending
-        && now_ns - quote_lifecycle.cancel_last_send_ts < CANCEL_RETRY_NS) {
-        return;
-    }
-    if (quote_lifecycle.status == StrategyQuoteMonitorState::CancelPending
-        && quote_lifecycle.cancel_attempts >= MAX_CANCEL_ATTEMPTS) {
-        return;
-    }
-
-    const QuoteId target_quote_id =
-        QuoteLifecycleController::cancel_target_quote_id(quote_lifecycle);
-    if (target_quote_id == 0) return;
-
-    Quote cancel{};
-    cancel.client_quote_id = target_quote_id;
-    cancel.instrument_id = state.instrument_id;
-    cancel.product_index = product_idx_;
-    cancel.bid_price = 0.0;
-    cancel.ask_price = 0.0;
-    cancel.bid_volume = 0;
-    cancel.ask_volume = 0;
-    cancel.send_ts = now_ns;
-    if (quote_buf_ && quote_buf_->try_push(cancel)) {
-        const QuoteLifecycleConfig cfg{
-            QUOTE_MAX_LIVE_NS,
-            CANCEL_RETRY_NS,
-            MAX_CANCEL_ATTEMPTS,
-        };
-        QuoteLifecycleController::note_cancel_submitted(quote_lifecycle,
-                                                        target_quote_id,
-                                                        now_ns,
-                                                        cfg);
-        update_monitor_state(state);
-    }
-}
-
-bool OptionMMCoreStrategy::manage_quote_lifecycle(OptionState& state, int64_t now_ns) noexcept {
-    // Lifecycle management runs before quote generation so stuck cancels, retry pacing,
-    // and quote timeouts are handled consistently in one place.
-    const QuoteLifecycleConfig cfg{
-        QUOTE_MAX_LIVE_NS,
-        CANCEL_RETRY_NS,
-        MAX_CANCEL_ATTEMPTS,
-    };
-    QuoteLifecycleWork work =
-        QuoteLifecycleController::manage(state.quote_lifecycle, cfg, now_ns);
-    if (!work.block_new_quote) {
-        update_monitor_state(state);
-        return false;
-    }
-
-    if (work.publish_cancel_failed_alert) {
-        state.suppress_flags |= SuppressCancelStuck;
-        publish_cancel_failed_alert(state, now_ns);
-    }
-    if (work.send_cancel && work.cancel_target_quote_id != 0) {
-        send_cancel(state, now_ns);
-    }
-    update_monitor_state(state);
-    return true;
-}
+// REMOVED: send_quote, send_cancel, manage_quote_lifecycle
+// These methods are now implemented in BaseQuotingStrategy.
+// The base class handles all quote lifecycle management.
 
 void OptionMMCoreStrategy::publish_cancel_failed_alert(const OptionState& state, int64_t now_ns) noexcept {
     if (!alert_topic_) return;
@@ -884,7 +684,11 @@ bool OptionMMCoreStrategy::product_temporarily_suppressed(int64_t now_ns) const 
 void OptionMMCoreStrategy::update_monitor_state(const OptionState& state) noexcept {
     if (!state.active || state.instrument_id >= MAX_INSTRUMENTS) return;
 
-    const QuoteLifecycleState& quote_lifecycle = state.quote_lifecycle;
+    // Get quote lifecycle state from base class
+    const QuoteLifecycleState* quote_lifecycle_ptr = get_quote_state(state.instrument_id);
+    if (!quote_lifecycle_ptr) return;
+    const QuoteLifecycleState& quote_lifecycle = *quote_lifecycle_ptr;
+
     monitor_quote_state_[state.instrument_id].store(
         static_cast<uint8_t>(quote_lifecycle.status), std::memory_order_relaxed);
     monitor_cancel_attempts_[state.instrument_id].store(

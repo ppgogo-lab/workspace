@@ -4,7 +4,7 @@
 #include "common/latest_snapshot.h"
 #include "monitoring/topic.h"
 #include "risk/post_trade_risk.h"
-#include "strategy/mm_framework.h"
+#include "strategy/base_quoting_strategy.h"
 #include "strategy/quote_lifecycle.h"
 
 #include <array>
@@ -14,11 +14,11 @@ namespace omm {
 
 // Core option market-making strategy.
 // Responsibilities:
-// - maintain one quote state machine per option instrument
+// - maintain one quote state machine per option instrument (via BaseQuotingStrategy)
 // - track product-level delta/vega exposure and trigger hedge orders
 // - gate quoting on session, risk, exposure, and temporary shock conditions
 // - publish a monitor-friendly mirror of internal state
-class OptionMMCoreStrategy : public IMarketMaker {
+class OptionMMCoreStrategy : public BaseQuotingStrategy {
 public:
     // Wire the strategy to the product, IO buffers, shared params, and monitor sinks.
     void init(uint8_t product_idx,
@@ -31,17 +31,6 @@ public:
               const PostTradeRisk* post_risk,
               MonitoringTopic<SystemAlert, 256>* alert_topic) noexcept;
 
-    // Feed-driven callbacks from pricing, execution, and timer subsystems.
-    void on_signal(const PricingSignal& signal) noexcept override;
-    void on_fill(const Trade& trade) noexcept override;
-    void on_order_ack(const Order& order) noexcept override;
-    void on_quote_ack(const Quote& quote) noexcept override;
-    void on_quote_cancel(const Quote& quote) noexcept override;
-    void on_quote_reject(const Quote& quote) noexcept override;
-    void on_order_cancel(OrderId id) noexcept override;
-    void on_order_reject(const Order& order) noexcept override;
-    void on_timer(const TimerEvent& event) noexcept override;
-
     // Monitor-facing snapshot accessors.
     [[nodiscard]] bool is_enabled() const noexcept override;
     [[nodiscard]] uint8_t product_index() const noexcept override { return product_idx_; }
@@ -49,6 +38,12 @@ public:
     [[nodiscard]] int read_instrument_monitor_states(InstrumentMonitorState* out,
                                                      int max_count) const noexcept override;
     [[nodiscard]] bool read_runtime_stats(StrategyRuntimeStats* out) const noexcept override;
+
+protected:
+    // BaseQuotingStrategy hooks
+    void on_signal_impl(const PricingSignal& signal) noexcept override;
+    void on_fill_impl(const Trade& trade) noexcept override;
+    void on_timer_impl(const TimerEvent& event) noexcept override;
 
 private:
     // Reasons why the strategy is not willing to quote this instrument right now.
@@ -88,7 +83,7 @@ private:
         double last_vega{0.0};  // Latest per-lot vega from pricing.
         double last_underlying_px{0.0};  // Last underlying reference price seen with the signal.
         int64_t last_signal_ts{0};  // Pricing signal timestamp used for stale-theo detection.
-        QuoteLifecycleState quote_lifecycle{};  // Shared quote state machine for this instrument.
+        // REMOVED: QuoteLifecycleState quote_lifecycle{};  // Now managed by BaseQuotingStrategy
         uint32_t suppress_flags{SuppressNone};  // Last suppress reasons exported to the monitor.
     };
 
@@ -143,9 +138,7 @@ private:
     // Per-instrument quote lifecycle.
     void maybe_quote(uint16_t instrument_id, int64_t now_ns) noexcept;
     QuoteDecision build_decision(OptionState& state, int64_t now_ns) const noexcept;
-    void send_quote(OptionState& state, const QuoteDecision& decision, int64_t now_ns) noexcept;
-    void send_cancel(OptionState& state, int64_t now_ns) noexcept;
-    [[nodiscard]] bool manage_quote_lifecycle(OptionState& state, int64_t now_ns) noexcept;
+    // REMOVED: send_quote, send_cancel, manage_quote_lifecycle - now in BaseQuotingStrategy
     void publish_cancel_failed_alert(const OptionState& state, int64_t now_ns) noexcept;
 
     // Product exposure and hedging helpers.
