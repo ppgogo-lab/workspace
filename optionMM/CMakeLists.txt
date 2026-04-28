@@ -126,7 +126,6 @@ find_package(yaml-cpp REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(Threads REQUIRED)
 find_package(Protobuf REQUIRED)
-find_package(Ceres REQUIRED)
 find_package(SQLite3 REQUIRED)
 find_package(OpenSSL REQUIRED)
 
@@ -253,7 +252,6 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64|amd64)$")
     target_compile_definitions(pricing_lib PUBLIC OMM_BLACK76_AVX512_BACKEND=1)
   endif()
 endif()
-target_link_libraries(pricing_lib PUBLIC Ceres::ceres)
 
 # ─── risk_lib ─────────────────────────────────────────────────────────────────
 add_library(risk_lib STATIC

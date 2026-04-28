@@ -18,6 +18,7 @@ double clamp_vol(double v) noexcept {
 
 constexpr double kInvSqrt2Pi = 0.39894228040143267794;
 constexpr double kBadFit = 1.0e100;
+constexpr double kRobustVolDelta = 0.04;
 
 struct OrcWingFitPoint {
     double x;
@@ -41,6 +42,35 @@ struct OrcWingLinearFit {
     bool   ok;
 };
 
+struct OrcWingEvalState {
+    double vc;
+    double sc;
+    double pc;
+    double cc;
+    double dc;
+    double uc;
+    double dsm;
+    double usm;
+    double down_outer;
+    double up_outer;
+    double down_tail_sc;
+    double down_tail_pc;
+    double up_tail_sc;
+    double up_tail_cc;
+    double down_a_pc;
+    double down_a_sc;
+    double down_b_pc;
+    double down_b_sc;
+    double down_c_pc;
+    double down_c_sc;
+    double up_a_cc;
+    double up_a_sc;
+    double up_b_cc;
+    double up_b_sc;
+    double up_c_cc;
+    double up_c_sc;
+};
+
 double normal_pdf(double x) noexcept {
     return kInvSqrt2Pi * std::exp(-0.5 * x * x);
 }
@@ -62,58 +92,133 @@ OrcWingShape sanitize_shape(const OrcWingShape& s) noexcept {
     return out;
 }
 
-void wing_basis(const OrcWingShape& raw_shape, double x, double b[4]) noexcept {
+double robust_square(double r) noexcept {
+    const double a = std::fabs(r);
+    if (a <= kRobustVolDelta) return r * r;
+    return kRobustVolDelta * (2.0 * a - kRobustVolDelta);
+}
+
+OrcWingEvalState make_eval_state(double vc, double sc, double pc, double cc,
+                                 const OrcWingShape& raw_shape) noexcept {
     const OrcWingShape s = sanitize_shape(raw_shape);
+    OrcWingEvalState e{};
+    e.vc = clamp_vol(vc);
+    e.sc = std::clamp(sc, -10.0, 10.0);
+    e.pc = std::clamp(pc, 0.0, 50.0);
+    e.cc = std::clamp(cc, 0.0, 50.0);
+    e.dc = s.dc;
+    e.uc = s.uc;
+    e.dsm = s.dsm;
+    e.usm = s.usm;
+    e.down_outer = e.dc * (1.0 + e.dsm);
+    e.up_outer = e.uc * (1.0 + e.usm);
+
+    const double inv_dsm = 1.0 / e.dsm;
+    const double inv_usm = 1.0 / e.usm;
+    e.down_tail_sc = e.dc * (2.0 + e.dsm) / 2.0;
+    e.down_tail_pc = (1.0 + e.dsm) * e.dc * e.dc;
+    e.up_tail_sc = e.uc * (2.0 + e.usm) / 2.0;
+    e.up_tail_cc = (1.0 + e.usm) * e.uc * e.uc;
+
+    e.down_a_pc = -(1.0 + inv_dsm) * e.dc * e.dc;
+    e.down_a_sc = -e.dc / (2.0 * e.dsm);
+    e.down_b_pc = (1.0 + inv_dsm) * 2.0 * e.dc;
+    e.down_b_sc = 1.0 + inv_dsm;
+    e.down_c_pc = -inv_dsm;
+    e.down_c_sc = -1.0 / (2.0 * e.dc * e.dsm);
+
+    e.up_a_cc = -(1.0 + inv_usm) * e.uc * e.uc;
+    e.up_a_sc = -e.uc / (2.0 * e.usm);
+    e.up_b_cc = (1.0 + inv_usm) * 2.0 * e.uc;
+    e.up_b_sc = 1.0 + inv_usm;
+    e.up_c_cc = -inv_usm;
+    e.up_c_sc = -1.0 / (2.0 * e.uc * e.usm);
+    return e;
+}
+
+double eval_state_x(const OrcWingEvalState& e, double x) noexcept {
+    const double x2 = x * x;
+    if (x <= e.down_outer) {
+        return clamp_vol(e.vc + e.sc * e.down_tail_sc + e.pc * e.down_tail_pc);
+    }
+    if (x <= e.dc) {
+        return clamp_vol(e.vc
+            + e.sc * (e.down_a_sc + e.down_b_sc * x + e.down_c_sc * x2)
+            + e.pc * (e.down_a_pc + e.down_b_pc * x + e.down_c_pc * x2));
+    }
+    if (x <= 0.0) {
+        return clamp_vol(e.vc + e.sc * x + e.pc * x2);
+    }
+    if (x <= e.uc) {
+        return clamp_vol(e.vc + e.sc * x + e.cc * x2);
+    }
+    if (x <= e.up_outer) {
+        return clamp_vol(e.vc
+            + e.sc * (e.up_a_sc + e.up_b_sc * x + e.up_c_sc * x2)
+            + e.cc * (e.up_a_cc + e.up_b_cc * x + e.up_c_cc * x2));
+    }
+    return clamp_vol(e.vc + e.sc * e.up_tail_sc + e.cc * e.up_tail_cc);
+}
+
+void wing_basis(const OrcWingShape& raw_shape, double x, double b[4]) noexcept {
+    const OrcWingEvalState e = make_eval_state(0.2, 0.0, 0.0, 0.0, raw_shape);
     b[0] = 1.0;
     b[1] = 0.0;
     b[2] = 0.0;
     b[3] = 0.0;
+    const double x2 = x * x;
 
-    if (x <= s.dc * (1.0 + s.dsm)) {
-        b[1] = s.dc * (2.0 + s.dsm) / 2.0;
-        b[2] = (1.0 + s.dsm) * s.dc * s.dc;
+    if (x <= e.down_outer) {
+        b[1] = e.down_tail_sc;
+        b[2] = e.down_tail_pc;
         return;
     }
-    if (x <= s.dc) {
-        const double inv_dsm = 1.0 / s.dsm;
-        b[1] = -s.dc / (2.0 * s.dsm)
-             + (1.0 + inv_dsm) * x
-             - x * x / (2.0 * s.dc * s.dsm);
-        b[2] = -(1.0 + inv_dsm) * s.dc * s.dc
-             + (1.0 + inv_dsm) * 2.0 * s.dc * x
-             - x * x * inv_dsm;
+    if (x <= e.dc) {
+        b[1] = e.down_a_sc + e.down_b_sc * x + e.down_c_sc * x2;
+        b[2] = e.down_a_pc + e.down_b_pc * x + e.down_c_pc * x2;
         return;
     }
     if (x <= 0.0) {
         b[1] = x;
-        b[2] = x * x;
+        b[2] = x2;
         return;
     }
-    if (x <= s.uc) {
+    if (x <= e.uc) {
         b[1] = x;
-        b[3] = x * x;
+        b[3] = x2;
         return;
     }
-    if (x <= s.uc * (1.0 + s.usm)) {
-        const double inv_usm = 1.0 / s.usm;
-        b[1] = -s.uc / (2.0 * s.usm)
-             + (1.0 + inv_usm) * x
-             - x * x / (2.0 * s.uc * s.usm);
-        b[3] = -(1.0 + inv_usm) * s.uc * s.uc
-             + (1.0 + inv_usm) * 2.0 * s.uc * x
-             - x * x * inv_usm;
+    if (x <= e.up_outer) {
+        b[1] = e.up_a_sc + e.up_b_sc * x + e.up_c_sc * x2;
+        b[3] = e.up_a_cc + e.up_b_cc * x + e.up_c_cc * x2;
         return;
     }
 
-    b[1] = s.uc * (2.0 + s.usm) / 2.0;
-    b[3] = (1.0 + s.usm) * s.uc * s.uc;
+    b[1] = e.up_tail_sc;
+    b[3] = e.up_tail_cc;
 }
 
-bool solve_4x4(double a[4][5], double out[4]) noexcept {
-    for (int col = 0; col < 4; ++col) {
+bool solve_active_system(double normal[4][5], const bool active[4], double coef[4]) noexcept {
+    int map[4]{};
+    int m = 0;
+    for (int i = 0; i < 4; ++i) {
+        coef[i] = 0.0;
+        if (active[i]) map[m++] = i;
+    }
+    if (m <= 0) return false;
+
+    double a[4][5]{};
+    for (int r = 0; r < m; ++r) {
+        for (int c = 0; c < m; ++c) a[r][c] = normal[map[r]][map[c]];
+        a[r][m] = normal[map[r]][4];
+    }
+
+    double min_pivot = std::numeric_limits<double>::max();
+    double max_pivot = 0.0;
+    for (int col = 0; col < m; ++col) {
         int pivot = col;
         double best = std::fabs(a[col][col]);
-        for (int row = col + 1; row < 4; ++row) {
+        for (int row = col + 1; row < m; ++row) {
             const double v = std::fabs(a[row][col]);
             if (v > best) {
                 best = v;
@@ -121,21 +226,36 @@ bool solve_4x4(double a[4][5], double out[4]) noexcept {
             }
         }
         if (best < 1e-14) return false;
+        min_pivot = std::min(min_pivot, best);
+        max_pivot = std::max(max_pivot, best);
         if (pivot != col) {
-            for (int k = col; k < 5; ++k) std::swap(a[col][k], a[pivot][k]);
+            for (int k = col; k <= m; ++k) std::swap(a[col][k], a[pivot][k]);
         }
 
         const double inv_pivot = 1.0 / a[col][col];
-        for (int k = col; k < 5; ++k) a[col][k] *= inv_pivot;
-        for (int row = 0; row < 4; ++row) {
+        for (int k = col; k <= m; ++k) a[col][k] *= inv_pivot;
+        for (int row = 0; row < m; ++row) {
             if (row == col) continue;
             const double f = a[row][col];
-            for (int k = col; k < 5; ++k) a[row][k] -= f * a[col][k];
+            for (int k = col; k <= m; ++k) a[row][k] -= f * a[col][k];
         }
     }
 
-    for (int i = 0; i < 4; ++i) out[i] = a[i][4];
+    if (max_pivot > 0.0 && min_pivot / max_pivot < 1e-12) return false;
+    for (int i = 0; i < m; ++i) coef[map[i]] = a[i][m];
     return true;
+}
+
+double score_linear_coefficients(const OrcWingFitPoint* pts, int n,
+                                 const OrcWingShape& shape,
+                                 const double coef[4]) noexcept {
+    const OrcWingEvalState e = make_eval_state(coef[0], coef[1], coef[2], coef[3], shape);
+    double cost = 0.0;
+    for (int i = 0; i < n; ++i) {
+        const double r = eval_state_x(e, pts[i].x) - pts[i].vol;
+        cost += pts[i].weight * robust_square(r);
+    }
+    return cost;
 }
 
 OrcWingLinearFit solve_linear_fit(const OrcWingFitPoint* pts, int n,
@@ -157,25 +277,28 @@ OrcWingLinearFit solve_linear_fit(const OrcWingFitPoint* pts, int n,
     constexpr double ridge = 1e-10;
     for (int i = 0; i < 4; ++i) normal[i][i] += ridge * std::max(weight_sum, 1.0);
 
-    double coef[4]{};
-    if (!solve_4x4(normal, coef)) return {0.0, 0.0, 0.0, 0.0, kBadFit, false};
+    OrcWingLinearFit best{0.0, 0.0, 0.0, 0.0, kBadFit, false};
+    constexpr bool kMasks[4][4]{
+        {true, true, true, true},
+        {true, true, false, true},
+        {true, true, true, false},
+        {true, true, false, false},
+    };
 
-    double cost = 0.0;
-    for (int i = 0; i < n; ++i) {
-        double b[4];
-        wing_basis(shape, pts[i].x, b);
-        const double model = coef[0] + coef[1] * b[1] + coef[2] * b[2] + coef[3] * b[3];
-        const double r = model - pts[i].vol;
-        cost += pts[i].weight * r * r;
+    for (const auto& mask : kMasks) {
+        double coef[4]{};
+        if (!solve_active_system(normal, mask, coef)) continue;
+        coef[0] = clamp_vol(coef[0]);
+        coef[1] = std::clamp(coef[1], -10.0, 10.0);
+        coef[2] = std::clamp(coef[2], 0.0, 50.0);
+        coef[3] = std::clamp(coef[3], 0.0, 50.0);
+        const double cost = score_linear_coefficients(pts, n, shape, coef);
+        if (std::isfinite(cost) && cost < best.cost) {
+            best = {coef[0], coef[1], coef[2], coef[3], cost, true};
+        }
     }
 
-    double penalty = 0.0;
-    if (coef[0] < kMinVol) penalty += (kMinVol - coef[0]) * (kMinVol - coef[0]) * 1e5;
-    if (coef[0] > kMaxVol) penalty += (coef[0] - kMaxVol) * (coef[0] - kMaxVol) * 1e5;
-    if (coef[2] < 0.0) penalty += coef[2] * coef[2] * 1e2;
-    if (coef[3] < 0.0) penalty += coef[3] * coef[3] * 1e2;
-
-    return {coef[0], coef[1], coef[2], coef[3], cost + penalty, std::isfinite(cost + penalty)};
+    return best;
 }
 
 double score_shape(const OrcWingFitPoint* pts, int n, const OrcWingShape& shape,
@@ -310,44 +433,10 @@ double OrcWingVolSurface::current_slope(const OrcWingParams& p) noexcept {
 }
 
 double OrcWingVolSurface::eval_x(const OrcWingParams& p, double x) noexcept {
-    const double vc  = current_vol(p);
-    const double sc  = current_slope(p);
-    const double pc  = std::max(p.put_curv, 0.0);
-    const double cc  = std::max(p.call_curv, 0.0);
-    const double dc  = std::min(p.down_cutoff, -1e-6);
-    const double uc  = std::max(p.up_cutoff, 1e-6);
-    const double dsm = std::max(p.down_smoothing, 1e-6);
-    const double usm = std::max(p.up_smoothing, 1e-6);
-
-    if (x <= dc * (1.0 + dsm)) {
-        const double tail = vc + dc * (2.0 + dsm) * (sc / 2.0)
-                          + (1.0 + dsm) * pc * dc * dc;
-        return clamp_vol(tail);
-    }
-    if (x <= dc) {
-        const double a = vc - (1.0 + 1.0 / dsm) * pc * dc * dc
-                       - (sc * dc) / (2.0 * dsm);
-        const double b = (1.0 + 1.0 / dsm) * (2.0 * pc * dc + sc);
-        const double c = -(pc / dsm + sc / (2.0 * dc * dsm));
-        return clamp_vol(a + b * x + c * x * x);
-    }
-    if (x <= 0.0) {
-        return clamp_vol(vc + sc * x + pc * x * x);
-    }
-    if (x <= uc) {
-        return clamp_vol(vc + sc * x + cc * x * x);
-    }
-    if (x <= uc * (1.0 + usm)) {
-        const double a = vc - (1.0 + 1.0 / usm) * cc * uc * uc
-                       - (sc * uc) / (2.0 * usm);
-        const double b = (1.0 + 1.0 / usm) * (2.0 * cc * uc + sc);
-        const double c = -(cc / usm + sc / (2.0 * uc * usm));
-        return clamp_vol(a + b * x + c * x * x);
-    }
-
-    const double tail = vc + uc * (2.0 + usm) * (sc / 2.0)
-                      + (1.0 + usm) * cc * uc * uc;
-    return clamp_vol(tail);
+    const OrcWingShape shape{p.down_cutoff, p.up_cutoff, p.down_smoothing, p.up_smoothing};
+    const OrcWingEvalState e = make_eval_state(current_vol(p), current_slope(p),
+                                               p.put_curv, p.call_curv, shape);
+    return eval_state_x(e, x);
 }
 
 OrcWingParams OrcWingVolSurface::interpolate(const OrcWingParams& a,
@@ -417,6 +506,55 @@ double OrcWingVolSurface::get_vol_by_strike(double F, double K, double T) const 
     return 0.20;
 }
 
+void OrcWingVolSurface::get_vols_by_strike(double F,
+                                           const double* K_arr,
+                                           const double* T_arr,
+                                           double* sigma_out,
+                                           int count) const noexcept {
+    if (!K_arr || !T_arr || !sigma_out || count <= 0) return;
+    if (n_slices == 0 || F < 1e-10) {
+        for (int i = 0; i < count; ++i) sigma_out[i] = 0.20;
+        return;
+    }
+
+    for (int i = 0; i < count; ++i) {
+        const double K = K_arr[i];
+        const double T = T_arr[i];
+        if (K < 1e-10 || T < 1e-10) {
+            sigma_out[i] = 0.20;
+            continue;
+        }
+
+        OrcWingParams local{};
+        if (T <= slices[0].expiry_T) {
+            local = slices[0];
+        } else if (T >= slices[n_slices - 1].expiry_T) {
+            local = slices[n_slices - 1];
+        } else {
+            bool found = false;
+            for (int s = 0; s < n_slices - 1; ++s) {
+                if (T >= slices[s].expiry_T && T <= slices[s + 1].expiry_T) {
+                    const double t0 = slices[s].expiry_T;
+                    const double t1 = slices[s + 1].expiry_T;
+                    const double alpha = (T - t0) / (t1 - t0);
+                    local = interpolate(slices[s], slices[s + 1], alpha);
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                sigma_out[i] = 0.20;
+                continue;
+            }
+        }
+
+        local.atm_forward = F;
+        if (local.ref_price < 1e-10) local.ref_price = F;
+        const double center = effective_forward(local);
+        sigma_out[i] = eval_x(local, std::log(K / std::max(center, 1e-8)));
+    }
+}
+
 bool fit_orc_wing_slice(const double* strikes,
                         const double* market_vols,
                         int           n,
@@ -424,12 +562,24 @@ bool fit_orc_wing_slice(const double* strikes,
                         double        T,
                         OrcWingParams& out,
                         int           max_iter) noexcept {
+    return fit_orc_wing_slice_seeded(strikes, market_vols, n, F, T, nullptr, out, max_iter);
+}
+
+bool fit_orc_wing_slice_seeded(const double* strikes,
+                               const double* market_vols,
+                               int           n,
+                               double        F,
+                               double        T,
+                               const OrcWingParams* seed_params,
+                               OrcWingParams& out,
+                               int           max_iter) noexcept {
     if (!strikes || !market_vols || n < 8 || F < 1e-10 || T < 1e-10) return false;
 
     WingParams seed_wing{};
     const bool have_wing_seed = fit_wing_slice(strikes, market_vols, n, F, T, seed_wing);
 
     std::array<OrcWingFitPoint, MAX_STRIKES * MAX_EXPIRIES> pts{};
+    std::array<double, MAX_STRIKES * MAX_EXPIRIES> sorted_x{};
     if (n > static_cast<int>(pts.size())) return false;
 
     double max_weight = 0.0;
@@ -446,6 +596,7 @@ bool fit_orc_wing_slice(const double* strikes,
         pts[i].x = std::log(strikes[i] / F);
         pts[i].vol = market_vols[i];
         pts[i].weight = vega_weight(F, strikes[i], T, market_vols[i]);
+        sorted_x[i] = pts[i].x;
         max_weight = std::max(max_weight, pts[i].weight);
         min_x = std::min(min_x, pts[i].x);
         max_x = std::max(max_x, pts[i].x);
@@ -457,13 +608,26 @@ bool fit_orc_wing_slice(const double* strikes,
     }
 
     if (max_weight <= 0.0 || !std::isfinite(max_weight)) return false;
-    for (int i = 0; i < n; ++i) pts[i].weight /= max_weight;
+    for (int i = 0; i < n; ++i) {
+        pts[i].weight = std::clamp(pts[i].weight / max_weight, 0.05, 1.0);
+    }
+
+    std::sort(sorted_x.begin(), sorted_x.begin() + n);
+    auto quantile = [&](double q) noexcept {
+        const double pos = std::clamp(q, 0.0, 1.0) * static_cast<double>(n - 1);
+        const int lo = static_cast<int>(std::floor(pos));
+        const int hi = std::min(lo + 1, n - 1);
+        const double alpha = pos - static_cast<double>(lo);
+        return (1.0 - alpha) * sorted_x[lo] + alpha * sorted_x[hi];
+    };
 
     const double left_span = std::max(std::fabs(std::min(min_x, -0.05)), 0.05);
     const double right_span = std::max(std::fabs(std::max(max_x, 0.05)), 0.05);
+    const double q20 = quantile(0.20);
+    const double q80 = quantile(0.80);
     OrcWingShape seed{
-        -std::clamp(0.75 * left_span, 0.05, 0.35),
-        std::clamp(0.75 * right_span, 0.05, 0.35),
+        -std::clamp(std::fabs(std::min(q20, -0.05)), 0.05, std::min(0.45, left_span)),
+        std::clamp(std::fabs(std::max(q80, 0.05)), 0.05, std::min(0.45, right_span)),
         0.5,
         0.5
     };
@@ -472,11 +636,14 @@ bool fit_orc_wing_slice(const double* strikes,
     OrcWingLinearFit best_fit{};
     double best_score = score_shape(pts.data(), n, best_shape, &best_fit);
 
-    constexpr std::array<OrcWingShape, 4> fallback_seeds{{
+    std::array<OrcWingShape, 5> fallback_seeds{{
         {-0.10, 0.10, 0.5, 0.5},
         {-0.15, 0.15, 0.5, 0.5},
         {-0.22, 0.18, 0.8, 0.35},
         {-0.30, 0.30, 0.5, 0.5},
+        seed_params ? OrcWingShape{seed_params->down_cutoff, seed_params->up_cutoff,
+                                   seed_params->down_smoothing, seed_params->up_smoothing}
+                    : seed,
     }};
 
     for (const OrcWingShape& fallback_seed : fallback_seeds) {

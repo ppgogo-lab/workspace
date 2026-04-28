@@ -40,6 +40,11 @@ public:
 
     [[nodiscard]] double get_vol(double k, double T) const noexcept override;
     [[nodiscard]] double get_vol_by_strike(double F, double K, double T) const noexcept override;
+    void get_vols_by_strike(double F,
+                            const double* K_arr,
+                            const double* T_arr,
+                            double* sigma_out,
+                            int count) const noexcept;
     [[nodiscard]] bool is_valid() const noexcept override {
         return n_slices > 0 && slices[0].valid;
     }
@@ -52,5 +57,14 @@ bool fit_orc_wing_slice(const double* strikes,
                         double        T,
                         OrcWingParams& out,
                         int           max_iter = 100) noexcept;
+
+bool fit_orc_wing_slice_seeded(const double* strikes,
+                               const double* market_vols,
+                               int           n,
+                               double        F,
+                               double        T,
+                               const OrcWingParams* seed,
+                               OrcWingParams& out,
+                               int           max_iter = 100) noexcept;
 
 } // namespace omm

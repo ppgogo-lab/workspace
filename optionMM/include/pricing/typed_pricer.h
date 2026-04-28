@@ -64,9 +64,7 @@ inline void TypedPricer<OrcWingVolSurface>::compute_batch_vols_by_strike(
     double* sigma_out,
     int count) const noexcept
 {
-    for (int i = 0; i < count; ++i) {
-        sigma_out[i] = surf_->get_vol_by_strike(F, K_arr[i], T_arr[i]);
-    }
+    surf_->get_vols_by_strike(F, K_arr, T_arr, sigma_out, count);
 }
 
 } // namespace omm

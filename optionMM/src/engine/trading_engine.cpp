@@ -1318,10 +1318,18 @@ void TradingEngine::pricer_loop() noexcept {
             T_arr[bi] = option_T_[prod][oi];
             sqrt_T_arr[bi] = option_sqrt_T_[prod][oi];
             disc_arr[bi] = option_disc_[prod][oi];
-            sigma_arr[bi] = (cfg_.pricing.vol_method == VolMethod::OrcWing)
-                ? surf->get_vol_by_strike(F_mid, opt.strike, T_arr[bi])
-                : surf->get_vol(option_log_K_[prod][oi] - log_F_mid, T_arr[bi]);
+            sigma_arr[bi] = 0.20;
             is_call_arr[bi] = (opt.option_type == OptionType::Call) ? 1 : 0;
+        }
+
+        if (cfg_.pricing.vol_method == VolMethod::OrcWing) {
+            const auto* orc_surf = static_cast<const OrcWingVolSurface*>(surf);
+            orc_surf->get_vols_by_strike(F_mid, K_arr, T_arr, sigma_arr, batch_n);
+        } else {
+            for (uint16_t bi = 0; bi < batch_n; ++bi) {
+                const uint16_t oi = start + bi;
+                sigma_arr[bi] = surf->get_vol(option_log_K_[prod][oi] - log_F_mid, T_arr[bi]);
+            }
         }
 
         compute_batch_precomputed(F_arr, K_arr, T_arr, sqrt_T_arr, disc_arr,
@@ -1481,9 +1489,7 @@ void TradingEngine::pricer_loop() noexcept {
             }
         } else if (cfg_.pricing.vol_method == VolMethod::OrcWing) {
             const auto* orc_surf = static_cast<const OrcWingVolSurface*>(surf);
-            for (uint16_t bi = 0; bi < batch_n; ++bi) {
-                sigma_arr[bi] = orc_surf->get_vol_by_strike(F_mid, K_arr[bi], T_arr[bi]);
-            }
+            orc_surf->get_vols_by_strike(F_mid, K_arr, T_arr, sigma_arr, batch_n);
         } else if (cfg_.pricing.vol_method == VolMethod::Wing) {
             const auto* wing_surf = static_cast<const WingVolSurface*>(surf);
             for (uint16_t bi = 0; bi < batch_n; ++bi) {
@@ -2398,10 +2404,19 @@ void TradingEngine::vol_fitter_loop() noexcept {
                     params.ref_price = fwd_prices[e];
                     params.atm_forward = fwd_prices[e];
                     params.expiry_T = expiry_Ts[e];
-                    const bool ok = fit_orc_wing_slice(
+                    const OrcWingParams* seed = nullptr;
+                    const OrcWingVolSurface* cur =
+                        static_cast<const OrcWingVolSurface*>(orc_wing_surfaces_[p].get());
+                    for (int s = 0; s < cur->n_slices; ++s) {
+                        if (std::fabs(cur->slices[s].expiry_T - expiry_Ts[e]) < 1.0 / 365.0) {
+                            seed = &cur->slices[s];
+                            break;
+                        }
+                    }
+                    const bool ok = fit_orc_wing_slice_seeded(
                         strikes + expiry_start[e],
                         mkt_vols + expiry_start[e],
-                        cnt, fwd_prices[e], expiry_Ts[e], params);
+                        cnt, fwd_prices[e], expiry_Ts[e], seed, params);
 
                     if (ok) {
                         surf->slices[surf->n_slices++] = params;

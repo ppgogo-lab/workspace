@@ -577,6 +577,46 @@ TEST(OrcWing, NoNaNOverRange) {
     }
 }
 
+TEST(OrcWing, BatchStrikeEvaluationMatchesScalar) {
+    OrcWingVolSurface surf;
+    surf.n_slices = 2;
+    surf.slices[0] = {100.0, 100.0, 1.0, 0.22, -0.15, 0.0, 0.0, 0.08, 0.04, -0.2, 0.25, 0.7, 0.4, 0.5, true};
+    surf.slices[1] = {100.0, 100.0, 1.0, 0.26, -0.05, 0.0, 0.0, 0.04, 0.09, -0.18, 0.2, 0.5, 0.8, 1.0, true};
+
+    const double F = 101.5;
+    const double K[] = {75.0, 90.0, 100.0, 110.0, 135.0};
+    const double T[] = {0.25, 0.5, 0.75, 1.0, 1.25};
+    double out[5]{};
+    surf.get_vols_by_strike(F, K, T, out, 5);
+
+    for (int i = 0; i < 5; ++i) {
+        EXPECT_NEAR(out[i], surf.get_vol_by_strike(F, K[i], T[i]), 1e-12);
+    }
+}
+
+TEST(OrcWing, EdgeParametersRemainFinite) {
+    OrcWingParams p;
+    p.ref_price = 100.0;
+    p.atm_forward = 100.0;
+    p.ssr = 1.0;
+    p.vol_ref = 0.00001;
+    p.slope_ref = 20.0;
+    p.put_curv = -1.0;
+    p.call_curv = 100.0;
+    p.down_cutoff = -1e-12;
+    p.up_cutoff = 1e-12;
+    p.down_smoothing = 1e-12;
+    p.up_smoothing = 1e-12;
+    p.valid = true;
+
+    for (double x = -1.0; x <= 1.0; x += 0.05) {
+        const double v = OrcWingVolSurface::eval_x(p, x);
+        EXPECT_TRUE(std::isfinite(v));
+        EXPECT_GE(v, 1e-4);
+        EXPECT_LE(v, 4.0);
+    }
+}
+
 TEST(OrcWingFitter, RecoversSyntheticSmile) {
     constexpr int N = 17;
     const double F = 100.0;
@@ -601,6 +641,28 @@ TEST(OrcWingFitter, RecoversSyntheticSmile) {
     EXPECT_LT(max_err, 0.02);
     EXPECT_NEAR(out.down_smoothing, truth.down_smoothing, 0.35);
     EXPECT_NEAR(out.up_smoothing, truth.up_smoothing, 0.35);
+}
+
+TEST(OrcWingFitter, SparseOneSidedDataStaysStable) {
+    const double F = 100.0;
+    const double T = 0.5;
+    const double strikes[] = {72.0, 78.0, 84.0, 90.0, 96.0, 100.0, 104.0, 108.0};
+    const double vols[] = {0.38, 0.34, 0.30, 0.27, 0.24, 0.225, 0.23, 0.245};
+
+    OrcWingParams seed{100.0, 100.0, 1.0, 0.23, -0.10, 0.0, 0.0, 0.08, 0.03, -0.20, 0.12, 0.5, 0.5, T, true};
+    OrcWingParams out{};
+    ASSERT_TRUE(fit_orc_wing_slice_seeded(strikes, vols, 8, F, T, &seed, out));
+    EXPECT_TRUE(out.valid);
+    EXPECT_GE(out.vol_ref, 1e-4);
+    EXPECT_GE(out.put_curv, 0.0);
+    EXPECT_GE(out.call_curv, 0.0);
+
+    for (int i = 0; i < 8; ++i) {
+        const double v = OrcWingVolSurface::eval_x(out, std::log(strikes[i] / F));
+        EXPECT_TRUE(std::isfinite(v));
+        EXPECT_GE(v, 1e-4);
+        EXPECT_LE(v, 4.0);
+    }
 }
 
 TEST(VolSurfaceManager, OrcWingAtomicSwap) {
