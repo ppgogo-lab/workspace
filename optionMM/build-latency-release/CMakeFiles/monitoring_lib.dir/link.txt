@@ -1,0 +1,2 @@
+/usr/bin/ar qc libmonitoring_lib.a CMakeFiles/monitoring_lib.dir/proto/gen/trading.pb.cc.o CMakeFiles/monitoring_lib.dir/proto/gen/trading.grpc.pb.cc.o CMakeFiles/monitoring_lib.dir/src/monitoring/grpc_server.cpp.o
+/usr/bin/ranlib libmonitoring_lib.a

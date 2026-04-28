@@ -1,0 +1,1 @@
+/usr/bin/c++ -O3 -DNDEBUG -Wall -Wextra -Wpedantic -fno-rtti CMakeFiles/test_latest_snapshot.dir/tests/test_latest_snapshot.cpp.o -o test_latest_snapshot  /usr/lib/x86_64-linux-gnu/libgtest_main.a /usr/lib/x86_64-linux-gnu/libgtest.a 

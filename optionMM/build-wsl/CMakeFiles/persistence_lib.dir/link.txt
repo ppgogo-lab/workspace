@@ -1,0 +1,2 @@
+/usr/bin/ar qc libpersistence_lib.a CMakeFiles/persistence_lib.dir/src/persistence/data_repository.cpp.o
+/usr/bin/ranlib libpersistence_lib.a

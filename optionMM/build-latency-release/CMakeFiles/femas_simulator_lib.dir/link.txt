@@ -1,0 +1,2 @@
+/usr/bin/ar qc libfemas_simulator_lib.a CMakeFiles/femas_simulator_lib.dir/src/sim/femas_simulator.cpp.o
+/usr/bin/ranlib libfemas_simulator_lib.a

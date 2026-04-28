@@ -1,0 +1,2 @@
+/usr/bin/ar qc libfemas_api_lib.a CMakeFiles/femas_api_lib.dir/src/femas/femas_api.cpp.o
+/usr/bin/ranlib libfemas_api_lib.a

@@ -1,0 +1,2 @@
+/usr/bin/ar qc libpricing_lib.a CMakeFiles/pricing_lib.dir/src/pricing/black76.cpp.o CMakeFiles/pricing_lib.dir/src/pricing/svi.cpp.o CMakeFiles/pricing_lib.dir/src/pricing/sabr.cpp.o CMakeFiles/pricing_lib.dir/src/pricing/cubic_spline.cpp.o CMakeFiles/pricing_lib.dir/src/pricing/wing.cpp.o CMakeFiles/pricing_lib.dir/src/pricing/orc_wing.cpp.o CMakeFiles/pricing_lib.dir/src/pricing/black76_avx2.cpp.o CMakeFiles/pricing_lib.dir/src/pricing/black76_avx512.cpp.o
+/usr/bin/ranlib libpricing_lib.a

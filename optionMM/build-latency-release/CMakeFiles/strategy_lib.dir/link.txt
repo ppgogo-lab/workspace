@@ -1,0 +1,2 @@
+/usr/bin/ar qc libstrategy_lib.a CMakeFiles/strategy_lib.dir/src/strategy/mm_framework.cpp.o CMakeFiles/strategy_lib.dir/src/strategy/simple_mm.cpp.o CMakeFiles/strategy_lib.dir/src/strategy/option_mm_core.cpp.o CMakeFiles/strategy_lib.dir/src/strategy/pcp_arbitrage.cpp.o
+/usr/bin/ranlib libstrategy_lib.a
