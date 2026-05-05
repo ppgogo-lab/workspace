@@ -543,6 +543,8 @@ OptionMMCoreStrategy::build_decision(OptionState& state, int64_t now_ns) const n
 
 void OptionMMCoreStrategy::publish_cancel_failed_alert(const OptionState& state, int64_t now_ns) noexcept {
     if (!alert_topic_) return;
+    const QuoteLifecycleState* quote_lifecycle = get_quote_state(state.instrument_id);
+    if (quote_lifecycle == nullptr) return;
 
     SystemAlert alert{};
     alert.ts_ns = now_ns;
@@ -552,9 +554,9 @@ void OptionMMCoreStrategy::publish_cancel_failed_alert(const OptionState& state,
     std::snprintf(alert.message,
                   sizeof(alert.message),
                   "quote cancel failed after %u attempts for instrument %u quote %llu",
-                  static_cast<unsigned>(state.quote_lifecycle.cancel_attempts),
+                  static_cast<unsigned>(quote_lifecycle->cancel_attempts),
                   static_cast<unsigned>(state.instrument_id),
-                  static_cast<unsigned long long>(state.quote_lifecycle.cancel_target_quote_id));
+                  static_cast<unsigned long long>(quote_lifecycle->cancel_target_quote_id));
     alert_topic_->publish(alert);
 }
 
