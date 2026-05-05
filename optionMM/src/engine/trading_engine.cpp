@@ -1300,14 +1300,13 @@ void TradingEngine::shutdown_on_zero_sessions() noexcept {
             }
         }
     }
-    cancel_all_live_orders_and_quotes();
+    request_cancel_all_live_orders_and_quotes();
 }
 
 // The gateway may report fills/acks with only exchange-side identifiers. These
 // live-state helpers restore product/book/account metadata before events are
 // routed to strategies, monitoring, persistence, and risk.
 void TradingEngine::track_live_order_submit(const Order& order) noexcept {
-    std::lock_guard<std::mutex> lock(live_state_mutex_);
     LiveOrderState state{};
     state.order = order;
     if (!live_orders_.insert(order.client_order_id, state)) {
@@ -1318,7 +1317,6 @@ void TradingEngine::track_live_order_submit(const Order& order) noexcept {
 void TradingEngine::track_live_quote_submit(const Quote& quote,
                                             OrderId bid_order_id,
                                             OrderId ask_order_id) noexcept {
-    std::lock_guard<std::mutex> lock(live_state_mutex_);
     LiveQuoteState* existing = live_quotes_.find(quote.client_quote_id);
     if (existing != nullptr) {
         // Remove old quote leg mappings if they exist
@@ -1351,7 +1349,6 @@ void TradingEngine::track_live_quote_submit(const Quote& quote,
 
 void TradingEngine::handle_gateway_order_update(Order& order,
                                                 GatewayEventType type) noexcept {
-    std::lock_guard<std::mutex> lock(live_state_mutex_);
     LiveOrderState* state = live_orders_.find(order.client_order_id);
     if (state != nullptr) {
         Order& live = state->order;
@@ -1386,7 +1383,6 @@ void TradingEngine::handle_gateway_order_update(Order& order,
 
 void TradingEngine::handle_gateway_quote_update(Quote& quote,
                                                 GatewayEventType type) noexcept {
-    std::lock_guard<std::mutex> lock(live_state_mutex_);
     LiveQuoteState* state = live_quotes_.find(quote.client_quote_id);
     if (state == nullptr) return;
 
@@ -1412,7 +1408,6 @@ void TradingEngine::handle_gateway_quote_update(Quote& quote,
 void TradingEngine::handle_gateway_fill(Trade* trade,
                                         GatewayEventType* type) noexcept {
     if (trade == nullptr || type == nullptr) return;
-    std::lock_guard<std::mutex> lock(live_state_mutex_);
 
     if (*type == GatewayEventType::QuoteFill) {
         const QuoteId direct_quote_id = static_cast<QuoteId>(trade->client_order_id);
@@ -1486,20 +1481,21 @@ void TradingEngine::handle_gateway_fill(Trade* trade,
     }
 }
 
+void TradingEngine::request_cancel_all_live_orders_and_quotes() noexcept {
+    cancel_all_live_requested_.store(true, std::memory_order_release);
+}
+
 void TradingEngine::cancel_all_live_orders_and_quotes() noexcept {
     std::array<Order, MAX_OPEN_ORDERS> orders{};
     std::size_t order_count = 0;
     std::array<LiveQuoteState, MAX_OPEN_ORDERS> quotes{};
     std::size_t quote_count = 0;
-    {
-        std::lock_guard<std::mutex> lock(live_state_mutex_);
-        live_orders_.for_each([&](OrderId, const LiveOrderState& state) noexcept {
-            if (order_count < orders.size()) orders[order_count++] = state.order;
-        });
-        live_quotes_.for_each([&](QuoteId, const LiveQuoteState& state) noexcept {
-            if (quote_count < quotes.size()) quotes[quote_count++] = state;
-        });
-    }
+    live_orders_.for_each([&](OrderId, const LiveOrderState& state) noexcept {
+        if (order_count < orders.size()) orders[order_count++] = state.order;
+    });
+    live_quotes_.for_each([&](QuoteId, const LiveQuoteState& state) noexcept {
+        if (quote_count < quotes.size()) quotes[quote_count++] = state;
+    });
 
     if (!gateway_ || !gateway_->is_connected()) return;
     for (std::size_t i = 0; i < order_count; ++i) {

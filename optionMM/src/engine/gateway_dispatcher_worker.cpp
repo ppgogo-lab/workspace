@@ -37,6 +37,10 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
     int spin_count = 0;  // Adaptive spinning counter
     while (!stop_flag_.load(std::memory_order_relaxed)) {
         bool did_work = false;
+        if (cancel_all_live_requested_.exchange(false, std::memory_order_acquire)) {
+            cancel_all_live_orders_and_quotes();
+            did_work = true;
+        }
         auto drain_callbacks = [&](int burst_cap) {
             DeferredCallbackSideEffect deferred[kDispatcherCallbackLeadBurstCap]{};
             int deferred_count = 0;

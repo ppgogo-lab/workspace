@@ -393,7 +393,6 @@ private:
     MonitoringTopic<Quote, 4096>      monitor_quotes_;
     MonitoringTopic<Trade, 4096>      monitor_trades_;
     std::array<MonitoringTopic<SystemAlert, 256>, MAX_PRODUCTS> monitor_alerts_;
-    mutable std::mutex live_state_mutex_;
     FixedHashTable<OrderId, LiveOrderState, MAX_OPEN_ORDERS * 2> live_orders_;
     FixedHashTable<QuoteId, LiveQuoteState, MAX_OPEN_ORDERS> live_quotes_;
     FixedHashTable<OrderId, QuoteId, MAX_OPEN_ORDERS * 2> quote_leg_to_quote_;
@@ -404,6 +403,7 @@ private:
     std::atomic<bool> stop_flag_{false};
     std::atomic<bool> gateway_dispatcher_running_{false};
     std::atomic<bool> strategy_dispatch_suspended_{false};
+    std::atomic<bool> cancel_all_live_requested_{false};
     std::thread feed_thread_;
     std::thread pricer_thread_;
     std::thread strategy_threads_[MAX_PRODUCTS];
@@ -478,6 +478,7 @@ private:
     void handle_gateway_quote_update(Quote& quote,
                                      GatewayEventType type) noexcept;
     void handle_gateway_fill(Trade* trade, GatewayEventType* type) noexcept;
+    void request_cancel_all_live_orders_and_quotes() noexcept;
     void cancel_all_live_orders_and_quotes() noexcept;
     [[nodiscard]] BookId arb_book_id_for_type(int product_idx,
                                               ArbitrageStrategyType type) const noexcept;
