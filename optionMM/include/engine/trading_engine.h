@@ -33,6 +33,15 @@
 
 namespace omm {
 
+class PricerWorker;
+class StrategyWorker;
+class ArbitrageWorker;
+class GatewayDispatcherWorker;
+class MonitorPublisherWorker;
+class VolFitterWorker;
+class RiskMonitorWorker;
+class TimerWorker;
+
 // ─── TradingEngine ────────────────────────────────────────────────────────────
 // Owns all ring buffers, threads, and component instances.
 // Startup sequence: see start().
@@ -47,6 +56,15 @@ namespace omm {
 //   timer_core            → timer thread (hedge check, quote refresh)
 
 class TradingEngine {
+    friend class PricerWorker;
+    friend class StrategyWorker;
+    friend class ArbitrageWorker;
+    friend class GatewayDispatcherWorker;
+    friend class MonitorPublisherWorker;
+    friend class VolFitterWorker;
+    friend class RiskMonitorWorker;
+    friend class TimerWorker;
+
 public:
     explicit TradingEngine(const SystemConfig& cfg,
                            std::unique_ptr<IGateway> gateway,

@@ -349,15 +349,28 @@ target_link_libraries(persistence_lib PUBLIC
 
 # ─── engine_lib ───────────────────────────────────────────────────────────────
 # Full engine: links gateway_lib which includes CTP+FEMAS SDK .so files.
-add_library(engine_lib STATIC
+set(ENGINE_SOURCES
     src/engine/trading_engine.cpp
+    src/engine/engine_workers.cpp
+    src/engine/pricer_worker.cpp
+    src/engine/strategy_worker.cpp
+    src/engine/arbitrage_worker.cpp
+    src/engine/gateway_dispatcher_worker.cpp
+    src/engine/monitor_publisher_worker.cpp
+    src/engine/vol_fitter_worker.cpp
+    src/engine/risk_monitor_worker.cpp
+    src/engine/timer_worker.cpp
+)
+
+add_library(engine_lib STATIC
+    ${ENGINE_SOURCES}
 )
 target_link_libraries(engine_lib PUBLIC
     common_lib pricing_lib risk_lib strategy_lib feed_lib gateway_lib logger_lib persistence_lib numa)
 
 # Test-only engine: links sim_gateway_lib (no CTP/FEMAS SDK dependencies).
 add_library(engine_lib_test STATIC
-    src/engine/trading_engine.cpp
+    ${ENGINE_SOURCES}
 )
 target_link_libraries(engine_lib_test PUBLIC
     common_lib pricing_lib risk_lib strategy_lib sim_gateway_lib logger_lib persistence_lib numa)
