@@ -25,6 +25,13 @@ namespace omm {
 
 namespace {
 
+// TradingEngine still owns the shared memory layout and public facade.
+// Long-running loops live in *_worker.cpp files; helpers here are for shared
+// state that multiple workers need to access through the engine.
+
+// Latest-only mailbox protocol used for coalesced signals/timers.
+// Odd version means a writer is in progress; even version means the slot can be
+// copied. Consumers track the last even version they processed.
 template<typename T>
 void publish_latest(std::atomic<uint64_t>& version, T& slot, const T& value) noexcept {
     const uint64_t cur = version.load(std::memory_order_relaxed);
@@ -69,6 +76,9 @@ int timer_mailbox_slot(TimerEventType type) noexcept {
     }
 }
 
+// Shared position accounting for post-trade risk and per-book snapshots.
+// Keep this templated so Position and BookPosition stay in sync without
+// duplicating the fill-price/realized-PnL rules.
 template<typename PositionLike>
 void apply_fill_to_position(PositionLike* pos, const Trade& trade) noexcept {
     if (pos == nullptr) return;
@@ -133,6 +143,9 @@ TradingEngine::TradingEngine(const SystemConfig& cfg,
       }
     , post_risk_(cfg.risk.soft)
 {
+    // Constructor only wires static ownership and config-derived state.
+    // Anything that depends on gateway instruments or repository contents is
+    // initialized in start(), after the engine has a concrete runtime context.
     std::memset(instr_to_product_, 0xFF, sizeof(instr_to_product_));
     mm_book_ids_.fill(INVALID_BOOK_ID);
     for (auto& row : arb_book_ids_) {
@@ -598,6 +611,12 @@ void TradingEngine::persist_shutdown_state() noexcept {
 }
 
 void TradingEngine::start() {
+    // Startup order matters:
+    // 1. instrument registry builds routing tables used by every worker;
+    // 2. persistence/calendar can override config bootstrap state;
+    // 3. strategies/surfaces are initialized before any worker can read them;
+    // 4. gateway dispatcher starts before producers so acknowledgements cannot
+    //    be missed during startup.
     setup_fp_environment();
     populate_instrument_registry();
     init_persistence();
@@ -638,6 +657,8 @@ void TradingEngine::start() {
 }
 
 void TradingEngine::stop() noexcept {
+    // stop_flag_ asks workers to exit their loops. Joining before persistence
+    // shutdown lets deferred events drain into repository queues where possible.
     OMM_LOG_INFO("shutdown", "TradingEngine stopping");
     stop_flag_.store(true, std::memory_order_release);
 
@@ -673,6 +694,9 @@ int TradingEngine::read_all_greeks(Greeks* out, int max_count) const noexcept {
     return count;
 }
 
+// Monitoring accessors below intentionally tolerate eventually consistent
+// single-writer counters. They are read by UI/gRPC paths and must not stall hot
+// pricing or strategy threads.
 uint64_t TradingEngine::total_coalesced_signal_writes() const noexcept {
     uint64_t total = 0;
     for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i)
@@ -844,6 +868,9 @@ AtomicArbParams* TradingEngine::arbitrage_params(int product_idx,
     return &arb_params_[product_idx][slot];
 }
 
+// Pricing signals can arrive faster than a strategy thread can consume them.
+// For each option slot, keep only the latest signal and queue the slot index as
+// a wake-up hint. If the index queue overflows, the consumer rescans all slots.
 void TradingEngine::coalesce_signal(uint8_t product_idx,
                                     uint16_t option_slot,
                                     const PricingSignal& sig) noexcept {
@@ -917,6 +944,8 @@ int TradingEngine::drain_coalesced_signals(int product_idx,
     return drained;
 }
 
+// Timer events are latest-only by type: hedge checks and quote refreshes are
+// periodic nudges, so redundant queued copies can be collapsed safely.
 void TradingEngine::coalesce_timer_event(int product_idx, const TimerEvent& ev) noexcept {
     const int slot = timer_mailbox_slot(ev.type);
     if (slot < 0 || slot >= kCoalescedTimerSlotCount) return;
@@ -1042,6 +1071,9 @@ void TradingEngine::note_signal_emitted(uint8_t product_idx,
     }
 }
 
+// Hot workers call publish_monitor_* directly. Depending on config, events are
+// either published inline or deferred to MonitorPublisherWorker to keep the hot
+// path from doing heavier history/persistence work.
 void TradingEngine::publish_monitor_tick(const TopOfBookTick& tick) noexcept {
     switch (cfg_.monitoring.hot_path_publish_mode) {
     case MonitoringPublishMode::Full:
@@ -1157,6 +1189,8 @@ void TradingEngine::persist_end_of_day_snapshot() noexcept {
     (void)repository_->persist_end_of_day_snapshot(eod_snapshot);
 }
 
+// Book positions are keyed by book + instrument. The risk worker owns updates;
+// readers take book_state_mutex_ to build consistent snapshots for monitoring.
 uint64_t TradingEngine::book_position_key(BookId book_id,
                                           uint16_t instrument_id) noexcept {
     return (static_cast<uint64_t>(book_id) << 16) | instrument_id;
@@ -1243,6 +1277,9 @@ void TradingEngine::note_session_activated() noexcept {
 }
 
 void TradingEngine::shutdown_on_zero_sessions() noexcept {
+    // Zero active sessions is treated as a protective shutdown: prevent new
+    // strategy dispatch, persist disabled params, and cancel outstanding live
+    // orders/quotes through the gateway.
     strategy_dispatch_suspended_.store(true, std::memory_order_release);
     for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i) {
         MMParamsConfig mm = mm_params_[i].snapshot();
@@ -1266,6 +1303,9 @@ void TradingEngine::shutdown_on_zero_sessions() noexcept {
     cancel_all_live_orders_and_quotes();
 }
 
+// The gateway may report fills/acks with only exchange-side identifiers. These
+// live-state helpers restore product/book/account metadata before events are
+// routed to strategies, monitoring, persistence, and risk.
 void TradingEngine::track_live_order_submit(const Order& order) noexcept {
     std::lock_guard<std::mutex> lock(live_state_mutex_);
     LiveOrderState state{};
