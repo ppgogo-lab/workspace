@@ -284,6 +284,7 @@ public:
             else password_edit_->setFocus();
         });
         connect(password_edit_, &QLineEdit::returnPressed, this, &QDialog::accept);
+
     }
 
     [[nodiscard]] QString username() const { return username_edit_->text().trimmed(); }
