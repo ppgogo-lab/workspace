@@ -308,6 +308,17 @@ static void print_series(const char* label, std::vector<int64_t> values) {
               << " ns count=" << values.size() << "\n";
 }
 
+static void expect_stage_p99_under(const char* label,
+                                   std::vector<int64_t> values,
+                                   int64_t budget_ns,
+                                   size_t min_samples) {
+    ASSERT_GE(values.size(), min_samples) << label << " did not capture enough samples";
+    std::sort(values.begin(), values.end());
+    EXPECT_GE(values.front(), 0LL) << label << " produced negative latency";
+    EXPECT_LT(percentile_sorted(values, 0.99), budget_ns)
+        << label << " p99 exceeded " << budget_ns << " ns";
+}
+
 static ProductScenario build_product(uint8_t product_idx,
                                      uint16_t* next_id,
                                      const ScenarioConfig& cfg) {
@@ -429,6 +440,7 @@ static ScenarioResult run_latency_scenario(const ScenarioConfig& cfg) {
     sys.timer.hedge_check_interval_ms = 60000;
     sys.timer.quote_refresh_interval_ms = 60000;
     sys.monitoring.hot_path_publish_mode = cfg.monitoring_mode;
+    sys.scheduling.low_latency_spin = true;
     sys.affinity.feed_core = -1;
     sys.affinity.pricer_core = -1;
     sys.affinity.gateway_dispatcher_core = -1;
@@ -644,7 +656,9 @@ static ScenarioResult run_latency_scenario(const ScenarioConfig& cfg) {
               << " options_per_product=" << cfg.options_per_product
               << " iterations=" << cfg.iterations
               << " cancel_latency_ms=" << cfg.gateway_cancel_latency_ms
-              << " monitoring=" << monitoring_mode_name(cfg.monitoring_mode) << "\n";
+              << " monitoring=" << monitoring_mode_name(cfg.monitoring_mode)
+              << " low_latency_spin=" << (sys.scheduling.low_latency_spin ? "on" : "off")
+              << "\n";
     if (latency_cores.size() >= static_cast<size_t>(7 + cfg.product_count)) {
         std::cout << "[PINNING] feed=" << sys.affinity.feed_core
                   << " pricer=" << sys.affinity.pricer_core
@@ -721,12 +735,23 @@ TEST(LatencyTest, TickToQuoteLatency) {
     EXPECT_GT(result.pending_future_tick_overwrites, 0u)
         << "Expected the production-scale direct-replace scenario to overwrite pending future ticks";
 
-    auto sorted = result.tick_to_gateway_ns;
-    std::sort(sorted.begin(), sorted.end());
-    ASSERT_FALSE(sorted.empty());
-    EXPECT_GT(sorted.front(), 0LL);
-    EXPECT_LT(percentile_sorted(sorted, 0.99), 100'000'000LL)
-        << "Direct-replace p99 latency exceeded 100ms";
+    const size_t min_stage_samples = std::max<size_t>(128, result.tick_to_gateway_ns.size() / 2);
+    expect_stage_p99_under("Direct-replace tick->signal_emit",
+                           result.tick_to_signal_emit_ns,
+                           10'000'000LL,
+                           min_stage_samples);
+    expect_stage_p99_under("Direct-replace signal_emit->strategy",
+                           result.signal_emit_to_strategy_ns,
+                           10'000'000LL,
+                           min_stage_samples);
+    expect_stage_p99_under("Direct-replace strategy->quote_send",
+                           result.strategy_to_quote_send_ns,
+                           10'000'000LL,
+                           min_stage_samples);
+    expect_stage_p99_under("Direct-replace quote_send->gateway",
+                           result.quote_send_to_gateway_ns,
+                           5'000'000LL,
+                           min_stage_samples);
 }
 
 TEST(LatencyTest, TickToQuoteLatencyCancelFirst) {
@@ -752,10 +777,25 @@ TEST(LatencyTest, TickToQuoteLatencyCancelFirst) {
         << "Expected cancel-first benchmark to capture quote-cancel callback routing";
     EXPECT_GT(result.strategy_stats[0].single_instrument_reevaluations, 0u);
 
-    auto sorted = result.tick_to_gateway_ns;
-    std::sort(sorted.begin(), sorted.end());
-    ASSERT_FALSE(sorted.empty());
-    EXPECT_GT(sorted.front(), 0LL);
-    EXPECT_LT(percentile_sorted(sorted, 0.99), 100'000'000LL)
-        << "Cancel-first p99 latency exceeded 100ms";
+    const size_t min_stage_samples = std::max<size_t>(16, result.tick_to_gateway_ns.size() / 2);
+    expect_stage_p99_under("Cancel-first tick->signal_emit",
+                           result.tick_to_signal_emit_ns,
+                           10'000'000LL,
+                           min_stage_samples);
+    expect_stage_p99_under("Cancel-first signal_emit->strategy",
+                           result.signal_emit_to_strategy_ns,
+                           10'000'000LL,
+                           min_stage_samples);
+    expect_stage_p99_under("Cancel-first strategy->quote_send",
+                           result.strategy_to_quote_send_ns,
+                           10'000'000LL,
+                           min_stage_samples);
+    expect_stage_p99_under("Cancel-first quote_send->gateway",
+                           result.quote_send_to_gateway_ns,
+                           5'000'000LL,
+                           min_stage_samples);
+    expect_stage_p99_under("Cancel-first quote cancel callback route",
+                           result.quote_cancel_route_latency_ns,
+                           20'000'000LL,
+                           1);
 }

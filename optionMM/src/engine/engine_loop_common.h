@@ -57,6 +57,14 @@ inline void sleep_for_ns_interruptible(const std::atomic<bool>& stop_flag,
     }
 }
 
+inline void idle_pause(bool low_latency_spin, int& spin_count) noexcept {
+    if (low_latency_spin) {
+        spin_pause();
+        return;
+    }
+    adaptive_spin_pause(spin_count);
+}
+
 inline void update_max(uint32_t& metric, uint32_t candidate) noexcept {
     if (candidate > metric) {
         metric = candidate;

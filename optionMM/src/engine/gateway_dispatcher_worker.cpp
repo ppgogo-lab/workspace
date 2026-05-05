@@ -262,7 +262,7 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
             drain_callbacks(kDispatcherCallbackInterleaveBurstCap);
         }
         if (!did_work) {
-            adaptive_spin_pause(spin_count);
+            idle_pause(cfg_.scheduling.low_latency_spin, spin_count);
         } else {
             spin_count = 0;  // Reset on work
         }

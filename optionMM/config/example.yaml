@@ -189,6 +189,9 @@ thread_affinity:
 
 thread_scheduling:
   enable_realtime: false
+  # Latency mode: pricer, strategy, and gateway dispatcher spin while idle
+  # instead of yielding or sleeping. Use only on isolated cores.
+  low_latency_spin: false
   pricer_priority: 80
   strategy_priority: 70
   arbitrage_priority: 60

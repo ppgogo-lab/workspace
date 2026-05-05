@@ -464,6 +464,9 @@ static ThreadSchedulingConfig parse_scheduling(const YAML::Node& n) {
     c.enable_realtime = get<bool>(n["enable_realtime"],
                                   "thread_scheduling.enable_realtime",
                                   false);
+    c.low_latency_spin = get<bool>(n["low_latency_spin"],
+                                   "thread_scheduling.low_latency_spin",
+                                   false);
     c.pricer_priority = get<int>(n["pricer_priority"],
                                  "thread_scheduling.pricer_priority",
                                  80);

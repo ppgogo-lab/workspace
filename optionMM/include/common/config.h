@@ -249,7 +249,8 @@ struct ThreadAffinityConfig {
 
 struct ThreadSchedulingConfig {
     bool enable_realtime{false};
-    uint8_t _pad0[3]{};
+    bool low_latency_spin{false};
+    uint8_t _pad0[2]{};
     int pricer_priority{80};
     int strategy_priority{70};
     int arbitrage_priority{60};
