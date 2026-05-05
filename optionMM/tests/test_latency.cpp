@@ -11,8 +11,10 @@
 #include <atomic>
 #include <chrono>
 #include <cmath>
+#include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <thread>
 #include <vector>
@@ -47,6 +49,40 @@ const char* monitoring_mode_name(MonitoringPublishMode mode) {
     case MonitoringPublishMode::Off: return "off";
     default: return "unknown";
     }
+}
+
+MonitoringPublishMode monitoring_mode_from_env() {
+    const char* value = std::getenv("OMM_LATENCY_MONITORING");
+    if (value == nullptr || value[0] == '\0') return MonitoringPublishMode::Deferred;
+    if (std::strcmp(value, "off") == 0) return MonitoringPublishMode::Off;
+    if (std::strcmp(value, "deferred") == 0) return MonitoringPublishMode::Deferred;
+    if (std::strcmp(value, "full") == 0) return MonitoringPublishMode::Full;
+    return MonitoringPublishMode::Deferred;
+}
+
+std::vector<int> parse_core_list(const char* value) {
+    std::vector<int> cores;
+    if (value == nullptr || value[0] == '\0') return cores;
+    std::stringstream ss(value);
+    std::string token;
+    while (std::getline(ss, token, ',')) {
+        if (token.empty()) continue;
+        cores.push_back(std::atoi(token.c_str()));
+    }
+    return cores;
+}
+
+std::vector<int> latency_core_list_from_env() {
+    const char* value = std::getenv("OMM_LATENCY_PIN_CORES");
+    const unsigned hw_threads = std::thread::hardware_concurrency();
+    if (value != nullptr && std::strcmp(value, "auto") == 0) {
+        std::vector<int> cores;
+        const int count = std::min<unsigned>(hw_threads, 12);
+        cores.reserve(static_cast<size_t>(count));
+        for (int i = 0; i < count; ++i) cores.push_back(i);
+        return cores;
+    }
+    return parse_core_list(value);
 }
 
 class LatencySimGateway : public SimGateway {
@@ -399,6 +435,18 @@ static ScenarioResult run_latency_scenario(const ScenarioConfig& cfg) {
     sys.affinity.vol_fitter_core = -1;
     sys.affinity.risk_monitor_core = -1;
     sys.affinity.timer_core = -1;
+    sys.affinity.grpc_server_core = -1;
+
+    const std::vector<int> latency_cores = latency_core_list_from_env();
+    if (latency_cores.size() >= static_cast<size_t>(7 + cfg.product_count)) {
+        sys.affinity.feed_core = latency_cores[0];
+        sys.affinity.pricer_core = latency_cores[1];
+        sys.affinity.gateway_dispatcher_core = latency_cores[2];
+        sys.affinity.vol_fitter_core = latency_cores[3];
+        sys.affinity.risk_monitor_core = latency_cores[4];
+        sys.affinity.timer_core = latency_cores[5];
+        sys.affinity.grpc_server_core = latency_cores[6];
+    }
 
     std::vector<ProductScenario> products;
     products.reserve(cfg.product_count);
@@ -406,6 +454,9 @@ static ScenarioResult run_latency_scenario(const ScenarioConfig& cfg) {
     for (int p = 0; p < cfg.product_count; ++p) {
         products.push_back(build_product(static_cast<uint8_t>(p), &next_id, cfg));
         configure_option_mm_core_product(&sys.products[p], products.back());
+        if (latency_cores.size() >= static_cast<size_t>(7 + cfg.product_count)) {
+            sys.products[p].strategy_core = latency_cores[7 + p];
+        }
     }
     add_latency_calendar(sys);
 
@@ -594,6 +645,21 @@ static ScenarioResult run_latency_scenario(const ScenarioConfig& cfg) {
               << " iterations=" << cfg.iterations
               << " cancel_latency_ms=" << cfg.gateway_cancel_latency_ms
               << " monitoring=" << monitoring_mode_name(cfg.monitoring_mode) << "\n";
+    if (latency_cores.size() >= static_cast<size_t>(7 + cfg.product_count)) {
+        std::cout << "[PINNING] feed=" << sys.affinity.feed_core
+                  << " pricer=" << sys.affinity.pricer_core
+                  << " gateway_dispatcher=" << sys.affinity.gateway_dispatcher_core
+                  << " vol_fitter=" << sys.affinity.vol_fitter_core
+                  << " risk_monitor=" << sys.affinity.risk_monitor_core
+                  << " timer=" << sys.affinity.timer_core
+                  << " grpc=" << sys.affinity.grpc_server_core;
+        for (int p = 0; p < cfg.product_count; ++p) {
+            std::cout << " strategy" << p << "=" << sys.products[p].strategy_core;
+        }
+        std::cout << "\n";
+    } else {
+        std::cout << "[PINNING] disabled; set OMM_LATENCY_PIN_CORES=auto or a comma-separated core list\n";
+    }
     std::cout << "[COUNTS] captured_quotes=" << result.tick_to_gateway_ns.size()
               << " expected_quotes=" << result.expected_total_quotes
               << " capture_ratio="
@@ -643,7 +709,7 @@ TEST(LatencyTest, TickToQuoteLatency) {
     cfg.options_per_product = 160;
     cfg.iterations = 320;
     cfg.timeout_ns = 6'000'000LL;
-    cfg.monitoring_mode = MonitoringPublishMode::Deferred;
+    cfg.monitoring_mode = monitoring_mode_from_env();
 
     ScenarioResult result = run_latency_scenario(cfg);
 
@@ -675,7 +741,7 @@ TEST(LatencyTest, TickToQuoteLatencyCancelFirst) {
     cfg.options_per_product = 16;
     cfg.iterations = 120;
     cfg.timeout_ns = 10'000'000LL;
-    cfg.monitoring_mode = MonitoringPublishMode::Deferred;
+    cfg.monitoring_mode = monitoring_mode_from_env();
     cfg.gateway_cancel_latency_ms = 1;
 
     ScenarioResult result = run_latency_scenario(cfg);

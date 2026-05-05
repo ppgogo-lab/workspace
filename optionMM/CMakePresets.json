@@ -1,0 +1,120 @@
+{
+  "version": 4,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "latency-release",
+      "displayName": "Latency Release",
+      "description": "Release latency benchmark build: no sanitizers, no native CPU tuning, latency CTest enabled.",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build-latency-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "OMM_ENABLE_LATENCY_CTEST": "ON",
+        "OMM_ENABLE_NATIVE_RELEASE": "OFF",
+        "OMM_ENABLE_IPO_RELEASE": "OFF",
+        "OMM_BUILD_TRADER_GUI": "OFF"
+      }
+    },
+    {
+      "name": "latency-native-release",
+      "displayName": "Latency Native Release",
+      "description": "Host-tuned latency benchmark build. Use only when the build and run hosts are the same CPU family.",
+      "inherits": "latency-release",
+      "binaryDir": "${sourceDir}/build-latency-native-release",
+      "cacheVariables": {
+        "OMM_ENABLE_NATIVE_RELEASE": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "latency-release",
+      "configurePreset": "latency-release",
+      "targets": [
+        "test_latency"
+      ]
+    },
+    {
+      "name": "latency-native-release",
+      "configurePreset": "latency-native-release",
+      "targets": [
+        "test_latency"
+      ]
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "latency-release",
+      "configurePreset": "latency-release",
+      "description": "Run latency benchmarks with deferred hot-path monitoring and auto-selected pinned cores.",
+      "output": {
+        "outputOnFailure": true
+      },
+      "filter": {
+        "include": {
+          "label": "latency"
+        }
+      },
+      "environment": {
+        "OMM_LATENCY_MONITORING": "deferred",
+        "OMM_LATENCY_PIN_CORES": "auto"
+      }
+    },
+    {
+      "name": "latency-release-monitoring-off",
+      "configurePreset": "latency-release",
+      "description": "Run latency benchmarks with hot-path monitoring disabled and auto-selected pinned cores.",
+      "output": {
+        "outputOnFailure": true
+      },
+      "filter": {
+        "include": {
+          "label": "latency"
+        }
+      },
+      "environment": {
+        "OMM_LATENCY_MONITORING": "off",
+        "OMM_LATENCY_PIN_CORES": "auto"
+      }
+    },
+    {
+      "name": "latency-native-release",
+      "configurePreset": "latency-native-release",
+      "description": "Run host-tuned latency benchmarks with deferred hot-path monitoring and auto-selected pinned cores.",
+      "output": {
+        "outputOnFailure": true
+      },
+      "filter": {
+        "include": {
+          "label": "latency"
+        }
+      },
+      "environment": {
+        "OMM_LATENCY_MONITORING": "deferred",
+        "OMM_LATENCY_PIN_CORES": "auto"
+      }
+    },
+    {
+      "name": "latency-native-release-monitoring-off",
+      "configurePreset": "latency-native-release",
+      "description": "Run host-tuned latency benchmarks with hot-path monitoring disabled and auto-selected pinned cores.",
+      "output": {
+        "outputOnFailure": true
+      },
+      "filter": {
+        "include": {
+          "label": "latency"
+        }
+      },
+      "environment": {
+        "OMM_LATENCY_MONITORING": "off",
+        "OMM_LATENCY_PIN_CORES": "auto"
+      }
+    }
+  ]
+}

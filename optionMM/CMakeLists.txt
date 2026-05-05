@@ -9,6 +9,7 @@ option(OMM_ENABLE_BLACK76_AVX512 "Build the AVX-512 Black76 backend" ON)
 option(OMM_ENABLE_NATIVE_RELEASE "Enable host-native release tuning (-march/-mtune=native)" OFF)
 option(OMM_ENABLE_IPO_RELEASE "Enable IPO/LTO for release builds when supported" OFF)
 option(OMM_ENABLE_DPDK "Enable DPDK support for kernel-bypass networking" OFF)
+option(OMM_ENABLE_LATENCY_CTEST "Register latency benchmarks as explicit CTest tests" OFF)
 set(OMM_PROTO_FILE "${CMAKE_SOURCE_DIR}/proto/trading.proto")
 set(OMM_PROTO_GEN_DIR "${CMAKE_CURRENT_BINARY_DIR}/proto/gen")
 file(MAKE_DIRECTORY "${OMM_PROTO_GEN_DIR}")
@@ -262,6 +263,7 @@ add_library(risk_lib STATIC
 # ─── strategy_lib ─────────────────────────────────────────────────────────────
 add_library(strategy_lib STATIC
     src/strategy/mm_framework.cpp
+    src/strategy/base_quoting_strategy.cpp
     src/strategy/simple_mm.cpp
     src/strategy/option_mm_core.cpp
     src/strategy/pcp_arbitrage.cpp
@@ -501,12 +503,17 @@ add_executable(test_data_repository tests/test_data_repository.cpp)
 target_link_libraries(test_data_repository PRIVATE persistence_lib SQLite::SQLite3 GTest::gtest_main Threads::Threads)
 add_test(NAME test_data_repository COMMAND test_data_repository)
 
-# test_latency — NOT added to ctest (run explicitly for benchmarking)
-# Build with RelWithDebInfo for realistic latency numbers.
+# test_latency is registered with CTest only for the latency presets. Normal
+# developer builds keep it manual so routine test runs do not collect benchmarks.
 add_executable(test_latency tests/test_latency.cpp)
 target_link_libraries(test_latency PRIVATE engine_lib_test GTest::gtest_main Threads::Threads)
-# Intentionally no add_test() — latency benchmarks must be run explicitly:
-#   ./build/tests/test_latency --gtest_filter="LatencyTest.*"
+if(OMM_ENABLE_LATENCY_CTEST)
+  add_test(NAME latency_benchmark
+           COMMAND test_latency --gtest_filter=LatencyTest.*)
+  set_tests_properties(latency_benchmark PROPERTIES
+      LABELS "latency;benchmark"
+      RUN_SERIAL TRUE)
+endif()
 
 # test_vol_calibration — reads MarketTick.csv, calibrates all 4 vol models, writes CSV results
 # Run manually: ./build/test_vol_calibration
