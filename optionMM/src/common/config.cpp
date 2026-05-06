@@ -223,6 +223,26 @@ static PricingConfig parse_pricing(const YAML::Node& n) {
     return c;
 }
 
+static BaseOffsetType parse_base_offset_type(const YAML::Node& n, const char* path) {
+    const std::string type = get<std::string>(n, path, "price");
+    if (type == "tick") return BaseOffsetType::Tick;
+    if (type == "price") return BaseOffsetType::Price;
+    if (type == "percentage") return BaseOffsetType::Percentage;
+    throw std::runtime_error(
+        std::string("config: ") + path + " must be tick/price/percentage, got: " + type);
+}
+
+static ProductPricingConfig parse_product_pricing(const YAML::Node& n,
+                                                  const std::string& path_prefix) {
+    ProductPricingConfig c;
+    if (!n) return c;
+    c.base_offset_type = parse_base_offset_type(
+        n["base_offset_type"], (path_prefix + ".base_offset_type").c_str());
+    c.base_offset_value = get<double>(
+        n["base_offset_value"], (path_prefix + ".base_offset_value").c_str(), 0.0);
+    return c;
+}
+
 static RiskConfig parse_risk(const YAML::Node& n) {
     RiskConfig c;
     if (!n) return c;
@@ -588,8 +608,10 @@ SystemConfig load_config(std::string_view path) {
         str_copy(p.strategy_type, sizeof(p.strategy_type),
                  pn["strategy_type"], "products[].strategy_type", "simple_mm");
         p.mm_book_id = get<BookId>(pn["book_id"], "products[].book_id", INVALID_BOOK_ID);
+        const std::string product_path = "products[" + std::to_string(cfg.product_count) + "]";
+        p.pricing = parse_product_pricing(pn["pricing"], product_path + ".pricing");
         p.params = parse_mm_params(pn["params"],
-                                   "products[" + std::to_string(cfg.product_count) + "].params");
+                                   product_path + ".params");
         p.arbitrage_strategy_count = 0;
         if (auto arb_node = pn["arbitrage_strategies"]) {
             if (!arb_node.IsSequence()) {

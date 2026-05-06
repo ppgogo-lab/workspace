@@ -98,6 +98,9 @@ products:
     arbitrage_core: 8
     strategy_type: option_mm_core
     book_id: 101
+    pricing:
+      base_offset_type: price        # tick | price | percentage
+      base_offset_value: 0.0
     params:
       bid_spread: 10.0        # RMB per tonne (copper option tick is 10)
       ask_spread: 10.0
@@ -135,6 +138,9 @@ products:
     arbitrage_core: 9
     strategy_type: option_mm_core
     book_id: 201
+    pricing:
+      base_offset_type: price        # tick | price | percentage
+      base_offset_value: 0.0
     params:
       bid_spread: 2.0         # RMB per tonne (rebar option tick is 1)
       ask_spread: 2.0

@@ -91,7 +91,16 @@ void TradingEngine::pricer_loop() noexcept {
             next_cold_greeks_due_ns[prod] = now + cold_greeks_interval_ns;
             return true;
         }
-        const double F_mid = future_tick.last_price;
+        const double F_mid_raw = future_tick.last_price;
+        if (F_mid_raw < 1e-10) {
+            next_cold_greeks_due_ns[prod] = now + cold_greeks_interval_ns;
+            return true;
+        }
+        const double future_tick_size = instruments_[future_id].tick_size > 0.0
+                                      ? instruments_[future_id].tick_size
+                                      : 0.0;
+        const double F_mid = apply_base_offset(F_mid_raw, future_tick_size,
+                                               cfg_.products[prod].pricing);
         if (F_mid < 1e-10) {
             next_cold_greeks_due_ns[prod] = now + cold_greeks_interval_ns;
             return true;
@@ -224,14 +233,31 @@ void TradingEngine::pricer_loop() noexcept {
 
         const uint8_t prod = static_cast<uint8_t>(selected_prod);
         const TopOfBookTick& future_tick = pending_future_tick[prod];
-        const double F_mid = future_tick.last_price;
-        const double F_bid = future_tick.bid_price[0] > 0.0 ? future_tick.bid_price[0] : F_mid;
-        const double F_ask = future_tick.ask_price[0] > F_bid ? future_tick.ask_price[0] : F_mid;
+        const double F_mid_raw = future_tick.last_price;
+        const double F_bid_raw = future_tick.bid_price[0] > 0.0 ? future_tick.bid_price[0] : F_mid_raw;
+        const double F_ask_raw = future_tick.ask_price[0] > F_bid_raw ? future_tick.ask_price[0] : F_mid_raw;
         const uint16_t n = option_count_[prod];
-        if (n == 0 || F_mid < 1e-10) {
+        if (n == 0 || F_mid_raw < 1e-10) {
             pending_product[prod] = false;
             next_option_offset[prod] = 0;
             continue;
+        }
+        const uint16_t future_id = future_tick.instrument_id;
+        const double future_tick_size = future_id < MAX_INSTRUMENTS && instruments_[future_id].tick_size > 0.0
+                                      ? instruments_[future_id].tick_size
+                                      : 0.0;
+        const ProductPricingConfig& product_pricing = cfg_.products[prod].pricing;
+        const double F_mid = apply_base_offset(F_mid_raw, future_tick_size, product_pricing);
+        double F_bid = apply_base_offset(F_bid_raw, future_tick_size, product_pricing);
+        double F_ask = apply_base_offset(F_ask_raw, future_tick_size, product_pricing);
+        if (F_mid < 1e-10) {
+            pending_product[prod] = false;
+            next_option_offset[prod] = 0;
+            continue;
+        }
+        if (F_bid < 1e-10 || F_ask < 1e-10 || F_ask <= F_bid) {
+            F_bid = F_mid;
+            F_ask = F_mid;
         }
 
         const IVolSurface* surf = nullptr;

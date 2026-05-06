@@ -481,6 +481,10 @@ add_executable(test_trading_calendar tests/test_trading_calendar.cpp)
 target_link_libraries(test_trading_calendar PRIVATE common_lib GTest::gtest_main Threads::Threads)
 add_test(NAME test_trading_calendar COMMAND test_trading_calendar)
 
+add_executable(test_config tests/test_config.cpp)
+target_link_libraries(test_config PRIVATE common_lib GTest::gtest_main Threads::Threads)
+add_test(NAME test_config COMMAND test_config)
+
 # test_simple_mm (strategy + gateway + engine integration)
 # Uses engine_lib_test which does not pull in CTP/FEMAS SDK shared libraries.
 add_executable(test_simple_mm tests/test_simple_mm.cpp)

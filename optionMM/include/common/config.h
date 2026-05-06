@@ -92,6 +92,7 @@ struct SimConfig {
 
 // ─── Pricing configuration ────────────────────────────────────────────────────
 enum class VolMethod : uint8_t { SVI, SABR, CubicSpline, Wing, OrcWing };
+enum class BaseOffsetType : uint8_t { Tick, Price, Percentage };
 
 struct PricingConfig {
     double    risk_free_rate{0.025};   // annualised, e.g. 2.5%
@@ -105,6 +106,25 @@ struct PricingConfig {
     int       cold_greeks_interval_ms{1000};
     int       cold_greeks_batch_size{64};
 };
+
+struct ProductPricingConfig {
+    BaseOffsetType base_offset_type{BaseOffsetType::Price};
+    double         base_offset_value{0.0};
+};
+
+[[nodiscard]] inline double apply_base_offset(double future_price,
+                                              double underlying_tick_size,
+                                              const ProductPricingConfig& cfg) noexcept {
+    switch (cfg.base_offset_type) {
+        case BaseOffsetType::Tick:
+            return future_price + cfg.base_offset_value * underlying_tick_size;
+        case BaseOffsetType::Price:
+            return future_price + cfg.base_offset_value;
+        case BaseOffsetType::Percentage:
+            return future_price * (1.0 + cfg.base_offset_value);
+    }
+    return future_price;
+}
 
 // ─── Risk configuration ───────────────────────────────────────────────────────
 struct HardRiskConfig {
@@ -193,6 +213,7 @@ struct ProductConfig {
     int            arbitrage_core{-1}; // optional CPU core for the product arbitrage sidecar
     char           strategy_type[32]{"simple_mm"};
     BookId         mm_book_id{INVALID_BOOK_ID};
+    ProductPricingConfig pricing;
     MMParamsConfig params;
     ArbitrageStrategyConfig arbitrage_strategies[MAX_ARBITRAGE_STRATEGIES_PER_PRODUCT]{};
     int            arbitrage_strategy_count{0};
