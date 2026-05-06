@@ -57,6 +57,7 @@
 #include <set>
 #include <string_view>
 #include <thread>
+#include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -485,6 +486,20 @@ public:
         return status.ok() && resp.ok();
     }
 
+    bool set_product_pricing_params(const omm::proto::ProductPricingParams& params) {
+        grpc::ClientContext ctx;
+        if (!prepare_authenticated_context(&ctx)) return false;
+        omm::proto::SetProductPricingParamsRequest req;
+        omm::proto::SetProductPricingParamsResponse resp;
+        *req.mutable_params() = params;
+        grpc::Status status = stub_->SetProductPricingParams(&ctx, req, &resp);
+        if (!status.ok()) {
+            handle_authenticated_failure(status);
+            return false;
+        }
+        return status.ok() && resp.ok();
+    }
+
     bool set_risk_thresholds(int max_net_position,
                              double max_delta,
                              double max_gamma,
@@ -595,6 +610,8 @@ private:
                         meta.kind = instrument.kind();
                         meta.option_type = instrument.option_type();
                         meta.strike = instrument.strike();
+                        meta.tick_size = instrument.tick_size();
+                        meta.multiplier = instrument.multiplier();
                         state_->instruments[meta.instrument_id] = std::move(meta);
                     }
                     state_->books.clear();
@@ -616,6 +633,10 @@ private:
                     state_->mm_params.clear();
                     for (int i = 0; i < resp.mm_params_size(); ++i) {
                         state_->mm_params[static_cast<uint32_t>(i)] = resp.mm_params(i);
+                    }
+                    state_->product_pricing_params.clear();
+                    for (const auto& params : resp.product_pricing_params()) {
+                        state_->product_pricing_params[params.product_index()] = params;
                     }
                     state_->arb_params.clear();
                     for (const auto& entry : resp.arb_params()) {
@@ -821,6 +842,7 @@ private:
         ++state_->trades_seq;
         state_->alerts.clear();
         state_->mm_params.clear();
+        state_->product_pricing_params.clear();
         state_->arb_params.clear();
         state_->product_states.clear();
         state_->instrument_states.clear();
@@ -834,6 +856,369 @@ private:
         }
     }
 };
+
+namespace {
+
+enum InstrumentTreeRole {
+    TreeRoleKind = Qt::UserRole + 1,
+    TreeRoleInstrumentId,
+};
+
+enum InstrumentTreeKind {
+    TreeKindGroup = 0,
+    TreeKindInstrument = 1,
+};
+
+QString qstr(const std::string& value) {
+    return QString::fromStdString(value);
+}
+
+QString product_class_for(const InstrumentMeta& meta) {
+    const std::string& source = !meta.underlying_code.empty() ? meta.underlying_code : meta.code;
+    QString product;
+    for (char ch : source) {
+        if (!std::isalpha(static_cast<unsigned char>(ch))) break;
+        product.append(QChar(static_cast<char>(std::toupper(static_cast<unsigned char>(ch)))));
+    }
+    return product.isEmpty() ? QString("--") : product;
+}
+
+QString product_label_for(const InstrumentMeta& meta) {
+    return QString("%1-%2").arg(product_class_for(meta), meta.kind == "Future" ? "F" : "O");
+}
+
+QString term_label_for(const InstrumentMeta& meta) {
+    return QString("%1[%2]").arg(product_label_for(meta)).arg(meta.expiry_date);
+}
+
+QString format_double(double value, int decimals = 6) {
+    QString text = QString::number(value, 'f', decimals);
+    while (text.contains('.') && text.endsWith('0')) text.chop(1);
+    if (text.endsWith('.')) text.chop(1);
+    return text.isEmpty() ? QString("0") : text;
+}
+
+class InstrumentDialog final : public QDialog {
+public:
+    InstrumentDialog(SharedState* state, GrpcTraderClient* client, QWidget* parent)
+        : QDialog(parent), state_(state), client_(client) {
+        setWindowTitle("Instruments");
+        resize(1180, 720);
+        build_ui();
+        reload_snapshot();
+        populate_tree();
+        if (hierarchy_->topLevelItemCount() > 0) {
+            hierarchy_->setCurrentItem(hierarchy_->topLevelItem(0));
+        }
+    }
+
+private:
+    void build_ui() {
+        auto* root_layout = new QVBoxLayout(this);
+        root_layout->setContentsMargins(12, 12, 12, 12);
+        root_layout->setSpacing(8);
+
+        auto* title = new QLabel("Instruments");
+        title->setStyleSheet("font-size:20px; font-weight:700;");
+        root_layout->addWidget(title);
+
+        auto* splitter = new QSplitter(Qt::Horizontal, this);
+        splitter->setChildrenCollapsible(false);
+
+        hierarchy_ = new QTreeWidget();
+        hierarchy_->setColumnCount(4);
+        hierarchy_->setHeaderLabels({"Exchange", "Product", "Term", "Strike"});
+        hierarchy_->setRootIsDecorated(false);
+        hierarchy_->setAlternatingRowColors(false);
+        hierarchy_->setSelectionMode(QAbstractItemView::SingleSelection);
+        hierarchy_->setUniformRowHeights(true);
+        hierarchy_->setMinimumWidth(520);
+        hierarchy_->header()->setSectionResizeMode(QHeaderView::Stretch);
+        hierarchy_->header()->setStyleSheet("QHeaderView::section { background:#c8c8c8; padding:6px; }");
+        splitter->addWidget(hierarchy_);
+
+        auto* right = new QWidget();
+        auto* right_layout = new QVBoxLayout(right);
+        right_layout->setContentsMargins(12, 0, 0, 0);
+        right_layout->setSpacing(12);
+
+        selected_title_ = new QLabel("Select an instrument");
+        selected_title_->setStyleSheet("font-size:20px; font-weight:700;");
+        right_layout->addWidget(selected_title_);
+
+        auto* details_group = new QGroupBox("Instrument Details");
+        auto* details_layout = new QGridLayout(details_group);
+        details_layout->setHorizontalSpacing(18);
+        details_layout->setVerticalSpacing(8);
+        details_layout->setContentsMargins(14, 14, 14, 14);
+
+        add_detail(details_layout, 0, 0, "Product Class", "product_class");
+        add_detail(details_layout, 0, 2, "Instrument Name", "instrument_name");
+        add_detail(details_layout, 1, 0, "Instrument ID", "instrument_id");
+        add_detail(details_layout, 1, 2, "Is Trading", "is_trading");
+        add_detail(details_layout, 2, 0, "Expiry Date", "expiry_date");
+        add_detail(details_layout, 2, 2, "Open Date", "open_date");
+        add_detail(details_layout, 3, 0, "Tick Size", "tick_size");
+        add_detail(details_layout, 3, 2, "Multiplier", "multiplier");
+        add_detail(details_layout, 4, 0, "Underlying", "underlying");
+        add_detail(details_layout, 4, 2, "Option Model", "option_model");
+        add_detail(details_layout, 5, 0, "Option Type", "option_type");
+        right_layout->addWidget(details_group);
+
+        pricing_group_ = new QGroupBox("Pricing Parameter");
+        auto* pricing_layout = new QGridLayout(pricing_group_);
+        pricing_layout->setHorizontalSpacing(18);
+        pricing_layout->setVerticalSpacing(10);
+        pricing_layout->setContentsMargins(14, 14, 14, 14);
+
+        auto* model = readonly_editor("Black-76");
+        pricing_layout->addWidget(new QLabel("Pricing Model"), 0, 0);
+        pricing_layout->addWidget(model, 0, 1);
+
+        base_offset_type_ = new QComboBox();
+        base_offset_type_->addItem("Tick", "tick");
+        base_offset_type_->addItem("Price", "price");
+        base_offset_type_->addItem("Percentage", "percentage");
+        pricing_layout->addWidget(new QLabel("Base Offset Type"), 1, 0);
+        pricing_layout->addWidget(base_offset_type_, 1, 1);
+
+        base_offset_value_ = new QDoubleSpinBox();
+        base_offset_value_->setRange(-1000000000.0, 1000000000.0);
+        base_offset_value_->setDecimals(8);
+        base_offset_value_->setSingleStep(0.01);
+        pricing_layout->addWidget(new QLabel("Base Offset Value"), 1, 2);
+        pricing_layout->addWidget(base_offset_value_, 1, 3);
+
+        apply_button_ = new QPushButton("Apply");
+        save_button_ = new QPushButton("Save");
+        auto* button_row = new QWidget();
+        auto* button_layout = new QHBoxLayout(button_row);
+        button_layout->setContentsMargins(0, 0, 0, 0);
+        button_layout->addStretch(1);
+        button_layout->addWidget(apply_button_);
+        button_layout->addWidget(save_button_);
+        pricing_layout->addWidget(button_row, 2, 0, 1, 4);
+        right_layout->addWidget(pricing_group_);
+
+        status_ = new QLabel("Select a future instrument to edit pricing parameters.");
+        status_->setStyleSheet("color:#5b5b5b;");
+        right_layout->addWidget(status_);
+        right_layout->addStretch(1);
+        splitter->addWidget(right);
+        splitter->setStretchFactor(0, 3);
+        splitter->setStretchFactor(1, 2);
+        root_layout->addWidget(splitter, 1);
+
+        connect(hierarchy_, &QTreeWidget::currentItemChanged, this,
+                [this](QTreeWidgetItem* current, QTreeWidgetItem*) { select_item(current); });
+        connect(apply_button_, &QPushButton::clicked, this, [this] { apply_pricing("Applied"); });
+        connect(save_button_, &QPushButton::clicked, this, [this] { apply_pricing("Saved"); });
+        clear_details();
+    }
+
+    void add_detail(QGridLayout* layout, int row, int col, const QString& label, const QString& key) {
+        layout->addWidget(new QLabel(label), row, col);
+        auto* editor = readonly_editor("");
+        detail_fields_[key] = editor;
+        layout->addWidget(editor, row, col + 1);
+    }
+
+    QLineEdit* readonly_editor(const QString& text) {
+        auto* editor = new QLineEdit(text);
+        editor->setReadOnly(true);
+        editor->setMinimumWidth(130);
+        return editor;
+    }
+
+    void reload_snapshot() {
+        instruments_.clear();
+        pricing_.clear();
+        ticks_.clear();
+        states_.clear();
+        if (state_ == nullptr) return;
+        std::lock_guard<std::mutex> lock(state_->mutex);
+        for (const auto& [id, meta] : state_->instruments) instruments_[id] = meta;
+        for (const auto& [product, params] : state_->product_pricing_params) pricing_[product] = params;
+        for (const auto& [id, tick] : state_->ticks) ticks_[id] = tick;
+        for (const auto& [id, state] : state_->instrument_states) states_[id] = state;
+    }
+
+    void populate_tree() {
+        hierarchy_->clear();
+        std::vector<const InstrumentMeta*> rows;
+        rows.reserve(instruments_.size());
+        for (const auto& [_, meta] : instruments_) rows.push_back(&meta);
+        std::sort(rows.begin(), rows.end(), [](const InstrumentMeta* lhs, const InstrumentMeta* rhs) {
+            const auto lkey = std::tuple(
+                qstr(lhs->exchange_id), product_label_for(*lhs), lhs->expiry_date, lhs->strike, qstr(lhs->code));
+            const auto rkey = std::tuple(
+                qstr(rhs->exchange_id), product_label_for(*rhs), rhs->expiry_date, rhs->strike, qstr(rhs->code));
+            return lkey < rkey;
+        });
+
+        std::map<QString, QTreeWidgetItem*> exchange_items;
+        std::map<QString, QTreeWidgetItem*> product_items;
+        std::map<QString, QTreeWidgetItem*> term_items;
+        for (const InstrumentMeta* meta : rows) {
+            const QString exchange = qstr(meta->exchange_id);
+            const QString product = product_label_for(*meta);
+            const QString term = term_label_for(*meta);
+            const QString exchange_key = exchange;
+            const QString product_key = exchange + "|" + product;
+            const QString term_key = product_key + "|" + term;
+
+            QTreeWidgetItem* exchange_item = exchange_items[exchange_key];
+            if (exchange_item == nullptr) {
+                exchange_item = new QTreeWidgetItem(hierarchy_);
+                exchange_item->setText(0, exchange);
+                exchange_item->setData(0, TreeRoleKind, TreeKindGroup);
+                exchange_items[exchange_key] = exchange_item;
+            }
+            QTreeWidgetItem* product_item = product_items[product_key];
+            if (product_item == nullptr) {
+                product_item = new QTreeWidgetItem(exchange_item);
+                product_item->setText(1, product);
+                product_item->setData(0, TreeRoleKind, TreeKindGroup);
+                product_items[product_key] = product_item;
+            }
+            QTreeWidgetItem* term_item = term_items[term_key];
+            if (term_item == nullptr) {
+                term_item = new QTreeWidgetItem(product_item);
+                term_item->setText(2, term);
+                term_item->setData(0, TreeRoleKind, TreeKindGroup);
+                term_items[term_key] = term_item;
+            }
+
+            if (meta->kind == "Future") {
+                term_item->setData(0, TreeRoleKind, TreeKindInstrument);
+                term_item->setData(0, TreeRoleInstrumentId, meta->instrument_id);
+            } else {
+                auto* strike_item = new QTreeWidgetItem(term_item);
+                strike_item->setText(3, format_double(meta->strike, 4));
+                strike_item->setData(0, TreeRoleKind, TreeKindInstrument);
+                strike_item->setData(0, TreeRoleInstrumentId, meta->instrument_id);
+            }
+        }
+        hierarchy_->expandAll();
+        for (int col = 0; col < hierarchy_->columnCount(); ++col) hierarchy_->resizeColumnToContents(col);
+    }
+
+    void select_item(QTreeWidgetItem* item) {
+        if (item == nullptr || item->data(0, TreeRoleKind).toInt() != TreeKindInstrument) {
+            selected_instrument_id_ = 0;
+            clear_details();
+            return;
+        }
+        const uint32_t instrument_id = item->data(0, TreeRoleInstrumentId).toUInt();
+        const auto it = instruments_.find(instrument_id);
+        if (it == instruments_.end()) {
+            selected_instrument_id_ = 0;
+            clear_details();
+            return;
+        }
+        selected_instrument_id_ = instrument_id;
+        populate_details(it->second);
+    }
+
+    void clear_details() {
+        selected_title_->setText("Select an instrument");
+        for (auto& [_, editor] : detail_fields_) editor->clear();
+        set_pricing_enabled(false);
+    }
+
+    void populate_details(const InstrumentMeta& meta) {
+        selected_title_->setText(qstr(meta.code));
+        set_detail("product_class", product_class_for(meta));
+        set_detail("instrument_name", qstr(meta.code));
+        set_detail("instrument_id", QString::number(meta.instrument_id));
+        set_detail("is_trading", ticks_.find(meta.instrument_id) != ticks_.end() ? "Yes" : "No");
+        set_detail("expiry_date", meta.expiry_date > 0 ? QString::number(meta.expiry_date) : "--");
+        set_detail("open_date", "--");
+        set_detail("tick_size", format_double(meta.tick_size));
+        set_detail("multiplier", format_double(meta.multiplier));
+        set_detail("underlying", meta.kind == "Option" ? qstr(meta.underlying_code) : "--");
+        set_detail("option_model", meta.kind == "Option" ? "Euro" : "--");
+        set_detail("option_type", meta.kind == "Option" ? qstr(meta.option_type) : "--");
+
+        const bool future = meta.kind == "Future";
+        set_pricing_enabled(future);
+        if (!future) {
+            status_->setText("Pricing parameters are editable only on future instruments.");
+            return;
+        }
+
+        auto pricing_it = pricing_.find(meta.product_index);
+        omm::proto::ProductPricingParams params;
+        params.set_product_index(meta.product_index);
+        params.set_base_offset_type("price");
+        params.set_base_offset_value(0.0);
+        if (pricing_it != pricing_.end()) params = pricing_it->second;
+
+        const int type_index = base_offset_type_->findData(qstr(params.base_offset_type()));
+        base_offset_type_->setCurrentIndex(type_index >= 0 ? type_index : 1);
+        base_offset_value_->setValue(params.base_offset_value());
+        status_->setText("Future pricing parameters loaded.");
+    }
+
+    void set_detail(const QString& key, const QString& value) {
+        auto it = detail_fields_.find(key);
+        if (it != detail_fields_.end()) it->second->setText(value);
+    }
+
+    void set_pricing_enabled(bool enabled) {
+        pricing_group_->setEnabled(enabled);
+        apply_button_->setEnabled(enabled);
+        save_button_->setEnabled(enabled);
+    }
+
+    void apply_pricing(const QString& verb) {
+        const auto it = instruments_.find(selected_instrument_id_);
+        if (it == instruments_.end() || it->second.kind != "Future") {
+            status_->setText("Select a future instrument before applying pricing parameters.");
+            return;
+        }
+        if (client_ == nullptr) {
+            status_->setText("No gRPC client is available.");
+            return;
+        }
+
+        omm::proto::ProductPricingParams params;
+        params.set_product_index(it->second.product_index);
+        params.set_base_offset_type(base_offset_type_->currentData().toString().toStdString());
+        params.set_base_offset_value(base_offset_value_->value());
+        const bool ok = client_->set_product_pricing_params(params);
+        if (ok) {
+            pricing_[params.product_index()] = params;
+            if (state_ != nullptr) {
+                std::lock_guard<std::mutex> lock(state_->mutex);
+                state_->product_pricing_params[params.product_index()] = params;
+            }
+            status_->setText(QString("%1 pricing parameters for %2.")
+                                 .arg(verb, qstr(it->second.code)));
+        } else {
+            status_->setText(QString("%1 failed for %2.").arg(verb, qstr(it->second.code)));
+        }
+    }
+
+    SharedState* state_{nullptr};
+    GrpcTraderClient* client_{nullptr};
+    std::map<uint32_t, InstrumentMeta> instruments_;
+    std::map<uint32_t, omm::proto::ProductPricingParams> pricing_;
+    std::unordered_map<uint32_t, omm::proto::Tick> ticks_;
+    std::unordered_map<uint32_t, omm::proto::InstrumentMMState> states_;
+    uint32_t selected_instrument_id_{0};
+    QTreeWidget* hierarchy_{nullptr};
+    QLabel* selected_title_{nullptr};
+    QGroupBox* pricing_group_{nullptr};
+    QComboBox* base_offset_type_{nullptr};
+    QDoubleSpinBox* base_offset_value_{nullptr};
+    QPushButton* apply_button_{nullptr};
+    QPushButton* save_button_{nullptr};
+    QLabel* status_{nullptr};
+    std::map<QString, QLineEdit*> detail_fields_;
+};
+
+} // namespace
 
 TraderMainWindow::TraderMainWindow(std::string grpc_endpoint, QWidget* parent)
     : QMainWindow(parent),
@@ -1296,6 +1681,11 @@ void TraderMainWindow::apply_strategy_params() {
     impl_->last_operator_status_text = ok
         ? QString("MM params applied at %1").arg(current_time_text())
         : QString("MM params update failed at %1").arg(current_time_text());
+}
+
+void TraderMainWindow::show_instrument_panel() {
+    InstrumentDialog dialog(&impl_->state, impl_->client.get(), this);
+    dialog.exec();
 }
 
 void TraderMainWindow::cancel_selected_order() {

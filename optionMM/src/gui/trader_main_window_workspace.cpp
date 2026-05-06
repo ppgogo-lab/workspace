@@ -25,6 +25,10 @@ void TraderMainWindow::build_main_workspace_panel() {
     logout_action_->setEnabled(false);
     connect(logout_action_, &QAction::triggered, this, [this] { perform_logout(); });
 
+    auto* settings_menu = menuBar()->addMenu("Settings");
+    instrument_action_ = settings_menu->addAction("Instrument...");
+    connect(instrument_action_, &QAction::triggered, this, [this] { show_instrument_panel(); });
+
     auto* central = new QWidget();
     auto* layout = new QVBoxLayout(central);
     layout->setContentsMargins(10, 10, 10, 10);

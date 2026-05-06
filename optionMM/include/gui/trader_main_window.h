@@ -54,6 +54,7 @@ private:
     void reset_strategy_params_to_defaults();
     void revert_strategy_params_to_live();
     void apply_risk_thresholds();
+    void show_instrument_panel();
     void cancel_selected_order();
     void cancel_selected_product_orders();
     void cancel_selected_quote();
@@ -151,6 +152,7 @@ private:
     QWidget* vol_window_widget_{nullptr};
     QWidget* secondary_vol_widget_{nullptr};
     QAction* logout_action_{nullptr};
+    QAction* instrument_action_{nullptr};
     QLabel* secondary_gate_label_{nullptr};
     QLabel* secondary_greeks_label_{nullptr};
     QLabel* secondary_limits_label_{nullptr};

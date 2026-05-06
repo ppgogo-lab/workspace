@@ -93,6 +93,8 @@ public:
     // Access for testing / gRPC server
     [[nodiscard]] IGateway*   gateway()    const noexcept { return gateway_.get(); }
     [[nodiscard]] AtomicMMParams& mm_params(int i) noexcept { return mm_params_[i]; }
+    [[nodiscard]] ProductPricingConfig product_pricing(int i) const noexcept;
+    [[nodiscard]] bool set_product_pricing(int i, const ProductPricingConfig& pricing) noexcept;
     [[nodiscard]] const PostTradeRisk& post_risk() const noexcept { return post_risk_; }
     [[nodiscard]] PostTradeRisk& post_risk_mutable() noexcept { return post_risk_; }
     [[nodiscard]] int product_count() const noexcept { return cfg_.product_count; }
@@ -333,6 +335,8 @@ private:
     // Strategy slots (one per product)
     std::array<std::unique_ptr<IMarketMaker>, MAX_PRODUCTS> strategies_;
     std::array<AtomicMMParams,  MAX_PRODUCTS> mm_params_;
+    std::array<std::atomic<uint8_t>, MAX_PRODUCTS> product_base_offset_type_{};
+    std::array<std::atomic<double>, MAX_PRODUCTS> product_base_offset_value_{};
     std::array<std::array<std::unique_ptr<IArbitrageStrategy>, MAX_ARBITRAGE_STRATEGIES_PER_PRODUCT>, MAX_PRODUCTS>
         arbitrage_strategies_;
     std::array<std::array<AtomicArbParams, MAX_ARBITRAGE_STRATEGIES_PER_PRODUCT>, MAX_PRODUCTS>

@@ -94,6 +94,8 @@ message InstrumentInfo {
     uint32 underlying_id   = 8;
     string exchange_id     = 9;
     int32  expiry_date     = 10;
+    double tick_size       = 11;
+    double multiplier      = 12;
 }
 
 message UserInfo {
@@ -199,6 +201,12 @@ message MMParams {
     optional bool   use_one_sided_at_limits             = 18;
 }
 
+message ProductPricingParams {
+    uint32 product_index = 1;
+    string base_offset_type = 2;  // "tick" | "price" | "percentage"
+    double base_offset_value = 3;
+}
+
 enum ArbitrageStrategyType {
     ARB_STRATEGY_NONE = 0;
     ARB_STRATEGY_PCP  = 1;
@@ -233,6 +241,15 @@ message SetStrategyParamsRequest {
 
 message SetStrategyParamsResponse {
     bool   ok      = 1;
+    string message = 2;
+}
+
+message SetProductPricingParamsRequest {
+    ProductPricingParams params = 1;
+}
+
+message SetProductPricingParamsResponse {
+    bool ok = 1;
     string message = 2;
 }
 
@@ -417,6 +434,7 @@ message SnapshotResponse {
     repeated BookInfo books = 13;
     repeated BookPosition book_positions = 14;
     repeated BookPortfolio book_portfolios = 15;
+    repeated ProductPricingParams product_pricing_params = 16;
 }
 
 message StreamRequest { uint32 product_index = 1; }  // 0xFF = all
@@ -439,6 +457,7 @@ service TradingMonitor {
 
     // ── Control (client → server, unary) ─────────────────────────────────────
     rpc SetStrategyParams  (SetStrategyParamsRequest)  returns (SetStrategyParamsResponse);
+    rpc SetProductPricingParams (SetProductPricingParamsRequest) returns (SetProductPricingParamsResponse);
     rpc StartStrategy      (StartStopRequest)          returns (StartStopResponse);
     rpc StopStrategy       (StartStopRequest)          returns (StartStopResponse);
     rpc SetArbStrategyParams (SetArbStrategyParamsRequest) returns (SetArbStrategyParamsResponse);

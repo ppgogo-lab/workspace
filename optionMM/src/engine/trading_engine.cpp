@@ -157,8 +157,14 @@ TradingEngine::TradingEngine(const SystemConfig& cfg,
             cfg_.persistence, cfg_.gateway.type, cfg_.pricing.vol_method);
     }
     // Apply initial MM params from config
+    for (int i = 0; i < MAX_PRODUCTS; ++i) {
+        product_base_offset_type_[i].store(
+            static_cast<uint8_t>(BaseOffsetType::Price), std::memory_order_relaxed);
+        product_base_offset_value_[i].store(0.0, std::memory_order_relaxed);
+    }
     for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i) {
         mm_params_[i].apply(cfg_.products[i].params);
+        (void)set_product_pricing(i, cfg_.products[i].pricing);
         for (int slot = 0; slot < cfg_.products[i].arbitrage_strategy_count
              && slot < MAX_ARBITRAGE_STRATEGIES_PER_PRODUCT; ++slot) {
             arb_strategy_types_[i][slot] = cfg_.products[i].arbitrage_strategies[slot].type;
@@ -170,6 +176,23 @@ TradingEngine::TradingEngine(const SystemConfig& cfg,
 }
 
 TradingEngine::~TradingEngine() { stop(); }
+
+ProductPricingConfig TradingEngine::product_pricing(int i) const noexcept {
+    ProductPricingConfig pricing{};
+    if (i < 0 || i >= MAX_PRODUCTS) return pricing;
+    pricing.base_offset_type = static_cast<BaseOffsetType>(
+        product_base_offset_type_[i].load(std::memory_order_relaxed));
+    pricing.base_offset_value = product_base_offset_value_[i].load(std::memory_order_relaxed);
+    return pricing;
+}
+
+bool TradingEngine::set_product_pricing(int i, const ProductPricingConfig& pricing) noexcept {
+    if (i < 0 || i >= cfg_.product_count || i >= MAX_PRODUCTS) return false;
+    product_base_offset_type_[i].store(
+        static_cast<uint8_t>(pricing.base_offset_type), std::memory_order_relaxed);
+    product_base_offset_value_[i].store(pricing.base_offset_value, std::memory_order_relaxed);
+    return true;
+}
 
 int TradingEngine::enable_huge_pages_for_large_arrays() noexcept {
     if (!huge_pages_available()) {

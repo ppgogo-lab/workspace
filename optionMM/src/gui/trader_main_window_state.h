@@ -37,6 +37,8 @@ struct InstrumentMeta {
     std::string kind;
     std::string option_type;
     double strike{0.0};
+    double tick_size{0.0};
+    double multiplier{0.0};
 };
 
 struct SharedState {
@@ -63,6 +65,7 @@ struct SharedState {
     uint64_t trades_seq{0};
     std::deque<omm::proto::RiskAlert> alerts;
     std::map<uint32_t, omm::proto::MMParams> mm_params;
+    std::map<uint32_t, omm::proto::ProductPricingParams> product_pricing_params;
     std::map<uint64_t, omm::proto::ArbParams> arb_params;
     std::unordered_map<uint32_t, omm::proto::ProductMMState> product_states;
     std::unordered_map<uint32_t, omm::proto::InstrumentMMState> instrument_states;

@@ -88,6 +88,40 @@ const char* option_type_name(const Instrument& instr) noexcept {
     return instr.option_type == OptionType::Call ? "Call" : "Put";
 }
 
+const char* base_offset_type_name(BaseOffsetType type) noexcept {
+    switch (type) {
+    case BaseOffsetType::Tick: return "tick";
+    case BaseOffsetType::Price: return "price";
+    case BaseOffsetType::Percentage: return "percentage";
+    }
+    return "price";
+}
+
+bool parse_base_offset_type(std::string_view type, BaseOffsetType* out) noexcept {
+    if (out == nullptr) return false;
+    if (type == "tick" || type == "Tick") {
+        *out = BaseOffsetType::Tick;
+        return true;
+    }
+    if (type == "price" || type == "Price") {
+        *out = BaseOffsetType::Price;
+        return true;
+    }
+    if (type == "percentage" || type == "Percentage") {
+        *out = BaseOffsetType::Percentage;
+        return true;
+    }
+    return false;
+}
+
+void populate_product_pricing(uint32_t product_index,
+                              const ProductPricingConfig& pricing,
+                              omm::proto::ProductPricingParams* msg) {
+    msg->set_product_index(product_index);
+    msg->set_base_offset_type(base_offset_type_name(pricing.base_offset_type));
+    msg->set_base_offset_value(pricing.base_offset_value);
+}
+
 omm::proto::ArbitrageStrategyType arb_strategy_type_to_proto(ArbitrageStrategyType type) noexcept {
     switch (type) {
     case ArbitrageStrategyType::PCP:
@@ -478,6 +512,46 @@ public:
         return grpc::Status::OK;
     }
 
+    grpc::Status SetProductPricingParams(
+            grpc::ServerContext* ctx,
+            const omm::proto::SetProductPricingParamsRequest* req,
+            omm::proto::SetProductPricingParamsResponse* resp) override
+    {
+        grpc::Status auth_status = authenticate(ctx, nullptr, nullptr);
+        if (!auth_status.ok()) return auth_status;
+
+        const auto& params = req->params();
+        const int idx = static_cast<int>(params.product_index());
+        if (idx < 0 || idx >= engine_.product_count()) {
+            resp->set_ok(false);
+            resp->set_message("invalid product_index");
+            return grpc::Status::OK;
+        }
+
+        ProductPricingConfig pricing = engine_.product_pricing(idx);
+        if (!params.base_offset_type().empty()
+            && !parse_base_offset_type(params.base_offset_type(), &pricing.base_offset_type)) {
+            resp->set_ok(false);
+            resp->set_message("base_offset_type must be tick/price/percentage");
+            return grpc::Status::OK;
+        }
+        pricing.base_offset_value = params.base_offset_value();
+        if (!engine_.set_product_pricing(idx, pricing)) {
+            resp->set_ok(false);
+            resp->set_message("failed to update product pricing");
+            return grpc::Status::OK;
+        }
+
+        OMM_LOG_INFO(
+            "grpc",
+            "SetProductPricingParams product={} base_offset_type={} base_offset_value={}",
+            idx,
+            base_offset_type_name(pricing.base_offset_type),
+            pricing.base_offset_value);
+        resp->set_ok(true);
+        return grpc::Status::OK;
+    }
+
     grpc::Status StartStrategy(
             grpc::ServerContext* ctx,
             const omm::proto::StartStopRequest* req,
@@ -764,6 +838,10 @@ public:
                 snap.underlying_move_widen_threshold_ticks);
             mp->set_use_one_sided_at_limits(snap.use_one_sided_at_limits);
             mp->set_enabled(snap.enabled);
+
+            populate_product_pricing(static_cast<uint32_t>(i),
+                                     engine_.product_pricing(i),
+                                     resp->add_product_pricing_params());
         }
 
         for (int i = 0; i < engine_.product_count(); ++i) {
@@ -881,6 +959,8 @@ public:
             pi->set_underlying_id(instr.underlying_id);
             pi->set_exchange_id(std::string(instr.exchange_id.view()));
             pi->set_expiry_date(instr.expiry_date);
+            pi->set_tick_size(instr.tick_size);
+            pi->set_multiplier(instr.multiplier);
         }
 
         populate_user_info(user, resp->mutable_current_user());
