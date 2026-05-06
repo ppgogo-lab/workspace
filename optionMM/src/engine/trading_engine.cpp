@@ -288,6 +288,7 @@ void TradingEngine::populate_instrument_registry() noexcept {
     for (uint16_t i = 0; i < n_instruments_; ++i) {
         instruments_[i].instrument_id = i;
         instruments_[i].product_index = 0xFF;
+        instruments_[i].tick_size = std::max(0.0, instruments_[i].tick_size);
         for (int p = 0; p < cfg_.product_count; ++p) {
             if (instruments_[i].code == cfg_.products[p].underlying_id ||
                 instruments_[i].underlying_code == cfg_.products[p].underlying_id) {

@@ -96,9 +96,7 @@ void TradingEngine::pricer_loop() noexcept {
             next_cold_greeks_due_ns[prod] = now + cold_greeks_interval_ns;
             return true;
         }
-        const double future_tick_size = instruments_[future_id].tick_size > 0.0
-                                      ? instruments_[future_id].tick_size
-                                      : 0.0;
+        const double future_tick_size = instruments_[future_id].tick_size;
         const double F_mid = apply_base_offset(F_mid_raw, future_tick_size,
                                                cfg_.products[prod].pricing);
         if (F_mid < 1e-10) {
@@ -243,9 +241,7 @@ void TradingEngine::pricer_loop() noexcept {
             continue;
         }
         const uint16_t future_id = future_tick.instrument_id;
-        const double future_tick_size = future_id < MAX_INSTRUMENTS && instruments_[future_id].tick_size > 0.0
-                                      ? instruments_[future_id].tick_size
-                                      : 0.0;
+        const double future_tick_size = instruments_[future_id].tick_size;
         const ProductPricingConfig& product_pricing = cfg_.products[prod].pricing;
         const double F_mid = apply_base_offset(F_mid_raw, future_tick_size, product_pricing);
         double F_bid = apply_base_offset(F_bid_raw, future_tick_size, product_pricing);
