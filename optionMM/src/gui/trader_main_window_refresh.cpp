@@ -915,7 +915,9 @@ void TraderMainWindow::refresh_ui() {
     }
 
     if (selected_arb_type != omm::proto::ARB_STRATEGY_PCP || pcp_rows.empty()) {
-        arb_opportunity_table_->setRowCount(0);
+        if (arb_opportunity_table_->rowCount() != 0) {
+            arb_opportunity_table_->setRowCount(0);
+        }
         arb_summary_label_->setText(
             selected_arb_type == omm::proto::ARB_STRATEGY_PCP
                 ? QString("No live PCP opportunities are available for %1.").arg(product_selector_->currentText())

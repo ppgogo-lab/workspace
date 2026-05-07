@@ -38,9 +38,13 @@ QDockWidget* TraderMainWindow::build_arbitrage_panel() {
     });
     arb_opportunity_table_->setAlternatingRowColors(true);
     arb_opportunity_table_->setSelectionMode(QAbstractItemView::SingleSelection);
-    arb_opportunity_table_->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-    arb_opportunity_table_->horizontalHeader()->setSectionResizeMode(8, QHeaderView::Stretch);
-    arb_opportunity_table_->horizontalHeader()->setSectionResizeMode(11, QHeaderView::Stretch);
+    auto* arb_header = arb_opportunity_table_->horizontalHeader();
+    arb_header->setSectionResizeMode(QHeaderView::Interactive);
+    arb_header->setDefaultSectionSize(88);
+    arb_header->setMinimumSectionSize(64);
+    arb_header->setStretchLastSection(true);
+    arb_opportunity_table_->setColumnWidth(8, 120);
+    arb_opportunity_table_->setColumnWidth(11, 140);
     arb_opportunity_table_->setMinimumHeight(220);
     arb_layout->addWidget(arb_opportunity_table_, 1);
     arb_monitor_dock->setWidget(arb_panel);

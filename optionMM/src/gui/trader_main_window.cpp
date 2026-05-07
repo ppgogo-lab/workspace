@@ -862,11 +862,16 @@ namespace {
 enum InstrumentTreeRole {
     TreeRoleKind = Qt::UserRole + 1,
     TreeRoleInstrumentId,
+    TreeRoleProductKey,
+    TreeRoleTermKey,
 };
 
 enum InstrumentTreeKind {
-    TreeKindGroup = 0,
-    TreeKindInstrument = 1,
+    TreeKindProduct = 0,
+    TreeKindFutureTerm = 1,
+    TreeKindOptionTerm = 2,
+    TreeKindOptionStrike = 3,
+    TreeKindExchange = 4,
 };
 
 QString qstr(const std::string& value) {
@@ -907,9 +912,6 @@ public:
         build_ui();
         reload_snapshot();
         populate_tree();
-        if (hierarchy_->topLevelItemCount() > 0) {
-            hierarchy_->setCurrentItem(hierarchy_->topLevelItem(0));
-        }
     }
 
 private:
@@ -929,8 +931,11 @@ private:
         hierarchy_->setColumnCount(4);
         hierarchy_->setHeaderLabels({"Exchange", "Product", "Term", "Strike"});
         hierarchy_->setRootIsDecorated(false);
+        hierarchy_->setItemsExpandable(false);
+        hierarchy_->setIndentation(0);
         hierarchy_->setAlternatingRowColors(false);
         hierarchy_->setSelectionMode(QAbstractItemView::SingleSelection);
+        hierarchy_->setSelectionBehavior(QAbstractItemView::SelectItems);
         hierarchy_->setUniformRowHeights(true);
         hierarchy_->setMinimumWidth(520);
         hierarchy_->header()->setSectionResizeMode(QHeaderView::Stretch);
@@ -1009,11 +1014,11 @@ private:
         splitter->setStretchFactor(1, 2);
         root_layout->addWidget(splitter, 1);
 
-        connect(hierarchy_, &QTreeWidget::currentItemChanged, this,
-                [this](QTreeWidgetItem* current, QTreeWidgetItem*) { select_item(current); });
+        connect(hierarchy_, &QTreeWidget::itemClicked, this,
+                [this](QTreeWidgetItem* item, int column) { select_cell(item, column); });
         connect(apply_button_, &QPushButton::clicked, this, [this] { apply_pricing("Applied"); });
         connect(save_button_, &QPushButton::clicked, this, [this] { apply_pricing("Saved"); });
-        clear_details();
+        clear_details("Select a product.");
     }
 
     void add_detail(QGridLayout* layout, int row, int col, const QString& label, const QString& key) {
@@ -1043,8 +1048,25 @@ private:
         for (const auto& [id, state] : state_->instrument_states) states_[id] = state;
     }
 
-    void populate_tree() {
-        hierarchy_->clear();
+    struct ProductRow {
+        QString key;
+        QString product;
+    };
+
+    struct TermRow {
+        QString key;
+        QString product_key;
+        QString term;
+        bool option{false};
+        const InstrumentMeta* future{nullptr};
+    };
+
+    struct ExchangeRow {
+        QString key;
+        QString exchange;
+    };
+
+    std::vector<const InstrumentMeta*> sorted_instruments() const {
         std::vector<const InstrumentMeta*> rows;
         rows.reserve(instruments_.size());
         for (const auto& [_, meta] : instruments_) rows.push_back(&meta);
@@ -1055,75 +1077,257 @@ private:
                 qstr(rhs->exchange_id), product_label_for(*rhs), rhs->expiry_date, rhs->strike, qstr(rhs->code));
             return lkey < rkey;
         });
-
-        std::map<QString, QTreeWidgetItem*> exchange_items;
-        std::map<QString, QTreeWidgetItem*> product_items;
-        std::map<QString, QTreeWidgetItem*> term_items;
-        for (const InstrumentMeta* meta : rows) {
-            const QString exchange = qstr(meta->exchange_id);
-            const QString product = product_label_for(*meta);
-            const QString term = term_label_for(*meta);
-            const QString exchange_key = exchange;
-            const QString product_key = exchange + "|" + product;
-            const QString term_key = product_key + "|" + term;
-
-            QTreeWidgetItem* exchange_item = exchange_items[exchange_key];
-            if (exchange_item == nullptr) {
-                exchange_item = new QTreeWidgetItem(hierarchy_);
-                exchange_item->setText(0, exchange);
-                exchange_item->setData(0, TreeRoleKind, TreeKindGroup);
-                exchange_items[exchange_key] = exchange_item;
-            }
-            QTreeWidgetItem* product_item = product_items[product_key];
-            if (product_item == nullptr) {
-                product_item = new QTreeWidgetItem(exchange_item);
-                product_item->setText(1, product);
-                product_item->setData(0, TreeRoleKind, TreeKindGroup);
-                product_items[product_key] = product_item;
-            }
-            QTreeWidgetItem* term_item = term_items[term_key];
-            if (term_item == nullptr) {
-                term_item = new QTreeWidgetItem(product_item);
-                term_item->setText(2, term);
-                term_item->setData(0, TreeRoleKind, TreeKindGroup);
-                term_items[term_key] = term_item;
-            }
-
-            if (meta->kind == "Future") {
-                term_item->setData(0, TreeRoleKind, TreeKindInstrument);
-                term_item->setData(0, TreeRoleInstrumentId, meta->instrument_id);
-            } else {
-                auto* strike_item = new QTreeWidgetItem(term_item);
-                strike_item->setText(3, format_double(meta->strike, 4));
-                strike_item->setData(0, TreeRoleKind, TreeKindInstrument);
-                strike_item->setData(0, TreeRoleInstrumentId, meta->instrument_id);
-            }
-        }
-        hierarchy_->expandAll();
-        for (int col = 0; col < hierarchy_->columnCount(); ++col) hierarchy_->resizeColumnToContents(col);
+        return rows;
     }
 
-    void select_item(QTreeWidgetItem* item) {
-        if (item == nullptr || item->data(0, TreeRoleKind).toInt() != TreeKindInstrument) {
+    QString product_key_for(const InstrumentMeta& meta) const {
+        return qstr(meta.exchange_id) + "|" + product_label_for(meta);
+    }
+
+    QString term_key_for(const InstrumentMeta& meta) const {
+        return product_key_for(meta) + "|" + term_label_for(meta);
+    }
+
+    std::vector<ExchangeRow> exchange_rows(const std::vector<const InstrumentMeta*>& rows) const {
+        std::map<QString, ExchangeRow> exchanges;
+        for (const InstrumentMeta* meta : rows) {
+            const QString exchange = qstr(meta->exchange_id);
+            exchanges.emplace(exchange, ExchangeRow{exchange, exchange});
+        }
+        std::vector<ExchangeRow> result;
+        result.reserve(exchanges.size());
+        for (const auto& [_, exchange] : exchanges) result.push_back(exchange);
+        return result;
+    }
+
+    std::vector<ProductRow> product_rows(const std::vector<const InstrumentMeta*>& rows) const {
+        std::map<QString, ProductRow> products;
+        for (const InstrumentMeta* meta : rows) {
+            const QString key = product_key_for(*meta);
+            auto [it, inserted] = products.emplace(
+                key,
+                ProductRow{key, product_label_for(*meta)});
+        }
+        std::vector<ProductRow> result;
+        result.reserve(products.size());
+        for (const auto& [_, product] : products) result.push_back(product);
+        return result;
+    }
+
+    std::vector<TermRow> term_rows(const std::vector<const InstrumentMeta*>& rows) const {
+        std::map<QString, TermRow> terms;
+        for (const InstrumentMeta* meta : rows) {
+            const QString product_key = product_key_for(*meta);
+            if (product_key != selected_product_key_) continue;
+
+            const QString term_key = term_key_for(*meta);
+            auto [it, inserted] = terms.emplace(
+                term_key,
+                TermRow{term_key, product_key, term_label_for(*meta), meta->kind == "Option", nullptr});
+            it->second.option = it->second.option || meta->kind == "Option";
+            if (meta->kind == "Future") it->second.future = meta;
+        }
+        std::vector<TermRow> result;
+        result.reserve(terms.size());
+        for (const auto& [_, term] : terms) result.push_back(term);
+        return result;
+    }
+
+    std::vector<const InstrumentMeta*> strike_rows(const std::vector<const InstrumentMeta*>& rows) const {
+        std::vector<const InstrumentMeta*> strikes;
+        if (selected_term_key_.isEmpty()) return strikes;
+        for (const InstrumentMeta* meta : rows) {
+            if (meta->kind == "Option" && term_key_for(*meta) == selected_term_key_) {
+                strikes.push_back(meta);
+            }
+        }
+        return strikes;
+    }
+
+    void set_cell_style(QTreeWidgetItem* item, int col, bool has_value, bool selected) {
+        const QColor neutral_bg("#ffffff");
+        const QColor muted_bg("#f7f7f7");
+        const QColor selected_bg("#d8ecff");
+        const QColor fg("#2a2a2a");
+        const QColor selected_fg("#1f3554");
+        QFont font = item->font(col);
+        font.setBold(selected);
+        item->setBackground(col, selected ? selected_bg : (has_value ? neutral_bg : muted_bg));
+        item->setForeground(col, selected ? selected_fg : fg);
+        item->setFont(col, font);
+    }
+
+    bool is_option_term_selected(const std::vector<const InstrumentMeta*>& rows) const {
+        if (selected_term_key_.isEmpty()) return false;
+        for (const InstrumentMeta* meta : rows) {
+            if (meta->kind == "Option" && term_key_for(*meta) == selected_term_key_) return true;
+        }
+        return false;
+    }
+
+    void clear_cell(QTreeWidgetItem* item, int col) {
+        item->setText(col, "");
+        item->setToolTip(col, "");
+        item->setData(col, TreeRoleKind, QVariant());
+        item->setData(col, TreeRoleProductKey, QVariant());
+        item->setData(col, TreeRoleTermKey, QVariant());
+        item->setData(col, TreeRoleInstrumentId, QVariant());
+        set_cell_style(item, col, false, false);
+    }
+
+    void set_cell(QTreeWidgetItem* item,
+                  int col,
+                  InstrumentTreeKind kind,
+                  const QString& text,
+                  const QString& product_key = {},
+                  const QString& term_key = {},
+                  uint32_t instrument_id = 0,
+                  bool selected = false) {
+        item->setText(col, text);
+        item->setData(col, TreeRoleKind, kind);
+        item->setData(col, TreeRoleProductKey, product_key);
+        item->setData(col, TreeRoleTermKey, term_key);
+        if (instrument_id != 0) {
+            item->setData(col, TreeRoleInstrumentId, instrument_id);
+        } else {
+            item->setData(col, TreeRoleInstrumentId, QVariant());
+        }
+        set_cell_style(item, col, true, selected);
+    }
+
+    void populate_tree() {
+        QSignalBlocker blocker(hierarchy_);
+        hierarchy_->clear();
+
+        const std::vector<const InstrumentMeta*> rows = sorted_instruments();
+        const std::vector<ExchangeRow> exchanges = exchange_rows(rows);
+        const std::vector<ProductRow> products = product_rows(rows);
+        const std::vector<TermRow> selected_product_terms = term_rows(rows);
+        const std::vector<const InstrumentMeta*> selected_term_strikes =
+            is_option_term_selected(rows) ? strike_rows(rows) : std::vector<const InstrumentMeta*>{};
+        QTreeWidgetItem* item_to_select = nullptr;
+        int column_to_select = -1;
+
+        int row_count = static_cast<int>(std::max(exchanges.size(), products.size()));
+        row_count = std::max(row_count, static_cast<int>(selected_product_terms.size()));
+        row_count = std::max(row_count, static_cast<int>(selected_term_strikes.size()));
+
+        for (int row = 0; row < row_count; ++row) {
+            auto* item = new QTreeWidgetItem(hierarchy_);
+            item->setFlags(item->flags() | Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+            for (int col = 0; col < hierarchy_->columnCount(); ++col) clear_cell(item, col);
+
+            if (row < static_cast<int>(exchanges.size())) {
+                const ExchangeRow& exchange = exchanges[static_cast<std::size_t>(row)];
+                set_cell(item, 0, TreeKindExchange, exchange.exchange);
+            }
+
+            if (row < static_cast<int>(products.size())) {
+                const ProductRow& product = products[static_cast<std::size_t>(row)];
+                const bool selected = product.key == selected_product_key_;
+                set_cell(item, 1, TreeKindProduct, product.product, product.key, {}, 0, selected);
+                if (selected && selected_term_key_.isEmpty() && selected_instrument_id_ == 0) {
+                    item_to_select = item;
+                    column_to_select = 1;
+                }
+            }
+
+            if (row < static_cast<int>(selected_product_terms.size())) {
+                const TermRow& term = selected_product_terms[static_cast<std::size_t>(row)];
+                const InstrumentTreeKind kind = term.option ? TreeKindOptionTerm : TreeKindFutureTerm;
+                const uint32_t future_id = term.future != nullptr ? term.future->instrument_id : 0;
+                const bool selected = term.key == selected_term_key_
+                    && (term.option || selected_instrument_id_ == 0 || future_id == selected_instrument_id_);
+                set_cell(item, 2, kind, term.term, term.product_key, term.key, future_id, selected);
+                if (selected && (selected_instrument_id_ == 0 || future_id == selected_instrument_id_)) {
+                    item_to_select = item;
+                    column_to_select = 2;
+                }
+            }
+
+            if (row < static_cast<int>(selected_term_strikes.size())) {
+                const InstrumentMeta* meta = selected_term_strikes[static_cast<std::size_t>(row)];
+                const bool selected = meta->instrument_id == selected_instrument_id_;
+                set_cell(item,
+                         3,
+                         TreeKindOptionStrike,
+                         format_double(meta->strike, 4),
+                         product_key_for(*meta),
+                         term_key_for(*meta),
+                         meta->instrument_id,
+                         selected);
+                item->setToolTip(3, qstr(meta->code));
+                if (selected) {
+                    item_to_select = item;
+                    column_to_select = 3;
+                }
+            }
+        }
+
+        for (int col = 0; col < hierarchy_->columnCount(); ++col) hierarchy_->resizeColumnToContents(col);
+
+        if (item_to_select != nullptr && column_to_select >= 0) {
+            hierarchy_->setCurrentItem(item_to_select,
+                                       column_to_select,
+                                       QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Current);
+        }
+    }
+
+    void select_cell(QTreeWidgetItem* item, int col) {
+        if (item == nullptr) {
             selected_instrument_id_ = 0;
-            clear_details();
+            clear_details("Select a product.");
             return;
         }
-        const uint32_t instrument_id = item->data(0, TreeRoleInstrumentId).toUInt();
+        const QVariant kind_data = item->data(col, TreeRoleKind);
+        if (!kind_data.isValid()) return;
+        const auto kind = static_cast<InstrumentTreeKind>(kind_data.toInt());
+        if (kind == TreeKindExchange) return;
+
+        if (kind == TreeKindProduct) {
+            selected_product_key_ = item->data(col, TreeRoleProductKey).toString();
+            selected_term_key_.clear();
+            selected_instrument_id_ = 0;
+            populate_tree();
+            clear_details("Select a term.");
+            return;
+        }
+
+        if (kind == TreeKindOptionTerm) {
+            selected_product_key_ = item->data(col, TreeRoleProductKey).toString();
+            selected_term_key_ = item->data(col, TreeRoleTermKey).toString();
+            selected_instrument_id_ = 0;
+            populate_tree();
+            clear_details("Select an option strike.");
+            return;
+        }
+
+        if (kind == TreeKindFutureTerm) {
+            selected_product_key_ = item->data(col, TreeRoleProductKey).toString();
+            selected_term_key_ = item->data(col, TreeRoleTermKey).toString();
+        }
+
+        const uint32_t instrument_id = item->data(col, TreeRoleInstrumentId).toUInt();
         const auto it = instruments_.find(instrument_id);
         if (it == instruments_.end()) {
             selected_instrument_id_ = 0;
-            clear_details();
+            clear_details("Select an instrument.");
             return;
         }
         selected_instrument_id_ = instrument_id;
+        if (kind == TreeKindOptionStrike) {
+            selected_product_key_ = item->data(col, TreeRoleProductKey).toString();
+            selected_term_key_ = item->data(col, TreeRoleTermKey).toString();
+        }
+        populate_tree();
         populate_details(it->second);
     }
 
-    void clear_details() {
+    void clear_details(const QString& message = "Select an instrument") {
         selected_title_->setText("Select an instrument");
         for (auto& [_, editor] : detail_fields_) editor->clear();
         set_pricing_enabled(false);
+        status_->setText(message);
     }
 
     void populate_details(const InstrumentMeta& meta) {
@@ -1207,6 +1411,8 @@ private:
     std::unordered_map<uint32_t, omm::proto::Tick> ticks_;
     std::unordered_map<uint32_t, omm::proto::InstrumentMMState> states_;
     uint32_t selected_instrument_id_{0};
+    QString selected_product_key_;
+    QString selected_term_key_;
     QTreeWidget* hierarchy_{nullptr};
     QLabel* selected_title_{nullptr};
     QGroupBox* pricing_group_{nullptr};
