@@ -12,6 +12,14 @@ using namespace omm;
 static constexpr double ABS_TOL = 1e-6;
 static constexpr double SIMD_TOL = 1e-4;
 
+static double test_norm_cdf(double x) {
+    return 0.5 * std::erfc(-x * M_SQRT1_2);
+}
+
+static double test_norm_pdf(double x) {
+    return 0.3989422804014327 * std::exp(-0.5 * x * x);
+}
+
 using BatchFn = void (*)(
     const double*,
     const double*,
@@ -85,11 +93,21 @@ static void expect_batch_matches_scalar(BatchFn fn, int count) {
 
     for (int i = 0; i < count; ++i) {
         EXPECT_NEAR(batch_out[i].price, scalar_out[i].price, SIMD_TOL) << "price mismatch at i=" << i;
+        EXPECT_NEAR(batch_out[i].std_delta, scalar_out[i].std_delta, SIMD_TOL) << "std_delta mismatch at i=" << i;
         EXPECT_NEAR(batch_out[i].delta, scalar_out[i].delta, SIMD_TOL) << "delta mismatch at i=" << i;
+        EXPECT_NEAR(batch_out[i].delta_cash, scalar_out[i].delta_cash, SIMD_TOL) << "delta_cash mismatch at i=" << i;
+        EXPECT_NEAR(batch_out[i].std_gamma, scalar_out[i].std_gamma, SIMD_TOL) << "std_gamma mismatch at i=" << i;
         EXPECT_NEAR(batch_out[i].gamma, scalar_out[i].gamma, SIMD_TOL) << "gamma mismatch at i=" << i;
+        EXPECT_NEAR(batch_out[i].gamma_cash, scalar_out[i].gamma_cash, SIMD_TOL) << "gamma_cash mismatch at i=" << i;
         EXPECT_NEAR(batch_out[i].vega, scalar_out[i].vega, SIMD_TOL) << "vega mismatch at i=" << i;
+        EXPECT_NEAR(batch_out[i].vega_cash, scalar_out[i].vega_cash, SIMD_TOL) << "vega_cash mismatch at i=" << i;
         EXPECT_NEAR(batch_out[i].theta, scalar_out[i].theta, SIMD_TOL) << "theta mismatch at i=" << i;
+        EXPECT_NEAR(batch_out[i].theta_cash, scalar_out[i].theta_cash, SIMD_TOL) << "theta_cash mismatch at i=" << i;
         EXPECT_NEAR(batch_out[i].rho, scalar_out[i].rho, SIMD_TOL) << "rho mismatch at i=" << i;
+        EXPECT_NEAR(batch_out[i].rho_cash, scalar_out[i].rho_cash, SIMD_TOL) << "rho_cash mismatch at i=" << i;
+        EXPECT_NEAR(batch_out[i].vanna, scalar_out[i].vanna, SIMD_TOL) << "vanna mismatch at i=" << i;
+        EXPECT_NEAR(batch_out[i].volga, scalar_out[i].volga, SIMD_TOL) << "volga mismatch at i=" << i;
+        EXPECT_NEAR(batch_out[i].charm, scalar_out[i].charm, SIMD_TOL) << "charm mismatch at i=" << i;
     }
 }
 
@@ -109,11 +127,21 @@ static void expect_batch_precomputed_matches_scalar(BatchPrecomputedFn fn, int c
 
     for (int i = 0; i < count; ++i) {
         EXPECT_NEAR(batch_out[i].price, scalar_out[i].price, SIMD_TOL) << "price mismatch at i=" << i;
+        EXPECT_NEAR(batch_out[i].std_delta, scalar_out[i].std_delta, SIMD_TOL) << "std_delta mismatch at i=" << i;
         EXPECT_NEAR(batch_out[i].delta, scalar_out[i].delta, SIMD_TOL) << "delta mismatch at i=" << i;
+        EXPECT_NEAR(batch_out[i].delta_cash, scalar_out[i].delta_cash, SIMD_TOL) << "delta_cash mismatch at i=" << i;
+        EXPECT_NEAR(batch_out[i].std_gamma, scalar_out[i].std_gamma, SIMD_TOL) << "std_gamma mismatch at i=" << i;
         EXPECT_NEAR(batch_out[i].gamma, scalar_out[i].gamma, SIMD_TOL) << "gamma mismatch at i=" << i;
+        EXPECT_NEAR(batch_out[i].gamma_cash, scalar_out[i].gamma_cash, SIMD_TOL) << "gamma_cash mismatch at i=" << i;
         EXPECT_NEAR(batch_out[i].vega, scalar_out[i].vega, SIMD_TOL) << "vega mismatch at i=" << i;
+        EXPECT_NEAR(batch_out[i].vega_cash, scalar_out[i].vega_cash, SIMD_TOL) << "vega_cash mismatch at i=" << i;
         EXPECT_NEAR(batch_out[i].theta, scalar_out[i].theta, SIMD_TOL) << "theta mismatch at i=" << i;
+        EXPECT_NEAR(batch_out[i].theta_cash, scalar_out[i].theta_cash, SIMD_TOL) << "theta_cash mismatch at i=" << i;
         EXPECT_NEAR(batch_out[i].rho, scalar_out[i].rho, SIMD_TOL) << "rho mismatch at i=" << i;
+        EXPECT_NEAR(batch_out[i].rho_cash, scalar_out[i].rho_cash, SIMD_TOL) << "rho_cash mismatch at i=" << i;
+        EXPECT_NEAR(batch_out[i].vanna, scalar_out[i].vanna, SIMD_TOL) << "vanna mismatch at i=" << i;
+        EXPECT_NEAR(batch_out[i].volga, scalar_out[i].volga, SIMD_TOL) << "volga mismatch at i=" << i;
+        EXPECT_NEAR(batch_out[i].charm, scalar_out[i].charm, SIMD_TOL) << "charm mismatch at i=" << i;
     }
 }
 
@@ -201,6 +229,50 @@ TEST(Black76Scalar, GammaSymmetry) {
     const auto call = compute_scalar(100.0, 95.0, 0.5, 0.03, 0.22, true);
     const auto put = compute_scalar(100.0, 95.0, 0.5, 0.03, 0.22, false);
     EXPECT_NEAR(call.gamma, put.gamma, 1e-10);
+}
+
+TEST(Black76Scalar, ExpandedGreeksUseMultipliersAndTradingDays) {
+    const double F = 100.0;
+    const double K = 105.0;
+    const double T = 0.5;
+    const double r = 0.02;
+    const double sigma = 0.25;
+    const double Om = 10.0;
+    const double Fm = 5.0;
+    const double DY = 252.0;
+
+    const auto res = compute_scalar(F, K, T, r, sigma, true, Om, Fm, DY);
+    const double sqrt_T = std::sqrt(T);
+    const double disc = std::exp(-r * T);
+    const double sig_sqrt_T = sigma * sqrt_T;
+    const double d1 = (std::log(F / K) + 0.5 * sigma * sigma * T) / sig_sqrt_T;
+    const double d2 = d1 - sig_sqrt_T;
+    const double nd1 = test_norm_pdf(d1);
+    const double price = disc * (F * test_norm_cdf(d1) - K * test_norm_cdf(d2));
+    const double std_delta = disc * test_norm_cdf(d1);
+    const double std_gamma = disc * nd1 / (F * sig_sqrt_T);
+    const double vega = disc * F * nd1 * sqrt_T * 0.01;
+    const double theta = (-disc * F * nd1 * sigma / (2.0 * sqrt_T) + r * price) / DY;
+    const double rho = -T * price * 0.01;
+
+    EXPECT_NEAR(res.price, price, 1e-12);
+    EXPECT_NEAR(res.std_delta, std_delta, 1e-12);
+    EXPECT_NEAR(res.delta, std_delta * Om / Fm, 1e-12);
+    EXPECT_NEAR(res.delta_cash, std_delta * Om * F, 1e-12);
+    EXPECT_NEAR(res.std_gamma, std_gamma, 1e-12);
+    EXPECT_NEAR(res.gamma, std_gamma * Om * F * 0.01 / Fm, 1e-12);
+    EXPECT_NEAR(res.gamma_cash, std_gamma * Om * F * F * 0.01, 1e-12);
+    EXPECT_NEAR(res.vega, vega, 1e-12);
+    EXPECT_NEAR(res.vega_cash, vega * Om, 1e-12);
+    EXPECT_NEAR(res.theta, theta, 1e-12);
+    EXPECT_NEAR(res.theta_cash, theta * Om, 1e-12);
+    EXPECT_NEAR(res.rho, rho, 1e-12);
+    EXPECT_NEAR(res.rho_cash, rho * Om, 1e-12);
+    EXPECT_NEAR(res.vanna, disc * nd1 * (-d2 / sigma), 1e-12);
+    EXPECT_NEAR(res.volga, disc * F * nd1 * sqrt_T * d1 * d2 / sigma * 0.01, 1e-12);
+    EXPECT_NEAR(res.charm,
+                -disc * nd1 * (r / sig_sqrt_T - d2 / (2.0 * T)),
+                1e-12);
 }
 
 TEST(Black76Dispatch, PrefersHighestAvailableBackend) {

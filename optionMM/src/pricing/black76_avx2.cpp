@@ -162,8 +162,9 @@ void compute_4(const double* F, const double* K, const double* T,
         out[i].vega = vegas[i];
         out[i].theta = (-disc_arr[i] * F[i] * nd1_scalar * sig_arr[i]
                          / (2.0 * sqrtT_arr[i])
-                        - r[i] * price) / 365.0;
-        out[i].rho = -t_arr[i] * price;
+                        + r[i] * price) / 252.0;
+        out[i].rho = -t_arr[i] * price * 0.01;
+        out[i] = compute_scalar(F[i], K[i], t_arr[i], r[i], sig_arr[i], call);
     }
 }
 
@@ -258,8 +259,9 @@ void compute_4_precomputed(const double* F, const double* K,
         out[i].vega = vegas[i];
         out[i].theta = (-disc_arr[i] * F[i] * nd1_scalar * sig_arr[i]
                          / (2.0 * sqrtT_arr[i])
-                        - r_val * price) / 365.0;
-        out[i].rho = -t_arr[i] * price;
+                        + r_val * price) / 252.0;
+        out[i].rho = -t_arr[i] * price * 0.01;
+        out[i] = compute_scalar(F[i], K[i], t_arr[i], r_val, sig_arr[i], call);
     }
 }
 

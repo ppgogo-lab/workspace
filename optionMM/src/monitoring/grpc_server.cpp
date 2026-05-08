@@ -776,13 +776,24 @@ public:
             auto* pg = resp->add_greeks();
             pg->set_instrument_id(g.instrument_id);
             pg->set_theo_price(g.theo_price);
+            pg->set_std_delta(g.std_delta);
             pg->set_delta(g.delta);
+            pg->set_delta_cash(g.delta_cash);
+            pg->set_std_gamma(g.std_gamma);
             pg->set_gamma(g.gamma);
+            pg->set_gamma_cash(g.gamma_cash);
             pg->set_vega(g.vega);
+            pg->set_vega_cash(g.vega_cash);
             pg->set_theta(g.theta);
+            pg->set_theta_cash(g.theta_cash);
             pg->set_rho(g.rho);
+            pg->set_rho_cash(g.rho_cash);
+            pg->set_vanna(g.vanna);
+            pg->set_volga(g.volga);
+            pg->set_charm(g.charm);
             pg->set_iv(g.iv);
             pg->set_t(g.T);
+            pg->set_calc_ts_ns(g.calc_ts_ns);
         }
 
         const auto* pos_snap = engine_.post_risk().positions();
@@ -1030,11 +1041,21 @@ public:
                 omm::proto::Greeks msg;
                 msg.set_instrument_id(g.instrument_id);
                 msg.set_theo_price(g.theo_price);
+                msg.set_std_delta(g.std_delta);
                 msg.set_delta(g.delta);
+                msg.set_delta_cash(g.delta_cash);
+                msg.set_std_gamma(g.std_gamma);
                 msg.set_gamma(g.gamma);
+                msg.set_gamma_cash(g.gamma_cash);
                 msg.set_vega(g.vega);
+                msg.set_vega_cash(g.vega_cash);
                 msg.set_theta(g.theta);
+                msg.set_theta_cash(g.theta_cash);
                 msg.set_rho(g.rho);
+                msg.set_rho_cash(g.rho_cash);
+                msg.set_vanna(g.vanna);
+                msg.set_volga(g.volga);
+                msg.set_charm(g.charm);
                 msg.set_iv(g.iv);
                 msg.set_t(g.T);
                 msg.set_calc_ts_ns(g.calc_ts_ns);

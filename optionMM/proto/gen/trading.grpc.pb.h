@@ -38,6 +38,27 @@ class TradingMonitor final {
   class StubInterface {
    public:
     virtual ~StubInterface() {}
+    virtual ::grpc::Status Login(::grpc::ClientContext* context, const ::omm::proto::LoginRequest& request, ::omm::proto::LoginResponse* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::LoginResponse>> AsyncLogin(::grpc::ClientContext* context, const ::omm::proto::LoginRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::LoginResponse>>(AsyncLoginRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::LoginResponse>> PrepareAsyncLogin(::grpc::ClientContext* context, const ::omm::proto::LoginRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::LoginResponse>>(PrepareAsyncLoginRaw(context, request, cq));
+    }
+    virtual ::grpc::Status Logout(::grpc::ClientContext* context, const ::omm::proto::LogoutRequest& request, ::omm::proto::LogoutResponse* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::LogoutResponse>> AsyncLogout(::grpc::ClientContext* context, const ::omm::proto::LogoutRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::LogoutResponse>>(AsyncLogoutRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::LogoutResponse>> PrepareAsyncLogout(::grpc::ClientContext* context, const ::omm::proto::LogoutRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::LogoutResponse>>(PrepareAsyncLogoutRaw(context, request, cq));
+    }
+    virtual ::grpc::Status WhoAmI(::grpc::ClientContext* context, const ::omm::proto::WhoAmIRequest& request, ::omm::proto::WhoAmIResponse* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::WhoAmIResponse>> AsyncWhoAmI(::grpc::ClientContext* context, const ::omm::proto::WhoAmIRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::WhoAmIResponse>>(AsyncWhoAmIRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::WhoAmIResponse>> PrepareAsyncWhoAmI(::grpc::ClientContext* context, const ::omm::proto::WhoAmIRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::WhoAmIResponse>>(PrepareAsyncWhoAmIRaw(context, request, cq));
+    }
     // ── Streaming (server → client) ──────────────────────────────────────────
     std::unique_ptr< ::grpc::ClientReaderInterface< ::omm::proto::Greeks>> StreamGreeks(::grpc::ClientContext* context, const ::omm::proto::StreamRequest& request) {
       return std::unique_ptr< ::grpc::ClientReaderInterface< ::omm::proto::Greeks>>(StreamGreeksRaw(context, request));
@@ -119,6 +140,13 @@ class TradingMonitor final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::SetStrategyParamsResponse>> PrepareAsyncSetStrategyParams(::grpc::ClientContext* context, const ::omm::proto::SetStrategyParamsRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::SetStrategyParamsResponse>>(PrepareAsyncSetStrategyParamsRaw(context, request, cq));
     }
+    virtual ::grpc::Status SetProductPricingParams(::grpc::ClientContext* context, const ::omm::proto::SetProductPricingParamsRequest& request, ::omm::proto::SetProductPricingParamsResponse* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::SetProductPricingParamsResponse>> AsyncSetProductPricingParams(::grpc::ClientContext* context, const ::omm::proto::SetProductPricingParamsRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::SetProductPricingParamsResponse>>(AsyncSetProductPricingParamsRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::SetProductPricingParamsResponse>> PrepareAsyncSetProductPricingParams(::grpc::ClientContext* context, const ::omm::proto::SetProductPricingParamsRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::SetProductPricingParamsResponse>>(PrepareAsyncSetProductPricingParamsRaw(context, request, cq));
+    }
     virtual ::grpc::Status StartStrategy(::grpc::ClientContext* context, const ::omm::proto::StartStopRequest& request, ::omm::proto::StartStopResponse* response) = 0;
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::StartStopResponse>> AsyncStartStrategy(::grpc::ClientContext* context, const ::omm::proto::StartStopRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::StartStopResponse>>(AsyncStartStrategyRaw(context, request, cq));
@@ -132,6 +160,27 @@ class TradingMonitor final {
     }
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::StartStopResponse>> PrepareAsyncStopStrategy(::grpc::ClientContext* context, const ::omm::proto::StartStopRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::StartStopResponse>>(PrepareAsyncStopStrategyRaw(context, request, cq));
+    }
+    virtual ::grpc::Status SetArbStrategyParams(::grpc::ClientContext* context, const ::omm::proto::SetArbStrategyParamsRequest& request, ::omm::proto::SetArbStrategyParamsResponse* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::SetArbStrategyParamsResponse>> AsyncSetArbStrategyParams(::grpc::ClientContext* context, const ::omm::proto::SetArbStrategyParamsRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::SetArbStrategyParamsResponse>>(AsyncSetArbStrategyParamsRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::SetArbStrategyParamsResponse>> PrepareAsyncSetArbStrategyParams(::grpc::ClientContext* context, const ::omm::proto::SetArbStrategyParamsRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::SetArbStrategyParamsResponse>>(PrepareAsyncSetArbStrategyParamsRaw(context, request, cq));
+    }
+    virtual ::grpc::Status StartArbStrategy(::grpc::ClientContext* context, const ::omm::proto::ArbStartStopRequest& request, ::omm::proto::ArbStartStopResponse* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::ArbStartStopResponse>> AsyncStartArbStrategy(::grpc::ClientContext* context, const ::omm::proto::ArbStartStopRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::ArbStartStopResponse>>(AsyncStartArbStrategyRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::ArbStartStopResponse>> PrepareAsyncStartArbStrategy(::grpc::ClientContext* context, const ::omm::proto::ArbStartStopRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::ArbStartStopResponse>>(PrepareAsyncStartArbStrategyRaw(context, request, cq));
+    }
+    virtual ::grpc::Status StopArbStrategy(::grpc::ClientContext* context, const ::omm::proto::ArbStartStopRequest& request, ::omm::proto::ArbStartStopResponse* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::ArbStartStopResponse>> AsyncStopArbStrategy(::grpc::ClientContext* context, const ::omm::proto::ArbStartStopRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::ArbStartStopResponse>>(AsyncStopArbStrategyRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::ArbStartStopResponse>> PrepareAsyncStopArbStrategy(::grpc::ClientContext* context, const ::omm::proto::ArbStartStopRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::ArbStartStopResponse>>(PrepareAsyncStopArbStrategyRaw(context, request, cq));
     }
     virtual ::grpc::Status SetRiskThreshold(::grpc::ClientContext* context, const ::omm::proto::SetRiskThresholdRequest& request, ::omm::proto::SetRiskThresholdResponse* response) = 0;
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::SetRiskThresholdResponse>> AsyncSetRiskThreshold(::grpc::ClientContext* context, const ::omm::proto::SetRiskThresholdRequest& request, ::grpc::CompletionQueue* cq) {
@@ -154,6 +203,13 @@ class TradingMonitor final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::CancelOrderResponse>> PrepareAsyncCancelOrder(::grpc::ClientContext* context, const ::omm::proto::CancelOrderRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::CancelOrderResponse>>(PrepareAsyncCancelOrderRaw(context, request, cq));
     }
+    virtual ::grpc::Status CancelQuote(::grpc::ClientContext* context, const ::omm::proto::CancelQuoteRequest& request, ::omm::proto::CancelQuoteResponse* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::CancelQuoteResponse>> AsyncCancelQuote(::grpc::ClientContext* context, const ::omm::proto::CancelQuoteRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::CancelQuoteResponse>>(AsyncCancelQuoteRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::CancelQuoteResponse>> PrepareAsyncCancelQuote(::grpc::ClientContext* context, const ::omm::proto::CancelQuoteRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::CancelQuoteResponse>>(PrepareAsyncCancelQuoteRaw(context, request, cq));
+    }
     virtual ::grpc::Status GetSnapshot(::grpc::ClientContext* context, const ::omm::proto::SnapshotRequest& request, ::omm::proto::SnapshotResponse* response) = 0;
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::SnapshotResponse>> AsyncGetSnapshot(::grpc::ClientContext* context, const ::omm::proto::SnapshotRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::SnapshotResponse>>(AsyncGetSnapshotRaw(context, request, cq));
@@ -164,6 +220,12 @@ class TradingMonitor final {
     class async_interface {
      public:
       virtual ~async_interface() {}
+      virtual void Login(::grpc::ClientContext* context, const ::omm::proto::LoginRequest* request, ::omm::proto::LoginResponse* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void Login(::grpc::ClientContext* context, const ::omm::proto::LoginRequest* request, ::omm::proto::LoginResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      virtual void Logout(::grpc::ClientContext* context, const ::omm::proto::LogoutRequest* request, ::omm::proto::LogoutResponse* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void Logout(::grpc::ClientContext* context, const ::omm::proto::LogoutRequest* request, ::omm::proto::LogoutResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      virtual void WhoAmI(::grpc::ClientContext* context, const ::omm::proto::WhoAmIRequest* request, ::omm::proto::WhoAmIResponse* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void WhoAmI(::grpc::ClientContext* context, const ::omm::proto::WhoAmIRequest* request, ::omm::proto::WhoAmIResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       // ── Streaming (server → client) ──────────────────────────────────────────
       virtual void StreamGreeks(::grpc::ClientContext* context, const ::omm::proto::StreamRequest* request, ::grpc::ClientReadReactor< ::omm::proto::Greeks>* reactor) = 0;
       virtual void StreamPositions(::grpc::ClientContext* context, const ::omm::proto::StreamRequest* request, ::grpc::ClientReadReactor< ::omm::proto::Position>* reactor) = 0;
@@ -176,16 +238,26 @@ class TradingMonitor final {
       // ── Control (client → server, unary) ─────────────────────────────────────
       virtual void SetStrategyParams(::grpc::ClientContext* context, const ::omm::proto::SetStrategyParamsRequest* request, ::omm::proto::SetStrategyParamsResponse* response, std::function<void(::grpc::Status)>) = 0;
       virtual void SetStrategyParams(::grpc::ClientContext* context, const ::omm::proto::SetStrategyParamsRequest* request, ::omm::proto::SetStrategyParamsResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      virtual void SetProductPricingParams(::grpc::ClientContext* context, const ::omm::proto::SetProductPricingParamsRequest* request, ::omm::proto::SetProductPricingParamsResponse* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void SetProductPricingParams(::grpc::ClientContext* context, const ::omm::proto::SetProductPricingParamsRequest* request, ::omm::proto::SetProductPricingParamsResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       virtual void StartStrategy(::grpc::ClientContext* context, const ::omm::proto::StartStopRequest* request, ::omm::proto::StartStopResponse* response, std::function<void(::grpc::Status)>) = 0;
       virtual void StartStrategy(::grpc::ClientContext* context, const ::omm::proto::StartStopRequest* request, ::omm::proto::StartStopResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       virtual void StopStrategy(::grpc::ClientContext* context, const ::omm::proto::StartStopRequest* request, ::omm::proto::StartStopResponse* response, std::function<void(::grpc::Status)>) = 0;
       virtual void StopStrategy(::grpc::ClientContext* context, const ::omm::proto::StartStopRequest* request, ::omm::proto::StartStopResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      virtual void SetArbStrategyParams(::grpc::ClientContext* context, const ::omm::proto::SetArbStrategyParamsRequest* request, ::omm::proto::SetArbStrategyParamsResponse* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void SetArbStrategyParams(::grpc::ClientContext* context, const ::omm::proto::SetArbStrategyParamsRequest* request, ::omm::proto::SetArbStrategyParamsResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      virtual void StartArbStrategy(::grpc::ClientContext* context, const ::omm::proto::ArbStartStopRequest* request, ::omm::proto::ArbStartStopResponse* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void StartArbStrategy(::grpc::ClientContext* context, const ::omm::proto::ArbStartStopRequest* request, ::omm::proto::ArbStartStopResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      virtual void StopArbStrategy(::grpc::ClientContext* context, const ::omm::proto::ArbStartStopRequest* request, ::omm::proto::ArbStartStopResponse* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void StopArbStrategy(::grpc::ClientContext* context, const ::omm::proto::ArbStartStopRequest* request, ::omm::proto::ArbStartStopResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       virtual void SetRiskThreshold(::grpc::ClientContext* context, const ::omm::proto::SetRiskThresholdRequest* request, ::omm::proto::SetRiskThresholdResponse* response, std::function<void(::grpc::Status)>) = 0;
       virtual void SetRiskThreshold(::grpc::ClientContext* context, const ::omm::proto::SetRiskThresholdRequest* request, ::omm::proto::SetRiskThresholdResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       virtual void SendManualOrder(::grpc::ClientContext* context, const ::omm::proto::ManualOrderRequest* request, ::omm::proto::ManualOrderResponse* response, std::function<void(::grpc::Status)>) = 0;
       virtual void SendManualOrder(::grpc::ClientContext* context, const ::omm::proto::ManualOrderRequest* request, ::omm::proto::ManualOrderResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       virtual void CancelOrder(::grpc::ClientContext* context, const ::omm::proto::CancelOrderRequest* request, ::omm::proto::CancelOrderResponse* response, std::function<void(::grpc::Status)>) = 0;
       virtual void CancelOrder(::grpc::ClientContext* context, const ::omm::proto::CancelOrderRequest* request, ::omm::proto::CancelOrderResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      virtual void CancelQuote(::grpc::ClientContext* context, const ::omm::proto::CancelQuoteRequest* request, ::omm::proto::CancelQuoteResponse* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void CancelQuote(::grpc::ClientContext* context, const ::omm::proto::CancelQuoteRequest* request, ::omm::proto::CancelQuoteResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       virtual void GetSnapshot(::grpc::ClientContext* context, const ::omm::proto::SnapshotRequest* request, ::omm::proto::SnapshotResponse* response, std::function<void(::grpc::Status)>) = 0;
       virtual void GetSnapshot(::grpc::ClientContext* context, const ::omm::proto::SnapshotRequest* request, ::omm::proto::SnapshotResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
     };
@@ -193,6 +265,12 @@ class TradingMonitor final {
     virtual class async_interface* async() { return nullptr; }
     class async_interface* experimental_async() { return async(); }
    private:
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::LoginResponse>* AsyncLoginRaw(::grpc::ClientContext* context, const ::omm::proto::LoginRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::LoginResponse>* PrepareAsyncLoginRaw(::grpc::ClientContext* context, const ::omm::proto::LoginRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::LogoutResponse>* AsyncLogoutRaw(::grpc::ClientContext* context, const ::omm::proto::LogoutRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::LogoutResponse>* PrepareAsyncLogoutRaw(::grpc::ClientContext* context, const ::omm::proto::LogoutRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::WhoAmIResponse>* AsyncWhoAmIRaw(::grpc::ClientContext* context, const ::omm::proto::WhoAmIRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::WhoAmIResponse>* PrepareAsyncWhoAmIRaw(::grpc::ClientContext* context, const ::omm::proto::WhoAmIRequest& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientReaderInterface< ::omm::proto::Greeks>* StreamGreeksRaw(::grpc::ClientContext* context, const ::omm::proto::StreamRequest& request) = 0;
     virtual ::grpc::ClientAsyncReaderInterface< ::omm::proto::Greeks>* AsyncStreamGreeksRaw(::grpc::ClientContext* context, const ::omm::proto::StreamRequest& request, ::grpc::CompletionQueue* cq, void* tag) = 0;
     virtual ::grpc::ClientAsyncReaderInterface< ::omm::proto::Greeks>* PrepareAsyncStreamGreeksRaw(::grpc::ClientContext* context, const ::omm::proto::StreamRequest& request, ::grpc::CompletionQueue* cq) = 0;
@@ -219,22 +297,53 @@ class TradingMonitor final {
     virtual ::grpc::ClientAsyncReaderInterface< ::omm::proto::VolSurface>* PrepareAsyncStreamVolSurfaceRaw(::grpc::ClientContext* context, const ::omm::proto::StreamRequest& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::SetStrategyParamsResponse>* AsyncSetStrategyParamsRaw(::grpc::ClientContext* context, const ::omm::proto::SetStrategyParamsRequest& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::SetStrategyParamsResponse>* PrepareAsyncSetStrategyParamsRaw(::grpc::ClientContext* context, const ::omm::proto::SetStrategyParamsRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::SetProductPricingParamsResponse>* AsyncSetProductPricingParamsRaw(::grpc::ClientContext* context, const ::omm::proto::SetProductPricingParamsRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::SetProductPricingParamsResponse>* PrepareAsyncSetProductPricingParamsRaw(::grpc::ClientContext* context, const ::omm::proto::SetProductPricingParamsRequest& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::StartStopResponse>* AsyncStartStrategyRaw(::grpc::ClientContext* context, const ::omm::proto::StartStopRequest& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::StartStopResponse>* PrepareAsyncStartStrategyRaw(::grpc::ClientContext* context, const ::omm::proto::StartStopRequest& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::StartStopResponse>* AsyncStopStrategyRaw(::grpc::ClientContext* context, const ::omm::proto::StartStopRequest& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::StartStopResponse>* PrepareAsyncStopStrategyRaw(::grpc::ClientContext* context, const ::omm::proto::StartStopRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::SetArbStrategyParamsResponse>* AsyncSetArbStrategyParamsRaw(::grpc::ClientContext* context, const ::omm::proto::SetArbStrategyParamsRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::SetArbStrategyParamsResponse>* PrepareAsyncSetArbStrategyParamsRaw(::grpc::ClientContext* context, const ::omm::proto::SetArbStrategyParamsRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::ArbStartStopResponse>* AsyncStartArbStrategyRaw(::grpc::ClientContext* context, const ::omm::proto::ArbStartStopRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::ArbStartStopResponse>* PrepareAsyncStartArbStrategyRaw(::grpc::ClientContext* context, const ::omm::proto::ArbStartStopRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::ArbStartStopResponse>* AsyncStopArbStrategyRaw(::grpc::ClientContext* context, const ::omm::proto::ArbStartStopRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::ArbStartStopResponse>* PrepareAsyncStopArbStrategyRaw(::grpc::ClientContext* context, const ::omm::proto::ArbStartStopRequest& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::SetRiskThresholdResponse>* AsyncSetRiskThresholdRaw(::grpc::ClientContext* context, const ::omm::proto::SetRiskThresholdRequest& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::SetRiskThresholdResponse>* PrepareAsyncSetRiskThresholdRaw(::grpc::ClientContext* context, const ::omm::proto::SetRiskThresholdRequest& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::ManualOrderResponse>* AsyncSendManualOrderRaw(::grpc::ClientContext* context, const ::omm::proto::ManualOrderRequest& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::ManualOrderResponse>* PrepareAsyncSendManualOrderRaw(::grpc::ClientContext* context, const ::omm::proto::ManualOrderRequest& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::CancelOrderResponse>* AsyncCancelOrderRaw(::grpc::ClientContext* context, const ::omm::proto::CancelOrderRequest& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::CancelOrderResponse>* PrepareAsyncCancelOrderRaw(::grpc::ClientContext* context, const ::omm::proto::CancelOrderRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::CancelQuoteResponse>* AsyncCancelQuoteRaw(::grpc::ClientContext* context, const ::omm::proto::CancelQuoteRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::CancelQuoteResponse>* PrepareAsyncCancelQuoteRaw(::grpc::ClientContext* context, const ::omm::proto::CancelQuoteRequest& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::SnapshotResponse>* AsyncGetSnapshotRaw(::grpc::ClientContext* context, const ::omm::proto::SnapshotRequest& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::omm::proto::SnapshotResponse>* PrepareAsyncGetSnapshotRaw(::grpc::ClientContext* context, const ::omm::proto::SnapshotRequest& request, ::grpc::CompletionQueue* cq) = 0;
   };
   class Stub final : public StubInterface {
    public:
     Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
+    ::grpc::Status Login(::grpc::ClientContext* context, const ::omm::proto::LoginRequest& request, ::omm::proto::LoginResponse* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::LoginResponse>> AsyncLogin(::grpc::ClientContext* context, const ::omm::proto::LoginRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::LoginResponse>>(AsyncLoginRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::LoginResponse>> PrepareAsyncLogin(::grpc::ClientContext* context, const ::omm::proto::LoginRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::LoginResponse>>(PrepareAsyncLoginRaw(context, request, cq));
+    }
+    ::grpc::Status Logout(::grpc::ClientContext* context, const ::omm::proto::LogoutRequest& request, ::omm::proto::LogoutResponse* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::LogoutResponse>> AsyncLogout(::grpc::ClientContext* context, const ::omm::proto::LogoutRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::LogoutResponse>>(AsyncLogoutRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::LogoutResponse>> PrepareAsyncLogout(::grpc::ClientContext* context, const ::omm::proto::LogoutRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::LogoutResponse>>(PrepareAsyncLogoutRaw(context, request, cq));
+    }
+    ::grpc::Status WhoAmI(::grpc::ClientContext* context, const ::omm::proto::WhoAmIRequest& request, ::omm::proto::WhoAmIResponse* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::WhoAmIResponse>> AsyncWhoAmI(::grpc::ClientContext* context, const ::omm::proto::WhoAmIRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::WhoAmIResponse>>(AsyncWhoAmIRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::WhoAmIResponse>> PrepareAsyncWhoAmI(::grpc::ClientContext* context, const ::omm::proto::WhoAmIRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::WhoAmIResponse>>(PrepareAsyncWhoAmIRaw(context, request, cq));
+    }
     std::unique_ptr< ::grpc::ClientReader< ::omm::proto::Greeks>> StreamGreeks(::grpc::ClientContext* context, const ::omm::proto::StreamRequest& request) {
       return std::unique_ptr< ::grpc::ClientReader< ::omm::proto::Greeks>>(StreamGreeksRaw(context, request));
     }
@@ -314,6 +423,13 @@ class TradingMonitor final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::SetStrategyParamsResponse>> PrepareAsyncSetStrategyParams(::grpc::ClientContext* context, const ::omm::proto::SetStrategyParamsRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::SetStrategyParamsResponse>>(PrepareAsyncSetStrategyParamsRaw(context, request, cq));
     }
+    ::grpc::Status SetProductPricingParams(::grpc::ClientContext* context, const ::omm::proto::SetProductPricingParamsRequest& request, ::omm::proto::SetProductPricingParamsResponse* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::SetProductPricingParamsResponse>> AsyncSetProductPricingParams(::grpc::ClientContext* context, const ::omm::proto::SetProductPricingParamsRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::SetProductPricingParamsResponse>>(AsyncSetProductPricingParamsRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::SetProductPricingParamsResponse>> PrepareAsyncSetProductPricingParams(::grpc::ClientContext* context, const ::omm::proto::SetProductPricingParamsRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::SetProductPricingParamsResponse>>(PrepareAsyncSetProductPricingParamsRaw(context, request, cq));
+    }
     ::grpc::Status StartStrategy(::grpc::ClientContext* context, const ::omm::proto::StartStopRequest& request, ::omm::proto::StartStopResponse* response) override;
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::StartStopResponse>> AsyncStartStrategy(::grpc::ClientContext* context, const ::omm::proto::StartStopRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::StartStopResponse>>(AsyncStartStrategyRaw(context, request, cq));
@@ -327,6 +443,27 @@ class TradingMonitor final {
     }
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::StartStopResponse>> PrepareAsyncStopStrategy(::grpc::ClientContext* context, const ::omm::proto::StartStopRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::StartStopResponse>>(PrepareAsyncStopStrategyRaw(context, request, cq));
+    }
+    ::grpc::Status SetArbStrategyParams(::grpc::ClientContext* context, const ::omm::proto::SetArbStrategyParamsRequest& request, ::omm::proto::SetArbStrategyParamsResponse* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::SetArbStrategyParamsResponse>> AsyncSetArbStrategyParams(::grpc::ClientContext* context, const ::omm::proto::SetArbStrategyParamsRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::SetArbStrategyParamsResponse>>(AsyncSetArbStrategyParamsRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::SetArbStrategyParamsResponse>> PrepareAsyncSetArbStrategyParams(::grpc::ClientContext* context, const ::omm::proto::SetArbStrategyParamsRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::SetArbStrategyParamsResponse>>(PrepareAsyncSetArbStrategyParamsRaw(context, request, cq));
+    }
+    ::grpc::Status StartArbStrategy(::grpc::ClientContext* context, const ::omm::proto::ArbStartStopRequest& request, ::omm::proto::ArbStartStopResponse* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::ArbStartStopResponse>> AsyncStartArbStrategy(::grpc::ClientContext* context, const ::omm::proto::ArbStartStopRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::ArbStartStopResponse>>(AsyncStartArbStrategyRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::ArbStartStopResponse>> PrepareAsyncStartArbStrategy(::grpc::ClientContext* context, const ::omm::proto::ArbStartStopRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::ArbStartStopResponse>>(PrepareAsyncStartArbStrategyRaw(context, request, cq));
+    }
+    ::grpc::Status StopArbStrategy(::grpc::ClientContext* context, const ::omm::proto::ArbStartStopRequest& request, ::omm::proto::ArbStartStopResponse* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::ArbStartStopResponse>> AsyncStopArbStrategy(::grpc::ClientContext* context, const ::omm::proto::ArbStartStopRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::ArbStartStopResponse>>(AsyncStopArbStrategyRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::ArbStartStopResponse>> PrepareAsyncStopArbStrategy(::grpc::ClientContext* context, const ::omm::proto::ArbStartStopRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::ArbStartStopResponse>>(PrepareAsyncStopArbStrategyRaw(context, request, cq));
     }
     ::grpc::Status SetRiskThreshold(::grpc::ClientContext* context, const ::omm::proto::SetRiskThresholdRequest& request, ::omm::proto::SetRiskThresholdResponse* response) override;
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::SetRiskThresholdResponse>> AsyncSetRiskThreshold(::grpc::ClientContext* context, const ::omm::proto::SetRiskThresholdRequest& request, ::grpc::CompletionQueue* cq) {
@@ -349,6 +486,13 @@ class TradingMonitor final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::CancelOrderResponse>> PrepareAsyncCancelOrder(::grpc::ClientContext* context, const ::omm::proto::CancelOrderRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::CancelOrderResponse>>(PrepareAsyncCancelOrderRaw(context, request, cq));
     }
+    ::grpc::Status CancelQuote(::grpc::ClientContext* context, const ::omm::proto::CancelQuoteRequest& request, ::omm::proto::CancelQuoteResponse* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::CancelQuoteResponse>> AsyncCancelQuote(::grpc::ClientContext* context, const ::omm::proto::CancelQuoteRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::CancelQuoteResponse>>(AsyncCancelQuoteRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::CancelQuoteResponse>> PrepareAsyncCancelQuote(::grpc::ClientContext* context, const ::omm::proto::CancelQuoteRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::CancelQuoteResponse>>(PrepareAsyncCancelQuoteRaw(context, request, cq));
+    }
     ::grpc::Status GetSnapshot(::grpc::ClientContext* context, const ::omm::proto::SnapshotRequest& request, ::omm::proto::SnapshotResponse* response) override;
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::SnapshotResponse>> AsyncGetSnapshot(::grpc::ClientContext* context, const ::omm::proto::SnapshotRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::omm::proto::SnapshotResponse>>(AsyncGetSnapshotRaw(context, request, cq));
@@ -359,6 +503,12 @@ class TradingMonitor final {
     class async final :
       public StubInterface::async_interface {
      public:
+      void Login(::grpc::ClientContext* context, const ::omm::proto::LoginRequest* request, ::omm::proto::LoginResponse* response, std::function<void(::grpc::Status)>) override;
+      void Login(::grpc::ClientContext* context, const ::omm::proto::LoginRequest* request, ::omm::proto::LoginResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
+      void Logout(::grpc::ClientContext* context, const ::omm::proto::LogoutRequest* request, ::omm::proto::LogoutResponse* response, std::function<void(::grpc::Status)>) override;
+      void Logout(::grpc::ClientContext* context, const ::omm::proto::LogoutRequest* request, ::omm::proto::LogoutResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
+      void WhoAmI(::grpc::ClientContext* context, const ::omm::proto::WhoAmIRequest* request, ::omm::proto::WhoAmIResponse* response, std::function<void(::grpc::Status)>) override;
+      void WhoAmI(::grpc::ClientContext* context, const ::omm::proto::WhoAmIRequest* request, ::omm::proto::WhoAmIResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
       void StreamGreeks(::grpc::ClientContext* context, const ::omm::proto::StreamRequest* request, ::grpc::ClientReadReactor< ::omm::proto::Greeks>* reactor) override;
       void StreamPositions(::grpc::ClientContext* context, const ::omm::proto::StreamRequest* request, ::grpc::ClientReadReactor< ::omm::proto::Position>* reactor) override;
       void StreamTicks(::grpc::ClientContext* context, const ::omm::proto::StreamRequest* request, ::grpc::ClientReadReactor< ::omm::proto::Tick>* reactor) override;
@@ -369,16 +519,26 @@ class TradingMonitor final {
       void StreamVolSurface(::grpc::ClientContext* context, const ::omm::proto::StreamRequest* request, ::grpc::ClientReadReactor< ::omm::proto::VolSurface>* reactor) override;
       void SetStrategyParams(::grpc::ClientContext* context, const ::omm::proto::SetStrategyParamsRequest* request, ::omm::proto::SetStrategyParamsResponse* response, std::function<void(::grpc::Status)>) override;
       void SetStrategyParams(::grpc::ClientContext* context, const ::omm::proto::SetStrategyParamsRequest* request, ::omm::proto::SetStrategyParamsResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
+      void SetProductPricingParams(::grpc::ClientContext* context, const ::omm::proto::SetProductPricingParamsRequest* request, ::omm::proto::SetProductPricingParamsResponse* response, std::function<void(::grpc::Status)>) override;
+      void SetProductPricingParams(::grpc::ClientContext* context, const ::omm::proto::SetProductPricingParamsRequest* request, ::omm::proto::SetProductPricingParamsResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
       void StartStrategy(::grpc::ClientContext* context, const ::omm::proto::StartStopRequest* request, ::omm::proto::StartStopResponse* response, std::function<void(::grpc::Status)>) override;
       void StartStrategy(::grpc::ClientContext* context, const ::omm::proto::StartStopRequest* request, ::omm::proto::StartStopResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
       void StopStrategy(::grpc::ClientContext* context, const ::omm::proto::StartStopRequest* request, ::omm::proto::StartStopResponse* response, std::function<void(::grpc::Status)>) override;
       void StopStrategy(::grpc::ClientContext* context, const ::omm::proto::StartStopRequest* request, ::omm::proto::StartStopResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
+      void SetArbStrategyParams(::grpc::ClientContext* context, const ::omm::proto::SetArbStrategyParamsRequest* request, ::omm::proto::SetArbStrategyParamsResponse* response, std::function<void(::grpc::Status)>) override;
+      void SetArbStrategyParams(::grpc::ClientContext* context, const ::omm::proto::SetArbStrategyParamsRequest* request, ::omm::proto::SetArbStrategyParamsResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
+      void StartArbStrategy(::grpc::ClientContext* context, const ::omm::proto::ArbStartStopRequest* request, ::omm::proto::ArbStartStopResponse* response, std::function<void(::grpc::Status)>) override;
+      void StartArbStrategy(::grpc::ClientContext* context, const ::omm::proto::ArbStartStopRequest* request, ::omm::proto::ArbStartStopResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
+      void StopArbStrategy(::grpc::ClientContext* context, const ::omm::proto::ArbStartStopRequest* request, ::omm::proto::ArbStartStopResponse* response, std::function<void(::grpc::Status)>) override;
+      void StopArbStrategy(::grpc::ClientContext* context, const ::omm::proto::ArbStartStopRequest* request, ::omm::proto::ArbStartStopResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
       void SetRiskThreshold(::grpc::ClientContext* context, const ::omm::proto::SetRiskThresholdRequest* request, ::omm::proto::SetRiskThresholdResponse* response, std::function<void(::grpc::Status)>) override;
       void SetRiskThreshold(::grpc::ClientContext* context, const ::omm::proto::SetRiskThresholdRequest* request, ::omm::proto::SetRiskThresholdResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
       void SendManualOrder(::grpc::ClientContext* context, const ::omm::proto::ManualOrderRequest* request, ::omm::proto::ManualOrderResponse* response, std::function<void(::grpc::Status)>) override;
       void SendManualOrder(::grpc::ClientContext* context, const ::omm::proto::ManualOrderRequest* request, ::omm::proto::ManualOrderResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
       void CancelOrder(::grpc::ClientContext* context, const ::omm::proto::CancelOrderRequest* request, ::omm::proto::CancelOrderResponse* response, std::function<void(::grpc::Status)>) override;
       void CancelOrder(::grpc::ClientContext* context, const ::omm::proto::CancelOrderRequest* request, ::omm::proto::CancelOrderResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
+      void CancelQuote(::grpc::ClientContext* context, const ::omm::proto::CancelQuoteRequest* request, ::omm::proto::CancelQuoteResponse* response, std::function<void(::grpc::Status)>) override;
+      void CancelQuote(::grpc::ClientContext* context, const ::omm::proto::CancelQuoteRequest* request, ::omm::proto::CancelQuoteResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
       void GetSnapshot(::grpc::ClientContext* context, const ::omm::proto::SnapshotRequest* request, ::omm::proto::SnapshotResponse* response, std::function<void(::grpc::Status)>) override;
       void GetSnapshot(::grpc::ClientContext* context, const ::omm::proto::SnapshotRequest* request, ::omm::proto::SnapshotResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
      private:
@@ -392,6 +552,12 @@ class TradingMonitor final {
    private:
     std::shared_ptr< ::grpc::ChannelInterface> channel_;
     class async async_stub_{this};
+    ::grpc::ClientAsyncResponseReader< ::omm::proto::LoginResponse>* AsyncLoginRaw(::grpc::ClientContext* context, const ::omm::proto::LoginRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::omm::proto::LoginResponse>* PrepareAsyncLoginRaw(::grpc::ClientContext* context, const ::omm::proto::LoginRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::omm::proto::LogoutResponse>* AsyncLogoutRaw(::grpc::ClientContext* context, const ::omm::proto::LogoutRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::omm::proto::LogoutResponse>* PrepareAsyncLogoutRaw(::grpc::ClientContext* context, const ::omm::proto::LogoutRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::omm::proto::WhoAmIResponse>* AsyncWhoAmIRaw(::grpc::ClientContext* context, const ::omm::proto::WhoAmIRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::omm::proto::WhoAmIResponse>* PrepareAsyncWhoAmIRaw(::grpc::ClientContext* context, const ::omm::proto::WhoAmIRequest& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientReader< ::omm::proto::Greeks>* StreamGreeksRaw(::grpc::ClientContext* context, const ::omm::proto::StreamRequest& request) override;
     ::grpc::ClientAsyncReader< ::omm::proto::Greeks>* AsyncStreamGreeksRaw(::grpc::ClientContext* context, const ::omm::proto::StreamRequest& request, ::grpc::CompletionQueue* cq, void* tag) override;
     ::grpc::ClientAsyncReader< ::omm::proto::Greeks>* PrepareAsyncStreamGreeksRaw(::grpc::ClientContext* context, const ::omm::proto::StreamRequest& request, ::grpc::CompletionQueue* cq) override;
@@ -418,18 +584,31 @@ class TradingMonitor final {
     ::grpc::ClientAsyncReader< ::omm::proto::VolSurface>* PrepareAsyncStreamVolSurfaceRaw(::grpc::ClientContext* context, const ::omm::proto::StreamRequest& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::omm::proto::SetStrategyParamsResponse>* AsyncSetStrategyParamsRaw(::grpc::ClientContext* context, const ::omm::proto::SetStrategyParamsRequest& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::omm::proto::SetStrategyParamsResponse>* PrepareAsyncSetStrategyParamsRaw(::grpc::ClientContext* context, const ::omm::proto::SetStrategyParamsRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::omm::proto::SetProductPricingParamsResponse>* AsyncSetProductPricingParamsRaw(::grpc::ClientContext* context, const ::omm::proto::SetProductPricingParamsRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::omm::proto::SetProductPricingParamsResponse>* PrepareAsyncSetProductPricingParamsRaw(::grpc::ClientContext* context, const ::omm::proto::SetProductPricingParamsRequest& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::omm::proto::StartStopResponse>* AsyncStartStrategyRaw(::grpc::ClientContext* context, const ::omm::proto::StartStopRequest& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::omm::proto::StartStopResponse>* PrepareAsyncStartStrategyRaw(::grpc::ClientContext* context, const ::omm::proto::StartStopRequest& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::omm::proto::StartStopResponse>* AsyncStopStrategyRaw(::grpc::ClientContext* context, const ::omm::proto::StartStopRequest& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::omm::proto::StartStopResponse>* PrepareAsyncStopStrategyRaw(::grpc::ClientContext* context, const ::omm::proto::StartStopRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::omm::proto::SetArbStrategyParamsResponse>* AsyncSetArbStrategyParamsRaw(::grpc::ClientContext* context, const ::omm::proto::SetArbStrategyParamsRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::omm::proto::SetArbStrategyParamsResponse>* PrepareAsyncSetArbStrategyParamsRaw(::grpc::ClientContext* context, const ::omm::proto::SetArbStrategyParamsRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::omm::proto::ArbStartStopResponse>* AsyncStartArbStrategyRaw(::grpc::ClientContext* context, const ::omm::proto::ArbStartStopRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::omm::proto::ArbStartStopResponse>* PrepareAsyncStartArbStrategyRaw(::grpc::ClientContext* context, const ::omm::proto::ArbStartStopRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::omm::proto::ArbStartStopResponse>* AsyncStopArbStrategyRaw(::grpc::ClientContext* context, const ::omm::proto::ArbStartStopRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::omm::proto::ArbStartStopResponse>* PrepareAsyncStopArbStrategyRaw(::grpc::ClientContext* context, const ::omm::proto::ArbStartStopRequest& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::omm::proto::SetRiskThresholdResponse>* AsyncSetRiskThresholdRaw(::grpc::ClientContext* context, const ::omm::proto::SetRiskThresholdRequest& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::omm::proto::SetRiskThresholdResponse>* PrepareAsyncSetRiskThresholdRaw(::grpc::ClientContext* context, const ::omm::proto::SetRiskThresholdRequest& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::omm::proto::ManualOrderResponse>* AsyncSendManualOrderRaw(::grpc::ClientContext* context, const ::omm::proto::ManualOrderRequest& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::omm::proto::ManualOrderResponse>* PrepareAsyncSendManualOrderRaw(::grpc::ClientContext* context, const ::omm::proto::ManualOrderRequest& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::omm::proto::CancelOrderResponse>* AsyncCancelOrderRaw(::grpc::ClientContext* context, const ::omm::proto::CancelOrderRequest& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::omm::proto::CancelOrderResponse>* PrepareAsyncCancelOrderRaw(::grpc::ClientContext* context, const ::omm::proto::CancelOrderRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::omm::proto::CancelQuoteResponse>* AsyncCancelQuoteRaw(::grpc::ClientContext* context, const ::omm::proto::CancelQuoteRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::omm::proto::CancelQuoteResponse>* PrepareAsyncCancelQuoteRaw(::grpc::ClientContext* context, const ::omm::proto::CancelQuoteRequest& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::omm::proto::SnapshotResponse>* AsyncGetSnapshotRaw(::grpc::ClientContext* context, const ::omm::proto::SnapshotRequest& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::omm::proto::SnapshotResponse>* PrepareAsyncGetSnapshotRaw(::grpc::ClientContext* context, const ::omm::proto::SnapshotRequest& request, ::grpc::CompletionQueue* cq) override;
+    const ::grpc::internal::RpcMethod rpcmethod_Login_;
+    const ::grpc::internal::RpcMethod rpcmethod_Logout_;
+    const ::grpc::internal::RpcMethod rpcmethod_WhoAmI_;
     const ::grpc::internal::RpcMethod rpcmethod_StreamGreeks_;
     const ::grpc::internal::RpcMethod rpcmethod_StreamPositions_;
     const ::grpc::internal::RpcMethod rpcmethod_StreamTicks_;
@@ -439,11 +618,16 @@ class TradingMonitor final {
     const ::grpc::internal::RpcMethod rpcmethod_StreamRiskAlerts_;
     const ::grpc::internal::RpcMethod rpcmethod_StreamVolSurface_;
     const ::grpc::internal::RpcMethod rpcmethod_SetStrategyParams_;
+    const ::grpc::internal::RpcMethod rpcmethod_SetProductPricingParams_;
     const ::grpc::internal::RpcMethod rpcmethod_StartStrategy_;
     const ::grpc::internal::RpcMethod rpcmethod_StopStrategy_;
+    const ::grpc::internal::RpcMethod rpcmethod_SetArbStrategyParams_;
+    const ::grpc::internal::RpcMethod rpcmethod_StartArbStrategy_;
+    const ::grpc::internal::RpcMethod rpcmethod_StopArbStrategy_;
     const ::grpc::internal::RpcMethod rpcmethod_SetRiskThreshold_;
     const ::grpc::internal::RpcMethod rpcmethod_SendManualOrder_;
     const ::grpc::internal::RpcMethod rpcmethod_CancelOrder_;
+    const ::grpc::internal::RpcMethod rpcmethod_CancelQuote_;
     const ::grpc::internal::RpcMethod rpcmethod_GetSnapshot_;
   };
   static std::unique_ptr<Stub> NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
@@ -452,6 +636,9 @@ class TradingMonitor final {
    public:
     Service();
     virtual ~Service();
+    virtual ::grpc::Status Login(::grpc::ServerContext* context, const ::omm::proto::LoginRequest* request, ::omm::proto::LoginResponse* response);
+    virtual ::grpc::Status Logout(::grpc::ServerContext* context, const ::omm::proto::LogoutRequest* request, ::omm::proto::LogoutResponse* response);
+    virtual ::grpc::Status WhoAmI(::grpc::ServerContext* context, const ::omm::proto::WhoAmIRequest* request, ::omm::proto::WhoAmIResponse* response);
     // ── Streaming (server → client) ──────────────────────────────────────────
     virtual ::grpc::Status StreamGreeks(::grpc::ServerContext* context, const ::omm::proto::StreamRequest* request, ::grpc::ServerWriter< ::omm::proto::Greeks>* writer);
     virtual ::grpc::Status StreamPositions(::grpc::ServerContext* context, const ::omm::proto::StreamRequest* request, ::grpc::ServerWriter< ::omm::proto::Position>* writer);
@@ -463,12 +650,77 @@ class TradingMonitor final {
     virtual ::grpc::Status StreamVolSurface(::grpc::ServerContext* context, const ::omm::proto::StreamRequest* request, ::grpc::ServerWriter< ::omm::proto::VolSurface>* writer);
     // ── Control (client → server, unary) ─────────────────────────────────────
     virtual ::grpc::Status SetStrategyParams(::grpc::ServerContext* context, const ::omm::proto::SetStrategyParamsRequest* request, ::omm::proto::SetStrategyParamsResponse* response);
+    virtual ::grpc::Status SetProductPricingParams(::grpc::ServerContext* context, const ::omm::proto::SetProductPricingParamsRequest* request, ::omm::proto::SetProductPricingParamsResponse* response);
     virtual ::grpc::Status StartStrategy(::grpc::ServerContext* context, const ::omm::proto::StartStopRequest* request, ::omm::proto::StartStopResponse* response);
     virtual ::grpc::Status StopStrategy(::grpc::ServerContext* context, const ::omm::proto::StartStopRequest* request, ::omm::proto::StartStopResponse* response);
+    virtual ::grpc::Status SetArbStrategyParams(::grpc::ServerContext* context, const ::omm::proto::SetArbStrategyParamsRequest* request, ::omm::proto::SetArbStrategyParamsResponse* response);
+    virtual ::grpc::Status StartArbStrategy(::grpc::ServerContext* context, const ::omm::proto::ArbStartStopRequest* request, ::omm::proto::ArbStartStopResponse* response);
+    virtual ::grpc::Status StopArbStrategy(::grpc::ServerContext* context, const ::omm::proto::ArbStartStopRequest* request, ::omm::proto::ArbStartStopResponse* response);
     virtual ::grpc::Status SetRiskThreshold(::grpc::ServerContext* context, const ::omm::proto::SetRiskThresholdRequest* request, ::omm::proto::SetRiskThresholdResponse* response);
     virtual ::grpc::Status SendManualOrder(::grpc::ServerContext* context, const ::omm::proto::ManualOrderRequest* request, ::omm::proto::ManualOrderResponse* response);
     virtual ::grpc::Status CancelOrder(::grpc::ServerContext* context, const ::omm::proto::CancelOrderRequest* request, ::omm::proto::CancelOrderResponse* response);
+    virtual ::grpc::Status CancelQuote(::grpc::ServerContext* context, const ::omm::proto::CancelQuoteRequest* request, ::omm::proto::CancelQuoteResponse* response);
     virtual ::grpc::Status GetSnapshot(::grpc::ServerContext* context, const ::omm::proto::SnapshotRequest* request, ::omm::proto::SnapshotResponse* response);
+  };
+  template <class BaseClass>
+  class WithAsyncMethod_Login : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_Login() {
+      ::grpc::Service::MarkMethodAsync(0);
+    }
+    ~WithAsyncMethod_Login() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Login(::grpc::ServerContext* /*context*/, const ::omm::proto::LoginRequest* /*request*/, ::omm::proto::LoginResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestLogin(::grpc::ServerContext* context, ::omm::proto::LoginRequest* request, ::grpc::ServerAsyncResponseWriter< ::omm::proto::LoginResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithAsyncMethod_Logout : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_Logout() {
+      ::grpc::Service::MarkMethodAsync(1);
+    }
+    ~WithAsyncMethod_Logout() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Logout(::grpc::ServerContext* /*context*/, const ::omm::proto::LogoutRequest* /*request*/, ::omm::proto::LogoutResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestLogout(::grpc::ServerContext* context, ::omm::proto::LogoutRequest* request, ::grpc::ServerAsyncResponseWriter< ::omm::proto::LogoutResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithAsyncMethod_WhoAmI : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_WhoAmI() {
+      ::grpc::Service::MarkMethodAsync(2);
+    }
+    ~WithAsyncMethod_WhoAmI() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status WhoAmI(::grpc::ServerContext* /*context*/, const ::omm::proto::WhoAmIRequest* /*request*/, ::omm::proto::WhoAmIResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestWhoAmI(::grpc::ServerContext* context, ::omm::proto::WhoAmIRequest* request, ::grpc::ServerAsyncResponseWriter< ::omm::proto::WhoAmIResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
+    }
   };
   template <class BaseClass>
   class WithAsyncMethod_StreamGreeks : public BaseClass {
@@ -476,7 +728,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_StreamGreeks() {
-      ::grpc::Service::MarkMethodAsync(0);
+      ::grpc::Service::MarkMethodAsync(3);
     }
     ~WithAsyncMethod_StreamGreeks() override {
       BaseClassMustBeDerivedFromService(this);
@@ -487,7 +739,7 @@ class TradingMonitor final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestStreamGreeks(::grpc::ServerContext* context, ::omm::proto::StreamRequest* request, ::grpc::ServerAsyncWriter< ::omm::proto::Greeks>* writer, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncServerStreaming(0, context, request, writer, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncServerStreaming(3, context, request, writer, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -496,7 +748,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_StreamPositions() {
-      ::grpc::Service::MarkMethodAsync(1);
+      ::grpc::Service::MarkMethodAsync(4);
     }
     ~WithAsyncMethod_StreamPositions() override {
       BaseClassMustBeDerivedFromService(this);
@@ -507,7 +759,7 @@ class TradingMonitor final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestStreamPositions(::grpc::ServerContext* context, ::omm::proto::StreamRequest* request, ::grpc::ServerAsyncWriter< ::omm::proto::Position>* writer, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncServerStreaming(1, context, request, writer, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncServerStreaming(4, context, request, writer, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -516,7 +768,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_StreamTicks() {
-      ::grpc::Service::MarkMethodAsync(2);
+      ::grpc::Service::MarkMethodAsync(5);
     }
     ~WithAsyncMethod_StreamTicks() override {
       BaseClassMustBeDerivedFromService(this);
@@ -527,7 +779,7 @@ class TradingMonitor final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestStreamTicks(::grpc::ServerContext* context, ::omm::proto::StreamRequest* request, ::grpc::ServerAsyncWriter< ::omm::proto::Tick>* writer, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncServerStreaming(2, context, request, writer, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncServerStreaming(5, context, request, writer, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -536,7 +788,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_StreamOrders() {
-      ::grpc::Service::MarkMethodAsync(3);
+      ::grpc::Service::MarkMethodAsync(6);
     }
     ~WithAsyncMethod_StreamOrders() override {
       BaseClassMustBeDerivedFromService(this);
@@ -547,7 +799,7 @@ class TradingMonitor final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestStreamOrders(::grpc::ServerContext* context, ::omm::proto::StreamRequest* request, ::grpc::ServerAsyncWriter< ::omm::proto::OrderUpdate>* writer, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncServerStreaming(3, context, request, writer, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncServerStreaming(6, context, request, writer, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -556,7 +808,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_StreamTrades() {
-      ::grpc::Service::MarkMethodAsync(4);
+      ::grpc::Service::MarkMethodAsync(7);
     }
     ~WithAsyncMethod_StreamTrades() override {
       BaseClassMustBeDerivedFromService(this);
@@ -567,7 +819,7 @@ class TradingMonitor final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestStreamTrades(::grpc::ServerContext* context, ::omm::proto::StreamRequest* request, ::grpc::ServerAsyncWriter< ::omm::proto::OrderUpdate>* writer, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncServerStreaming(4, context, request, writer, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncServerStreaming(7, context, request, writer, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -576,7 +828,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_StreamQuotes() {
-      ::grpc::Service::MarkMethodAsync(5);
+      ::grpc::Service::MarkMethodAsync(8);
     }
     ~WithAsyncMethod_StreamQuotes() override {
       BaseClassMustBeDerivedFromService(this);
@@ -587,7 +839,7 @@ class TradingMonitor final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestStreamQuotes(::grpc::ServerContext* context, ::omm::proto::StreamRequest* request, ::grpc::ServerAsyncWriter< ::omm::proto::QuoteUpdate>* writer, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncServerStreaming(5, context, request, writer, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncServerStreaming(8, context, request, writer, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -596,7 +848,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_StreamRiskAlerts() {
-      ::grpc::Service::MarkMethodAsync(6);
+      ::grpc::Service::MarkMethodAsync(9);
     }
     ~WithAsyncMethod_StreamRiskAlerts() override {
       BaseClassMustBeDerivedFromService(this);
@@ -607,7 +859,7 @@ class TradingMonitor final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestStreamRiskAlerts(::grpc::ServerContext* context, ::omm::proto::StreamRequest* request, ::grpc::ServerAsyncWriter< ::omm::proto::RiskAlert>* writer, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncServerStreaming(6, context, request, writer, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncServerStreaming(9, context, request, writer, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -616,7 +868,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_StreamVolSurface() {
-      ::grpc::Service::MarkMethodAsync(7);
+      ::grpc::Service::MarkMethodAsync(10);
     }
     ~WithAsyncMethod_StreamVolSurface() override {
       BaseClassMustBeDerivedFromService(this);
@@ -627,7 +879,7 @@ class TradingMonitor final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestStreamVolSurface(::grpc::ServerContext* context, ::omm::proto::StreamRequest* request, ::grpc::ServerAsyncWriter< ::omm::proto::VolSurface>* writer, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncServerStreaming(7, context, request, writer, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncServerStreaming(10, context, request, writer, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -636,7 +888,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_SetStrategyParams() {
-      ::grpc::Service::MarkMethodAsync(8);
+      ::grpc::Service::MarkMethodAsync(11);
     }
     ~WithAsyncMethod_SetStrategyParams() override {
       BaseClassMustBeDerivedFromService(this);
@@ -647,7 +899,27 @@ class TradingMonitor final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestSetStrategyParams(::grpc::ServerContext* context, ::omm::proto::SetStrategyParamsRequest* request, ::grpc::ServerAsyncResponseWriter< ::omm::proto::SetStrategyParamsResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(8, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(11, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithAsyncMethod_SetProductPricingParams : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_SetProductPricingParams() {
+      ::grpc::Service::MarkMethodAsync(12);
+    }
+    ~WithAsyncMethod_SetProductPricingParams() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status SetProductPricingParams(::grpc::ServerContext* /*context*/, const ::omm::proto::SetProductPricingParamsRequest* /*request*/, ::omm::proto::SetProductPricingParamsResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestSetProductPricingParams(::grpc::ServerContext* context, ::omm::proto::SetProductPricingParamsRequest* request, ::grpc::ServerAsyncResponseWriter< ::omm::proto::SetProductPricingParamsResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(12, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -656,7 +928,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_StartStrategy() {
-      ::grpc::Service::MarkMethodAsync(9);
+      ::grpc::Service::MarkMethodAsync(13);
     }
     ~WithAsyncMethod_StartStrategy() override {
       BaseClassMustBeDerivedFromService(this);
@@ -667,7 +939,7 @@ class TradingMonitor final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestStartStrategy(::grpc::ServerContext* context, ::omm::proto::StartStopRequest* request, ::grpc::ServerAsyncResponseWriter< ::omm::proto::StartStopResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(9, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(13, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -676,7 +948,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_StopStrategy() {
-      ::grpc::Service::MarkMethodAsync(10);
+      ::grpc::Service::MarkMethodAsync(14);
     }
     ~WithAsyncMethod_StopStrategy() override {
       BaseClassMustBeDerivedFromService(this);
@@ -687,7 +959,67 @@ class TradingMonitor final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestStopStrategy(::grpc::ServerContext* context, ::omm::proto::StartStopRequest* request, ::grpc::ServerAsyncResponseWriter< ::omm::proto::StartStopResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(10, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(14, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithAsyncMethod_SetArbStrategyParams : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_SetArbStrategyParams() {
+      ::grpc::Service::MarkMethodAsync(15);
+    }
+    ~WithAsyncMethod_SetArbStrategyParams() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status SetArbStrategyParams(::grpc::ServerContext* /*context*/, const ::omm::proto::SetArbStrategyParamsRequest* /*request*/, ::omm::proto::SetArbStrategyParamsResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestSetArbStrategyParams(::grpc::ServerContext* context, ::omm::proto::SetArbStrategyParamsRequest* request, ::grpc::ServerAsyncResponseWriter< ::omm::proto::SetArbStrategyParamsResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(15, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithAsyncMethod_StartArbStrategy : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_StartArbStrategy() {
+      ::grpc::Service::MarkMethodAsync(16);
+    }
+    ~WithAsyncMethod_StartArbStrategy() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status StartArbStrategy(::grpc::ServerContext* /*context*/, const ::omm::proto::ArbStartStopRequest* /*request*/, ::omm::proto::ArbStartStopResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestStartArbStrategy(::grpc::ServerContext* context, ::omm::proto::ArbStartStopRequest* request, ::grpc::ServerAsyncResponseWriter< ::omm::proto::ArbStartStopResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(16, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithAsyncMethod_StopArbStrategy : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_StopArbStrategy() {
+      ::grpc::Service::MarkMethodAsync(17);
+    }
+    ~WithAsyncMethod_StopArbStrategy() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status StopArbStrategy(::grpc::ServerContext* /*context*/, const ::omm::proto::ArbStartStopRequest* /*request*/, ::omm::proto::ArbStartStopResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestStopArbStrategy(::grpc::ServerContext* context, ::omm::proto::ArbStartStopRequest* request, ::grpc::ServerAsyncResponseWriter< ::omm::proto::ArbStartStopResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(17, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -696,7 +1028,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_SetRiskThreshold() {
-      ::grpc::Service::MarkMethodAsync(11);
+      ::grpc::Service::MarkMethodAsync(18);
     }
     ~WithAsyncMethod_SetRiskThreshold() override {
       BaseClassMustBeDerivedFromService(this);
@@ -707,7 +1039,7 @@ class TradingMonitor final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestSetRiskThreshold(::grpc::ServerContext* context, ::omm::proto::SetRiskThresholdRequest* request, ::grpc::ServerAsyncResponseWriter< ::omm::proto::SetRiskThresholdResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(11, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(18, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -716,7 +1048,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_SendManualOrder() {
-      ::grpc::Service::MarkMethodAsync(12);
+      ::grpc::Service::MarkMethodAsync(19);
     }
     ~WithAsyncMethod_SendManualOrder() override {
       BaseClassMustBeDerivedFromService(this);
@@ -727,7 +1059,7 @@ class TradingMonitor final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestSendManualOrder(::grpc::ServerContext* context, ::omm::proto::ManualOrderRequest* request, ::grpc::ServerAsyncResponseWriter< ::omm::proto::ManualOrderResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(12, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(19, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -736,7 +1068,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_CancelOrder() {
-      ::grpc::Service::MarkMethodAsync(13);
+      ::grpc::Service::MarkMethodAsync(20);
     }
     ~WithAsyncMethod_CancelOrder() override {
       BaseClassMustBeDerivedFromService(this);
@@ -747,7 +1079,27 @@ class TradingMonitor final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestCancelOrder(::grpc::ServerContext* context, ::omm::proto::CancelOrderRequest* request, ::grpc::ServerAsyncResponseWriter< ::omm::proto::CancelOrderResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(13, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(20, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithAsyncMethod_CancelQuote : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_CancelQuote() {
+      ::grpc::Service::MarkMethodAsync(21);
+    }
+    ~WithAsyncMethod_CancelQuote() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status CancelQuote(::grpc::ServerContext* /*context*/, const ::omm::proto::CancelQuoteRequest* /*request*/, ::omm::proto::CancelQuoteResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestCancelQuote(::grpc::ServerContext* context, ::omm::proto::CancelQuoteRequest* request, ::grpc::ServerAsyncResponseWriter< ::omm::proto::CancelQuoteResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(21, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -756,7 +1108,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_GetSnapshot() {
-      ::grpc::Service::MarkMethodAsync(14);
+      ::grpc::Service::MarkMethodAsync(22);
     }
     ~WithAsyncMethod_GetSnapshot() override {
       BaseClassMustBeDerivedFromService(this);
@@ -767,17 +1119,98 @@ class TradingMonitor final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestGetSnapshot(::grpc::ServerContext* context, ::omm::proto::SnapshotRequest* request, ::grpc::ServerAsyncResponseWriter< ::omm::proto::SnapshotResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(14, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(22, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
-  typedef WithAsyncMethod_StreamGreeks<WithAsyncMethod_StreamPositions<WithAsyncMethod_StreamTicks<WithAsyncMethod_StreamOrders<WithAsyncMethod_StreamTrades<WithAsyncMethod_StreamQuotes<WithAsyncMethod_StreamRiskAlerts<WithAsyncMethod_StreamVolSurface<WithAsyncMethod_SetStrategyParams<WithAsyncMethod_StartStrategy<WithAsyncMethod_StopStrategy<WithAsyncMethod_SetRiskThreshold<WithAsyncMethod_SendManualOrder<WithAsyncMethod_CancelOrder<WithAsyncMethod_GetSnapshot<Service > > > > > > > > > > > > > > > AsyncService;
+  typedef WithAsyncMethod_Login<WithAsyncMethod_Logout<WithAsyncMethod_WhoAmI<WithAsyncMethod_StreamGreeks<WithAsyncMethod_StreamPositions<WithAsyncMethod_StreamTicks<WithAsyncMethod_StreamOrders<WithAsyncMethod_StreamTrades<WithAsyncMethod_StreamQuotes<WithAsyncMethod_StreamRiskAlerts<WithAsyncMethod_StreamVolSurface<WithAsyncMethod_SetStrategyParams<WithAsyncMethod_SetProductPricingParams<WithAsyncMethod_StartStrategy<WithAsyncMethod_StopStrategy<WithAsyncMethod_SetArbStrategyParams<WithAsyncMethod_StartArbStrategy<WithAsyncMethod_StopArbStrategy<WithAsyncMethod_SetRiskThreshold<WithAsyncMethod_SendManualOrder<WithAsyncMethod_CancelOrder<WithAsyncMethod_CancelQuote<WithAsyncMethod_GetSnapshot<Service > > > > > > > > > > > > > > > > > > > > > > > AsyncService;
+  template <class BaseClass>
+  class WithCallbackMethod_Login : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithCallbackMethod_Login() {
+      ::grpc::Service::MarkMethodCallback(0,
+          new ::grpc::internal::CallbackUnaryHandler< ::omm::proto::LoginRequest, ::omm::proto::LoginResponse>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::omm::proto::LoginRequest* request, ::omm::proto::LoginResponse* response) { return this->Login(context, request, response); }));}
+    void SetMessageAllocatorFor_Login(
+        ::grpc::MessageAllocator< ::omm::proto::LoginRequest, ::omm::proto::LoginResponse>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(0);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::omm::proto::LoginRequest, ::omm::proto::LoginResponse>*>(handler)
+              ->SetMessageAllocator(allocator);
+    }
+    ~WithCallbackMethod_Login() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Login(::grpc::ServerContext* /*context*/, const ::omm::proto::LoginRequest* /*request*/, ::omm::proto::LoginResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* Login(
+      ::grpc::CallbackServerContext* /*context*/, const ::omm::proto::LoginRequest* /*request*/, ::omm::proto::LoginResponse* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
+  class WithCallbackMethod_Logout : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithCallbackMethod_Logout() {
+      ::grpc::Service::MarkMethodCallback(1,
+          new ::grpc::internal::CallbackUnaryHandler< ::omm::proto::LogoutRequest, ::omm::proto::LogoutResponse>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::omm::proto::LogoutRequest* request, ::omm::proto::LogoutResponse* response) { return this->Logout(context, request, response); }));}
+    void SetMessageAllocatorFor_Logout(
+        ::grpc::MessageAllocator< ::omm::proto::LogoutRequest, ::omm::proto::LogoutResponse>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(1);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::omm::proto::LogoutRequest, ::omm::proto::LogoutResponse>*>(handler)
+              ->SetMessageAllocator(allocator);
+    }
+    ~WithCallbackMethod_Logout() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Logout(::grpc::ServerContext* /*context*/, const ::omm::proto::LogoutRequest* /*request*/, ::omm::proto::LogoutResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* Logout(
+      ::grpc::CallbackServerContext* /*context*/, const ::omm::proto::LogoutRequest* /*request*/, ::omm::proto::LogoutResponse* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
+  class WithCallbackMethod_WhoAmI : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithCallbackMethod_WhoAmI() {
+      ::grpc::Service::MarkMethodCallback(2,
+          new ::grpc::internal::CallbackUnaryHandler< ::omm::proto::WhoAmIRequest, ::omm::proto::WhoAmIResponse>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::omm::proto::WhoAmIRequest* request, ::omm::proto::WhoAmIResponse* response) { return this->WhoAmI(context, request, response); }));}
+    void SetMessageAllocatorFor_WhoAmI(
+        ::grpc::MessageAllocator< ::omm::proto::WhoAmIRequest, ::omm::proto::WhoAmIResponse>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(2);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::omm::proto::WhoAmIRequest, ::omm::proto::WhoAmIResponse>*>(handler)
+              ->SetMessageAllocator(allocator);
+    }
+    ~WithCallbackMethod_WhoAmI() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status WhoAmI(::grpc::ServerContext* /*context*/, const ::omm::proto::WhoAmIRequest* /*request*/, ::omm::proto::WhoAmIResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* WhoAmI(
+      ::grpc::CallbackServerContext* /*context*/, const ::omm::proto::WhoAmIRequest* /*request*/, ::omm::proto::WhoAmIResponse* /*response*/)  { return nullptr; }
+  };
   template <class BaseClass>
   class WithCallbackMethod_StreamGreeks : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithCallbackMethod_StreamGreeks() {
-      ::grpc::Service::MarkMethodCallback(0,
+      ::grpc::Service::MarkMethodCallback(3,
           new ::grpc::internal::CallbackServerStreamingHandler< ::omm::proto::StreamRequest, ::omm::proto::Greeks>(
             [this](
                    ::grpc::CallbackServerContext* context, const ::omm::proto::StreamRequest* request) { return this->StreamGreeks(context, request); }));
@@ -799,7 +1232,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithCallbackMethod_StreamPositions() {
-      ::grpc::Service::MarkMethodCallback(1,
+      ::grpc::Service::MarkMethodCallback(4,
           new ::grpc::internal::CallbackServerStreamingHandler< ::omm::proto::StreamRequest, ::omm::proto::Position>(
             [this](
                    ::grpc::CallbackServerContext* context, const ::omm::proto::StreamRequest* request) { return this->StreamPositions(context, request); }));
@@ -821,7 +1254,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithCallbackMethod_StreamTicks() {
-      ::grpc::Service::MarkMethodCallback(2,
+      ::grpc::Service::MarkMethodCallback(5,
           new ::grpc::internal::CallbackServerStreamingHandler< ::omm::proto::StreamRequest, ::omm::proto::Tick>(
             [this](
                    ::grpc::CallbackServerContext* context, const ::omm::proto::StreamRequest* request) { return this->StreamTicks(context, request); }));
@@ -843,7 +1276,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithCallbackMethod_StreamOrders() {
-      ::grpc::Service::MarkMethodCallback(3,
+      ::grpc::Service::MarkMethodCallback(6,
           new ::grpc::internal::CallbackServerStreamingHandler< ::omm::proto::StreamRequest, ::omm::proto::OrderUpdate>(
             [this](
                    ::grpc::CallbackServerContext* context, const ::omm::proto::StreamRequest* request) { return this->StreamOrders(context, request); }));
@@ -865,7 +1298,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithCallbackMethod_StreamTrades() {
-      ::grpc::Service::MarkMethodCallback(4,
+      ::grpc::Service::MarkMethodCallback(7,
           new ::grpc::internal::CallbackServerStreamingHandler< ::omm::proto::StreamRequest, ::omm::proto::OrderUpdate>(
             [this](
                    ::grpc::CallbackServerContext* context, const ::omm::proto::StreamRequest* request) { return this->StreamTrades(context, request); }));
@@ -887,7 +1320,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithCallbackMethod_StreamQuotes() {
-      ::grpc::Service::MarkMethodCallback(5,
+      ::grpc::Service::MarkMethodCallback(8,
           new ::grpc::internal::CallbackServerStreamingHandler< ::omm::proto::StreamRequest, ::omm::proto::QuoteUpdate>(
             [this](
                    ::grpc::CallbackServerContext* context, const ::omm::proto::StreamRequest* request) { return this->StreamQuotes(context, request); }));
@@ -909,7 +1342,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithCallbackMethod_StreamRiskAlerts() {
-      ::grpc::Service::MarkMethodCallback(6,
+      ::grpc::Service::MarkMethodCallback(9,
           new ::grpc::internal::CallbackServerStreamingHandler< ::omm::proto::StreamRequest, ::omm::proto::RiskAlert>(
             [this](
                    ::grpc::CallbackServerContext* context, const ::omm::proto::StreamRequest* request) { return this->StreamRiskAlerts(context, request); }));
@@ -931,7 +1364,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithCallbackMethod_StreamVolSurface() {
-      ::grpc::Service::MarkMethodCallback(7,
+      ::grpc::Service::MarkMethodCallback(10,
           new ::grpc::internal::CallbackServerStreamingHandler< ::omm::proto::StreamRequest, ::omm::proto::VolSurface>(
             [this](
                    ::grpc::CallbackServerContext* context, const ::omm::proto::StreamRequest* request) { return this->StreamVolSurface(context, request); }));
@@ -953,13 +1386,13 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithCallbackMethod_SetStrategyParams() {
-      ::grpc::Service::MarkMethodCallback(8,
+      ::grpc::Service::MarkMethodCallback(11,
           new ::grpc::internal::CallbackUnaryHandler< ::omm::proto::SetStrategyParamsRequest, ::omm::proto::SetStrategyParamsResponse>(
             [this](
                    ::grpc::CallbackServerContext* context, const ::omm::proto::SetStrategyParamsRequest* request, ::omm::proto::SetStrategyParamsResponse* response) { return this->SetStrategyParams(context, request, response); }));}
     void SetMessageAllocatorFor_SetStrategyParams(
         ::grpc::MessageAllocator< ::omm::proto::SetStrategyParamsRequest, ::omm::proto::SetStrategyParamsResponse>* allocator) {
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(8);
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(11);
       static_cast<::grpc::internal::CallbackUnaryHandler< ::omm::proto::SetStrategyParamsRequest, ::omm::proto::SetStrategyParamsResponse>*>(handler)
               ->SetMessageAllocator(allocator);
     }
@@ -975,18 +1408,45 @@ class TradingMonitor final {
       ::grpc::CallbackServerContext* /*context*/, const ::omm::proto::SetStrategyParamsRequest* /*request*/, ::omm::proto::SetStrategyParamsResponse* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
+  class WithCallbackMethod_SetProductPricingParams : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithCallbackMethod_SetProductPricingParams() {
+      ::grpc::Service::MarkMethodCallback(12,
+          new ::grpc::internal::CallbackUnaryHandler< ::omm::proto::SetProductPricingParamsRequest, ::omm::proto::SetProductPricingParamsResponse>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::omm::proto::SetProductPricingParamsRequest* request, ::omm::proto::SetProductPricingParamsResponse* response) { return this->SetProductPricingParams(context, request, response); }));}
+    void SetMessageAllocatorFor_SetProductPricingParams(
+        ::grpc::MessageAllocator< ::omm::proto::SetProductPricingParamsRequest, ::omm::proto::SetProductPricingParamsResponse>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(12);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::omm::proto::SetProductPricingParamsRequest, ::omm::proto::SetProductPricingParamsResponse>*>(handler)
+              ->SetMessageAllocator(allocator);
+    }
+    ~WithCallbackMethod_SetProductPricingParams() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status SetProductPricingParams(::grpc::ServerContext* /*context*/, const ::omm::proto::SetProductPricingParamsRequest* /*request*/, ::omm::proto::SetProductPricingParamsResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* SetProductPricingParams(
+      ::grpc::CallbackServerContext* /*context*/, const ::omm::proto::SetProductPricingParamsRequest* /*request*/, ::omm::proto::SetProductPricingParamsResponse* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
   class WithCallbackMethod_StartStrategy : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithCallbackMethod_StartStrategy() {
-      ::grpc::Service::MarkMethodCallback(9,
+      ::grpc::Service::MarkMethodCallback(13,
           new ::grpc::internal::CallbackUnaryHandler< ::omm::proto::StartStopRequest, ::omm::proto::StartStopResponse>(
             [this](
                    ::grpc::CallbackServerContext* context, const ::omm::proto::StartStopRequest* request, ::omm::proto::StartStopResponse* response) { return this->StartStrategy(context, request, response); }));}
     void SetMessageAllocatorFor_StartStrategy(
         ::grpc::MessageAllocator< ::omm::proto::StartStopRequest, ::omm::proto::StartStopResponse>* allocator) {
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(9);
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(13);
       static_cast<::grpc::internal::CallbackUnaryHandler< ::omm::proto::StartStopRequest, ::omm::proto::StartStopResponse>*>(handler)
               ->SetMessageAllocator(allocator);
     }
@@ -1007,13 +1467,13 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithCallbackMethod_StopStrategy() {
-      ::grpc::Service::MarkMethodCallback(10,
+      ::grpc::Service::MarkMethodCallback(14,
           new ::grpc::internal::CallbackUnaryHandler< ::omm::proto::StartStopRequest, ::omm::proto::StartStopResponse>(
             [this](
                    ::grpc::CallbackServerContext* context, const ::omm::proto::StartStopRequest* request, ::omm::proto::StartStopResponse* response) { return this->StopStrategy(context, request, response); }));}
     void SetMessageAllocatorFor_StopStrategy(
         ::grpc::MessageAllocator< ::omm::proto::StartStopRequest, ::omm::proto::StartStopResponse>* allocator) {
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(10);
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(14);
       static_cast<::grpc::internal::CallbackUnaryHandler< ::omm::proto::StartStopRequest, ::omm::proto::StartStopResponse>*>(handler)
               ->SetMessageAllocator(allocator);
     }
@@ -1029,18 +1489,99 @@ class TradingMonitor final {
       ::grpc::CallbackServerContext* /*context*/, const ::omm::proto::StartStopRequest* /*request*/, ::omm::proto::StartStopResponse* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
+  class WithCallbackMethod_SetArbStrategyParams : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithCallbackMethod_SetArbStrategyParams() {
+      ::grpc::Service::MarkMethodCallback(15,
+          new ::grpc::internal::CallbackUnaryHandler< ::omm::proto::SetArbStrategyParamsRequest, ::omm::proto::SetArbStrategyParamsResponse>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::omm::proto::SetArbStrategyParamsRequest* request, ::omm::proto::SetArbStrategyParamsResponse* response) { return this->SetArbStrategyParams(context, request, response); }));}
+    void SetMessageAllocatorFor_SetArbStrategyParams(
+        ::grpc::MessageAllocator< ::omm::proto::SetArbStrategyParamsRequest, ::omm::proto::SetArbStrategyParamsResponse>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(15);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::omm::proto::SetArbStrategyParamsRequest, ::omm::proto::SetArbStrategyParamsResponse>*>(handler)
+              ->SetMessageAllocator(allocator);
+    }
+    ~WithCallbackMethod_SetArbStrategyParams() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status SetArbStrategyParams(::grpc::ServerContext* /*context*/, const ::omm::proto::SetArbStrategyParamsRequest* /*request*/, ::omm::proto::SetArbStrategyParamsResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* SetArbStrategyParams(
+      ::grpc::CallbackServerContext* /*context*/, const ::omm::proto::SetArbStrategyParamsRequest* /*request*/, ::omm::proto::SetArbStrategyParamsResponse* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
+  class WithCallbackMethod_StartArbStrategy : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithCallbackMethod_StartArbStrategy() {
+      ::grpc::Service::MarkMethodCallback(16,
+          new ::grpc::internal::CallbackUnaryHandler< ::omm::proto::ArbStartStopRequest, ::omm::proto::ArbStartStopResponse>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::omm::proto::ArbStartStopRequest* request, ::omm::proto::ArbStartStopResponse* response) { return this->StartArbStrategy(context, request, response); }));}
+    void SetMessageAllocatorFor_StartArbStrategy(
+        ::grpc::MessageAllocator< ::omm::proto::ArbStartStopRequest, ::omm::proto::ArbStartStopResponse>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(16);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::omm::proto::ArbStartStopRequest, ::omm::proto::ArbStartStopResponse>*>(handler)
+              ->SetMessageAllocator(allocator);
+    }
+    ~WithCallbackMethod_StartArbStrategy() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status StartArbStrategy(::grpc::ServerContext* /*context*/, const ::omm::proto::ArbStartStopRequest* /*request*/, ::omm::proto::ArbStartStopResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* StartArbStrategy(
+      ::grpc::CallbackServerContext* /*context*/, const ::omm::proto::ArbStartStopRequest* /*request*/, ::omm::proto::ArbStartStopResponse* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
+  class WithCallbackMethod_StopArbStrategy : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithCallbackMethod_StopArbStrategy() {
+      ::grpc::Service::MarkMethodCallback(17,
+          new ::grpc::internal::CallbackUnaryHandler< ::omm::proto::ArbStartStopRequest, ::omm::proto::ArbStartStopResponse>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::omm::proto::ArbStartStopRequest* request, ::omm::proto::ArbStartStopResponse* response) { return this->StopArbStrategy(context, request, response); }));}
+    void SetMessageAllocatorFor_StopArbStrategy(
+        ::grpc::MessageAllocator< ::omm::proto::ArbStartStopRequest, ::omm::proto::ArbStartStopResponse>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(17);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::omm::proto::ArbStartStopRequest, ::omm::proto::ArbStartStopResponse>*>(handler)
+              ->SetMessageAllocator(allocator);
+    }
+    ~WithCallbackMethod_StopArbStrategy() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status StopArbStrategy(::grpc::ServerContext* /*context*/, const ::omm::proto::ArbStartStopRequest* /*request*/, ::omm::proto::ArbStartStopResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* StopArbStrategy(
+      ::grpc::CallbackServerContext* /*context*/, const ::omm::proto::ArbStartStopRequest* /*request*/, ::omm::proto::ArbStartStopResponse* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
   class WithCallbackMethod_SetRiskThreshold : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithCallbackMethod_SetRiskThreshold() {
-      ::grpc::Service::MarkMethodCallback(11,
+      ::grpc::Service::MarkMethodCallback(18,
           new ::grpc::internal::CallbackUnaryHandler< ::omm::proto::SetRiskThresholdRequest, ::omm::proto::SetRiskThresholdResponse>(
             [this](
                    ::grpc::CallbackServerContext* context, const ::omm::proto::SetRiskThresholdRequest* request, ::omm::proto::SetRiskThresholdResponse* response) { return this->SetRiskThreshold(context, request, response); }));}
     void SetMessageAllocatorFor_SetRiskThreshold(
         ::grpc::MessageAllocator< ::omm::proto::SetRiskThresholdRequest, ::omm::proto::SetRiskThresholdResponse>* allocator) {
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(11);
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(18);
       static_cast<::grpc::internal::CallbackUnaryHandler< ::omm::proto::SetRiskThresholdRequest, ::omm::proto::SetRiskThresholdResponse>*>(handler)
               ->SetMessageAllocator(allocator);
     }
@@ -1061,13 +1602,13 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithCallbackMethod_SendManualOrder() {
-      ::grpc::Service::MarkMethodCallback(12,
+      ::grpc::Service::MarkMethodCallback(19,
           new ::grpc::internal::CallbackUnaryHandler< ::omm::proto::ManualOrderRequest, ::omm::proto::ManualOrderResponse>(
             [this](
                    ::grpc::CallbackServerContext* context, const ::omm::proto::ManualOrderRequest* request, ::omm::proto::ManualOrderResponse* response) { return this->SendManualOrder(context, request, response); }));}
     void SetMessageAllocatorFor_SendManualOrder(
         ::grpc::MessageAllocator< ::omm::proto::ManualOrderRequest, ::omm::proto::ManualOrderResponse>* allocator) {
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(12);
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(19);
       static_cast<::grpc::internal::CallbackUnaryHandler< ::omm::proto::ManualOrderRequest, ::omm::proto::ManualOrderResponse>*>(handler)
               ->SetMessageAllocator(allocator);
     }
@@ -1088,13 +1629,13 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithCallbackMethod_CancelOrder() {
-      ::grpc::Service::MarkMethodCallback(13,
+      ::grpc::Service::MarkMethodCallback(20,
           new ::grpc::internal::CallbackUnaryHandler< ::omm::proto::CancelOrderRequest, ::omm::proto::CancelOrderResponse>(
             [this](
                    ::grpc::CallbackServerContext* context, const ::omm::proto::CancelOrderRequest* request, ::omm::proto::CancelOrderResponse* response) { return this->CancelOrder(context, request, response); }));}
     void SetMessageAllocatorFor_CancelOrder(
         ::grpc::MessageAllocator< ::omm::proto::CancelOrderRequest, ::omm::proto::CancelOrderResponse>* allocator) {
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(13);
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(20);
       static_cast<::grpc::internal::CallbackUnaryHandler< ::omm::proto::CancelOrderRequest, ::omm::proto::CancelOrderResponse>*>(handler)
               ->SetMessageAllocator(allocator);
     }
@@ -1110,18 +1651,45 @@ class TradingMonitor final {
       ::grpc::CallbackServerContext* /*context*/, const ::omm::proto::CancelOrderRequest* /*request*/, ::omm::proto::CancelOrderResponse* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
+  class WithCallbackMethod_CancelQuote : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithCallbackMethod_CancelQuote() {
+      ::grpc::Service::MarkMethodCallback(21,
+          new ::grpc::internal::CallbackUnaryHandler< ::omm::proto::CancelQuoteRequest, ::omm::proto::CancelQuoteResponse>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::omm::proto::CancelQuoteRequest* request, ::omm::proto::CancelQuoteResponse* response) { return this->CancelQuote(context, request, response); }));}
+    void SetMessageAllocatorFor_CancelQuote(
+        ::grpc::MessageAllocator< ::omm::proto::CancelQuoteRequest, ::omm::proto::CancelQuoteResponse>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(21);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::omm::proto::CancelQuoteRequest, ::omm::proto::CancelQuoteResponse>*>(handler)
+              ->SetMessageAllocator(allocator);
+    }
+    ~WithCallbackMethod_CancelQuote() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status CancelQuote(::grpc::ServerContext* /*context*/, const ::omm::proto::CancelQuoteRequest* /*request*/, ::omm::proto::CancelQuoteResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* CancelQuote(
+      ::grpc::CallbackServerContext* /*context*/, const ::omm::proto::CancelQuoteRequest* /*request*/, ::omm::proto::CancelQuoteResponse* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
   class WithCallbackMethod_GetSnapshot : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithCallbackMethod_GetSnapshot() {
-      ::grpc::Service::MarkMethodCallback(14,
+      ::grpc::Service::MarkMethodCallback(22,
           new ::grpc::internal::CallbackUnaryHandler< ::omm::proto::SnapshotRequest, ::omm::proto::SnapshotResponse>(
             [this](
                    ::grpc::CallbackServerContext* context, const ::omm::proto::SnapshotRequest* request, ::omm::proto::SnapshotResponse* response) { return this->GetSnapshot(context, request, response); }));}
     void SetMessageAllocatorFor_GetSnapshot(
         ::grpc::MessageAllocator< ::omm::proto::SnapshotRequest, ::omm::proto::SnapshotResponse>* allocator) {
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(14);
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(22);
       static_cast<::grpc::internal::CallbackUnaryHandler< ::omm::proto::SnapshotRequest, ::omm::proto::SnapshotResponse>*>(handler)
               ->SetMessageAllocator(allocator);
     }
@@ -1136,15 +1704,66 @@ class TradingMonitor final {
     virtual ::grpc::ServerUnaryReactor* GetSnapshot(
       ::grpc::CallbackServerContext* /*context*/, const ::omm::proto::SnapshotRequest* /*request*/, ::omm::proto::SnapshotResponse* /*response*/)  { return nullptr; }
   };
-  typedef WithCallbackMethod_StreamGreeks<WithCallbackMethod_StreamPositions<WithCallbackMethod_StreamTicks<WithCallbackMethod_StreamOrders<WithCallbackMethod_StreamTrades<WithCallbackMethod_StreamQuotes<WithCallbackMethod_StreamRiskAlerts<WithCallbackMethod_StreamVolSurface<WithCallbackMethod_SetStrategyParams<WithCallbackMethod_StartStrategy<WithCallbackMethod_StopStrategy<WithCallbackMethod_SetRiskThreshold<WithCallbackMethod_SendManualOrder<WithCallbackMethod_CancelOrder<WithCallbackMethod_GetSnapshot<Service > > > > > > > > > > > > > > > CallbackService;
+  typedef WithCallbackMethod_Login<WithCallbackMethod_Logout<WithCallbackMethod_WhoAmI<WithCallbackMethod_StreamGreeks<WithCallbackMethod_StreamPositions<WithCallbackMethod_StreamTicks<WithCallbackMethod_StreamOrders<WithCallbackMethod_StreamTrades<WithCallbackMethod_StreamQuotes<WithCallbackMethod_StreamRiskAlerts<WithCallbackMethod_StreamVolSurface<WithCallbackMethod_SetStrategyParams<WithCallbackMethod_SetProductPricingParams<WithCallbackMethod_StartStrategy<WithCallbackMethod_StopStrategy<WithCallbackMethod_SetArbStrategyParams<WithCallbackMethod_StartArbStrategy<WithCallbackMethod_StopArbStrategy<WithCallbackMethod_SetRiskThreshold<WithCallbackMethod_SendManualOrder<WithCallbackMethod_CancelOrder<WithCallbackMethod_CancelQuote<WithCallbackMethod_GetSnapshot<Service > > > > > > > > > > > > > > > > > > > > > > > CallbackService;
   typedef CallbackService ExperimentalCallbackService;
+  template <class BaseClass>
+  class WithGenericMethod_Login : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_Login() {
+      ::grpc::Service::MarkMethodGeneric(0);
+    }
+    ~WithGenericMethod_Login() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Login(::grpc::ServerContext* /*context*/, const ::omm::proto::LoginRequest* /*request*/, ::omm::proto::LoginResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
+  class WithGenericMethod_Logout : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_Logout() {
+      ::grpc::Service::MarkMethodGeneric(1);
+    }
+    ~WithGenericMethod_Logout() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Logout(::grpc::ServerContext* /*context*/, const ::omm::proto::LogoutRequest* /*request*/, ::omm::proto::LogoutResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
+  class WithGenericMethod_WhoAmI : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_WhoAmI() {
+      ::grpc::Service::MarkMethodGeneric(2);
+    }
+    ~WithGenericMethod_WhoAmI() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status WhoAmI(::grpc::ServerContext* /*context*/, const ::omm::proto::WhoAmIRequest* /*request*/, ::omm::proto::WhoAmIResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
   template <class BaseClass>
   class WithGenericMethod_StreamGreeks : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_StreamGreeks() {
-      ::grpc::Service::MarkMethodGeneric(0);
+      ::grpc::Service::MarkMethodGeneric(3);
     }
     ~WithGenericMethod_StreamGreeks() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1161,7 +1780,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_StreamPositions() {
-      ::grpc::Service::MarkMethodGeneric(1);
+      ::grpc::Service::MarkMethodGeneric(4);
     }
     ~WithGenericMethod_StreamPositions() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1178,7 +1797,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_StreamTicks() {
-      ::grpc::Service::MarkMethodGeneric(2);
+      ::grpc::Service::MarkMethodGeneric(5);
     }
     ~WithGenericMethod_StreamTicks() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1195,7 +1814,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_StreamOrders() {
-      ::grpc::Service::MarkMethodGeneric(3);
+      ::grpc::Service::MarkMethodGeneric(6);
     }
     ~WithGenericMethod_StreamOrders() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1212,7 +1831,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_StreamTrades() {
-      ::grpc::Service::MarkMethodGeneric(4);
+      ::grpc::Service::MarkMethodGeneric(7);
     }
     ~WithGenericMethod_StreamTrades() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1229,7 +1848,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_StreamQuotes() {
-      ::grpc::Service::MarkMethodGeneric(5);
+      ::grpc::Service::MarkMethodGeneric(8);
     }
     ~WithGenericMethod_StreamQuotes() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1246,7 +1865,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_StreamRiskAlerts() {
-      ::grpc::Service::MarkMethodGeneric(6);
+      ::grpc::Service::MarkMethodGeneric(9);
     }
     ~WithGenericMethod_StreamRiskAlerts() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1263,7 +1882,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_StreamVolSurface() {
-      ::grpc::Service::MarkMethodGeneric(7);
+      ::grpc::Service::MarkMethodGeneric(10);
     }
     ~WithGenericMethod_StreamVolSurface() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1280,7 +1899,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_SetStrategyParams() {
-      ::grpc::Service::MarkMethodGeneric(8);
+      ::grpc::Service::MarkMethodGeneric(11);
     }
     ~WithGenericMethod_SetStrategyParams() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1292,12 +1911,29 @@ class TradingMonitor final {
     }
   };
   template <class BaseClass>
+  class WithGenericMethod_SetProductPricingParams : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_SetProductPricingParams() {
+      ::grpc::Service::MarkMethodGeneric(12);
+    }
+    ~WithGenericMethod_SetProductPricingParams() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status SetProductPricingParams(::grpc::ServerContext* /*context*/, const ::omm::proto::SetProductPricingParamsRequest* /*request*/, ::omm::proto::SetProductPricingParamsResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
   class WithGenericMethod_StartStrategy : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_StartStrategy() {
-      ::grpc::Service::MarkMethodGeneric(9);
+      ::grpc::Service::MarkMethodGeneric(13);
     }
     ~WithGenericMethod_StartStrategy() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1314,7 +1950,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_StopStrategy() {
-      ::grpc::Service::MarkMethodGeneric(10);
+      ::grpc::Service::MarkMethodGeneric(14);
     }
     ~WithGenericMethod_StopStrategy() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1326,12 +1962,63 @@ class TradingMonitor final {
     }
   };
   template <class BaseClass>
+  class WithGenericMethod_SetArbStrategyParams : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_SetArbStrategyParams() {
+      ::grpc::Service::MarkMethodGeneric(15);
+    }
+    ~WithGenericMethod_SetArbStrategyParams() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status SetArbStrategyParams(::grpc::ServerContext* /*context*/, const ::omm::proto::SetArbStrategyParamsRequest* /*request*/, ::omm::proto::SetArbStrategyParamsResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
+  class WithGenericMethod_StartArbStrategy : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_StartArbStrategy() {
+      ::grpc::Service::MarkMethodGeneric(16);
+    }
+    ~WithGenericMethod_StartArbStrategy() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status StartArbStrategy(::grpc::ServerContext* /*context*/, const ::omm::proto::ArbStartStopRequest* /*request*/, ::omm::proto::ArbStartStopResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
+  class WithGenericMethod_StopArbStrategy : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_StopArbStrategy() {
+      ::grpc::Service::MarkMethodGeneric(17);
+    }
+    ~WithGenericMethod_StopArbStrategy() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status StopArbStrategy(::grpc::ServerContext* /*context*/, const ::omm::proto::ArbStartStopRequest* /*request*/, ::omm::proto::ArbStartStopResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
   class WithGenericMethod_SetRiskThreshold : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_SetRiskThreshold() {
-      ::grpc::Service::MarkMethodGeneric(11);
+      ::grpc::Service::MarkMethodGeneric(18);
     }
     ~WithGenericMethod_SetRiskThreshold() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1348,7 +2035,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_SendManualOrder() {
-      ::grpc::Service::MarkMethodGeneric(12);
+      ::grpc::Service::MarkMethodGeneric(19);
     }
     ~WithGenericMethod_SendManualOrder() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1365,7 +2052,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_CancelOrder() {
-      ::grpc::Service::MarkMethodGeneric(13);
+      ::grpc::Service::MarkMethodGeneric(20);
     }
     ~WithGenericMethod_CancelOrder() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1377,12 +2064,29 @@ class TradingMonitor final {
     }
   };
   template <class BaseClass>
+  class WithGenericMethod_CancelQuote : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_CancelQuote() {
+      ::grpc::Service::MarkMethodGeneric(21);
+    }
+    ~WithGenericMethod_CancelQuote() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status CancelQuote(::grpc::ServerContext* /*context*/, const ::omm::proto::CancelQuoteRequest* /*request*/, ::omm::proto::CancelQuoteResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
   class WithGenericMethod_GetSnapshot : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_GetSnapshot() {
-      ::grpc::Service::MarkMethodGeneric(14);
+      ::grpc::Service::MarkMethodGeneric(22);
     }
     ~WithGenericMethod_GetSnapshot() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1394,12 +2098,72 @@ class TradingMonitor final {
     }
   };
   template <class BaseClass>
+  class WithRawMethod_Login : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_Login() {
+      ::grpc::Service::MarkMethodRaw(0);
+    }
+    ~WithRawMethod_Login() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Login(::grpc::ServerContext* /*context*/, const ::omm::proto::LoginRequest* /*request*/, ::omm::proto::LoginResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestLogin(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithRawMethod_Logout : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_Logout() {
+      ::grpc::Service::MarkMethodRaw(1);
+    }
+    ~WithRawMethod_Logout() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Logout(::grpc::ServerContext* /*context*/, const ::omm::proto::LogoutRequest* /*request*/, ::omm::proto::LogoutResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestLogout(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithRawMethod_WhoAmI : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_WhoAmI() {
+      ::grpc::Service::MarkMethodRaw(2);
+    }
+    ~WithRawMethod_WhoAmI() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status WhoAmI(::grpc::ServerContext* /*context*/, const ::omm::proto::WhoAmIRequest* /*request*/, ::omm::proto::WhoAmIResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestWhoAmI(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
   class WithRawMethod_StreamGreeks : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_StreamGreeks() {
-      ::grpc::Service::MarkMethodRaw(0);
+      ::grpc::Service::MarkMethodRaw(3);
     }
     ~WithRawMethod_StreamGreeks() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1410,7 +2174,7 @@ class TradingMonitor final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestStreamGreeks(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncWriter< ::grpc::ByteBuffer>* writer, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncServerStreaming(0, context, request, writer, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncServerStreaming(3, context, request, writer, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -1419,7 +2183,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_StreamPositions() {
-      ::grpc::Service::MarkMethodRaw(1);
+      ::grpc::Service::MarkMethodRaw(4);
     }
     ~WithRawMethod_StreamPositions() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1430,7 +2194,7 @@ class TradingMonitor final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestStreamPositions(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncWriter< ::grpc::ByteBuffer>* writer, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncServerStreaming(1, context, request, writer, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncServerStreaming(4, context, request, writer, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -1439,7 +2203,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_StreamTicks() {
-      ::grpc::Service::MarkMethodRaw(2);
+      ::grpc::Service::MarkMethodRaw(5);
     }
     ~WithRawMethod_StreamTicks() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1450,7 +2214,7 @@ class TradingMonitor final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestStreamTicks(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncWriter< ::grpc::ByteBuffer>* writer, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncServerStreaming(2, context, request, writer, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncServerStreaming(5, context, request, writer, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -1459,7 +2223,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_StreamOrders() {
-      ::grpc::Service::MarkMethodRaw(3);
+      ::grpc::Service::MarkMethodRaw(6);
     }
     ~WithRawMethod_StreamOrders() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1470,7 +2234,7 @@ class TradingMonitor final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestStreamOrders(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncWriter< ::grpc::ByteBuffer>* writer, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncServerStreaming(3, context, request, writer, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncServerStreaming(6, context, request, writer, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -1479,7 +2243,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_StreamTrades() {
-      ::grpc::Service::MarkMethodRaw(4);
+      ::grpc::Service::MarkMethodRaw(7);
     }
     ~WithRawMethod_StreamTrades() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1490,7 +2254,7 @@ class TradingMonitor final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestStreamTrades(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncWriter< ::grpc::ByteBuffer>* writer, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncServerStreaming(4, context, request, writer, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncServerStreaming(7, context, request, writer, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -1499,7 +2263,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_StreamQuotes() {
-      ::grpc::Service::MarkMethodRaw(5);
+      ::grpc::Service::MarkMethodRaw(8);
     }
     ~WithRawMethod_StreamQuotes() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1510,7 +2274,7 @@ class TradingMonitor final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestStreamQuotes(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncWriter< ::grpc::ByteBuffer>* writer, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncServerStreaming(5, context, request, writer, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncServerStreaming(8, context, request, writer, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -1519,7 +2283,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_StreamRiskAlerts() {
-      ::grpc::Service::MarkMethodRaw(6);
+      ::grpc::Service::MarkMethodRaw(9);
     }
     ~WithRawMethod_StreamRiskAlerts() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1530,7 +2294,7 @@ class TradingMonitor final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestStreamRiskAlerts(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncWriter< ::grpc::ByteBuffer>* writer, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncServerStreaming(6, context, request, writer, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncServerStreaming(9, context, request, writer, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -1539,7 +2303,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_StreamVolSurface() {
-      ::grpc::Service::MarkMethodRaw(7);
+      ::grpc::Service::MarkMethodRaw(10);
     }
     ~WithRawMethod_StreamVolSurface() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1550,7 +2314,7 @@ class TradingMonitor final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestStreamVolSurface(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncWriter< ::grpc::ByteBuffer>* writer, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncServerStreaming(7, context, request, writer, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncServerStreaming(10, context, request, writer, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -1559,7 +2323,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_SetStrategyParams() {
-      ::grpc::Service::MarkMethodRaw(8);
+      ::grpc::Service::MarkMethodRaw(11);
     }
     ~WithRawMethod_SetStrategyParams() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1570,7 +2334,27 @@ class TradingMonitor final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestSetStrategyParams(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(8, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(11, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithRawMethod_SetProductPricingParams : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_SetProductPricingParams() {
+      ::grpc::Service::MarkMethodRaw(12);
+    }
+    ~WithRawMethod_SetProductPricingParams() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status SetProductPricingParams(::grpc::ServerContext* /*context*/, const ::omm::proto::SetProductPricingParamsRequest* /*request*/, ::omm::proto::SetProductPricingParamsResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestSetProductPricingParams(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(12, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -1579,7 +2363,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_StartStrategy() {
-      ::grpc::Service::MarkMethodRaw(9);
+      ::grpc::Service::MarkMethodRaw(13);
     }
     ~WithRawMethod_StartStrategy() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1590,7 +2374,7 @@ class TradingMonitor final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestStartStrategy(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(9, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(13, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -1599,7 +2383,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_StopStrategy() {
-      ::grpc::Service::MarkMethodRaw(10);
+      ::grpc::Service::MarkMethodRaw(14);
     }
     ~WithRawMethod_StopStrategy() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1610,7 +2394,67 @@ class TradingMonitor final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestStopStrategy(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(10, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(14, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithRawMethod_SetArbStrategyParams : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_SetArbStrategyParams() {
+      ::grpc::Service::MarkMethodRaw(15);
+    }
+    ~WithRawMethod_SetArbStrategyParams() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status SetArbStrategyParams(::grpc::ServerContext* /*context*/, const ::omm::proto::SetArbStrategyParamsRequest* /*request*/, ::omm::proto::SetArbStrategyParamsResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestSetArbStrategyParams(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(15, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithRawMethod_StartArbStrategy : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_StartArbStrategy() {
+      ::grpc::Service::MarkMethodRaw(16);
+    }
+    ~WithRawMethod_StartArbStrategy() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status StartArbStrategy(::grpc::ServerContext* /*context*/, const ::omm::proto::ArbStartStopRequest* /*request*/, ::omm::proto::ArbStartStopResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestStartArbStrategy(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(16, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithRawMethod_StopArbStrategy : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_StopArbStrategy() {
+      ::grpc::Service::MarkMethodRaw(17);
+    }
+    ~WithRawMethod_StopArbStrategy() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status StopArbStrategy(::grpc::ServerContext* /*context*/, const ::omm::proto::ArbStartStopRequest* /*request*/, ::omm::proto::ArbStartStopResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestStopArbStrategy(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(17, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -1619,7 +2463,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_SetRiskThreshold() {
-      ::grpc::Service::MarkMethodRaw(11);
+      ::grpc::Service::MarkMethodRaw(18);
     }
     ~WithRawMethod_SetRiskThreshold() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1630,7 +2474,7 @@ class TradingMonitor final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestSetRiskThreshold(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(11, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(18, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -1639,7 +2483,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_SendManualOrder() {
-      ::grpc::Service::MarkMethodRaw(12);
+      ::grpc::Service::MarkMethodRaw(19);
     }
     ~WithRawMethod_SendManualOrder() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1650,7 +2494,7 @@ class TradingMonitor final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestSendManualOrder(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(12, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(19, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -1659,7 +2503,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_CancelOrder() {
-      ::grpc::Service::MarkMethodRaw(13);
+      ::grpc::Service::MarkMethodRaw(20);
     }
     ~WithRawMethod_CancelOrder() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1670,7 +2514,27 @@ class TradingMonitor final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestCancelOrder(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(13, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(20, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithRawMethod_CancelQuote : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_CancelQuote() {
+      ::grpc::Service::MarkMethodRaw(21);
+    }
+    ~WithRawMethod_CancelQuote() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status CancelQuote(::grpc::ServerContext* /*context*/, const ::omm::proto::CancelQuoteRequest* /*request*/, ::omm::proto::CancelQuoteResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestCancelQuote(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(21, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -1679,7 +2543,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_GetSnapshot() {
-      ::grpc::Service::MarkMethodRaw(14);
+      ::grpc::Service::MarkMethodRaw(22);
     }
     ~WithRawMethod_GetSnapshot() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1690,8 +2554,74 @@ class TradingMonitor final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestGetSnapshot(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(14, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(22, context, request, response, new_call_cq, notification_cq, tag);
     }
+  };
+  template <class BaseClass>
+  class WithRawCallbackMethod_Login : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawCallbackMethod_Login() {
+      ::grpc::Service::MarkMethodRawCallback(0,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->Login(context, request, response); }));
+    }
+    ~WithRawCallbackMethod_Login() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Login(::grpc::ServerContext* /*context*/, const ::omm::proto::LoginRequest* /*request*/, ::omm::proto::LoginResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* Login(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
+  class WithRawCallbackMethod_Logout : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawCallbackMethod_Logout() {
+      ::grpc::Service::MarkMethodRawCallback(1,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->Logout(context, request, response); }));
+    }
+    ~WithRawCallbackMethod_Logout() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Logout(::grpc::ServerContext* /*context*/, const ::omm::proto::LogoutRequest* /*request*/, ::omm::proto::LogoutResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* Logout(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
+  class WithRawCallbackMethod_WhoAmI : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawCallbackMethod_WhoAmI() {
+      ::grpc::Service::MarkMethodRawCallback(2,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->WhoAmI(context, request, response); }));
+    }
+    ~WithRawCallbackMethod_WhoAmI() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status WhoAmI(::grpc::ServerContext* /*context*/, const ::omm::proto::WhoAmIRequest* /*request*/, ::omm::proto::WhoAmIResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* WhoAmI(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
   class WithRawCallbackMethod_StreamGreeks : public BaseClass {
@@ -1699,7 +2629,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawCallbackMethod_StreamGreeks() {
-      ::grpc::Service::MarkMethodRawCallback(0,
+      ::grpc::Service::MarkMethodRawCallback(3,
           new ::grpc::internal::CallbackServerStreamingHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
                    ::grpc::CallbackServerContext* context, const::grpc::ByteBuffer* request) { return this->StreamGreeks(context, request); }));
@@ -1721,7 +2651,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawCallbackMethod_StreamPositions() {
-      ::grpc::Service::MarkMethodRawCallback(1,
+      ::grpc::Service::MarkMethodRawCallback(4,
           new ::grpc::internal::CallbackServerStreamingHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
                    ::grpc::CallbackServerContext* context, const::grpc::ByteBuffer* request) { return this->StreamPositions(context, request); }));
@@ -1743,7 +2673,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawCallbackMethod_StreamTicks() {
-      ::grpc::Service::MarkMethodRawCallback(2,
+      ::grpc::Service::MarkMethodRawCallback(5,
           new ::grpc::internal::CallbackServerStreamingHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
                    ::grpc::CallbackServerContext* context, const::grpc::ByteBuffer* request) { return this->StreamTicks(context, request); }));
@@ -1765,7 +2695,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawCallbackMethod_StreamOrders() {
-      ::grpc::Service::MarkMethodRawCallback(3,
+      ::grpc::Service::MarkMethodRawCallback(6,
           new ::grpc::internal::CallbackServerStreamingHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
                    ::grpc::CallbackServerContext* context, const::grpc::ByteBuffer* request) { return this->StreamOrders(context, request); }));
@@ -1787,7 +2717,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawCallbackMethod_StreamTrades() {
-      ::grpc::Service::MarkMethodRawCallback(4,
+      ::grpc::Service::MarkMethodRawCallback(7,
           new ::grpc::internal::CallbackServerStreamingHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
                    ::grpc::CallbackServerContext* context, const::grpc::ByteBuffer* request) { return this->StreamTrades(context, request); }));
@@ -1809,7 +2739,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawCallbackMethod_StreamQuotes() {
-      ::grpc::Service::MarkMethodRawCallback(5,
+      ::grpc::Service::MarkMethodRawCallback(8,
           new ::grpc::internal::CallbackServerStreamingHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
                    ::grpc::CallbackServerContext* context, const::grpc::ByteBuffer* request) { return this->StreamQuotes(context, request); }));
@@ -1831,7 +2761,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawCallbackMethod_StreamRiskAlerts() {
-      ::grpc::Service::MarkMethodRawCallback(6,
+      ::grpc::Service::MarkMethodRawCallback(9,
           new ::grpc::internal::CallbackServerStreamingHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
                    ::grpc::CallbackServerContext* context, const::grpc::ByteBuffer* request) { return this->StreamRiskAlerts(context, request); }));
@@ -1853,7 +2783,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawCallbackMethod_StreamVolSurface() {
-      ::grpc::Service::MarkMethodRawCallback(7,
+      ::grpc::Service::MarkMethodRawCallback(10,
           new ::grpc::internal::CallbackServerStreamingHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
                    ::grpc::CallbackServerContext* context, const::grpc::ByteBuffer* request) { return this->StreamVolSurface(context, request); }));
@@ -1875,7 +2805,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawCallbackMethod_SetStrategyParams() {
-      ::grpc::Service::MarkMethodRawCallback(8,
+      ::grpc::Service::MarkMethodRawCallback(11,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
                    ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->SetStrategyParams(context, request, response); }));
@@ -1892,12 +2822,34 @@ class TradingMonitor final {
       ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
+  class WithRawCallbackMethod_SetProductPricingParams : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawCallbackMethod_SetProductPricingParams() {
+      ::grpc::Service::MarkMethodRawCallback(12,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->SetProductPricingParams(context, request, response); }));
+    }
+    ~WithRawCallbackMethod_SetProductPricingParams() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status SetProductPricingParams(::grpc::ServerContext* /*context*/, const ::omm::proto::SetProductPricingParamsRequest* /*request*/, ::omm::proto::SetProductPricingParamsResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* SetProductPricingParams(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
   class WithRawCallbackMethod_StartStrategy : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawCallbackMethod_StartStrategy() {
-      ::grpc::Service::MarkMethodRawCallback(9,
+      ::grpc::Service::MarkMethodRawCallback(13,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
                    ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->StartStrategy(context, request, response); }));
@@ -1919,7 +2871,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawCallbackMethod_StopStrategy() {
-      ::grpc::Service::MarkMethodRawCallback(10,
+      ::grpc::Service::MarkMethodRawCallback(14,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
                    ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->StopStrategy(context, request, response); }));
@@ -1936,12 +2888,78 @@ class TradingMonitor final {
       ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
+  class WithRawCallbackMethod_SetArbStrategyParams : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawCallbackMethod_SetArbStrategyParams() {
+      ::grpc::Service::MarkMethodRawCallback(15,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->SetArbStrategyParams(context, request, response); }));
+    }
+    ~WithRawCallbackMethod_SetArbStrategyParams() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status SetArbStrategyParams(::grpc::ServerContext* /*context*/, const ::omm::proto::SetArbStrategyParamsRequest* /*request*/, ::omm::proto::SetArbStrategyParamsResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* SetArbStrategyParams(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
+  class WithRawCallbackMethod_StartArbStrategy : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawCallbackMethod_StartArbStrategy() {
+      ::grpc::Service::MarkMethodRawCallback(16,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->StartArbStrategy(context, request, response); }));
+    }
+    ~WithRawCallbackMethod_StartArbStrategy() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status StartArbStrategy(::grpc::ServerContext* /*context*/, const ::omm::proto::ArbStartStopRequest* /*request*/, ::omm::proto::ArbStartStopResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* StartArbStrategy(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
+  class WithRawCallbackMethod_StopArbStrategy : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawCallbackMethod_StopArbStrategy() {
+      ::grpc::Service::MarkMethodRawCallback(17,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->StopArbStrategy(context, request, response); }));
+    }
+    ~WithRawCallbackMethod_StopArbStrategy() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status StopArbStrategy(::grpc::ServerContext* /*context*/, const ::omm::proto::ArbStartStopRequest* /*request*/, ::omm::proto::ArbStartStopResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* StopArbStrategy(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
   class WithRawCallbackMethod_SetRiskThreshold : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawCallbackMethod_SetRiskThreshold() {
-      ::grpc::Service::MarkMethodRawCallback(11,
+      ::grpc::Service::MarkMethodRawCallback(18,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
                    ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->SetRiskThreshold(context, request, response); }));
@@ -1963,7 +2981,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawCallbackMethod_SendManualOrder() {
-      ::grpc::Service::MarkMethodRawCallback(12,
+      ::grpc::Service::MarkMethodRawCallback(19,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
                    ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->SendManualOrder(context, request, response); }));
@@ -1985,7 +3003,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawCallbackMethod_CancelOrder() {
-      ::grpc::Service::MarkMethodRawCallback(13,
+      ::grpc::Service::MarkMethodRawCallback(20,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
                    ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->CancelOrder(context, request, response); }));
@@ -2002,12 +3020,34 @@ class TradingMonitor final {
       ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
+  class WithRawCallbackMethod_CancelQuote : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawCallbackMethod_CancelQuote() {
+      ::grpc::Service::MarkMethodRawCallback(21,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->CancelQuote(context, request, response); }));
+    }
+    ~WithRawCallbackMethod_CancelQuote() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status CancelQuote(::grpc::ServerContext* /*context*/, const ::omm::proto::CancelQuoteRequest* /*request*/, ::omm::proto::CancelQuoteResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* CancelQuote(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
   class WithRawCallbackMethod_GetSnapshot : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawCallbackMethod_GetSnapshot() {
-      ::grpc::Service::MarkMethodRawCallback(14,
+      ::grpc::Service::MarkMethodRawCallback(22,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
                    ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->GetSnapshot(context, request, response); }));
@@ -2024,12 +3064,93 @@ class TradingMonitor final {
       ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
+  class WithStreamedUnaryMethod_Login : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithStreamedUnaryMethod_Login() {
+      ::grpc::Service::MarkMethodStreamed(0,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::omm::proto::LoginRequest, ::omm::proto::LoginResponse>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::omm::proto::LoginRequest, ::omm::proto::LoginResponse>* streamer) {
+                       return this->StreamedLogin(context,
+                         streamer);
+                  }));
+    }
+    ~WithStreamedUnaryMethod_Login() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status Login(::grpc::ServerContext* /*context*/, const ::omm::proto::LoginRequest* /*request*/, ::omm::proto::LoginResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedLogin(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::omm::proto::LoginRequest,::omm::proto::LoginResponse>* server_unary_streamer) = 0;
+  };
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_Logout : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithStreamedUnaryMethod_Logout() {
+      ::grpc::Service::MarkMethodStreamed(1,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::omm::proto::LogoutRequest, ::omm::proto::LogoutResponse>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::omm::proto::LogoutRequest, ::omm::proto::LogoutResponse>* streamer) {
+                       return this->StreamedLogout(context,
+                         streamer);
+                  }));
+    }
+    ~WithStreamedUnaryMethod_Logout() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status Logout(::grpc::ServerContext* /*context*/, const ::omm::proto::LogoutRequest* /*request*/, ::omm::proto::LogoutResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedLogout(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::omm::proto::LogoutRequest,::omm::proto::LogoutResponse>* server_unary_streamer) = 0;
+  };
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_WhoAmI : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithStreamedUnaryMethod_WhoAmI() {
+      ::grpc::Service::MarkMethodStreamed(2,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::omm::proto::WhoAmIRequest, ::omm::proto::WhoAmIResponse>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::omm::proto::WhoAmIRequest, ::omm::proto::WhoAmIResponse>* streamer) {
+                       return this->StreamedWhoAmI(context,
+                         streamer);
+                  }));
+    }
+    ~WithStreamedUnaryMethod_WhoAmI() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status WhoAmI(::grpc::ServerContext* /*context*/, const ::omm::proto::WhoAmIRequest* /*request*/, ::omm::proto::WhoAmIResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedWhoAmI(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::omm::proto::WhoAmIRequest,::omm::proto::WhoAmIResponse>* server_unary_streamer) = 0;
+  };
+  template <class BaseClass>
   class WithStreamedUnaryMethod_SetStrategyParams : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithStreamedUnaryMethod_SetStrategyParams() {
-      ::grpc::Service::MarkMethodStreamed(8,
+      ::grpc::Service::MarkMethodStreamed(11,
         new ::grpc::internal::StreamedUnaryHandler<
           ::omm::proto::SetStrategyParamsRequest, ::omm::proto::SetStrategyParamsResponse>(
             [this](::grpc::ServerContext* context,
@@ -2051,12 +3172,39 @@ class TradingMonitor final {
     virtual ::grpc::Status StreamedSetStrategyParams(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::omm::proto::SetStrategyParamsRequest,::omm::proto::SetStrategyParamsResponse>* server_unary_streamer) = 0;
   };
   template <class BaseClass>
+  class WithStreamedUnaryMethod_SetProductPricingParams : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithStreamedUnaryMethod_SetProductPricingParams() {
+      ::grpc::Service::MarkMethodStreamed(12,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::omm::proto::SetProductPricingParamsRequest, ::omm::proto::SetProductPricingParamsResponse>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::omm::proto::SetProductPricingParamsRequest, ::omm::proto::SetProductPricingParamsResponse>* streamer) {
+                       return this->StreamedSetProductPricingParams(context,
+                         streamer);
+                  }));
+    }
+    ~WithStreamedUnaryMethod_SetProductPricingParams() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status SetProductPricingParams(::grpc::ServerContext* /*context*/, const ::omm::proto::SetProductPricingParamsRequest* /*request*/, ::omm::proto::SetProductPricingParamsResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedSetProductPricingParams(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::omm::proto::SetProductPricingParamsRequest,::omm::proto::SetProductPricingParamsResponse>* server_unary_streamer) = 0;
+  };
+  template <class BaseClass>
   class WithStreamedUnaryMethod_StartStrategy : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithStreamedUnaryMethod_StartStrategy() {
-      ::grpc::Service::MarkMethodStreamed(9,
+      ::grpc::Service::MarkMethodStreamed(13,
         new ::grpc::internal::StreamedUnaryHandler<
           ::omm::proto::StartStopRequest, ::omm::proto::StartStopResponse>(
             [this](::grpc::ServerContext* context,
@@ -2083,7 +3231,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithStreamedUnaryMethod_StopStrategy() {
-      ::grpc::Service::MarkMethodStreamed(10,
+      ::grpc::Service::MarkMethodStreamed(14,
         new ::grpc::internal::StreamedUnaryHandler<
           ::omm::proto::StartStopRequest, ::omm::proto::StartStopResponse>(
             [this](::grpc::ServerContext* context,
@@ -2105,12 +3253,93 @@ class TradingMonitor final {
     virtual ::grpc::Status StreamedStopStrategy(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::omm::proto::StartStopRequest,::omm::proto::StartStopResponse>* server_unary_streamer) = 0;
   };
   template <class BaseClass>
+  class WithStreamedUnaryMethod_SetArbStrategyParams : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithStreamedUnaryMethod_SetArbStrategyParams() {
+      ::grpc::Service::MarkMethodStreamed(15,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::omm::proto::SetArbStrategyParamsRequest, ::omm::proto::SetArbStrategyParamsResponse>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::omm::proto::SetArbStrategyParamsRequest, ::omm::proto::SetArbStrategyParamsResponse>* streamer) {
+                       return this->StreamedSetArbStrategyParams(context,
+                         streamer);
+                  }));
+    }
+    ~WithStreamedUnaryMethod_SetArbStrategyParams() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status SetArbStrategyParams(::grpc::ServerContext* /*context*/, const ::omm::proto::SetArbStrategyParamsRequest* /*request*/, ::omm::proto::SetArbStrategyParamsResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedSetArbStrategyParams(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::omm::proto::SetArbStrategyParamsRequest,::omm::proto::SetArbStrategyParamsResponse>* server_unary_streamer) = 0;
+  };
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_StartArbStrategy : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithStreamedUnaryMethod_StartArbStrategy() {
+      ::grpc::Service::MarkMethodStreamed(16,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::omm::proto::ArbStartStopRequest, ::omm::proto::ArbStartStopResponse>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::omm::proto::ArbStartStopRequest, ::omm::proto::ArbStartStopResponse>* streamer) {
+                       return this->StreamedStartArbStrategy(context,
+                         streamer);
+                  }));
+    }
+    ~WithStreamedUnaryMethod_StartArbStrategy() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status StartArbStrategy(::grpc::ServerContext* /*context*/, const ::omm::proto::ArbStartStopRequest* /*request*/, ::omm::proto::ArbStartStopResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedStartArbStrategy(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::omm::proto::ArbStartStopRequest,::omm::proto::ArbStartStopResponse>* server_unary_streamer) = 0;
+  };
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_StopArbStrategy : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithStreamedUnaryMethod_StopArbStrategy() {
+      ::grpc::Service::MarkMethodStreamed(17,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::omm::proto::ArbStartStopRequest, ::omm::proto::ArbStartStopResponse>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::omm::proto::ArbStartStopRequest, ::omm::proto::ArbStartStopResponse>* streamer) {
+                       return this->StreamedStopArbStrategy(context,
+                         streamer);
+                  }));
+    }
+    ~WithStreamedUnaryMethod_StopArbStrategy() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status StopArbStrategy(::grpc::ServerContext* /*context*/, const ::omm::proto::ArbStartStopRequest* /*request*/, ::omm::proto::ArbStartStopResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedStopArbStrategy(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::omm::proto::ArbStartStopRequest,::omm::proto::ArbStartStopResponse>* server_unary_streamer) = 0;
+  };
+  template <class BaseClass>
   class WithStreamedUnaryMethod_SetRiskThreshold : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithStreamedUnaryMethod_SetRiskThreshold() {
-      ::grpc::Service::MarkMethodStreamed(11,
+      ::grpc::Service::MarkMethodStreamed(18,
         new ::grpc::internal::StreamedUnaryHandler<
           ::omm::proto::SetRiskThresholdRequest, ::omm::proto::SetRiskThresholdResponse>(
             [this](::grpc::ServerContext* context,
@@ -2137,7 +3366,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithStreamedUnaryMethod_SendManualOrder() {
-      ::grpc::Service::MarkMethodStreamed(12,
+      ::grpc::Service::MarkMethodStreamed(19,
         new ::grpc::internal::StreamedUnaryHandler<
           ::omm::proto::ManualOrderRequest, ::omm::proto::ManualOrderResponse>(
             [this](::grpc::ServerContext* context,
@@ -2164,7 +3393,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithStreamedUnaryMethod_CancelOrder() {
-      ::grpc::Service::MarkMethodStreamed(13,
+      ::grpc::Service::MarkMethodStreamed(20,
         new ::grpc::internal::StreamedUnaryHandler<
           ::omm::proto::CancelOrderRequest, ::omm::proto::CancelOrderResponse>(
             [this](::grpc::ServerContext* context,
@@ -2186,12 +3415,39 @@ class TradingMonitor final {
     virtual ::grpc::Status StreamedCancelOrder(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::omm::proto::CancelOrderRequest,::omm::proto::CancelOrderResponse>* server_unary_streamer) = 0;
   };
   template <class BaseClass>
+  class WithStreamedUnaryMethod_CancelQuote : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithStreamedUnaryMethod_CancelQuote() {
+      ::grpc::Service::MarkMethodStreamed(21,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::omm::proto::CancelQuoteRequest, ::omm::proto::CancelQuoteResponse>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::omm::proto::CancelQuoteRequest, ::omm::proto::CancelQuoteResponse>* streamer) {
+                       return this->StreamedCancelQuote(context,
+                         streamer);
+                  }));
+    }
+    ~WithStreamedUnaryMethod_CancelQuote() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status CancelQuote(::grpc::ServerContext* /*context*/, const ::omm::proto::CancelQuoteRequest* /*request*/, ::omm::proto::CancelQuoteResponse* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedCancelQuote(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::omm::proto::CancelQuoteRequest,::omm::proto::CancelQuoteResponse>* server_unary_streamer) = 0;
+  };
+  template <class BaseClass>
   class WithStreamedUnaryMethod_GetSnapshot : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithStreamedUnaryMethod_GetSnapshot() {
-      ::grpc::Service::MarkMethodStreamed(14,
+      ::grpc::Service::MarkMethodStreamed(22,
         new ::grpc::internal::StreamedUnaryHandler<
           ::omm::proto::SnapshotRequest, ::omm::proto::SnapshotResponse>(
             [this](::grpc::ServerContext* context,
@@ -2212,14 +3468,14 @@ class TradingMonitor final {
     // replace default version of method with streamed unary
     virtual ::grpc::Status StreamedGetSnapshot(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::omm::proto::SnapshotRequest,::omm::proto::SnapshotResponse>* server_unary_streamer) = 0;
   };
-  typedef WithStreamedUnaryMethod_SetStrategyParams<WithStreamedUnaryMethod_StartStrategy<WithStreamedUnaryMethod_StopStrategy<WithStreamedUnaryMethod_SetRiskThreshold<WithStreamedUnaryMethod_SendManualOrder<WithStreamedUnaryMethod_CancelOrder<WithStreamedUnaryMethod_GetSnapshot<Service > > > > > > > StreamedUnaryService;
+  typedef WithStreamedUnaryMethod_Login<WithStreamedUnaryMethod_Logout<WithStreamedUnaryMethod_WhoAmI<WithStreamedUnaryMethod_SetStrategyParams<WithStreamedUnaryMethod_SetProductPricingParams<WithStreamedUnaryMethod_StartStrategy<WithStreamedUnaryMethod_StopStrategy<WithStreamedUnaryMethod_SetArbStrategyParams<WithStreamedUnaryMethod_StartArbStrategy<WithStreamedUnaryMethod_StopArbStrategy<WithStreamedUnaryMethod_SetRiskThreshold<WithStreamedUnaryMethod_SendManualOrder<WithStreamedUnaryMethod_CancelOrder<WithStreamedUnaryMethod_CancelQuote<WithStreamedUnaryMethod_GetSnapshot<Service > > > > > > > > > > > > > > > StreamedUnaryService;
   template <class BaseClass>
   class WithSplitStreamingMethod_StreamGreeks : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithSplitStreamingMethod_StreamGreeks() {
-      ::grpc::Service::MarkMethodStreamed(0,
+      ::grpc::Service::MarkMethodStreamed(3,
         new ::grpc::internal::SplitServerStreamingHandler<
           ::omm::proto::StreamRequest, ::omm::proto::Greeks>(
             [this](::grpc::ServerContext* context,
@@ -2246,7 +3502,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithSplitStreamingMethod_StreamPositions() {
-      ::grpc::Service::MarkMethodStreamed(1,
+      ::grpc::Service::MarkMethodStreamed(4,
         new ::grpc::internal::SplitServerStreamingHandler<
           ::omm::proto::StreamRequest, ::omm::proto::Position>(
             [this](::grpc::ServerContext* context,
@@ -2273,7 +3529,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithSplitStreamingMethod_StreamTicks() {
-      ::grpc::Service::MarkMethodStreamed(2,
+      ::grpc::Service::MarkMethodStreamed(5,
         new ::grpc::internal::SplitServerStreamingHandler<
           ::omm::proto::StreamRequest, ::omm::proto::Tick>(
             [this](::grpc::ServerContext* context,
@@ -2300,7 +3556,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithSplitStreamingMethod_StreamOrders() {
-      ::grpc::Service::MarkMethodStreamed(3,
+      ::grpc::Service::MarkMethodStreamed(6,
         new ::grpc::internal::SplitServerStreamingHandler<
           ::omm::proto::StreamRequest, ::omm::proto::OrderUpdate>(
             [this](::grpc::ServerContext* context,
@@ -2327,7 +3583,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithSplitStreamingMethod_StreamTrades() {
-      ::grpc::Service::MarkMethodStreamed(4,
+      ::grpc::Service::MarkMethodStreamed(7,
         new ::grpc::internal::SplitServerStreamingHandler<
           ::omm::proto::StreamRequest, ::omm::proto::OrderUpdate>(
             [this](::grpc::ServerContext* context,
@@ -2354,7 +3610,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithSplitStreamingMethod_StreamQuotes() {
-      ::grpc::Service::MarkMethodStreamed(5,
+      ::grpc::Service::MarkMethodStreamed(8,
         new ::grpc::internal::SplitServerStreamingHandler<
           ::omm::proto::StreamRequest, ::omm::proto::QuoteUpdate>(
             [this](::grpc::ServerContext* context,
@@ -2381,7 +3637,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithSplitStreamingMethod_StreamRiskAlerts() {
-      ::grpc::Service::MarkMethodStreamed(6,
+      ::grpc::Service::MarkMethodStreamed(9,
         new ::grpc::internal::SplitServerStreamingHandler<
           ::omm::proto::StreamRequest, ::omm::proto::RiskAlert>(
             [this](::grpc::ServerContext* context,
@@ -2408,7 +3664,7 @@ class TradingMonitor final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithSplitStreamingMethod_StreamVolSurface() {
-      ::grpc::Service::MarkMethodStreamed(7,
+      ::grpc::Service::MarkMethodStreamed(10,
         new ::grpc::internal::SplitServerStreamingHandler<
           ::omm::proto::StreamRequest, ::omm::proto::VolSurface>(
             [this](::grpc::ServerContext* context,
@@ -2430,7 +3686,7 @@ class TradingMonitor final {
     virtual ::grpc::Status StreamedStreamVolSurface(::grpc::ServerContext* context, ::grpc::ServerSplitStreamer< ::omm::proto::StreamRequest,::omm::proto::VolSurface>* server_split_streamer) = 0;
   };
   typedef WithSplitStreamingMethod_StreamGreeks<WithSplitStreamingMethod_StreamPositions<WithSplitStreamingMethod_StreamTicks<WithSplitStreamingMethod_StreamOrders<WithSplitStreamingMethod_StreamTrades<WithSplitStreamingMethod_StreamQuotes<WithSplitStreamingMethod_StreamRiskAlerts<WithSplitStreamingMethod_StreamVolSurface<Service > > > > > > > > SplitStreamedService;
-  typedef WithSplitStreamingMethod_StreamGreeks<WithSplitStreamingMethod_StreamPositions<WithSplitStreamingMethod_StreamTicks<WithSplitStreamingMethod_StreamOrders<WithSplitStreamingMethod_StreamTrades<WithSplitStreamingMethod_StreamQuotes<WithSplitStreamingMethod_StreamRiskAlerts<WithSplitStreamingMethod_StreamVolSurface<WithStreamedUnaryMethod_SetStrategyParams<WithStreamedUnaryMethod_StartStrategy<WithStreamedUnaryMethod_StopStrategy<WithStreamedUnaryMethod_SetRiskThreshold<WithStreamedUnaryMethod_SendManualOrder<WithStreamedUnaryMethod_CancelOrder<WithStreamedUnaryMethod_GetSnapshot<Service > > > > > > > > > > > > > > > StreamedService;
+  typedef WithStreamedUnaryMethod_Login<WithStreamedUnaryMethod_Logout<WithStreamedUnaryMethod_WhoAmI<WithSplitStreamingMethod_StreamGreeks<WithSplitStreamingMethod_StreamPositions<WithSplitStreamingMethod_StreamTicks<WithSplitStreamingMethod_StreamOrders<WithSplitStreamingMethod_StreamTrades<WithSplitStreamingMethod_StreamQuotes<WithSplitStreamingMethod_StreamRiskAlerts<WithSplitStreamingMethod_StreamVolSurface<WithStreamedUnaryMethod_SetStrategyParams<WithStreamedUnaryMethod_SetProductPricingParams<WithStreamedUnaryMethod_StartStrategy<WithStreamedUnaryMethod_StopStrategy<WithStreamedUnaryMethod_SetArbStrategyParams<WithStreamedUnaryMethod_StartArbStrategy<WithStreamedUnaryMethod_StopArbStrategy<WithStreamedUnaryMethod_SetRiskThreshold<WithStreamedUnaryMethod_SendManualOrder<WithStreamedUnaryMethod_CancelOrder<WithStreamedUnaryMethod_CancelQuote<WithStreamedUnaryMethod_GetSnapshot<Service > > > > > > > > > > > > > > > > > > > > > > > StreamedService;
 };
 
 }  // namespace proto

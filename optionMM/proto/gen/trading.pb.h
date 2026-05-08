@@ -48,18 +48,66 @@ struct TableStruct_trading_2eproto {
 extern const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_trading_2eproto;
 namespace omm {
 namespace proto {
+class ArbParams;
+struct ArbParamsDefaultTypeInternal;
+extern ArbParamsDefaultTypeInternal _ArbParams_default_instance_;
+class ArbStartStopRequest;
+struct ArbStartStopRequestDefaultTypeInternal;
+extern ArbStartStopRequestDefaultTypeInternal _ArbStartStopRequest_default_instance_;
+class ArbStartStopResponse;
+struct ArbStartStopResponseDefaultTypeInternal;
+extern ArbStartStopResponseDefaultTypeInternal _ArbStartStopResponse_default_instance_;
+class ArbStrategyId;
+struct ArbStrategyIdDefaultTypeInternal;
+extern ArbStrategyIdDefaultTypeInternal _ArbStrategyId_default_instance_;
+class ArbStrategyParamsEntry;
+struct ArbStrategyParamsEntryDefaultTypeInternal;
+extern ArbStrategyParamsEntryDefaultTypeInternal _ArbStrategyParamsEntry_default_instance_;
+class ArbStrategyState;
+struct ArbStrategyStateDefaultTypeInternal;
+extern ArbStrategyStateDefaultTypeInternal _ArbStrategyState_default_instance_;
+class BookInfo;
+struct BookInfoDefaultTypeInternal;
+extern BookInfoDefaultTypeInternal _BookInfo_default_instance_;
+class BookPortfolio;
+struct BookPortfolioDefaultTypeInternal;
+extern BookPortfolioDefaultTypeInternal _BookPortfolio_default_instance_;
+class BookPosition;
+struct BookPositionDefaultTypeInternal;
+extern BookPositionDefaultTypeInternal _BookPosition_default_instance_;
 class CancelOrderRequest;
 struct CancelOrderRequestDefaultTypeInternal;
 extern CancelOrderRequestDefaultTypeInternal _CancelOrderRequest_default_instance_;
 class CancelOrderResponse;
 struct CancelOrderResponseDefaultTypeInternal;
 extern CancelOrderResponseDefaultTypeInternal _CancelOrderResponse_default_instance_;
+class CancelQuoteRequest;
+struct CancelQuoteRequestDefaultTypeInternal;
+extern CancelQuoteRequestDefaultTypeInternal _CancelQuoteRequest_default_instance_;
+class CancelQuoteResponse;
+struct CancelQuoteResponseDefaultTypeInternal;
+extern CancelQuoteResponseDefaultTypeInternal _CancelQuoteResponse_default_instance_;
 class Greeks;
 struct GreeksDefaultTypeInternal;
 extern GreeksDefaultTypeInternal _Greeks_default_instance_;
 class InstrumentInfo;
 struct InstrumentInfoDefaultTypeInternal;
 extern InstrumentInfoDefaultTypeInternal _InstrumentInfo_default_instance_;
+class InstrumentMMState;
+struct InstrumentMMStateDefaultTypeInternal;
+extern InstrumentMMStateDefaultTypeInternal _InstrumentMMState_default_instance_;
+class LoginRequest;
+struct LoginRequestDefaultTypeInternal;
+extern LoginRequestDefaultTypeInternal _LoginRequest_default_instance_;
+class LoginResponse;
+struct LoginResponseDefaultTypeInternal;
+extern LoginResponseDefaultTypeInternal _LoginResponse_default_instance_;
+class LogoutRequest;
+struct LogoutRequestDefaultTypeInternal;
+extern LogoutRequestDefaultTypeInternal _LogoutRequest_default_instance_;
+class LogoutResponse;
+struct LogoutResponseDefaultTypeInternal;
+extern LogoutResponseDefaultTypeInternal _LogoutResponse_default_instance_;
 class MMParams;
 struct MMParamsDefaultTypeInternal;
 extern MMParamsDefaultTypeInternal _MMParams_default_instance_;
@@ -72,21 +120,45 @@ extern ManualOrderResponseDefaultTypeInternal _ManualOrderResponse_default_insta
 class OrderUpdate;
 struct OrderUpdateDefaultTypeInternal;
 extern OrderUpdateDefaultTypeInternal _OrderUpdate_default_instance_;
+class PcpOpportunityState;
+struct PcpOpportunityStateDefaultTypeInternal;
+extern PcpOpportunityStateDefaultTypeInternal _PcpOpportunityState_default_instance_;
 class PortfolioGreeks;
 struct PortfolioGreeksDefaultTypeInternal;
 extern PortfolioGreeksDefaultTypeInternal _PortfolioGreeks_default_instance_;
 class Position;
 struct PositionDefaultTypeInternal;
 extern PositionDefaultTypeInternal _Position_default_instance_;
+class ProductMMState;
+struct ProductMMStateDefaultTypeInternal;
+extern ProductMMStateDefaultTypeInternal _ProductMMState_default_instance_;
+class ProductPricingParams;
+struct ProductPricingParamsDefaultTypeInternal;
+extern ProductPricingParamsDefaultTypeInternal _ProductPricingParams_default_instance_;
 class QuoteUpdate;
 struct QuoteUpdateDefaultTypeInternal;
 extern QuoteUpdateDefaultTypeInternal _QuoteUpdate_default_instance_;
 class RiskAlert;
 struct RiskAlertDefaultTypeInternal;
 extern RiskAlertDefaultTypeInternal _RiskAlert_default_instance_;
+class RiskState;
+struct RiskStateDefaultTypeInternal;
+extern RiskStateDefaultTypeInternal _RiskState_default_instance_;
 class RiskThreshold;
 struct RiskThresholdDefaultTypeInternal;
 extern RiskThresholdDefaultTypeInternal _RiskThreshold_default_instance_;
+class SetArbStrategyParamsRequest;
+struct SetArbStrategyParamsRequestDefaultTypeInternal;
+extern SetArbStrategyParamsRequestDefaultTypeInternal _SetArbStrategyParamsRequest_default_instance_;
+class SetArbStrategyParamsResponse;
+struct SetArbStrategyParamsResponseDefaultTypeInternal;
+extern SetArbStrategyParamsResponseDefaultTypeInternal _SetArbStrategyParamsResponse_default_instance_;
+class SetProductPricingParamsRequest;
+struct SetProductPricingParamsRequestDefaultTypeInternal;
+extern SetProductPricingParamsRequestDefaultTypeInternal _SetProductPricingParamsRequest_default_instance_;
+class SetProductPricingParamsResponse;
+struct SetProductPricingParamsResponseDefaultTypeInternal;
+extern SetProductPricingParamsResponseDefaultTypeInternal _SetProductPricingParamsResponse_default_instance_;
 class SetRiskThresholdRequest;
 struct SetRiskThresholdRequestDefaultTypeInternal;
 extern SetRiskThresholdRequestDefaultTypeInternal _SetRiskThresholdRequest_default_instance_;
@@ -117,28 +189,61 @@ extern StreamRequestDefaultTypeInternal _StreamRequest_default_instance_;
 class Tick;
 struct TickDefaultTypeInternal;
 extern TickDefaultTypeInternal _Tick_default_instance_;
+class UserInfo;
+struct UserInfoDefaultTypeInternal;
+extern UserInfoDefaultTypeInternal _UserInfo_default_instance_;
 class VolSurface;
 struct VolSurfaceDefaultTypeInternal;
 extern VolSurfaceDefaultTypeInternal _VolSurface_default_instance_;
 class VolSurfaceSlice;
 struct VolSurfaceSliceDefaultTypeInternal;
 extern VolSurfaceSliceDefaultTypeInternal _VolSurfaceSlice_default_instance_;
+class WhoAmIRequest;
+struct WhoAmIRequestDefaultTypeInternal;
+extern WhoAmIRequestDefaultTypeInternal _WhoAmIRequest_default_instance_;
+class WhoAmIResponse;
+struct WhoAmIResponseDefaultTypeInternal;
+extern WhoAmIResponseDefaultTypeInternal _WhoAmIResponse_default_instance_;
 }  // namespace proto
 }  // namespace omm
 PROTOBUF_NAMESPACE_OPEN
+template<> ::omm::proto::ArbParams* Arena::CreateMaybeMessage<::omm::proto::ArbParams>(Arena*);
+template<> ::omm::proto::ArbStartStopRequest* Arena::CreateMaybeMessage<::omm::proto::ArbStartStopRequest>(Arena*);
+template<> ::omm::proto::ArbStartStopResponse* Arena::CreateMaybeMessage<::omm::proto::ArbStartStopResponse>(Arena*);
+template<> ::omm::proto::ArbStrategyId* Arena::CreateMaybeMessage<::omm::proto::ArbStrategyId>(Arena*);
+template<> ::omm::proto::ArbStrategyParamsEntry* Arena::CreateMaybeMessage<::omm::proto::ArbStrategyParamsEntry>(Arena*);
+template<> ::omm::proto::ArbStrategyState* Arena::CreateMaybeMessage<::omm::proto::ArbStrategyState>(Arena*);
+template<> ::omm::proto::BookInfo* Arena::CreateMaybeMessage<::omm::proto::BookInfo>(Arena*);
+template<> ::omm::proto::BookPortfolio* Arena::CreateMaybeMessage<::omm::proto::BookPortfolio>(Arena*);
+template<> ::omm::proto::BookPosition* Arena::CreateMaybeMessage<::omm::proto::BookPosition>(Arena*);
 template<> ::omm::proto::CancelOrderRequest* Arena::CreateMaybeMessage<::omm::proto::CancelOrderRequest>(Arena*);
 template<> ::omm::proto::CancelOrderResponse* Arena::CreateMaybeMessage<::omm::proto::CancelOrderResponse>(Arena*);
+template<> ::omm::proto::CancelQuoteRequest* Arena::CreateMaybeMessage<::omm::proto::CancelQuoteRequest>(Arena*);
+template<> ::omm::proto::CancelQuoteResponse* Arena::CreateMaybeMessage<::omm::proto::CancelQuoteResponse>(Arena*);
 template<> ::omm::proto::Greeks* Arena::CreateMaybeMessage<::omm::proto::Greeks>(Arena*);
 template<> ::omm::proto::InstrumentInfo* Arena::CreateMaybeMessage<::omm::proto::InstrumentInfo>(Arena*);
+template<> ::omm::proto::InstrumentMMState* Arena::CreateMaybeMessage<::omm::proto::InstrumentMMState>(Arena*);
+template<> ::omm::proto::LoginRequest* Arena::CreateMaybeMessage<::omm::proto::LoginRequest>(Arena*);
+template<> ::omm::proto::LoginResponse* Arena::CreateMaybeMessage<::omm::proto::LoginResponse>(Arena*);
+template<> ::omm::proto::LogoutRequest* Arena::CreateMaybeMessage<::omm::proto::LogoutRequest>(Arena*);
+template<> ::omm::proto::LogoutResponse* Arena::CreateMaybeMessage<::omm::proto::LogoutResponse>(Arena*);
 template<> ::omm::proto::MMParams* Arena::CreateMaybeMessage<::omm::proto::MMParams>(Arena*);
 template<> ::omm::proto::ManualOrderRequest* Arena::CreateMaybeMessage<::omm::proto::ManualOrderRequest>(Arena*);
 template<> ::omm::proto::ManualOrderResponse* Arena::CreateMaybeMessage<::omm::proto::ManualOrderResponse>(Arena*);
 template<> ::omm::proto::OrderUpdate* Arena::CreateMaybeMessage<::omm::proto::OrderUpdate>(Arena*);
+template<> ::omm::proto::PcpOpportunityState* Arena::CreateMaybeMessage<::omm::proto::PcpOpportunityState>(Arena*);
 template<> ::omm::proto::PortfolioGreeks* Arena::CreateMaybeMessage<::omm::proto::PortfolioGreeks>(Arena*);
 template<> ::omm::proto::Position* Arena::CreateMaybeMessage<::omm::proto::Position>(Arena*);
+template<> ::omm::proto::ProductMMState* Arena::CreateMaybeMessage<::omm::proto::ProductMMState>(Arena*);
+template<> ::omm::proto::ProductPricingParams* Arena::CreateMaybeMessage<::omm::proto::ProductPricingParams>(Arena*);
 template<> ::omm::proto::QuoteUpdate* Arena::CreateMaybeMessage<::omm::proto::QuoteUpdate>(Arena*);
 template<> ::omm::proto::RiskAlert* Arena::CreateMaybeMessage<::omm::proto::RiskAlert>(Arena*);
+template<> ::omm::proto::RiskState* Arena::CreateMaybeMessage<::omm::proto::RiskState>(Arena*);
 template<> ::omm::proto::RiskThreshold* Arena::CreateMaybeMessage<::omm::proto::RiskThreshold>(Arena*);
+template<> ::omm::proto::SetArbStrategyParamsRequest* Arena::CreateMaybeMessage<::omm::proto::SetArbStrategyParamsRequest>(Arena*);
+template<> ::omm::proto::SetArbStrategyParamsResponse* Arena::CreateMaybeMessage<::omm::proto::SetArbStrategyParamsResponse>(Arena*);
+template<> ::omm::proto::SetProductPricingParamsRequest* Arena::CreateMaybeMessage<::omm::proto::SetProductPricingParamsRequest>(Arena*);
+template<> ::omm::proto::SetProductPricingParamsResponse* Arena::CreateMaybeMessage<::omm::proto::SetProductPricingParamsResponse>(Arena*);
 template<> ::omm::proto::SetRiskThresholdRequest* Arena::CreateMaybeMessage<::omm::proto::SetRiskThresholdRequest>(Arena*);
 template<> ::omm::proto::SetRiskThresholdResponse* Arena::CreateMaybeMessage<::omm::proto::SetRiskThresholdResponse>(Arena*);
 template<> ::omm::proto::SetStrategyParamsRequest* Arena::CreateMaybeMessage<::omm::proto::SetStrategyParamsRequest>(Arena*);
@@ -149,8 +254,11 @@ template<> ::omm::proto::StartStopRequest* Arena::CreateMaybeMessage<::omm::prot
 template<> ::omm::proto::StartStopResponse* Arena::CreateMaybeMessage<::omm::proto::StartStopResponse>(Arena*);
 template<> ::omm::proto::StreamRequest* Arena::CreateMaybeMessage<::omm::proto::StreamRequest>(Arena*);
 template<> ::omm::proto::Tick* Arena::CreateMaybeMessage<::omm::proto::Tick>(Arena*);
+template<> ::omm::proto::UserInfo* Arena::CreateMaybeMessage<::omm::proto::UserInfo>(Arena*);
 template<> ::omm::proto::VolSurface* Arena::CreateMaybeMessage<::omm::proto::VolSurface>(Arena*);
 template<> ::omm::proto::VolSurfaceSlice* Arena::CreateMaybeMessage<::omm::proto::VolSurfaceSlice>(Arena*);
+template<> ::omm::proto::WhoAmIRequest* Arena::CreateMaybeMessage<::omm::proto::WhoAmIRequest>(Arena*);
+template<> ::omm::proto::WhoAmIResponse* Arena::CreateMaybeMessage<::omm::proto::WhoAmIResponse>(Arena*);
 PROTOBUF_NAMESPACE_CLOSE
 namespace omm {
 namespace proto {
@@ -182,6 +290,151 @@ inline bool RiskAlert_AlertType_Parse(
     ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, RiskAlert_AlertType* value) {
   return ::PROTOBUF_NAMESPACE_ID::internal::ParseNamedEnum<RiskAlert_AlertType>(
     RiskAlert_AlertType_descriptor(), name, value);
+}
+enum ArbitrageStrategyType : int {
+  ARB_STRATEGY_NONE = 0,
+  ARB_STRATEGY_PCP = 1,
+  ArbitrageStrategyType_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
+  ArbitrageStrategyType_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
+};
+bool ArbitrageStrategyType_IsValid(int value);
+constexpr ArbitrageStrategyType ArbitrageStrategyType_MIN = ARB_STRATEGY_NONE;
+constexpr ArbitrageStrategyType ArbitrageStrategyType_MAX = ARB_STRATEGY_PCP;
+constexpr int ArbitrageStrategyType_ARRAYSIZE = ArbitrageStrategyType_MAX + 1;
+
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* ArbitrageStrategyType_descriptor();
+template<typename T>
+inline const std::string& ArbitrageStrategyType_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, ArbitrageStrategyType>::value ||
+    ::std::is_integral<T>::value,
+    "Incorrect type passed to function ArbitrageStrategyType_Name.");
+  return ::PROTOBUF_NAMESPACE_ID::internal::NameOfEnum(
+    ArbitrageStrategyType_descriptor(), enum_t_value);
+}
+inline bool ArbitrageStrategyType_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, ArbitrageStrategyType* value) {
+  return ::PROTOBUF_NAMESPACE_ID::internal::ParseNamedEnum<ArbitrageStrategyType>(
+    ArbitrageStrategyType_descriptor(), name, value);
+}
+enum MMQuoteState : int {
+  MM_QUOTE_IDLE = 0,
+  MM_QUOTE_LIVE = 1,
+  MM_QUOTE_ACK_PENDING = 2,
+  MM_QUOTE_CANCEL_PENDING = 3,
+  MM_QUOTE_CANCEL_FAILED = 4,
+  MM_QUOTE_SUPPRESSED = 5,
+  MMQuoteState_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
+  MMQuoteState_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
+};
+bool MMQuoteState_IsValid(int value);
+constexpr MMQuoteState MMQuoteState_MIN = MM_QUOTE_IDLE;
+constexpr MMQuoteState MMQuoteState_MAX = MM_QUOTE_SUPPRESSED;
+constexpr int MMQuoteState_ARRAYSIZE = MMQuoteState_MAX + 1;
+
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* MMQuoteState_descriptor();
+template<typename T>
+inline const std::string& MMQuoteState_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, MMQuoteState>::value ||
+    ::std::is_integral<T>::value,
+    "Incorrect type passed to function MMQuoteState_Name.");
+  return ::PROTOBUF_NAMESPACE_ID::internal::NameOfEnum(
+    MMQuoteState_descriptor(), enum_t_value);
+}
+inline bool MMQuoteState_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, MMQuoteState* value) {
+  return ::PROTOBUF_NAMESPACE_ID::internal::ParseNamedEnum<MMQuoteState>(
+    MMQuoteState_descriptor(), name, value);
+}
+enum MMSuppressReason : int {
+  MM_REASON_NONE = 0,
+  MM_REASON_DISABLED = 1,
+  MM_REASON_SESSION_CLOSED = 2,
+  MM_REASON_STALE_THEO = 3,
+  MM_REASON_INVALID_MARKET = 4,
+  MM_REASON_POSITION_LIMIT = 5,
+  MM_REASON_RISK_LIMIT = 6,
+  MM_REASON_THROTTLE = 7,
+  MM_REASON_UNDERLYING_SHOCK = 8,
+  MM_REASON_PRODUCT_EXPOSURE = 9,
+  MM_REASON_CANCEL_STUCK = 10,
+  MMSuppressReason_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
+  MMSuppressReason_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
+};
+bool MMSuppressReason_IsValid(int value);
+constexpr MMSuppressReason MMSuppressReason_MIN = MM_REASON_NONE;
+constexpr MMSuppressReason MMSuppressReason_MAX = MM_REASON_CANCEL_STUCK;
+constexpr int MMSuppressReason_ARRAYSIZE = MMSuppressReason_MAX + 1;
+
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* MMSuppressReason_descriptor();
+template<typename T>
+inline const std::string& MMSuppressReason_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, MMSuppressReason>::value ||
+    ::std::is_integral<T>::value,
+    "Incorrect type passed to function MMSuppressReason_Name.");
+  return ::PROTOBUF_NAMESPACE_ID::internal::NameOfEnum(
+    MMSuppressReason_descriptor(), enum_t_value);
+}
+inline bool MMSuppressReason_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, MMSuppressReason* value) {
+  return ::PROTOBUF_NAMESPACE_ID::internal::ParseNamedEnum<MMSuppressReason>(
+    MMSuppressReason_descriptor(), name, value);
+}
+enum ArbSuppressReason : int {
+  ARB_REASON_NONE = 0,
+  ARB_REASON_DISABLED = 1,
+  ARB_REASON_NO_PAIRS = 2,
+  ARB_REASON_INVALID_MARKET = 3,
+  ARB_REASON_COOLDOWN = 4,
+  ARB_REASON_INTENT_BACKPRESSURE = 5,
+  ARB_REASON_LIVE_ORDERS = 6,
+  ARB_REASON_CLEANUP_PENDING = 7,
+  ArbSuppressReason_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
+  ArbSuppressReason_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
+};
+bool ArbSuppressReason_IsValid(int value);
+constexpr ArbSuppressReason ArbSuppressReason_MIN = ARB_REASON_NONE;
+constexpr ArbSuppressReason ArbSuppressReason_MAX = ARB_REASON_CLEANUP_PENDING;
+constexpr int ArbSuppressReason_ARRAYSIZE = ArbSuppressReason_MAX + 1;
+
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* ArbSuppressReason_descriptor();
+template<typename T>
+inline const std::string& ArbSuppressReason_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, ArbSuppressReason>::value ||
+    ::std::is_integral<T>::value,
+    "Incorrect type passed to function ArbSuppressReason_Name.");
+  return ::PROTOBUF_NAMESPACE_ID::internal::NameOfEnum(
+    ArbSuppressReason_descriptor(), enum_t_value);
+}
+inline bool ArbSuppressReason_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, ArbSuppressReason* value) {
+  return ::PROTOBUF_NAMESPACE_ID::internal::ParseNamedEnum<ArbSuppressReason>(
+    ArbSuppressReason_descriptor(), name, value);
+}
+enum PcpOpportunityDirection : int {
+  PCP_DIR_NONE = 0,
+  PCP_DIR_LONG_SYNTH_SHORT_FUTURE = 1,
+  PCP_DIR_SHORT_SYNTH_LONG_FUTURE = 2,
+  PcpOpportunityDirection_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
+  PcpOpportunityDirection_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
+};
+bool PcpOpportunityDirection_IsValid(int value);
+constexpr PcpOpportunityDirection PcpOpportunityDirection_MIN = PCP_DIR_NONE;
+constexpr PcpOpportunityDirection PcpOpportunityDirection_MAX = PCP_DIR_SHORT_SYNTH_LONG_FUTURE;
+constexpr int PcpOpportunityDirection_ARRAYSIZE = PcpOpportunityDirection_MAX + 1;
+
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* PcpOpportunityDirection_descriptor();
+template<typename T>
+inline const std::string& PcpOpportunityDirection_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, PcpOpportunityDirection>::value ||
+    ::std::is_integral<T>::value,
+    "Incorrect type passed to function PcpOpportunityDirection_Name.");
+  return ::PROTOBUF_NAMESPACE_ID::internal::NameOfEnum(
+    PcpOpportunityDirection_descriptor(), enum_t_value);
+}
+inline bool PcpOpportunityDirection_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, PcpOpportunityDirection* value) {
+  return ::PROTOBUF_NAMESPACE_ID::internal::ParseNamedEnum<PcpOpportunityDirection>(
+    PcpOpportunityDirection_descriptor(), name, value);
 }
 // ===================================================================
 
@@ -315,6 +568,16 @@ class Greeks final :
     kIvFieldNumber = 8,
     kTFieldNumber = 9,
     kCalcTsNsFieldNumber = 10,
+    kStdDeltaFieldNumber = 11,
+    kDeltaCashFieldNumber = 12,
+    kStdGammaFieldNumber = 13,
+    kGammaCashFieldNumber = 14,
+    kVegaCashFieldNumber = 15,
+    kThetaCashFieldNumber = 16,
+    kRhoCashFieldNumber = 17,
+    kVannaFieldNumber = 18,
+    kVolgaFieldNumber = 19,
+    kCharmFieldNumber = 20,
     kInstrumentIdFieldNumber = 1,
   };
   // double theo_price = 2;
@@ -398,6 +661,96 @@ class Greeks final :
   void _internal_set_calc_ts_ns(int64_t value);
   public:
 
+  // double std_delta = 11;
+  void clear_std_delta();
+  double std_delta() const;
+  void set_std_delta(double value);
+  private:
+  double _internal_std_delta() const;
+  void _internal_set_std_delta(double value);
+  public:
+
+  // double delta_cash = 12;
+  void clear_delta_cash();
+  double delta_cash() const;
+  void set_delta_cash(double value);
+  private:
+  double _internal_delta_cash() const;
+  void _internal_set_delta_cash(double value);
+  public:
+
+  // double std_gamma = 13;
+  void clear_std_gamma();
+  double std_gamma() const;
+  void set_std_gamma(double value);
+  private:
+  double _internal_std_gamma() const;
+  void _internal_set_std_gamma(double value);
+  public:
+
+  // double gamma_cash = 14;
+  void clear_gamma_cash();
+  double gamma_cash() const;
+  void set_gamma_cash(double value);
+  private:
+  double _internal_gamma_cash() const;
+  void _internal_set_gamma_cash(double value);
+  public:
+
+  // double vega_cash = 15;
+  void clear_vega_cash();
+  double vega_cash() const;
+  void set_vega_cash(double value);
+  private:
+  double _internal_vega_cash() const;
+  void _internal_set_vega_cash(double value);
+  public:
+
+  // double theta_cash = 16;
+  void clear_theta_cash();
+  double theta_cash() const;
+  void set_theta_cash(double value);
+  private:
+  double _internal_theta_cash() const;
+  void _internal_set_theta_cash(double value);
+  public:
+
+  // double rho_cash = 17;
+  void clear_rho_cash();
+  double rho_cash() const;
+  void set_rho_cash(double value);
+  private:
+  double _internal_rho_cash() const;
+  void _internal_set_rho_cash(double value);
+  public:
+
+  // double vanna = 18;
+  void clear_vanna();
+  double vanna() const;
+  void set_vanna(double value);
+  private:
+  double _internal_vanna() const;
+  void _internal_set_vanna(double value);
+  public:
+
+  // double volga = 19;
+  void clear_volga();
+  double volga() const;
+  void set_volga(double value);
+  private:
+  double _internal_volga() const;
+  void _internal_set_volga(double value);
+  public:
+
+  // double charm = 20;
+  void clear_charm();
+  double charm() const;
+  void set_charm(double value);
+  private:
+  double _internal_charm() const;
+  void _internal_set_charm(double value);
+  public:
+
   // uint32 instrument_id = 1;
   void clear_instrument_id();
   uint32_t instrument_id() const;
@@ -424,6 +777,16 @@ class Greeks final :
     double iv_;
     double t_;
     int64_t calc_ts_ns_;
+    double std_delta_;
+    double delta_cash_;
+    double std_gamma_;
+    double gamma_cash_;
+    double vega_cash_;
+    double theta_cash_;
+    double rho_cash_;
+    double vanna_;
+    double volga_;
+    double charm_;
     uint32_t instrument_id_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
@@ -1373,6 +1736,7 @@ class OrderUpdate final :
     kPriceFieldNumber = 9,
     kExchangeTradeIdFieldNumber = 11,
     kVolumeFieldNumber = 10,
+    kBookIdFieldNumber = 12,
   };
   // string status = 3;
   void clear_status();
@@ -1488,6 +1852,15 @@ class OrderUpdate final :
   void _internal_set_volume(int32_t value);
   public:
 
+  // uint32 book_id = 12;
+  void clear_book_id();
+  uint32_t book_id() const;
+  void set_book_id(uint32_t value);
+  private:
+  uint32_t _internal_book_id() const;
+  void _internal_set_book_id(uint32_t value);
+  public:
+
   // @@protoc_insertion_point(class_scope:omm.proto.OrderUpdate)
  private:
   class _Internal;
@@ -1507,6 +1880,7 @@ class OrderUpdate final :
     double price_;
     uint64_t exchange_trade_id_;
     int32_t volume_;
+    uint32_t book_id_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -1641,8 +2015,9 @@ class QuoteUpdate final :
     kInstrumentIdFieldNumber = 2,
     kBidVolumeFieldNumber = 5,
     kAskPriceFieldNumber = 4,
-    kTsNsFieldNumber = 8,
     kAskVolumeFieldNumber = 6,
+    kBookIdFieldNumber = 9,
+    kTsNsFieldNumber = 8,
   };
   // string status = 7;
   void clear_status();
@@ -1703,15 +2078,6 @@ class QuoteUpdate final :
   void _internal_set_ask_price(double value);
   public:
 
-  // int64 ts_ns = 8;
-  void clear_ts_ns();
-  int64_t ts_ns() const;
-  void set_ts_ns(int64_t value);
-  private:
-  int64_t _internal_ts_ns() const;
-  void _internal_set_ts_ns(int64_t value);
-  public:
-
   // int32 ask_volume = 6;
   void clear_ask_volume();
   int32_t ask_volume() const;
@@ -1719,6 +2085,24 @@ class QuoteUpdate final :
   private:
   int32_t _internal_ask_volume() const;
   void _internal_set_ask_volume(int32_t value);
+  public:
+
+  // uint32 book_id = 9;
+  void clear_book_id();
+  uint32_t book_id() const;
+  void set_book_id(uint32_t value);
+  private:
+  uint32_t _internal_book_id() const;
+  void _internal_set_book_id(uint32_t value);
+  public:
+
+  // int64 ts_ns = 8;
+  void clear_ts_ns();
+  int64_t ts_ns() const;
+  void set_ts_ns(int64_t value);
+  private:
+  int64_t _internal_ts_ns() const;
+  void _internal_set_ts_ns(int64_t value);
   public:
 
   // @@protoc_insertion_point(class_scope:omm.proto.QuoteUpdate)
@@ -1735,8 +2119,9 @@ class QuoteUpdate final :
     uint32_t instrument_id_;
     int32_t bid_volume_;
     double ask_price_;
-    int64_t ts_ns_;
     int32_t ask_volume_;
+    uint32_t book_id_;
+    int64_t ts_ns_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -1875,6 +2260,8 @@ class InstrumentInfo final :
     kStrikeFieldNumber = 6,
     kUnderlyingIdFieldNumber = 8,
     kExpiryDateFieldNumber = 10,
+    kTickSizeFieldNumber = 11,
+    kMultiplierFieldNumber = 12,
   };
   // string code = 2;
   void clear_code();
@@ -1991,6 +2378,24 @@ class InstrumentInfo final :
   void _internal_set_expiry_date(int32_t value);
   public:
 
+  // double tick_size = 11;
+  void clear_tick_size();
+  double tick_size() const;
+  void set_tick_size(double value);
+  private:
+  double _internal_tick_size() const;
+  void _internal_set_tick_size(double value);
+  public:
+
+  // double multiplier = 12;
+  void clear_multiplier();
+  double multiplier() const;
+  void set_multiplier(double value);
+  private:
+  double _internal_multiplier() const;
+  void _internal_set_multiplier(double value);
+  public:
+
   // @@protoc_insertion_point(class_scope:omm.proto.InstrumentInfo)
  private:
   class _Internal;
@@ -2009,6 +2414,1853 @@ class InstrumentInfo final :
     double strike_;
     uint32_t underlying_id_;
     int32_t expiry_date_;
+    double tick_size_;
+    double multiplier_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_trading_2eproto;
+};
+// -------------------------------------------------------------------
+
+class UserInfo final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.UserInfo) */ {
+ public:
+  inline UserInfo() : UserInfo(nullptr) {}
+  ~UserInfo() override;
+  explicit PROTOBUF_CONSTEXPR UserInfo(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  UserInfo(const UserInfo& from);
+  UserInfo(UserInfo&& from) noexcept
+    : UserInfo() {
+    *this = ::std::move(from);
+  }
+
+  inline UserInfo& operator=(const UserInfo& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline UserInfo& operator=(UserInfo&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const UserInfo& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const UserInfo* internal_default_instance() {
+    return reinterpret_cast<const UserInfo*>(
+               &_UserInfo_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    8;
+
+  friend void swap(UserInfo& a, UserInfo& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(UserInfo* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(UserInfo* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  UserInfo* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<UserInfo>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const UserInfo& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const UserInfo& from) {
+    UserInfo::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(UserInfo* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "omm.proto.UserInfo";
+  }
+  protected:
+  explicit UserInfo(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kUsernameFieldNumber = 2,
+    kDisplayNameFieldNumber = 3,
+    kUserIdFieldNumber = 1,
+    kActiveFieldNumber = 4,
+    kDefaultBookIdFieldNumber = 5,
+  };
+  // string username = 2;
+  void clear_username();
+  const std::string& username() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_username(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_username();
+  PROTOBUF_NODISCARD std::string* release_username();
+  void set_allocated_username(std::string* username);
+  private:
+  const std::string& _internal_username() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_username(const std::string& value);
+  std::string* _internal_mutable_username();
+  public:
+
+  // string display_name = 3;
+  void clear_display_name();
+  const std::string& display_name() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_display_name(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_display_name();
+  PROTOBUF_NODISCARD std::string* release_display_name();
+  void set_allocated_display_name(std::string* display_name);
+  private:
+  const std::string& _internal_display_name() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_display_name(const std::string& value);
+  std::string* _internal_mutable_display_name();
+  public:
+
+  // uint32 user_id = 1;
+  void clear_user_id();
+  uint32_t user_id() const;
+  void set_user_id(uint32_t value);
+  private:
+  uint32_t _internal_user_id() const;
+  void _internal_set_user_id(uint32_t value);
+  public:
+
+  // bool active = 4;
+  void clear_active();
+  bool active() const;
+  void set_active(bool value);
+  private:
+  bool _internal_active() const;
+  void _internal_set_active(bool value);
+  public:
+
+  // uint32 default_book_id = 5;
+  void clear_default_book_id();
+  uint32_t default_book_id() const;
+  void set_default_book_id(uint32_t value);
+  private:
+  uint32_t _internal_default_book_id() const;
+  void _internal_set_default_book_id(uint32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:omm.proto.UserInfo)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr username_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr display_name_;
+    uint32_t user_id_;
+    bool active_;
+    uint32_t default_book_id_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_trading_2eproto;
+};
+// -------------------------------------------------------------------
+
+class LoginRequest final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.LoginRequest) */ {
+ public:
+  inline LoginRequest() : LoginRequest(nullptr) {}
+  ~LoginRequest() override;
+  explicit PROTOBUF_CONSTEXPR LoginRequest(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  LoginRequest(const LoginRequest& from);
+  LoginRequest(LoginRequest&& from) noexcept
+    : LoginRequest() {
+    *this = ::std::move(from);
+  }
+
+  inline LoginRequest& operator=(const LoginRequest& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline LoginRequest& operator=(LoginRequest&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const LoginRequest& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const LoginRequest* internal_default_instance() {
+    return reinterpret_cast<const LoginRequest*>(
+               &_LoginRequest_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    9;
+
+  friend void swap(LoginRequest& a, LoginRequest& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(LoginRequest* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(LoginRequest* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  LoginRequest* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<LoginRequest>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const LoginRequest& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const LoginRequest& from) {
+    LoginRequest::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(LoginRequest* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "omm.proto.LoginRequest";
+  }
+  protected:
+  explicit LoginRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kUsernameFieldNumber = 1,
+    kPasswordFieldNumber = 2,
+  };
+  // string username = 1;
+  void clear_username();
+  const std::string& username() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_username(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_username();
+  PROTOBUF_NODISCARD std::string* release_username();
+  void set_allocated_username(std::string* username);
+  private:
+  const std::string& _internal_username() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_username(const std::string& value);
+  std::string* _internal_mutable_username();
+  public:
+
+  // string password = 2;
+  void clear_password();
+  const std::string& password() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_password(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_password();
+  PROTOBUF_NODISCARD std::string* release_password();
+  void set_allocated_password(std::string* password);
+  private:
+  const std::string& _internal_password() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_password(const std::string& value);
+  std::string* _internal_mutable_password();
+  public:
+
+  // @@protoc_insertion_point(class_scope:omm.proto.LoginRequest)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr username_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr password_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_trading_2eproto;
+};
+// -------------------------------------------------------------------
+
+class LoginResponse final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.LoginResponse) */ {
+ public:
+  inline LoginResponse() : LoginResponse(nullptr) {}
+  ~LoginResponse() override;
+  explicit PROTOBUF_CONSTEXPR LoginResponse(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  LoginResponse(const LoginResponse& from);
+  LoginResponse(LoginResponse&& from) noexcept
+    : LoginResponse() {
+    *this = ::std::move(from);
+  }
+
+  inline LoginResponse& operator=(const LoginResponse& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline LoginResponse& operator=(LoginResponse&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const LoginResponse& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const LoginResponse* internal_default_instance() {
+    return reinterpret_cast<const LoginResponse*>(
+               &_LoginResponse_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    10;
+
+  friend void swap(LoginResponse& a, LoginResponse& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(LoginResponse* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(LoginResponse* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  LoginResponse* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<LoginResponse>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const LoginResponse& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const LoginResponse& from) {
+    LoginResponse::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(LoginResponse* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "omm.proto.LoginResponse";
+  }
+  protected:
+  explicit LoginResponse(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kMessageFieldNumber = 2,
+    kSessionTokenFieldNumber = 3,
+    kUserFieldNumber = 4,
+    kOkFieldNumber = 1,
+  };
+  // string message = 2;
+  void clear_message();
+  const std::string& message() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_message(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_message();
+  PROTOBUF_NODISCARD std::string* release_message();
+  void set_allocated_message(std::string* message);
+  private:
+  const std::string& _internal_message() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_message(const std::string& value);
+  std::string* _internal_mutable_message();
+  public:
+
+  // string session_token = 3;
+  void clear_session_token();
+  const std::string& session_token() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_session_token(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_session_token();
+  PROTOBUF_NODISCARD std::string* release_session_token();
+  void set_allocated_session_token(std::string* session_token);
+  private:
+  const std::string& _internal_session_token() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_session_token(const std::string& value);
+  std::string* _internal_mutable_session_token();
+  public:
+
+  // .omm.proto.UserInfo user = 4;
+  bool has_user() const;
+  private:
+  bool _internal_has_user() const;
+  public:
+  void clear_user();
+  const ::omm::proto::UserInfo& user() const;
+  PROTOBUF_NODISCARD ::omm::proto::UserInfo* release_user();
+  ::omm::proto::UserInfo* mutable_user();
+  void set_allocated_user(::omm::proto::UserInfo* user);
+  private:
+  const ::omm::proto::UserInfo& _internal_user() const;
+  ::omm::proto::UserInfo* _internal_mutable_user();
+  public:
+  void unsafe_arena_set_allocated_user(
+      ::omm::proto::UserInfo* user);
+  ::omm::proto::UserInfo* unsafe_arena_release_user();
+
+  // bool ok = 1;
+  void clear_ok();
+  bool ok() const;
+  void set_ok(bool value);
+  private:
+  bool _internal_ok() const;
+  void _internal_set_ok(bool value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:omm.proto.LoginResponse)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr message_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr session_token_;
+    ::omm::proto::UserInfo* user_;
+    bool ok_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_trading_2eproto;
+};
+// -------------------------------------------------------------------
+
+class LogoutRequest final :
+    public ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase /* @@protoc_insertion_point(class_definition:omm.proto.LogoutRequest) */ {
+ public:
+  inline LogoutRequest() : LogoutRequest(nullptr) {}
+  explicit PROTOBUF_CONSTEXPR LogoutRequest(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  LogoutRequest(const LogoutRequest& from);
+  LogoutRequest(LogoutRequest&& from) noexcept
+    : LogoutRequest() {
+    *this = ::std::move(from);
+  }
+
+  inline LogoutRequest& operator=(const LogoutRequest& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline LogoutRequest& operator=(LogoutRequest&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const LogoutRequest& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const LogoutRequest* internal_default_instance() {
+    return reinterpret_cast<const LogoutRequest*>(
+               &_LogoutRequest_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    11;
+
+  friend void swap(LogoutRequest& a, LogoutRequest& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(LogoutRequest* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(LogoutRequest* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  LogoutRequest* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<LogoutRequest>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::CopyFrom;
+  inline void CopyFrom(const LogoutRequest& from) {
+    ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::CopyImpl(*this, from);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::MergeFrom;
+  void MergeFrom(const LogoutRequest& from) {
+    ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::MergeImpl(*this, from);
+  }
+  public:
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "omm.proto.LogoutRequest";
+  }
+  protected:
+  explicit LogoutRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // @@protoc_insertion_point(class_scope:omm.proto.LogoutRequest)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+  };
+  friend struct ::TableStruct_trading_2eproto;
+};
+// -------------------------------------------------------------------
+
+class LogoutResponse final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.LogoutResponse) */ {
+ public:
+  inline LogoutResponse() : LogoutResponse(nullptr) {}
+  ~LogoutResponse() override;
+  explicit PROTOBUF_CONSTEXPR LogoutResponse(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  LogoutResponse(const LogoutResponse& from);
+  LogoutResponse(LogoutResponse&& from) noexcept
+    : LogoutResponse() {
+    *this = ::std::move(from);
+  }
+
+  inline LogoutResponse& operator=(const LogoutResponse& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline LogoutResponse& operator=(LogoutResponse&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const LogoutResponse& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const LogoutResponse* internal_default_instance() {
+    return reinterpret_cast<const LogoutResponse*>(
+               &_LogoutResponse_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    12;
+
+  friend void swap(LogoutResponse& a, LogoutResponse& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(LogoutResponse* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(LogoutResponse* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  LogoutResponse* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<LogoutResponse>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const LogoutResponse& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const LogoutResponse& from) {
+    LogoutResponse::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(LogoutResponse* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "omm.proto.LogoutResponse";
+  }
+  protected:
+  explicit LogoutResponse(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kMessageFieldNumber = 2,
+    kOkFieldNumber = 1,
+    kTriggeredShutdownFieldNumber = 3,
+  };
+  // string message = 2;
+  void clear_message();
+  const std::string& message() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_message(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_message();
+  PROTOBUF_NODISCARD std::string* release_message();
+  void set_allocated_message(std::string* message);
+  private:
+  const std::string& _internal_message() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_message(const std::string& value);
+  std::string* _internal_mutable_message();
+  public:
+
+  // bool ok = 1;
+  void clear_ok();
+  bool ok() const;
+  void set_ok(bool value);
+  private:
+  bool _internal_ok() const;
+  void _internal_set_ok(bool value);
+  public:
+
+  // bool triggered_shutdown = 3;
+  void clear_triggered_shutdown();
+  bool triggered_shutdown() const;
+  void set_triggered_shutdown(bool value);
+  private:
+  bool _internal_triggered_shutdown() const;
+  void _internal_set_triggered_shutdown(bool value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:omm.proto.LogoutResponse)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr message_;
+    bool ok_;
+    bool triggered_shutdown_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_trading_2eproto;
+};
+// -------------------------------------------------------------------
+
+class WhoAmIRequest final :
+    public ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase /* @@protoc_insertion_point(class_definition:omm.proto.WhoAmIRequest) */ {
+ public:
+  inline WhoAmIRequest() : WhoAmIRequest(nullptr) {}
+  explicit PROTOBUF_CONSTEXPR WhoAmIRequest(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  WhoAmIRequest(const WhoAmIRequest& from);
+  WhoAmIRequest(WhoAmIRequest&& from) noexcept
+    : WhoAmIRequest() {
+    *this = ::std::move(from);
+  }
+
+  inline WhoAmIRequest& operator=(const WhoAmIRequest& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline WhoAmIRequest& operator=(WhoAmIRequest&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const WhoAmIRequest& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const WhoAmIRequest* internal_default_instance() {
+    return reinterpret_cast<const WhoAmIRequest*>(
+               &_WhoAmIRequest_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    13;
+
+  friend void swap(WhoAmIRequest& a, WhoAmIRequest& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(WhoAmIRequest* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(WhoAmIRequest* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  WhoAmIRequest* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<WhoAmIRequest>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::CopyFrom;
+  inline void CopyFrom(const WhoAmIRequest& from) {
+    ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::CopyImpl(*this, from);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::MergeFrom;
+  void MergeFrom(const WhoAmIRequest& from) {
+    ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::MergeImpl(*this, from);
+  }
+  public:
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "omm.proto.WhoAmIRequest";
+  }
+  protected:
+  explicit WhoAmIRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // @@protoc_insertion_point(class_scope:omm.proto.WhoAmIRequest)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+  };
+  friend struct ::TableStruct_trading_2eproto;
+};
+// -------------------------------------------------------------------
+
+class WhoAmIResponse final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.WhoAmIResponse) */ {
+ public:
+  inline WhoAmIResponse() : WhoAmIResponse(nullptr) {}
+  ~WhoAmIResponse() override;
+  explicit PROTOBUF_CONSTEXPR WhoAmIResponse(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  WhoAmIResponse(const WhoAmIResponse& from);
+  WhoAmIResponse(WhoAmIResponse&& from) noexcept
+    : WhoAmIResponse() {
+    *this = ::std::move(from);
+  }
+
+  inline WhoAmIResponse& operator=(const WhoAmIResponse& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline WhoAmIResponse& operator=(WhoAmIResponse&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const WhoAmIResponse& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const WhoAmIResponse* internal_default_instance() {
+    return reinterpret_cast<const WhoAmIResponse*>(
+               &_WhoAmIResponse_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    14;
+
+  friend void swap(WhoAmIResponse& a, WhoAmIResponse& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(WhoAmIResponse* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(WhoAmIResponse* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  WhoAmIResponse* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<WhoAmIResponse>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const WhoAmIResponse& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const WhoAmIResponse& from) {
+    WhoAmIResponse::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(WhoAmIResponse* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "omm.proto.WhoAmIResponse";
+  }
+  protected:
+  explicit WhoAmIResponse(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kMessageFieldNumber = 2,
+    kUserFieldNumber = 3,
+    kOkFieldNumber = 1,
+  };
+  // string message = 2;
+  void clear_message();
+  const std::string& message() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_message(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_message();
+  PROTOBUF_NODISCARD std::string* release_message();
+  void set_allocated_message(std::string* message);
+  private:
+  const std::string& _internal_message() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_message(const std::string& value);
+  std::string* _internal_mutable_message();
+  public:
+
+  // .omm.proto.UserInfo user = 3;
+  bool has_user() const;
+  private:
+  bool _internal_has_user() const;
+  public:
+  void clear_user();
+  const ::omm::proto::UserInfo& user() const;
+  PROTOBUF_NODISCARD ::omm::proto::UserInfo* release_user();
+  ::omm::proto::UserInfo* mutable_user();
+  void set_allocated_user(::omm::proto::UserInfo* user);
+  private:
+  const ::omm::proto::UserInfo& _internal_user() const;
+  ::omm::proto::UserInfo* _internal_mutable_user();
+  public:
+  void unsafe_arena_set_allocated_user(
+      ::omm::proto::UserInfo* user);
+  ::omm::proto::UserInfo* unsafe_arena_release_user();
+
+  // bool ok = 1;
+  void clear_ok();
+  bool ok() const;
+  void set_ok(bool value);
+  private:
+  bool _internal_ok() const;
+  void _internal_set_ok(bool value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:omm.proto.WhoAmIResponse)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr message_;
+    ::omm::proto::UserInfo* user_;
+    bool ok_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_trading_2eproto;
+};
+// -------------------------------------------------------------------
+
+class BookInfo final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.BookInfo) */ {
+ public:
+  inline BookInfo() : BookInfo(nullptr) {}
+  ~BookInfo() override;
+  explicit PROTOBUF_CONSTEXPR BookInfo(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  BookInfo(const BookInfo& from);
+  BookInfo(BookInfo&& from) noexcept
+    : BookInfo() {
+    *this = ::std::move(from);
+  }
+
+  inline BookInfo& operator=(const BookInfo& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline BookInfo& operator=(BookInfo&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const BookInfo& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const BookInfo* internal_default_instance() {
+    return reinterpret_cast<const BookInfo*>(
+               &_BookInfo_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    15;
+
+  friend void swap(BookInfo& a, BookInfo& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(BookInfo* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(BookInfo* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  BookInfo* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<BookInfo>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const BookInfo& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const BookInfo& from) {
+    BookInfo::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(BookInfo* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "omm.proto.BookInfo";
+  }
+  protected:
+  explicit BookInfo(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kBookCodeFieldNumber = 2,
+    kDisplayNameFieldNumber = 3,
+    kDescriptionFieldNumber = 5,
+    kBookIdFieldNumber = 1,
+    kActiveFieldNumber = 4,
+  };
+  // string book_code = 2;
+  void clear_book_code();
+  const std::string& book_code() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_book_code(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_book_code();
+  PROTOBUF_NODISCARD std::string* release_book_code();
+  void set_allocated_book_code(std::string* book_code);
+  private:
+  const std::string& _internal_book_code() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_book_code(const std::string& value);
+  std::string* _internal_mutable_book_code();
+  public:
+
+  // string display_name = 3;
+  void clear_display_name();
+  const std::string& display_name() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_display_name(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_display_name();
+  PROTOBUF_NODISCARD std::string* release_display_name();
+  void set_allocated_display_name(std::string* display_name);
+  private:
+  const std::string& _internal_display_name() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_display_name(const std::string& value);
+  std::string* _internal_mutable_display_name();
+  public:
+
+  // string description = 5;
+  void clear_description();
+  const std::string& description() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_description(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_description();
+  PROTOBUF_NODISCARD std::string* release_description();
+  void set_allocated_description(std::string* description);
+  private:
+  const std::string& _internal_description() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_description(const std::string& value);
+  std::string* _internal_mutable_description();
+  public:
+
+  // uint32 book_id = 1;
+  void clear_book_id();
+  uint32_t book_id() const;
+  void set_book_id(uint32_t value);
+  private:
+  uint32_t _internal_book_id() const;
+  void _internal_set_book_id(uint32_t value);
+  public:
+
+  // bool active = 4;
+  void clear_active();
+  bool active() const;
+  void set_active(bool value);
+  private:
+  bool _internal_active() const;
+  void _internal_set_active(bool value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:omm.proto.BookInfo)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr book_code_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr display_name_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr description_;
+    uint32_t book_id_;
+    bool active_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_trading_2eproto;
+};
+// -------------------------------------------------------------------
+
+class BookPosition final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.BookPosition) */ {
+ public:
+  inline BookPosition() : BookPosition(nullptr) {}
+  ~BookPosition() override;
+  explicit PROTOBUF_CONSTEXPR BookPosition(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  BookPosition(const BookPosition& from);
+  BookPosition(BookPosition&& from) noexcept
+    : BookPosition() {
+    *this = ::std::move(from);
+  }
+
+  inline BookPosition& operator=(const BookPosition& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline BookPosition& operator=(BookPosition&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const BookPosition& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const BookPosition* internal_default_instance() {
+    return reinterpret_cast<const BookPosition*>(
+               &_BookPosition_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    16;
+
+  friend void swap(BookPosition& a, BookPosition& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(BookPosition* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(BookPosition* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  BookPosition* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<BookPosition>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const BookPosition& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const BookPosition& from) {
+    BookPosition::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(BookPosition* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "omm.proto.BookPosition";
+  }
+  protected:
+  explicit BookPosition(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kBookIdFieldNumber = 1,
+    kInstrumentIdFieldNumber = 2,
+    kProductIndexFieldNumber = 3,
+    kNetPositionFieldNumber = 4,
+    kLongPositionFieldNumber = 5,
+    kShortPositionFieldNumber = 6,
+    kAvgLongPriceFieldNumber = 7,
+    kAvgShortPriceFieldNumber = 8,
+    kRealizedPnlFieldNumber = 9,
+  };
+  // uint32 book_id = 1;
+  void clear_book_id();
+  uint32_t book_id() const;
+  void set_book_id(uint32_t value);
+  private:
+  uint32_t _internal_book_id() const;
+  void _internal_set_book_id(uint32_t value);
+  public:
+
+  // uint32 instrument_id = 2;
+  void clear_instrument_id();
+  uint32_t instrument_id() const;
+  void set_instrument_id(uint32_t value);
+  private:
+  uint32_t _internal_instrument_id() const;
+  void _internal_set_instrument_id(uint32_t value);
+  public:
+
+  // uint32 product_index = 3;
+  void clear_product_index();
+  uint32_t product_index() const;
+  void set_product_index(uint32_t value);
+  private:
+  uint32_t _internal_product_index() const;
+  void _internal_set_product_index(uint32_t value);
+  public:
+
+  // int32 net_position = 4;
+  void clear_net_position();
+  int32_t net_position() const;
+  void set_net_position(int32_t value);
+  private:
+  int32_t _internal_net_position() const;
+  void _internal_set_net_position(int32_t value);
+  public:
+
+  // int32 long_position = 5;
+  void clear_long_position();
+  int32_t long_position() const;
+  void set_long_position(int32_t value);
+  private:
+  int32_t _internal_long_position() const;
+  void _internal_set_long_position(int32_t value);
+  public:
+
+  // int32 short_position = 6;
+  void clear_short_position();
+  int32_t short_position() const;
+  void set_short_position(int32_t value);
+  private:
+  int32_t _internal_short_position() const;
+  void _internal_set_short_position(int32_t value);
+  public:
+
+  // double avg_long_price = 7;
+  void clear_avg_long_price();
+  double avg_long_price() const;
+  void set_avg_long_price(double value);
+  private:
+  double _internal_avg_long_price() const;
+  void _internal_set_avg_long_price(double value);
+  public:
+
+  // double avg_short_price = 8;
+  void clear_avg_short_price();
+  double avg_short_price() const;
+  void set_avg_short_price(double value);
+  private:
+  double _internal_avg_short_price() const;
+  void _internal_set_avg_short_price(double value);
+  public:
+
+  // double realized_pnl = 9;
+  void clear_realized_pnl();
+  double realized_pnl() const;
+  void set_realized_pnl(double value);
+  private:
+  double _internal_realized_pnl() const;
+  void _internal_set_realized_pnl(double value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:omm.proto.BookPosition)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    uint32_t book_id_;
+    uint32_t instrument_id_;
+    uint32_t product_index_;
+    int32_t net_position_;
+    int32_t long_position_;
+    int32_t short_position_;
+    double avg_long_price_;
+    double avg_short_price_;
+    double realized_pnl_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_trading_2eproto;
+};
+// -------------------------------------------------------------------
+
+class BookPortfolio final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.BookPortfolio) */ {
+ public:
+  inline BookPortfolio() : BookPortfolio(nullptr) {}
+  ~BookPortfolio() override;
+  explicit PROTOBUF_CONSTEXPR BookPortfolio(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  BookPortfolio(const BookPortfolio& from);
+  BookPortfolio(BookPortfolio&& from) noexcept
+    : BookPortfolio() {
+    *this = ::std::move(from);
+  }
+
+  inline BookPortfolio& operator=(const BookPortfolio& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline BookPortfolio& operator=(BookPortfolio&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const BookPortfolio& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const BookPortfolio* internal_default_instance() {
+    return reinterpret_cast<const BookPortfolio*>(
+               &_BookPortfolio_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    17;
+
+  friend void swap(BookPortfolio& a, BookPortfolio& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(BookPortfolio* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(BookPortfolio* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  BookPortfolio* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<BookPortfolio>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const BookPortfolio& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const BookPortfolio& from) {
+    BookPortfolio::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(BookPortfolio* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "omm.proto.BookPortfolio";
+  }
+  protected:
+  explicit BookPortfolio(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kBookIdFieldNumber = 1,
+    kProductIndexFieldNumber = 2,
+    kTotalDeltaFieldNumber = 3,
+    kTotalGammaFieldNumber = 4,
+    kTotalVegaFieldNumber = 5,
+    kTotalThetaFieldNumber = 6,
+    kRealizedPnlFieldNumber = 7,
+    kUnrealizedPnlFieldNumber = 8,
+    kCalcTsNsFieldNumber = 9,
+  };
+  // uint32 book_id = 1;
+  void clear_book_id();
+  uint32_t book_id() const;
+  void set_book_id(uint32_t value);
+  private:
+  uint32_t _internal_book_id() const;
+  void _internal_set_book_id(uint32_t value);
+  public:
+
+  // uint32 product_index = 2;
+  void clear_product_index();
+  uint32_t product_index() const;
+  void set_product_index(uint32_t value);
+  private:
+  uint32_t _internal_product_index() const;
+  void _internal_set_product_index(uint32_t value);
+  public:
+
+  // double total_delta = 3;
+  void clear_total_delta();
+  double total_delta() const;
+  void set_total_delta(double value);
+  private:
+  double _internal_total_delta() const;
+  void _internal_set_total_delta(double value);
+  public:
+
+  // double total_gamma = 4;
+  void clear_total_gamma();
+  double total_gamma() const;
+  void set_total_gamma(double value);
+  private:
+  double _internal_total_gamma() const;
+  void _internal_set_total_gamma(double value);
+  public:
+
+  // double total_vega = 5;
+  void clear_total_vega();
+  double total_vega() const;
+  void set_total_vega(double value);
+  private:
+  double _internal_total_vega() const;
+  void _internal_set_total_vega(double value);
+  public:
+
+  // double total_theta = 6;
+  void clear_total_theta();
+  double total_theta() const;
+  void set_total_theta(double value);
+  private:
+  double _internal_total_theta() const;
+  void _internal_set_total_theta(double value);
+  public:
+
+  // double realized_pnl = 7;
+  void clear_realized_pnl();
+  double realized_pnl() const;
+  void set_realized_pnl(double value);
+  private:
+  double _internal_realized_pnl() const;
+  void _internal_set_realized_pnl(double value);
+  public:
+
+  // double unrealized_pnl = 8;
+  void clear_unrealized_pnl();
+  double unrealized_pnl() const;
+  void set_unrealized_pnl(double value);
+  private:
+  double _internal_unrealized_pnl() const;
+  void _internal_set_unrealized_pnl(double value);
+  public:
+
+  // int64 calc_ts_ns = 9;
+  void clear_calc_ts_ns();
+  int64_t calc_ts_ns() const;
+  void set_calc_ts_ns(int64_t value);
+  private:
+  int64_t _internal_calc_ts_ns() const;
+  void _internal_set_calc_ts_ns(int64_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:omm.proto.BookPortfolio)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    uint32_t book_id_;
+    uint32_t product_index_;
+    double total_delta_;
+    double total_gamma_;
+    double total_vega_;
+    double total_theta_;
+    double realized_pnl_;
+    double unrealized_pnl_;
+    int64_t calc_ts_ns_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -2064,7 +4316,7 @@ class VolSurfaceSlice final :
                &_VolSurfaceSlice_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    8;
+    18;
 
   friend void swap(VolSurfaceSlice& a, VolSurfaceSlice& b) {
     a.Swap(&b);
@@ -2260,7 +4512,7 @@ class VolSurface final :
                &_VolSurface_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    9;
+    19;
 
   friend void swap(VolSurface& a, VolSurface& b) {
     a.Swap(&b);
@@ -2439,7 +4691,7 @@ class MMParams final :
                &_MMParams_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    10;
+    20;
 
   friend void swap(MMParams& a, MMParams& b) {
     a.Swap(&b);
@@ -2514,7 +4766,7 @@ class MMParams final :
   enum : int {
     kBidSpreadFieldNumber = 1,
     kAskSpreadFieldNumber = 2,
-    kHedgeDeltaThresholdFieldNumber = 3,
+    kProductDeltaThresholdFieldNumber = 3,
     kQuoteVolumeFieldNumber = 4,
     kMaxPositionFieldNumber = 5,
     kProductVegaThresholdFieldNumber = 7,
@@ -2557,17 +4809,17 @@ class MMParams final :
   void _internal_set_ask_spread(double value);
   public:
 
-  // optional double hedge_delta_threshold = 3;
-  bool has_hedge_delta_threshold() const;
+  // optional double product_delta_threshold = 3;
+  bool has_product_delta_threshold() const;
   private:
-  bool _internal_has_hedge_delta_threshold() const;
+  bool _internal_has_product_delta_threshold() const;
   public:
-  void clear_hedge_delta_threshold();
-  double hedge_delta_threshold() const;
-  void set_hedge_delta_threshold(double value);
+  void clear_product_delta_threshold();
+  double product_delta_threshold() const;
+  void set_product_delta_threshold(double value);
   private:
-  double _internal_hedge_delta_threshold() const;
-  void _internal_set_hedge_delta_threshold(double value);
+  double _internal_product_delta_threshold() const;
+  void _internal_set_product_delta_threshold(double value);
   public:
 
   // optional int32 quote_volume = 4;
@@ -2777,7 +5029,7 @@ class MMParams final :
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
     double bid_spread_;
     double ask_spread_;
-    double hedge_delta_threshold_;
+    double product_delta_threshold_;
     int32_t quote_volume_;
     int32_t max_position_;
     double product_vega_threshold_;
@@ -2793,6 +5045,777 @@ class MMParams final :
     double requote_price_epsilon_ticks_;
     double market_width_widen_threshold_ticks_;
     double underlying_move_widen_threshold_ticks_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_trading_2eproto;
+};
+// -------------------------------------------------------------------
+
+class ProductPricingParams final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.ProductPricingParams) */ {
+ public:
+  inline ProductPricingParams() : ProductPricingParams(nullptr) {}
+  ~ProductPricingParams() override;
+  explicit PROTOBUF_CONSTEXPR ProductPricingParams(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  ProductPricingParams(const ProductPricingParams& from);
+  ProductPricingParams(ProductPricingParams&& from) noexcept
+    : ProductPricingParams() {
+    *this = ::std::move(from);
+  }
+
+  inline ProductPricingParams& operator=(const ProductPricingParams& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline ProductPricingParams& operator=(ProductPricingParams&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const ProductPricingParams& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const ProductPricingParams* internal_default_instance() {
+    return reinterpret_cast<const ProductPricingParams*>(
+               &_ProductPricingParams_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    21;
+
+  friend void swap(ProductPricingParams& a, ProductPricingParams& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(ProductPricingParams* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(ProductPricingParams* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  ProductPricingParams* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<ProductPricingParams>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const ProductPricingParams& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const ProductPricingParams& from) {
+    ProductPricingParams::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(ProductPricingParams* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "omm.proto.ProductPricingParams";
+  }
+  protected:
+  explicit ProductPricingParams(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kBaseOffsetTypeFieldNumber = 2,
+    kBaseOffsetValueFieldNumber = 3,
+    kProductIndexFieldNumber = 1,
+  };
+  // string base_offset_type = 2;
+  void clear_base_offset_type();
+  const std::string& base_offset_type() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_base_offset_type(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_base_offset_type();
+  PROTOBUF_NODISCARD std::string* release_base_offset_type();
+  void set_allocated_base_offset_type(std::string* base_offset_type);
+  private:
+  const std::string& _internal_base_offset_type() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_base_offset_type(const std::string& value);
+  std::string* _internal_mutable_base_offset_type();
+  public:
+
+  // double base_offset_value = 3;
+  void clear_base_offset_value();
+  double base_offset_value() const;
+  void set_base_offset_value(double value);
+  private:
+  double _internal_base_offset_value() const;
+  void _internal_set_base_offset_value(double value);
+  public:
+
+  // uint32 product_index = 1;
+  void clear_product_index();
+  uint32_t product_index() const;
+  void set_product_index(uint32_t value);
+  private:
+  uint32_t _internal_product_index() const;
+  void _internal_set_product_index(uint32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:omm.proto.ProductPricingParams)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr base_offset_type_;
+    double base_offset_value_;
+    uint32_t product_index_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_trading_2eproto;
+};
+// -------------------------------------------------------------------
+
+class ArbParams final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.ArbParams) */ {
+ public:
+  inline ArbParams() : ArbParams(nullptr) {}
+  ~ArbParams() override;
+  explicit PROTOBUF_CONSTEXPR ArbParams(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  ArbParams(const ArbParams& from);
+  ArbParams(ArbParams&& from) noexcept
+    : ArbParams() {
+    *this = ::std::move(from);
+  }
+
+  inline ArbParams& operator=(const ArbParams& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline ArbParams& operator=(ArbParams&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const ArbParams& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const ArbParams* internal_default_instance() {
+    return reinterpret_cast<const ArbParams*>(
+               &_ArbParams_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    22;
+
+  friend void swap(ArbParams& a, ArbParams& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(ArbParams* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(ArbParams* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  ArbParams* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<ArbParams>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const ArbParams& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const ArbParams& from) {
+    ArbParams::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(ArbParams* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "omm.proto.ArbParams";
+  }
+  protected:
+  explicit ArbParams(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kMinEdgeTicksFieldNumber = 1,
+    kCooldownMsFieldNumber = 2,
+    kScanIntervalMsFieldNumber = 3,
+    kCleanupTimeoutMsFieldNumber = 4,
+    kMaxOrderVolumeFieldNumber = 5,
+    kMaxLiveOrdersFieldNumber = 6,
+    kCleanupOnPartialFieldNumber = 7,
+    kEnabledFieldNumber = 8,
+  };
+  // optional double min_edge_ticks = 1;
+  bool has_min_edge_ticks() const;
+  private:
+  bool _internal_has_min_edge_ticks() const;
+  public:
+  void clear_min_edge_ticks();
+  double min_edge_ticks() const;
+  void set_min_edge_ticks(double value);
+  private:
+  double _internal_min_edge_ticks() const;
+  void _internal_set_min_edge_ticks(double value);
+  public:
+
+  // optional double cooldown_ms = 2;
+  bool has_cooldown_ms() const;
+  private:
+  bool _internal_has_cooldown_ms() const;
+  public:
+  void clear_cooldown_ms();
+  double cooldown_ms() const;
+  void set_cooldown_ms(double value);
+  private:
+  double _internal_cooldown_ms() const;
+  void _internal_set_cooldown_ms(double value);
+  public:
+
+  // optional double scan_interval_ms = 3;
+  bool has_scan_interval_ms() const;
+  private:
+  bool _internal_has_scan_interval_ms() const;
+  public:
+  void clear_scan_interval_ms();
+  double scan_interval_ms() const;
+  void set_scan_interval_ms(double value);
+  private:
+  double _internal_scan_interval_ms() const;
+  void _internal_set_scan_interval_ms(double value);
+  public:
+
+  // optional double cleanup_timeout_ms = 4;
+  bool has_cleanup_timeout_ms() const;
+  private:
+  bool _internal_has_cleanup_timeout_ms() const;
+  public:
+  void clear_cleanup_timeout_ms();
+  double cleanup_timeout_ms() const;
+  void set_cleanup_timeout_ms(double value);
+  private:
+  double _internal_cleanup_timeout_ms() const;
+  void _internal_set_cleanup_timeout_ms(double value);
+  public:
+
+  // optional int32 max_order_volume = 5;
+  bool has_max_order_volume() const;
+  private:
+  bool _internal_has_max_order_volume() const;
+  public:
+  void clear_max_order_volume();
+  int32_t max_order_volume() const;
+  void set_max_order_volume(int32_t value);
+  private:
+  int32_t _internal_max_order_volume() const;
+  void _internal_set_max_order_volume(int32_t value);
+  public:
+
+  // optional int32 max_live_orders = 6;
+  bool has_max_live_orders() const;
+  private:
+  bool _internal_has_max_live_orders() const;
+  public:
+  void clear_max_live_orders();
+  int32_t max_live_orders() const;
+  void set_max_live_orders(int32_t value);
+  private:
+  int32_t _internal_max_live_orders() const;
+  void _internal_set_max_live_orders(int32_t value);
+  public:
+
+  // optional bool cleanup_on_partial = 7;
+  bool has_cleanup_on_partial() const;
+  private:
+  bool _internal_has_cleanup_on_partial() const;
+  public:
+  void clear_cleanup_on_partial();
+  bool cleanup_on_partial() const;
+  void set_cleanup_on_partial(bool value);
+  private:
+  bool _internal_cleanup_on_partial() const;
+  void _internal_set_cleanup_on_partial(bool value);
+  public:
+
+  // optional bool enabled = 8;
+  bool has_enabled() const;
+  private:
+  bool _internal_has_enabled() const;
+  public:
+  void clear_enabled();
+  bool enabled() const;
+  void set_enabled(bool value);
+  private:
+  bool _internal_enabled() const;
+  void _internal_set_enabled(bool value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:omm.proto.ArbParams)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::HasBits<1> _has_bits_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+    double min_edge_ticks_;
+    double cooldown_ms_;
+    double scan_interval_ms_;
+    double cleanup_timeout_ms_;
+    int32_t max_order_volume_;
+    int32_t max_live_orders_;
+    bool cleanup_on_partial_;
+    bool enabled_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_trading_2eproto;
+};
+// -------------------------------------------------------------------
+
+class ArbStrategyId final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.ArbStrategyId) */ {
+ public:
+  inline ArbStrategyId() : ArbStrategyId(nullptr) {}
+  ~ArbStrategyId() override;
+  explicit PROTOBUF_CONSTEXPR ArbStrategyId(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  ArbStrategyId(const ArbStrategyId& from);
+  ArbStrategyId(ArbStrategyId&& from) noexcept
+    : ArbStrategyId() {
+    *this = ::std::move(from);
+  }
+
+  inline ArbStrategyId& operator=(const ArbStrategyId& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline ArbStrategyId& operator=(ArbStrategyId&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const ArbStrategyId& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const ArbStrategyId* internal_default_instance() {
+    return reinterpret_cast<const ArbStrategyId*>(
+               &_ArbStrategyId_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    23;
+
+  friend void swap(ArbStrategyId& a, ArbStrategyId& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(ArbStrategyId* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(ArbStrategyId* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  ArbStrategyId* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<ArbStrategyId>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const ArbStrategyId& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const ArbStrategyId& from) {
+    ArbStrategyId::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(ArbStrategyId* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "omm.proto.ArbStrategyId";
+  }
+  protected:
+  explicit ArbStrategyId(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kProductIndexFieldNumber = 1,
+    kStrategyTypeFieldNumber = 2,
+  };
+  // uint32 product_index = 1;
+  void clear_product_index();
+  uint32_t product_index() const;
+  void set_product_index(uint32_t value);
+  private:
+  uint32_t _internal_product_index() const;
+  void _internal_set_product_index(uint32_t value);
+  public:
+
+  // .omm.proto.ArbitrageStrategyType strategy_type = 2;
+  void clear_strategy_type();
+  ::omm::proto::ArbitrageStrategyType strategy_type() const;
+  void set_strategy_type(::omm::proto::ArbitrageStrategyType value);
+  private:
+  ::omm::proto::ArbitrageStrategyType _internal_strategy_type() const;
+  void _internal_set_strategy_type(::omm::proto::ArbitrageStrategyType value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:omm.proto.ArbStrategyId)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    uint32_t product_index_;
+    int strategy_type_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_trading_2eproto;
+};
+// -------------------------------------------------------------------
+
+class ArbStrategyParamsEntry final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.ArbStrategyParamsEntry) */ {
+ public:
+  inline ArbStrategyParamsEntry() : ArbStrategyParamsEntry(nullptr) {}
+  ~ArbStrategyParamsEntry() override;
+  explicit PROTOBUF_CONSTEXPR ArbStrategyParamsEntry(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  ArbStrategyParamsEntry(const ArbStrategyParamsEntry& from);
+  ArbStrategyParamsEntry(ArbStrategyParamsEntry&& from) noexcept
+    : ArbStrategyParamsEntry() {
+    *this = ::std::move(from);
+  }
+
+  inline ArbStrategyParamsEntry& operator=(const ArbStrategyParamsEntry& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline ArbStrategyParamsEntry& operator=(ArbStrategyParamsEntry&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const ArbStrategyParamsEntry& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const ArbStrategyParamsEntry* internal_default_instance() {
+    return reinterpret_cast<const ArbStrategyParamsEntry*>(
+               &_ArbStrategyParamsEntry_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    24;
+
+  friend void swap(ArbStrategyParamsEntry& a, ArbStrategyParamsEntry& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(ArbStrategyParamsEntry* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(ArbStrategyParamsEntry* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  ArbStrategyParamsEntry* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<ArbStrategyParamsEntry>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const ArbStrategyParamsEntry& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const ArbStrategyParamsEntry& from) {
+    ArbStrategyParamsEntry::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(ArbStrategyParamsEntry* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "omm.proto.ArbStrategyParamsEntry";
+  }
+  protected:
+  explicit ArbStrategyParamsEntry(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kParamsFieldNumber = 3,
+    kProductIndexFieldNumber = 1,
+    kStrategyTypeFieldNumber = 2,
+  };
+  // .omm.proto.ArbParams params = 3;
+  bool has_params() const;
+  private:
+  bool _internal_has_params() const;
+  public:
+  void clear_params();
+  const ::omm::proto::ArbParams& params() const;
+  PROTOBUF_NODISCARD ::omm::proto::ArbParams* release_params();
+  ::omm::proto::ArbParams* mutable_params();
+  void set_allocated_params(::omm::proto::ArbParams* params);
+  private:
+  const ::omm::proto::ArbParams& _internal_params() const;
+  ::omm::proto::ArbParams* _internal_mutable_params();
+  public:
+  void unsafe_arena_set_allocated_params(
+      ::omm::proto::ArbParams* params);
+  ::omm::proto::ArbParams* unsafe_arena_release_params();
+
+  // uint32 product_index = 1;
+  void clear_product_index();
+  uint32_t product_index() const;
+  void set_product_index(uint32_t value);
+  private:
+  uint32_t _internal_product_index() const;
+  void _internal_set_product_index(uint32_t value);
+  public:
+
+  // .omm.proto.ArbitrageStrategyType strategy_type = 2;
+  void clear_strategy_type();
+  ::omm::proto::ArbitrageStrategyType strategy_type() const;
+  void set_strategy_type(::omm::proto::ArbitrageStrategyType value);
+  private:
+  ::omm::proto::ArbitrageStrategyType _internal_strategy_type() const;
+  void _internal_set_strategy_type(::omm::proto::ArbitrageStrategyType value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:omm.proto.ArbStrategyParamsEntry)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::omm::proto::ArbParams* params_;
+    uint32_t product_index_;
+    int strategy_type_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
   friend struct ::TableStruct_trading_2eproto;
@@ -2847,7 +5870,7 @@ class SetStrategyParamsRequest final :
                &_SetStrategyParamsRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    11;
+    25;
 
   friend void swap(SetStrategyParamsRequest& a, SetStrategyParamsRequest& b) {
     a.Swap(&b);
@@ -3015,7 +6038,7 @@ class SetStrategyParamsResponse final :
                &_SetStrategyParamsResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    12;
+    26;
 
   friend void swap(SetStrategyParamsResponse& a, SetStrategyParamsResponse& b) {
     a.Swap(&b);
@@ -3131,6 +6154,668 @@ class SetStrategyParamsResponse final :
 };
 // -------------------------------------------------------------------
 
+class SetProductPricingParamsRequest final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.SetProductPricingParamsRequest) */ {
+ public:
+  inline SetProductPricingParamsRequest() : SetProductPricingParamsRequest(nullptr) {}
+  ~SetProductPricingParamsRequest() override;
+  explicit PROTOBUF_CONSTEXPR SetProductPricingParamsRequest(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  SetProductPricingParamsRequest(const SetProductPricingParamsRequest& from);
+  SetProductPricingParamsRequest(SetProductPricingParamsRequest&& from) noexcept
+    : SetProductPricingParamsRequest() {
+    *this = ::std::move(from);
+  }
+
+  inline SetProductPricingParamsRequest& operator=(const SetProductPricingParamsRequest& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline SetProductPricingParamsRequest& operator=(SetProductPricingParamsRequest&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const SetProductPricingParamsRequest& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const SetProductPricingParamsRequest* internal_default_instance() {
+    return reinterpret_cast<const SetProductPricingParamsRequest*>(
+               &_SetProductPricingParamsRequest_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    27;
+
+  friend void swap(SetProductPricingParamsRequest& a, SetProductPricingParamsRequest& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(SetProductPricingParamsRequest* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(SetProductPricingParamsRequest* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  SetProductPricingParamsRequest* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<SetProductPricingParamsRequest>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const SetProductPricingParamsRequest& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const SetProductPricingParamsRequest& from) {
+    SetProductPricingParamsRequest::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(SetProductPricingParamsRequest* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "omm.proto.SetProductPricingParamsRequest";
+  }
+  protected:
+  explicit SetProductPricingParamsRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kParamsFieldNumber = 1,
+  };
+  // .omm.proto.ProductPricingParams params = 1;
+  bool has_params() const;
+  private:
+  bool _internal_has_params() const;
+  public:
+  void clear_params();
+  const ::omm::proto::ProductPricingParams& params() const;
+  PROTOBUF_NODISCARD ::omm::proto::ProductPricingParams* release_params();
+  ::omm::proto::ProductPricingParams* mutable_params();
+  void set_allocated_params(::omm::proto::ProductPricingParams* params);
+  private:
+  const ::omm::proto::ProductPricingParams& _internal_params() const;
+  ::omm::proto::ProductPricingParams* _internal_mutable_params();
+  public:
+  void unsafe_arena_set_allocated_params(
+      ::omm::proto::ProductPricingParams* params);
+  ::omm::proto::ProductPricingParams* unsafe_arena_release_params();
+
+  // @@protoc_insertion_point(class_scope:omm.proto.SetProductPricingParamsRequest)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::omm::proto::ProductPricingParams* params_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_trading_2eproto;
+};
+// -------------------------------------------------------------------
+
+class SetProductPricingParamsResponse final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.SetProductPricingParamsResponse) */ {
+ public:
+  inline SetProductPricingParamsResponse() : SetProductPricingParamsResponse(nullptr) {}
+  ~SetProductPricingParamsResponse() override;
+  explicit PROTOBUF_CONSTEXPR SetProductPricingParamsResponse(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  SetProductPricingParamsResponse(const SetProductPricingParamsResponse& from);
+  SetProductPricingParamsResponse(SetProductPricingParamsResponse&& from) noexcept
+    : SetProductPricingParamsResponse() {
+    *this = ::std::move(from);
+  }
+
+  inline SetProductPricingParamsResponse& operator=(const SetProductPricingParamsResponse& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline SetProductPricingParamsResponse& operator=(SetProductPricingParamsResponse&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const SetProductPricingParamsResponse& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const SetProductPricingParamsResponse* internal_default_instance() {
+    return reinterpret_cast<const SetProductPricingParamsResponse*>(
+               &_SetProductPricingParamsResponse_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    28;
+
+  friend void swap(SetProductPricingParamsResponse& a, SetProductPricingParamsResponse& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(SetProductPricingParamsResponse* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(SetProductPricingParamsResponse* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  SetProductPricingParamsResponse* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<SetProductPricingParamsResponse>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const SetProductPricingParamsResponse& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const SetProductPricingParamsResponse& from) {
+    SetProductPricingParamsResponse::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(SetProductPricingParamsResponse* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "omm.proto.SetProductPricingParamsResponse";
+  }
+  protected:
+  explicit SetProductPricingParamsResponse(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kMessageFieldNumber = 2,
+    kOkFieldNumber = 1,
+  };
+  // string message = 2;
+  void clear_message();
+  const std::string& message() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_message(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_message();
+  PROTOBUF_NODISCARD std::string* release_message();
+  void set_allocated_message(std::string* message);
+  private:
+  const std::string& _internal_message() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_message(const std::string& value);
+  std::string* _internal_mutable_message();
+  public:
+
+  // bool ok = 1;
+  void clear_ok();
+  bool ok() const;
+  void set_ok(bool value);
+  private:
+  bool _internal_ok() const;
+  void _internal_set_ok(bool value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:omm.proto.SetProductPricingParamsResponse)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr message_;
+    bool ok_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_trading_2eproto;
+};
+// -------------------------------------------------------------------
+
+class SetArbStrategyParamsRequest final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.SetArbStrategyParamsRequest) */ {
+ public:
+  inline SetArbStrategyParamsRequest() : SetArbStrategyParamsRequest(nullptr) {}
+  ~SetArbStrategyParamsRequest() override;
+  explicit PROTOBUF_CONSTEXPR SetArbStrategyParamsRequest(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  SetArbStrategyParamsRequest(const SetArbStrategyParamsRequest& from);
+  SetArbStrategyParamsRequest(SetArbStrategyParamsRequest&& from) noexcept
+    : SetArbStrategyParamsRequest() {
+    *this = ::std::move(from);
+  }
+
+  inline SetArbStrategyParamsRequest& operator=(const SetArbStrategyParamsRequest& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline SetArbStrategyParamsRequest& operator=(SetArbStrategyParamsRequest&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const SetArbStrategyParamsRequest& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const SetArbStrategyParamsRequest* internal_default_instance() {
+    return reinterpret_cast<const SetArbStrategyParamsRequest*>(
+               &_SetArbStrategyParamsRequest_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    29;
+
+  friend void swap(SetArbStrategyParamsRequest& a, SetArbStrategyParamsRequest& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(SetArbStrategyParamsRequest* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(SetArbStrategyParamsRequest* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  SetArbStrategyParamsRequest* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<SetArbStrategyParamsRequest>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const SetArbStrategyParamsRequest& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const SetArbStrategyParamsRequest& from) {
+    SetArbStrategyParamsRequest::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(SetArbStrategyParamsRequest* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "omm.proto.SetArbStrategyParamsRequest";
+  }
+  protected:
+  explicit SetArbStrategyParamsRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kIdFieldNumber = 1,
+    kParamsFieldNumber = 2,
+  };
+  // .omm.proto.ArbStrategyId id = 1;
+  bool has_id() const;
+  private:
+  bool _internal_has_id() const;
+  public:
+  void clear_id();
+  const ::omm::proto::ArbStrategyId& id() const;
+  PROTOBUF_NODISCARD ::omm::proto::ArbStrategyId* release_id();
+  ::omm::proto::ArbStrategyId* mutable_id();
+  void set_allocated_id(::omm::proto::ArbStrategyId* id);
+  private:
+  const ::omm::proto::ArbStrategyId& _internal_id() const;
+  ::omm::proto::ArbStrategyId* _internal_mutable_id();
+  public:
+  void unsafe_arena_set_allocated_id(
+      ::omm::proto::ArbStrategyId* id);
+  ::omm::proto::ArbStrategyId* unsafe_arena_release_id();
+
+  // .omm.proto.ArbParams params = 2;
+  bool has_params() const;
+  private:
+  bool _internal_has_params() const;
+  public:
+  void clear_params();
+  const ::omm::proto::ArbParams& params() const;
+  PROTOBUF_NODISCARD ::omm::proto::ArbParams* release_params();
+  ::omm::proto::ArbParams* mutable_params();
+  void set_allocated_params(::omm::proto::ArbParams* params);
+  private:
+  const ::omm::proto::ArbParams& _internal_params() const;
+  ::omm::proto::ArbParams* _internal_mutable_params();
+  public:
+  void unsafe_arena_set_allocated_params(
+      ::omm::proto::ArbParams* params);
+  ::omm::proto::ArbParams* unsafe_arena_release_params();
+
+  // @@protoc_insertion_point(class_scope:omm.proto.SetArbStrategyParamsRequest)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::omm::proto::ArbStrategyId* id_;
+    ::omm::proto::ArbParams* params_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_trading_2eproto;
+};
+// -------------------------------------------------------------------
+
+class SetArbStrategyParamsResponse final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.SetArbStrategyParamsResponse) */ {
+ public:
+  inline SetArbStrategyParamsResponse() : SetArbStrategyParamsResponse(nullptr) {}
+  ~SetArbStrategyParamsResponse() override;
+  explicit PROTOBUF_CONSTEXPR SetArbStrategyParamsResponse(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  SetArbStrategyParamsResponse(const SetArbStrategyParamsResponse& from);
+  SetArbStrategyParamsResponse(SetArbStrategyParamsResponse&& from) noexcept
+    : SetArbStrategyParamsResponse() {
+    *this = ::std::move(from);
+  }
+
+  inline SetArbStrategyParamsResponse& operator=(const SetArbStrategyParamsResponse& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline SetArbStrategyParamsResponse& operator=(SetArbStrategyParamsResponse&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const SetArbStrategyParamsResponse& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const SetArbStrategyParamsResponse* internal_default_instance() {
+    return reinterpret_cast<const SetArbStrategyParamsResponse*>(
+               &_SetArbStrategyParamsResponse_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    30;
+
+  friend void swap(SetArbStrategyParamsResponse& a, SetArbStrategyParamsResponse& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(SetArbStrategyParamsResponse* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(SetArbStrategyParamsResponse* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  SetArbStrategyParamsResponse* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<SetArbStrategyParamsResponse>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const SetArbStrategyParamsResponse& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const SetArbStrategyParamsResponse& from) {
+    SetArbStrategyParamsResponse::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(SetArbStrategyParamsResponse* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "omm.proto.SetArbStrategyParamsResponse";
+  }
+  protected:
+  explicit SetArbStrategyParamsResponse(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kMessageFieldNumber = 2,
+    kOkFieldNumber = 1,
+  };
+  // string message = 2;
+  void clear_message();
+  const std::string& message() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_message(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_message();
+  PROTOBUF_NODISCARD std::string* release_message();
+  void set_allocated_message(std::string* message);
+  private:
+  const std::string& _internal_message() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_message(const std::string& value);
+  std::string* _internal_mutable_message();
+  public:
+
+  // bool ok = 1;
+  void clear_ok();
+  bool ok() const;
+  void set_ok(bool value);
+  private:
+  bool _internal_ok() const;
+  void _internal_set_ok(bool value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:omm.proto.SetArbStrategyParamsResponse)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr message_;
+    bool ok_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_trading_2eproto;
+};
+// -------------------------------------------------------------------
+
 class StartStopRequest final :
     public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.StartStopRequest) */ {
  public:
@@ -3179,7 +6864,7 @@ class StartStopRequest final :
                &_StartStopRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    13;
+    31;
 
   friend void swap(StartStopRequest& a, StartStopRequest& b) {
     a.Swap(&b);
@@ -3327,7 +7012,7 @@ class StartStopResponse final :
                &_StartStopResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    14;
+    32;
 
   friend void swap(StartStopResponse& a, StartStopResponse& b) {
     a.Swap(&b);
@@ -3443,6 +7128,327 @@ class StartStopResponse final :
 };
 // -------------------------------------------------------------------
 
+class ArbStartStopRequest final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.ArbStartStopRequest) */ {
+ public:
+  inline ArbStartStopRequest() : ArbStartStopRequest(nullptr) {}
+  ~ArbStartStopRequest() override;
+  explicit PROTOBUF_CONSTEXPR ArbStartStopRequest(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  ArbStartStopRequest(const ArbStartStopRequest& from);
+  ArbStartStopRequest(ArbStartStopRequest&& from) noexcept
+    : ArbStartStopRequest() {
+    *this = ::std::move(from);
+  }
+
+  inline ArbStartStopRequest& operator=(const ArbStartStopRequest& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline ArbStartStopRequest& operator=(ArbStartStopRequest&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const ArbStartStopRequest& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const ArbStartStopRequest* internal_default_instance() {
+    return reinterpret_cast<const ArbStartStopRequest*>(
+               &_ArbStartStopRequest_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    33;
+
+  friend void swap(ArbStartStopRequest& a, ArbStartStopRequest& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(ArbStartStopRequest* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(ArbStartStopRequest* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  ArbStartStopRequest* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<ArbStartStopRequest>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const ArbStartStopRequest& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const ArbStartStopRequest& from) {
+    ArbStartStopRequest::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(ArbStartStopRequest* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "omm.proto.ArbStartStopRequest";
+  }
+  protected:
+  explicit ArbStartStopRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kIdFieldNumber = 1,
+  };
+  // .omm.proto.ArbStrategyId id = 1;
+  bool has_id() const;
+  private:
+  bool _internal_has_id() const;
+  public:
+  void clear_id();
+  const ::omm::proto::ArbStrategyId& id() const;
+  PROTOBUF_NODISCARD ::omm::proto::ArbStrategyId* release_id();
+  ::omm::proto::ArbStrategyId* mutable_id();
+  void set_allocated_id(::omm::proto::ArbStrategyId* id);
+  private:
+  const ::omm::proto::ArbStrategyId& _internal_id() const;
+  ::omm::proto::ArbStrategyId* _internal_mutable_id();
+  public:
+  void unsafe_arena_set_allocated_id(
+      ::omm::proto::ArbStrategyId* id);
+  ::omm::proto::ArbStrategyId* unsafe_arena_release_id();
+
+  // @@protoc_insertion_point(class_scope:omm.proto.ArbStartStopRequest)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::omm::proto::ArbStrategyId* id_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_trading_2eproto;
+};
+// -------------------------------------------------------------------
+
+class ArbStartStopResponse final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.ArbStartStopResponse) */ {
+ public:
+  inline ArbStartStopResponse() : ArbStartStopResponse(nullptr) {}
+  ~ArbStartStopResponse() override;
+  explicit PROTOBUF_CONSTEXPR ArbStartStopResponse(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  ArbStartStopResponse(const ArbStartStopResponse& from);
+  ArbStartStopResponse(ArbStartStopResponse&& from) noexcept
+    : ArbStartStopResponse() {
+    *this = ::std::move(from);
+  }
+
+  inline ArbStartStopResponse& operator=(const ArbStartStopResponse& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline ArbStartStopResponse& operator=(ArbStartStopResponse&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const ArbStartStopResponse& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const ArbStartStopResponse* internal_default_instance() {
+    return reinterpret_cast<const ArbStartStopResponse*>(
+               &_ArbStartStopResponse_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    34;
+
+  friend void swap(ArbStartStopResponse& a, ArbStartStopResponse& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(ArbStartStopResponse* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(ArbStartStopResponse* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  ArbStartStopResponse* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<ArbStartStopResponse>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const ArbStartStopResponse& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const ArbStartStopResponse& from) {
+    ArbStartStopResponse::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(ArbStartStopResponse* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "omm.proto.ArbStartStopResponse";
+  }
+  protected:
+  explicit ArbStartStopResponse(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kMessageFieldNumber = 2,
+    kOkFieldNumber = 1,
+  };
+  // string message = 2;
+  void clear_message();
+  const std::string& message() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_message(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_message();
+  PROTOBUF_NODISCARD std::string* release_message();
+  void set_allocated_message(std::string* message);
+  private:
+  const std::string& _internal_message() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_message(const std::string& value);
+  std::string* _internal_mutable_message();
+  public:
+
+  // bool ok = 1;
+  void clear_ok();
+  bool ok() const;
+  void set_ok(bool value);
+  private:
+  bool _internal_ok() const;
+  void _internal_set_ok(bool value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:omm.proto.ArbStartStopResponse)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr message_;
+    bool ok_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_trading_2eproto;
+};
+// -------------------------------------------------------------------
+
 class RiskThreshold final :
     public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.RiskThreshold) */ {
  public:
@@ -3491,7 +7497,7 @@ class RiskThreshold final :
                &_RiskThreshold_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    15;
+    35;
 
   friend void swap(RiskThreshold& a, RiskThreshold& b) {
     a.Swap(&b);
@@ -3624,6 +7630,1299 @@ class RiskThreshold final :
 };
 // -------------------------------------------------------------------
 
+class RiskState final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.RiskState) */ {
+ public:
+  inline RiskState() : RiskState(nullptr) {}
+  ~RiskState() override;
+  explicit PROTOBUF_CONSTEXPR RiskState(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  RiskState(const RiskState& from);
+  RiskState(RiskState&& from) noexcept
+    : RiskState() {
+    *this = ::std::move(from);
+  }
+
+  inline RiskState& operator=(const RiskState& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline RiskState& operator=(RiskState&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const RiskState& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const RiskState* internal_default_instance() {
+    return reinterpret_cast<const RiskState*>(
+               &_RiskState_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    36;
+
+  friend void swap(RiskState& a, RiskState& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(RiskState* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(RiskState* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  RiskState* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<RiskState>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const RiskState& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const RiskState& from) {
+    RiskState::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(RiskState* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "omm.proto.RiskState";
+  }
+  protected:
+  explicit RiskState(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kThresholdFieldNumber = 1,
+    kPositionBreachFieldNumber = 2,
+    kDeltaBreachFieldNumber = 3,
+    kGammaBreachFieldNumber = 4,
+    kVegaBreachFieldNumber = 5,
+  };
+  // .omm.proto.RiskThreshold threshold = 1;
+  bool has_threshold() const;
+  private:
+  bool _internal_has_threshold() const;
+  public:
+  void clear_threshold();
+  const ::omm::proto::RiskThreshold& threshold() const;
+  PROTOBUF_NODISCARD ::omm::proto::RiskThreshold* release_threshold();
+  ::omm::proto::RiskThreshold* mutable_threshold();
+  void set_allocated_threshold(::omm::proto::RiskThreshold* threshold);
+  private:
+  const ::omm::proto::RiskThreshold& _internal_threshold() const;
+  ::omm::proto::RiskThreshold* _internal_mutable_threshold();
+  public:
+  void unsafe_arena_set_allocated_threshold(
+      ::omm::proto::RiskThreshold* threshold);
+  ::omm::proto::RiskThreshold* unsafe_arena_release_threshold();
+
+  // bool position_breach = 2;
+  void clear_position_breach();
+  bool position_breach() const;
+  void set_position_breach(bool value);
+  private:
+  bool _internal_position_breach() const;
+  void _internal_set_position_breach(bool value);
+  public:
+
+  // bool delta_breach = 3;
+  void clear_delta_breach();
+  bool delta_breach() const;
+  void set_delta_breach(bool value);
+  private:
+  bool _internal_delta_breach() const;
+  void _internal_set_delta_breach(bool value);
+  public:
+
+  // bool gamma_breach = 4;
+  void clear_gamma_breach();
+  bool gamma_breach() const;
+  void set_gamma_breach(bool value);
+  private:
+  bool _internal_gamma_breach() const;
+  void _internal_set_gamma_breach(bool value);
+  public:
+
+  // bool vega_breach = 5;
+  void clear_vega_breach();
+  bool vega_breach() const;
+  void set_vega_breach(bool value);
+  private:
+  bool _internal_vega_breach() const;
+  void _internal_set_vega_breach(bool value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:omm.proto.RiskState)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::omm::proto::RiskThreshold* threshold_;
+    bool position_breach_;
+    bool delta_breach_;
+    bool gamma_breach_;
+    bool vega_breach_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_trading_2eproto;
+};
+// -------------------------------------------------------------------
+
+class ProductMMState final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.ProductMMState) */ {
+ public:
+  inline ProductMMState() : ProductMMState(nullptr) {}
+  ~ProductMMState() override;
+  explicit PROTOBUF_CONSTEXPR ProductMMState(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  ProductMMState(const ProductMMState& from);
+  ProductMMState(ProductMMState&& from) noexcept
+    : ProductMMState() {
+    *this = ::std::move(from);
+  }
+
+  inline ProductMMState& operator=(const ProductMMState& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline ProductMMState& operator=(ProductMMState&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const ProductMMState& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const ProductMMState* internal_default_instance() {
+    return reinterpret_cast<const ProductMMState*>(
+               &_ProductMMState_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    37;
+
+  friend void swap(ProductMMState& a, ProductMMState& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(ProductMMState* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(ProductMMState* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  ProductMMState* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<ProductMMState>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const ProductMMState& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const ProductMMState& from) {
+    ProductMMState::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(ProductMMState* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "omm.proto.ProductMMState";
+  }
+  protected:
+  explicit ProductMMState(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kReasonsFieldNumber = 5,
+    kProductIndexFieldNumber = 1,
+    kStrategyEnabledFieldNumber = 2,
+    kSessionOpenFieldNumber = 3,
+    kProductSuppressedFieldNumber = 4,
+  };
+  // repeated .omm.proto.MMSuppressReason reasons = 5;
+  int reasons_size() const;
+  private:
+  int _internal_reasons_size() const;
+  public:
+  void clear_reasons();
+  private:
+  ::omm::proto::MMSuppressReason _internal_reasons(int index) const;
+  void _internal_add_reasons(::omm::proto::MMSuppressReason value);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField<int>* _internal_mutable_reasons();
+  public:
+  ::omm::proto::MMSuppressReason reasons(int index) const;
+  void set_reasons(int index, ::omm::proto::MMSuppressReason value);
+  void add_reasons(::omm::proto::MMSuppressReason value);
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField<int>& reasons() const;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField<int>* mutable_reasons();
+
+  // uint32 product_index = 1;
+  void clear_product_index();
+  uint32_t product_index() const;
+  void set_product_index(uint32_t value);
+  private:
+  uint32_t _internal_product_index() const;
+  void _internal_set_product_index(uint32_t value);
+  public:
+
+  // bool strategy_enabled = 2;
+  void clear_strategy_enabled();
+  bool strategy_enabled() const;
+  void set_strategy_enabled(bool value);
+  private:
+  bool _internal_strategy_enabled() const;
+  void _internal_set_strategy_enabled(bool value);
+  public:
+
+  // bool session_open = 3;
+  void clear_session_open();
+  bool session_open() const;
+  void set_session_open(bool value);
+  private:
+  bool _internal_session_open() const;
+  void _internal_set_session_open(bool value);
+  public:
+
+  // bool product_suppressed = 4;
+  void clear_product_suppressed();
+  bool product_suppressed() const;
+  void set_product_suppressed(bool value);
+  private:
+  bool _internal_product_suppressed() const;
+  void _internal_set_product_suppressed(bool value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:omm.proto.ProductMMState)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::RepeatedField<int> reasons_;
+    mutable std::atomic<int> _reasons_cached_byte_size_;
+    uint32_t product_index_;
+    bool strategy_enabled_;
+    bool session_open_;
+    bool product_suppressed_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_trading_2eproto;
+};
+// -------------------------------------------------------------------
+
+class InstrumentMMState final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.InstrumentMMState) */ {
+ public:
+  inline InstrumentMMState() : InstrumentMMState(nullptr) {}
+  ~InstrumentMMState() override;
+  explicit PROTOBUF_CONSTEXPR InstrumentMMState(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  InstrumentMMState(const InstrumentMMState& from);
+  InstrumentMMState(InstrumentMMState&& from) noexcept
+    : InstrumentMMState() {
+    *this = ::std::move(from);
+  }
+
+  inline InstrumentMMState& operator=(const InstrumentMMState& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline InstrumentMMState& operator=(InstrumentMMState&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const InstrumentMMState& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const InstrumentMMState* internal_default_instance() {
+    return reinterpret_cast<const InstrumentMMState*>(
+               &_InstrumentMMState_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    38;
+
+  friend void swap(InstrumentMMState& a, InstrumentMMState& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(InstrumentMMState* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(InstrumentMMState* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  InstrumentMMState* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<InstrumentMMState>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const InstrumentMMState& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const InstrumentMMState& from) {
+    InstrumentMMState::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(InstrumentMMState* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "omm.proto.InstrumentMMState";
+  }
+  protected:
+  explicit InstrumentMMState(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kReasonsFieldNumber = 4,
+    kInstrumentIdFieldNumber = 1,
+    kProductIndexFieldNumber = 2,
+    kQuoteStateFieldNumber = 3,
+    kNetPositionFieldNumber = 5,
+    kLastQuoteTsNsFieldNumber = 7,
+    kCancelAttemptsFieldNumber = 6,
+  };
+  // repeated .omm.proto.MMSuppressReason reasons = 4;
+  int reasons_size() const;
+  private:
+  int _internal_reasons_size() const;
+  public:
+  void clear_reasons();
+  private:
+  ::omm::proto::MMSuppressReason _internal_reasons(int index) const;
+  void _internal_add_reasons(::omm::proto::MMSuppressReason value);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField<int>* _internal_mutable_reasons();
+  public:
+  ::omm::proto::MMSuppressReason reasons(int index) const;
+  void set_reasons(int index, ::omm::proto::MMSuppressReason value);
+  void add_reasons(::omm::proto::MMSuppressReason value);
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField<int>& reasons() const;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField<int>* mutable_reasons();
+
+  // uint32 instrument_id = 1;
+  void clear_instrument_id();
+  uint32_t instrument_id() const;
+  void set_instrument_id(uint32_t value);
+  private:
+  uint32_t _internal_instrument_id() const;
+  void _internal_set_instrument_id(uint32_t value);
+  public:
+
+  // uint32 product_index = 2;
+  void clear_product_index();
+  uint32_t product_index() const;
+  void set_product_index(uint32_t value);
+  private:
+  uint32_t _internal_product_index() const;
+  void _internal_set_product_index(uint32_t value);
+  public:
+
+  // .omm.proto.MMQuoteState quote_state = 3;
+  void clear_quote_state();
+  ::omm::proto::MMQuoteState quote_state() const;
+  void set_quote_state(::omm::proto::MMQuoteState value);
+  private:
+  ::omm::proto::MMQuoteState _internal_quote_state() const;
+  void _internal_set_quote_state(::omm::proto::MMQuoteState value);
+  public:
+
+  // int32 net_position = 5;
+  void clear_net_position();
+  int32_t net_position() const;
+  void set_net_position(int32_t value);
+  private:
+  int32_t _internal_net_position() const;
+  void _internal_set_net_position(int32_t value);
+  public:
+
+  // int64 last_quote_ts_ns = 7;
+  void clear_last_quote_ts_ns();
+  int64_t last_quote_ts_ns() const;
+  void set_last_quote_ts_ns(int64_t value);
+  private:
+  int64_t _internal_last_quote_ts_ns() const;
+  void _internal_set_last_quote_ts_ns(int64_t value);
+  public:
+
+  // uint32 cancel_attempts = 6;
+  void clear_cancel_attempts();
+  uint32_t cancel_attempts() const;
+  void set_cancel_attempts(uint32_t value);
+  private:
+  uint32_t _internal_cancel_attempts() const;
+  void _internal_set_cancel_attempts(uint32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:omm.proto.InstrumentMMState)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::RepeatedField<int> reasons_;
+    mutable std::atomic<int> _reasons_cached_byte_size_;
+    uint32_t instrument_id_;
+    uint32_t product_index_;
+    int quote_state_;
+    int32_t net_position_;
+    int64_t last_quote_ts_ns_;
+    uint32_t cancel_attempts_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_trading_2eproto;
+};
+// -------------------------------------------------------------------
+
+class ArbStrategyState final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.ArbStrategyState) */ {
+ public:
+  inline ArbStrategyState() : ArbStrategyState(nullptr) {}
+  ~ArbStrategyState() override;
+  explicit PROTOBUF_CONSTEXPR ArbStrategyState(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  ArbStrategyState(const ArbStrategyState& from);
+  ArbStrategyState(ArbStrategyState&& from) noexcept
+    : ArbStrategyState() {
+    *this = ::std::move(from);
+  }
+
+  inline ArbStrategyState& operator=(const ArbStrategyState& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline ArbStrategyState& operator=(ArbStrategyState&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const ArbStrategyState& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const ArbStrategyState* internal_default_instance() {
+    return reinterpret_cast<const ArbStrategyState*>(
+               &_ArbStrategyState_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    39;
+
+  friend void swap(ArbStrategyState& a, ArbStrategyState& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(ArbStrategyState* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(ArbStrategyState* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  ArbStrategyState* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<ArbStrategyState>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const ArbStrategyState& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const ArbStrategyState& from) {
+    ArbStrategyState::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(ArbStrategyState* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "omm.proto.ArbStrategyState";
+  }
+  protected:
+  explicit ArbStrategyState(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kReasonsFieldNumber = 11,
+    kProductIndexFieldNumber = 1,
+    kStrategyTypeFieldNumber = 2,
+    kEnabledFieldNumber = 3,
+    kRunningFieldNumber = 4,
+    kCleanupActiveFieldNumber = 5,
+    kLiveOrdersFieldNumber = 6,
+    kPairCountFieldNumber = 7,
+    kActiveCallIdFieldNumber = 8,
+    kActivePutIdFieldNumber = 9,
+    kActiveFutureIdFieldNumber = 10,
+    kLastEdgeTicksFieldNumber = 12,
+    kLastTriggerEdgeTicksFieldNumber = 13,
+    kLastEvalTsNsFieldNumber = 14,
+    kLastTriggerTsNsFieldNumber = 15,
+  };
+  // repeated .omm.proto.ArbSuppressReason reasons = 11;
+  int reasons_size() const;
+  private:
+  int _internal_reasons_size() const;
+  public:
+  void clear_reasons();
+  private:
+  ::omm::proto::ArbSuppressReason _internal_reasons(int index) const;
+  void _internal_add_reasons(::omm::proto::ArbSuppressReason value);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField<int>* _internal_mutable_reasons();
+  public:
+  ::omm::proto::ArbSuppressReason reasons(int index) const;
+  void set_reasons(int index, ::omm::proto::ArbSuppressReason value);
+  void add_reasons(::omm::proto::ArbSuppressReason value);
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField<int>& reasons() const;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField<int>* mutable_reasons();
+
+  // uint32 product_index = 1;
+  void clear_product_index();
+  uint32_t product_index() const;
+  void set_product_index(uint32_t value);
+  private:
+  uint32_t _internal_product_index() const;
+  void _internal_set_product_index(uint32_t value);
+  public:
+
+  // .omm.proto.ArbitrageStrategyType strategy_type = 2;
+  void clear_strategy_type();
+  ::omm::proto::ArbitrageStrategyType strategy_type() const;
+  void set_strategy_type(::omm::proto::ArbitrageStrategyType value);
+  private:
+  ::omm::proto::ArbitrageStrategyType _internal_strategy_type() const;
+  void _internal_set_strategy_type(::omm::proto::ArbitrageStrategyType value);
+  public:
+
+  // bool enabled = 3;
+  void clear_enabled();
+  bool enabled() const;
+  void set_enabled(bool value);
+  private:
+  bool _internal_enabled() const;
+  void _internal_set_enabled(bool value);
+  public:
+
+  // bool running = 4;
+  void clear_running();
+  bool running() const;
+  void set_running(bool value);
+  private:
+  bool _internal_running() const;
+  void _internal_set_running(bool value);
+  public:
+
+  // bool cleanup_active = 5;
+  void clear_cleanup_active();
+  bool cleanup_active() const;
+  void set_cleanup_active(bool value);
+  private:
+  bool _internal_cleanup_active() const;
+  void _internal_set_cleanup_active(bool value);
+  public:
+
+  // uint32 live_orders = 6;
+  void clear_live_orders();
+  uint32_t live_orders() const;
+  void set_live_orders(uint32_t value);
+  private:
+  uint32_t _internal_live_orders() const;
+  void _internal_set_live_orders(uint32_t value);
+  public:
+
+  // uint32 pair_count = 7;
+  void clear_pair_count();
+  uint32_t pair_count() const;
+  void set_pair_count(uint32_t value);
+  private:
+  uint32_t _internal_pair_count() const;
+  void _internal_set_pair_count(uint32_t value);
+  public:
+
+  // uint32 active_call_id = 8;
+  void clear_active_call_id();
+  uint32_t active_call_id() const;
+  void set_active_call_id(uint32_t value);
+  private:
+  uint32_t _internal_active_call_id() const;
+  void _internal_set_active_call_id(uint32_t value);
+  public:
+
+  // uint32 active_put_id = 9;
+  void clear_active_put_id();
+  uint32_t active_put_id() const;
+  void set_active_put_id(uint32_t value);
+  private:
+  uint32_t _internal_active_put_id() const;
+  void _internal_set_active_put_id(uint32_t value);
+  public:
+
+  // uint32 active_future_id = 10;
+  void clear_active_future_id();
+  uint32_t active_future_id() const;
+  void set_active_future_id(uint32_t value);
+  private:
+  uint32_t _internal_active_future_id() const;
+  void _internal_set_active_future_id(uint32_t value);
+  public:
+
+  // double last_edge_ticks = 12;
+  void clear_last_edge_ticks();
+  double last_edge_ticks() const;
+  void set_last_edge_ticks(double value);
+  private:
+  double _internal_last_edge_ticks() const;
+  void _internal_set_last_edge_ticks(double value);
+  public:
+
+  // double last_trigger_edge_ticks = 13;
+  void clear_last_trigger_edge_ticks();
+  double last_trigger_edge_ticks() const;
+  void set_last_trigger_edge_ticks(double value);
+  private:
+  double _internal_last_trigger_edge_ticks() const;
+  void _internal_set_last_trigger_edge_ticks(double value);
+  public:
+
+  // int64 last_eval_ts_ns = 14;
+  void clear_last_eval_ts_ns();
+  int64_t last_eval_ts_ns() const;
+  void set_last_eval_ts_ns(int64_t value);
+  private:
+  int64_t _internal_last_eval_ts_ns() const;
+  void _internal_set_last_eval_ts_ns(int64_t value);
+  public:
+
+  // int64 last_trigger_ts_ns = 15;
+  void clear_last_trigger_ts_ns();
+  int64_t last_trigger_ts_ns() const;
+  void set_last_trigger_ts_ns(int64_t value);
+  private:
+  int64_t _internal_last_trigger_ts_ns() const;
+  void _internal_set_last_trigger_ts_ns(int64_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:omm.proto.ArbStrategyState)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::RepeatedField<int> reasons_;
+    mutable std::atomic<int> _reasons_cached_byte_size_;
+    uint32_t product_index_;
+    int strategy_type_;
+    bool enabled_;
+    bool running_;
+    bool cleanup_active_;
+    uint32_t live_orders_;
+    uint32_t pair_count_;
+    uint32_t active_call_id_;
+    uint32_t active_put_id_;
+    uint32_t active_future_id_;
+    double last_edge_ticks_;
+    double last_trigger_edge_ticks_;
+    int64_t last_eval_ts_ns_;
+    int64_t last_trigger_ts_ns_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_trading_2eproto;
+};
+// -------------------------------------------------------------------
+
+class PcpOpportunityState final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.PcpOpportunityState) */ {
+ public:
+  inline PcpOpportunityState() : PcpOpportunityState(nullptr) {}
+  ~PcpOpportunityState() override;
+  explicit PROTOBUF_CONSTEXPR PcpOpportunityState(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  PcpOpportunityState(const PcpOpportunityState& from);
+  PcpOpportunityState(PcpOpportunityState&& from) noexcept
+    : PcpOpportunityState() {
+    *this = ::std::move(from);
+  }
+
+  inline PcpOpportunityState& operator=(const PcpOpportunityState& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline PcpOpportunityState& operator=(PcpOpportunityState&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const PcpOpportunityState& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const PcpOpportunityState* internal_default_instance() {
+    return reinterpret_cast<const PcpOpportunityState*>(
+               &_PcpOpportunityState_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    40;
+
+  friend void swap(PcpOpportunityState& a, PcpOpportunityState& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(PcpOpportunityState* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(PcpOpportunityState* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  PcpOpportunityState* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<PcpOpportunityState>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const PcpOpportunityState& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const PcpOpportunityState& from) {
+    PcpOpportunityState::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(PcpOpportunityState* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "omm.proto.PcpOpportunityState";
+  }
+  protected:
+  explicit PcpOpportunityState(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kProductIndexFieldNumber = 1,
+    kStrategyTypeFieldNumber = 2,
+    kCallIdFieldNumber = 3,
+    kPutIdFieldNumber = 4,
+    kFutureIdFieldNumber = 5,
+    kExpiryDateFieldNumber = 6,
+    kStrikeFieldNumber = 7,
+    kDiscountFactorFieldNumber = 10,
+    kSyntheticBidFieldNumber = 11,
+    kMarketValidFieldNumber = 8,
+    kSelectedFieldNumber = 9,
+    kBestDirectionFieldNumber = 18,
+    kSyntheticAskFieldNumber = 12,
+    kFutureBidFieldNumber = 13,
+    kFutureAskFieldNumber = 14,
+    kLongSynthEdgeTicksFieldNumber = 15,
+    kShortSynthEdgeTicksFieldNumber = 16,
+    kBestEdgeTicksFieldNumber = 17,
+    kEvalTsNsFieldNumber = 20,
+    kBestVolumeFieldNumber = 19,
+  };
+  // uint32 product_index = 1;
+  void clear_product_index();
+  uint32_t product_index() const;
+  void set_product_index(uint32_t value);
+  private:
+  uint32_t _internal_product_index() const;
+  void _internal_set_product_index(uint32_t value);
+  public:
+
+  // .omm.proto.ArbitrageStrategyType strategy_type = 2;
+  void clear_strategy_type();
+  ::omm::proto::ArbitrageStrategyType strategy_type() const;
+  void set_strategy_type(::omm::proto::ArbitrageStrategyType value);
+  private:
+  ::omm::proto::ArbitrageStrategyType _internal_strategy_type() const;
+  void _internal_set_strategy_type(::omm::proto::ArbitrageStrategyType value);
+  public:
+
+  // uint32 call_id = 3;
+  void clear_call_id();
+  uint32_t call_id() const;
+  void set_call_id(uint32_t value);
+  private:
+  uint32_t _internal_call_id() const;
+  void _internal_set_call_id(uint32_t value);
+  public:
+
+  // uint32 put_id = 4;
+  void clear_put_id();
+  uint32_t put_id() const;
+  void set_put_id(uint32_t value);
+  private:
+  uint32_t _internal_put_id() const;
+  void _internal_set_put_id(uint32_t value);
+  public:
+
+  // uint32 future_id = 5;
+  void clear_future_id();
+  uint32_t future_id() const;
+  void set_future_id(uint32_t value);
+  private:
+  uint32_t _internal_future_id() const;
+  void _internal_set_future_id(uint32_t value);
+  public:
+
+  // int32 expiry_date = 6;
+  void clear_expiry_date();
+  int32_t expiry_date() const;
+  void set_expiry_date(int32_t value);
+  private:
+  int32_t _internal_expiry_date() const;
+  void _internal_set_expiry_date(int32_t value);
+  public:
+
+  // double strike = 7;
+  void clear_strike();
+  double strike() const;
+  void set_strike(double value);
+  private:
+  double _internal_strike() const;
+  void _internal_set_strike(double value);
+  public:
+
+  // double discount_factor = 10;
+  void clear_discount_factor();
+  double discount_factor() const;
+  void set_discount_factor(double value);
+  private:
+  double _internal_discount_factor() const;
+  void _internal_set_discount_factor(double value);
+  public:
+
+  // double synthetic_bid = 11;
+  void clear_synthetic_bid();
+  double synthetic_bid() const;
+  void set_synthetic_bid(double value);
+  private:
+  double _internal_synthetic_bid() const;
+  void _internal_set_synthetic_bid(double value);
+  public:
+
+  // bool market_valid = 8;
+  void clear_market_valid();
+  bool market_valid() const;
+  void set_market_valid(bool value);
+  private:
+  bool _internal_market_valid() const;
+  void _internal_set_market_valid(bool value);
+  public:
+
+  // bool selected = 9;
+  void clear_selected();
+  bool selected() const;
+  void set_selected(bool value);
+  private:
+  bool _internal_selected() const;
+  void _internal_set_selected(bool value);
+  public:
+
+  // .omm.proto.PcpOpportunityDirection best_direction = 18;
+  void clear_best_direction();
+  ::omm::proto::PcpOpportunityDirection best_direction() const;
+  void set_best_direction(::omm::proto::PcpOpportunityDirection value);
+  private:
+  ::omm::proto::PcpOpportunityDirection _internal_best_direction() const;
+  void _internal_set_best_direction(::omm::proto::PcpOpportunityDirection value);
+  public:
+
+  // double synthetic_ask = 12;
+  void clear_synthetic_ask();
+  double synthetic_ask() const;
+  void set_synthetic_ask(double value);
+  private:
+  double _internal_synthetic_ask() const;
+  void _internal_set_synthetic_ask(double value);
+  public:
+
+  // double future_bid = 13;
+  void clear_future_bid();
+  double future_bid() const;
+  void set_future_bid(double value);
+  private:
+  double _internal_future_bid() const;
+  void _internal_set_future_bid(double value);
+  public:
+
+  // double future_ask = 14;
+  void clear_future_ask();
+  double future_ask() const;
+  void set_future_ask(double value);
+  private:
+  double _internal_future_ask() const;
+  void _internal_set_future_ask(double value);
+  public:
+
+  // double long_synth_edge_ticks = 15;
+  void clear_long_synth_edge_ticks();
+  double long_synth_edge_ticks() const;
+  void set_long_synth_edge_ticks(double value);
+  private:
+  double _internal_long_synth_edge_ticks() const;
+  void _internal_set_long_synth_edge_ticks(double value);
+  public:
+
+  // double short_synth_edge_ticks = 16;
+  void clear_short_synth_edge_ticks();
+  double short_synth_edge_ticks() const;
+  void set_short_synth_edge_ticks(double value);
+  private:
+  double _internal_short_synth_edge_ticks() const;
+  void _internal_set_short_synth_edge_ticks(double value);
+  public:
+
+  // double best_edge_ticks = 17;
+  void clear_best_edge_ticks();
+  double best_edge_ticks() const;
+  void set_best_edge_ticks(double value);
+  private:
+  double _internal_best_edge_ticks() const;
+  void _internal_set_best_edge_ticks(double value);
+  public:
+
+  // int64 eval_ts_ns = 20;
+  void clear_eval_ts_ns();
+  int64_t eval_ts_ns() const;
+  void set_eval_ts_ns(int64_t value);
+  private:
+  int64_t _internal_eval_ts_ns() const;
+  void _internal_set_eval_ts_ns(int64_t value);
+  public:
+
+  // int32 best_volume = 19;
+  void clear_best_volume();
+  int32_t best_volume() const;
+  void set_best_volume(int32_t value);
+  private:
+  int32_t _internal_best_volume() const;
+  void _internal_set_best_volume(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:omm.proto.PcpOpportunityState)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    uint32_t product_index_;
+    int strategy_type_;
+    uint32_t call_id_;
+    uint32_t put_id_;
+    uint32_t future_id_;
+    int32_t expiry_date_;
+    double strike_;
+    double discount_factor_;
+    double synthetic_bid_;
+    bool market_valid_;
+    bool selected_;
+    int best_direction_;
+    double synthetic_ask_;
+    double future_bid_;
+    double future_ask_;
+    double long_synth_edge_ticks_;
+    double short_synth_edge_ticks_;
+    double best_edge_ticks_;
+    int64_t eval_ts_ns_;
+    int32_t best_volume_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_trading_2eproto;
+};
+// -------------------------------------------------------------------
+
 class SetRiskThresholdRequest final :
     public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.SetRiskThresholdRequest) */ {
  public:
@@ -3672,7 +8971,7 @@ class SetRiskThresholdRequest final :
                &_SetRiskThresholdRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    16;
+    41;
 
   friend void swap(SetRiskThresholdRequest& a, SetRiskThresholdRequest& b) {
     a.Swap(&b);
@@ -3829,7 +9128,7 @@ class SetRiskThresholdResponse final :
                &_SetRiskThresholdResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    17;
+    42;
 
   friend void swap(SetRiskThresholdResponse& a, SetRiskThresholdResponse& b) {
     a.Swap(&b);
@@ -3993,7 +9292,7 @@ class ManualOrderRequest final :
                &_ManualOrderRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    18;
+    43;
 
   friend void swap(ManualOrderRequest& a, ManualOrderRequest& b) {
     a.Swap(&b);
@@ -4070,6 +9369,7 @@ class ManualOrderRequest final :
     kInstrumentIdFieldNumber = 1,
     kVolumeFieldNumber = 4,
     kPriceFieldNumber = 3,
+    kBookIdFieldNumber = 5,
   };
   // string side = 2;
   void clear_side();
@@ -4112,6 +9412,19 @@ class ManualOrderRequest final :
   void _internal_set_price(double value);
   public:
 
+  // optional uint32 book_id = 5;
+  bool has_book_id() const;
+  private:
+  bool _internal_has_book_id() const;
+  public:
+  void clear_book_id();
+  uint32_t book_id() const;
+  void set_book_id(uint32_t value);
+  private:
+  uint32_t _internal_book_id() const;
+  void _internal_set_book_id(uint32_t value);
+  public:
+
   // @@protoc_insertion_point(class_scope:omm.proto.ManualOrderRequest)
  private:
   class _Internal;
@@ -4120,11 +9433,13 @@ class ManualOrderRequest final :
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
   struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::HasBits<1> _has_bits_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr side_;
     uint32_t instrument_id_;
     int32_t volume_;
     double price_;
-    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+    uint32_t book_id_;
   };
   union { Impl_ _impl_; };
   friend struct ::TableStruct_trading_2eproto;
@@ -4179,7 +9494,7 @@ class ManualOrderResponse final :
                &_ManualOrderResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    19;
+    44;
 
   friend void swap(ManualOrderResponse& a, ManualOrderResponse& b) {
     a.Swap(&b);
@@ -4253,8 +9568,9 @@ class ManualOrderResponse final :
 
   enum : int {
     kMessageFieldNumber = 2,
-    kOrderIdFieldNumber = 3,
     kOkFieldNumber = 1,
+    kBookIdFieldNumber = 4,
+    kOrderIdFieldNumber = 3,
   };
   // string message = 2;
   void clear_message();
@@ -4270,15 +9586,6 @@ class ManualOrderResponse final :
   std::string* _internal_mutable_message();
   public:
 
-  // uint64 order_id = 3;
-  void clear_order_id();
-  uint64_t order_id() const;
-  void set_order_id(uint64_t value);
-  private:
-  uint64_t _internal_order_id() const;
-  void _internal_set_order_id(uint64_t value);
-  public:
-
   // bool ok = 1;
   void clear_ok();
   bool ok() const;
@@ -4286,6 +9593,24 @@ class ManualOrderResponse final :
   private:
   bool _internal_ok() const;
   void _internal_set_ok(bool value);
+  public:
+
+  // uint32 book_id = 4;
+  void clear_book_id();
+  uint32_t book_id() const;
+  void set_book_id(uint32_t value);
+  private:
+  uint32_t _internal_book_id() const;
+  void _internal_set_book_id(uint32_t value);
+  public:
+
+  // uint64 order_id = 3;
+  void clear_order_id();
+  uint64_t order_id() const;
+  void set_order_id(uint64_t value);
+  private:
+  uint64_t _internal_order_id() const;
+  void _internal_set_order_id(uint64_t value);
   public:
 
   // @@protoc_insertion_point(class_scope:omm.proto.ManualOrderResponse)
@@ -4297,8 +9622,9 @@ class ManualOrderResponse final :
   typedef void DestructorSkippable_;
   struct Impl_ {
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr message_;
-    uint64_t order_id_;
     bool ok_;
+    uint32_t book_id_;
+    uint64_t order_id_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -4354,7 +9680,7 @@ class CancelOrderRequest final :
                &_CancelOrderRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    20;
+    45;
 
   friend void swap(CancelOrderRequest& a, CancelOrderRequest& b) {
     a.Swap(&b);
@@ -4513,7 +9839,7 @@ class CancelOrderResponse final :
                &_CancelOrderResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    21;
+    46;
 
   friend void swap(CancelOrderResponse& a, CancelOrderResponse& b) {
     a.Swap(&b);
@@ -4629,6 +9955,329 @@ class CancelOrderResponse final :
 };
 // -------------------------------------------------------------------
 
+class CancelQuoteRequest final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.CancelQuoteRequest) */ {
+ public:
+  inline CancelQuoteRequest() : CancelQuoteRequest(nullptr) {}
+  ~CancelQuoteRequest() override;
+  explicit PROTOBUF_CONSTEXPR CancelQuoteRequest(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  CancelQuoteRequest(const CancelQuoteRequest& from);
+  CancelQuoteRequest(CancelQuoteRequest&& from) noexcept
+    : CancelQuoteRequest() {
+    *this = ::std::move(from);
+  }
+
+  inline CancelQuoteRequest& operator=(const CancelQuoteRequest& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline CancelQuoteRequest& operator=(CancelQuoteRequest&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const CancelQuoteRequest& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const CancelQuoteRequest* internal_default_instance() {
+    return reinterpret_cast<const CancelQuoteRequest*>(
+               &_CancelQuoteRequest_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    47;
+
+  friend void swap(CancelQuoteRequest& a, CancelQuoteRequest& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(CancelQuoteRequest* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(CancelQuoteRequest* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  CancelQuoteRequest* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<CancelQuoteRequest>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const CancelQuoteRequest& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const CancelQuoteRequest& from) {
+    CancelQuoteRequest::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(CancelQuoteRequest* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "omm.proto.CancelQuoteRequest";
+  }
+  protected:
+  explicit CancelQuoteRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kQuoteIdFieldNumber = 1,
+    kInstrumentIdFieldNumber = 2,
+  };
+  // uint64 quote_id = 1;
+  void clear_quote_id();
+  uint64_t quote_id() const;
+  void set_quote_id(uint64_t value);
+  private:
+  uint64_t _internal_quote_id() const;
+  void _internal_set_quote_id(uint64_t value);
+  public:
+
+  // uint32 instrument_id = 2;
+  void clear_instrument_id();
+  uint32_t instrument_id() const;
+  void set_instrument_id(uint32_t value);
+  private:
+  uint32_t _internal_instrument_id() const;
+  void _internal_set_instrument_id(uint32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:omm.proto.CancelQuoteRequest)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    uint64_t quote_id_;
+    uint32_t instrument_id_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_trading_2eproto;
+};
+// -------------------------------------------------------------------
+
+class CancelQuoteResponse final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.CancelQuoteResponse) */ {
+ public:
+  inline CancelQuoteResponse() : CancelQuoteResponse(nullptr) {}
+  ~CancelQuoteResponse() override;
+  explicit PROTOBUF_CONSTEXPR CancelQuoteResponse(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  CancelQuoteResponse(const CancelQuoteResponse& from);
+  CancelQuoteResponse(CancelQuoteResponse&& from) noexcept
+    : CancelQuoteResponse() {
+    *this = ::std::move(from);
+  }
+
+  inline CancelQuoteResponse& operator=(const CancelQuoteResponse& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline CancelQuoteResponse& operator=(CancelQuoteResponse&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const CancelQuoteResponse& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const CancelQuoteResponse* internal_default_instance() {
+    return reinterpret_cast<const CancelQuoteResponse*>(
+               &_CancelQuoteResponse_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    48;
+
+  friend void swap(CancelQuoteResponse& a, CancelQuoteResponse& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(CancelQuoteResponse* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(CancelQuoteResponse* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  CancelQuoteResponse* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<CancelQuoteResponse>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const CancelQuoteResponse& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const CancelQuoteResponse& from) {
+    CancelQuoteResponse::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(CancelQuoteResponse* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "omm.proto.CancelQuoteResponse";
+  }
+  protected:
+  explicit CancelQuoteResponse(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kMessageFieldNumber = 2,
+    kOkFieldNumber = 1,
+  };
+  // string message = 2;
+  void clear_message();
+  const std::string& message() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_message(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_message();
+  PROTOBUF_NODISCARD std::string* release_message();
+  void set_allocated_message(std::string* message);
+  private:
+  const std::string& _internal_message() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_message(const std::string& value);
+  std::string* _internal_mutable_message();
+  public:
+
+  // bool ok = 1;
+  void clear_ok();
+  bool ok() const;
+  void set_ok(bool value);
+  private:
+  bool _internal_ok() const;
+  void _internal_set_ok(bool value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:omm.proto.CancelQuoteResponse)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr message_;
+    bool ok_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_trading_2eproto;
+};
+// -------------------------------------------------------------------
+
 class SnapshotRequest final :
     public ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase /* @@protoc_insertion_point(class_definition:omm.proto.SnapshotRequest) */ {
  public:
@@ -4676,7 +10325,7 @@ class SnapshotRequest final :
                &_SnapshotRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    22;
+    49;
 
   friend void swap(SnapshotRequest& a, SnapshotRequest& b) {
     a.Swap(&b);
@@ -4795,7 +10444,7 @@ class SnapshotResponse final :
                &_SnapshotResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    23;
+    50;
 
   friend void swap(SnapshotResponse& a, SnapshotResponse& b) {
     a.Swap(&b);
@@ -4872,7 +10521,18 @@ class SnapshotResponse final :
     kPositionsFieldNumber = 2,
     kMmParamsFieldNumber = 4,
     kInstrumentsFieldNumber = 5,
+    kProductStatesFieldNumber = 7,
+    kInstrumentStatesFieldNumber = 8,
+    kArbParamsFieldNumber = 9,
+    kArbStrategyStatesFieldNumber = 10,
+    kPcpOpportunitiesFieldNumber = 11,
+    kBooksFieldNumber = 13,
+    kBookPositionsFieldNumber = 14,
+    kBookPortfoliosFieldNumber = 15,
+    kProductPricingParamsFieldNumber = 16,
     kPortfolioFieldNumber = 3,
+    kRiskStateFieldNumber = 6,
+    kCurrentUserFieldNumber = 12,
   };
   // repeated .omm.proto.Greeks greeks = 1;
   int greeks_size() const;
@@ -4946,6 +10606,168 @@ class SnapshotResponse final :
   const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::InstrumentInfo >&
       instruments() const;
 
+  // repeated .omm.proto.ProductMMState product_states = 7;
+  int product_states_size() const;
+  private:
+  int _internal_product_states_size() const;
+  public:
+  void clear_product_states();
+  ::omm::proto::ProductMMState* mutable_product_states(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::ProductMMState >*
+      mutable_product_states();
+  private:
+  const ::omm::proto::ProductMMState& _internal_product_states(int index) const;
+  ::omm::proto::ProductMMState* _internal_add_product_states();
+  public:
+  const ::omm::proto::ProductMMState& product_states(int index) const;
+  ::omm::proto::ProductMMState* add_product_states();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::ProductMMState >&
+      product_states() const;
+
+  // repeated .omm.proto.InstrumentMMState instrument_states = 8;
+  int instrument_states_size() const;
+  private:
+  int _internal_instrument_states_size() const;
+  public:
+  void clear_instrument_states();
+  ::omm::proto::InstrumentMMState* mutable_instrument_states(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::InstrumentMMState >*
+      mutable_instrument_states();
+  private:
+  const ::omm::proto::InstrumentMMState& _internal_instrument_states(int index) const;
+  ::omm::proto::InstrumentMMState* _internal_add_instrument_states();
+  public:
+  const ::omm::proto::InstrumentMMState& instrument_states(int index) const;
+  ::omm::proto::InstrumentMMState* add_instrument_states();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::InstrumentMMState >&
+      instrument_states() const;
+
+  // repeated .omm.proto.ArbStrategyParamsEntry arb_params = 9;
+  int arb_params_size() const;
+  private:
+  int _internal_arb_params_size() const;
+  public:
+  void clear_arb_params();
+  ::omm::proto::ArbStrategyParamsEntry* mutable_arb_params(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::ArbStrategyParamsEntry >*
+      mutable_arb_params();
+  private:
+  const ::omm::proto::ArbStrategyParamsEntry& _internal_arb_params(int index) const;
+  ::omm::proto::ArbStrategyParamsEntry* _internal_add_arb_params();
+  public:
+  const ::omm::proto::ArbStrategyParamsEntry& arb_params(int index) const;
+  ::omm::proto::ArbStrategyParamsEntry* add_arb_params();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::ArbStrategyParamsEntry >&
+      arb_params() const;
+
+  // repeated .omm.proto.ArbStrategyState arb_strategy_states = 10;
+  int arb_strategy_states_size() const;
+  private:
+  int _internal_arb_strategy_states_size() const;
+  public:
+  void clear_arb_strategy_states();
+  ::omm::proto::ArbStrategyState* mutable_arb_strategy_states(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::ArbStrategyState >*
+      mutable_arb_strategy_states();
+  private:
+  const ::omm::proto::ArbStrategyState& _internal_arb_strategy_states(int index) const;
+  ::omm::proto::ArbStrategyState* _internal_add_arb_strategy_states();
+  public:
+  const ::omm::proto::ArbStrategyState& arb_strategy_states(int index) const;
+  ::omm::proto::ArbStrategyState* add_arb_strategy_states();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::ArbStrategyState >&
+      arb_strategy_states() const;
+
+  // repeated .omm.proto.PcpOpportunityState pcp_opportunities = 11;
+  int pcp_opportunities_size() const;
+  private:
+  int _internal_pcp_opportunities_size() const;
+  public:
+  void clear_pcp_opportunities();
+  ::omm::proto::PcpOpportunityState* mutable_pcp_opportunities(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::PcpOpportunityState >*
+      mutable_pcp_opportunities();
+  private:
+  const ::omm::proto::PcpOpportunityState& _internal_pcp_opportunities(int index) const;
+  ::omm::proto::PcpOpportunityState* _internal_add_pcp_opportunities();
+  public:
+  const ::omm::proto::PcpOpportunityState& pcp_opportunities(int index) const;
+  ::omm::proto::PcpOpportunityState* add_pcp_opportunities();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::PcpOpportunityState >&
+      pcp_opportunities() const;
+
+  // repeated .omm.proto.BookInfo books = 13;
+  int books_size() const;
+  private:
+  int _internal_books_size() const;
+  public:
+  void clear_books();
+  ::omm::proto::BookInfo* mutable_books(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::BookInfo >*
+      mutable_books();
+  private:
+  const ::omm::proto::BookInfo& _internal_books(int index) const;
+  ::omm::proto::BookInfo* _internal_add_books();
+  public:
+  const ::omm::proto::BookInfo& books(int index) const;
+  ::omm::proto::BookInfo* add_books();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::BookInfo >&
+      books() const;
+
+  // repeated .omm.proto.BookPosition book_positions = 14;
+  int book_positions_size() const;
+  private:
+  int _internal_book_positions_size() const;
+  public:
+  void clear_book_positions();
+  ::omm::proto::BookPosition* mutable_book_positions(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::BookPosition >*
+      mutable_book_positions();
+  private:
+  const ::omm::proto::BookPosition& _internal_book_positions(int index) const;
+  ::omm::proto::BookPosition* _internal_add_book_positions();
+  public:
+  const ::omm::proto::BookPosition& book_positions(int index) const;
+  ::omm::proto::BookPosition* add_book_positions();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::BookPosition >&
+      book_positions() const;
+
+  // repeated .omm.proto.BookPortfolio book_portfolios = 15;
+  int book_portfolios_size() const;
+  private:
+  int _internal_book_portfolios_size() const;
+  public:
+  void clear_book_portfolios();
+  ::omm::proto::BookPortfolio* mutable_book_portfolios(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::BookPortfolio >*
+      mutable_book_portfolios();
+  private:
+  const ::omm::proto::BookPortfolio& _internal_book_portfolios(int index) const;
+  ::omm::proto::BookPortfolio* _internal_add_book_portfolios();
+  public:
+  const ::omm::proto::BookPortfolio& book_portfolios(int index) const;
+  ::omm::proto::BookPortfolio* add_book_portfolios();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::BookPortfolio >&
+      book_portfolios() const;
+
+  // repeated .omm.proto.ProductPricingParams product_pricing_params = 16;
+  int product_pricing_params_size() const;
+  private:
+  int _internal_product_pricing_params_size() const;
+  public:
+  void clear_product_pricing_params();
+  ::omm::proto::ProductPricingParams* mutable_product_pricing_params(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::ProductPricingParams >*
+      mutable_product_pricing_params();
+  private:
+  const ::omm::proto::ProductPricingParams& _internal_product_pricing_params(int index) const;
+  ::omm::proto::ProductPricingParams* _internal_add_product_pricing_params();
+  public:
+  const ::omm::proto::ProductPricingParams& product_pricing_params(int index) const;
+  ::omm::proto::ProductPricingParams* add_product_pricing_params();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::ProductPricingParams >&
+      product_pricing_params() const;
+
   // .omm.proto.PortfolioGreeks portfolio = 3;
   bool has_portfolio() const;
   private:
@@ -4964,6 +10786,42 @@ class SnapshotResponse final :
       ::omm::proto::PortfolioGreeks* portfolio);
   ::omm::proto::PortfolioGreeks* unsafe_arena_release_portfolio();
 
+  // .omm.proto.RiskState risk_state = 6;
+  bool has_risk_state() const;
+  private:
+  bool _internal_has_risk_state() const;
+  public:
+  void clear_risk_state();
+  const ::omm::proto::RiskState& risk_state() const;
+  PROTOBUF_NODISCARD ::omm::proto::RiskState* release_risk_state();
+  ::omm::proto::RiskState* mutable_risk_state();
+  void set_allocated_risk_state(::omm::proto::RiskState* risk_state);
+  private:
+  const ::omm::proto::RiskState& _internal_risk_state() const;
+  ::omm::proto::RiskState* _internal_mutable_risk_state();
+  public:
+  void unsafe_arena_set_allocated_risk_state(
+      ::omm::proto::RiskState* risk_state);
+  ::omm::proto::RiskState* unsafe_arena_release_risk_state();
+
+  // .omm.proto.UserInfo current_user = 12;
+  bool has_current_user() const;
+  private:
+  bool _internal_has_current_user() const;
+  public:
+  void clear_current_user();
+  const ::omm::proto::UserInfo& current_user() const;
+  PROTOBUF_NODISCARD ::omm::proto::UserInfo* release_current_user();
+  ::omm::proto::UserInfo* mutable_current_user();
+  void set_allocated_current_user(::omm::proto::UserInfo* current_user);
+  private:
+  const ::omm::proto::UserInfo& _internal_current_user() const;
+  ::omm::proto::UserInfo* _internal_mutable_current_user();
+  public:
+  void unsafe_arena_set_allocated_current_user(
+      ::omm::proto::UserInfo* current_user);
+  ::omm::proto::UserInfo* unsafe_arena_release_current_user();
+
   // @@protoc_insertion_point(class_scope:omm.proto.SnapshotResponse)
  private:
   class _Internal;
@@ -4976,7 +10834,18 @@ class SnapshotResponse final :
     ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::Position > positions_;
     ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::MMParams > mm_params_;
     ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::InstrumentInfo > instruments_;
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::ProductMMState > product_states_;
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::InstrumentMMState > instrument_states_;
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::ArbStrategyParamsEntry > arb_params_;
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::ArbStrategyState > arb_strategy_states_;
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::PcpOpportunityState > pcp_opportunities_;
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::BookInfo > books_;
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::BookPosition > book_positions_;
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::BookPortfolio > book_portfolios_;
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::ProductPricingParams > product_pricing_params_;
     ::omm::proto::PortfolioGreeks* portfolio_;
+    ::omm::proto::RiskState* risk_state_;
+    ::omm::proto::UserInfo* current_user_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -5032,7 +10901,7 @@ class StreamRequest final :
                &_StreamRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    24;
+    51;
 
   friend void swap(StreamRequest& a, StreamRequest& b) {
     a.Swap(&b);
@@ -5339,6 +11208,206 @@ inline void Greeks::_internal_set_calc_ts_ns(int64_t value) {
 inline void Greeks::set_calc_ts_ns(int64_t value) {
   _internal_set_calc_ts_ns(value);
   // @@protoc_insertion_point(field_set:omm.proto.Greeks.calc_ts_ns)
+}
+
+// double std_delta = 11;
+inline void Greeks::clear_std_delta() {
+  _impl_.std_delta_ = 0;
+}
+inline double Greeks::_internal_std_delta() const {
+  return _impl_.std_delta_;
+}
+inline double Greeks::std_delta() const {
+  // @@protoc_insertion_point(field_get:omm.proto.Greeks.std_delta)
+  return _internal_std_delta();
+}
+inline void Greeks::_internal_set_std_delta(double value) {
+  
+  _impl_.std_delta_ = value;
+}
+inline void Greeks::set_std_delta(double value) {
+  _internal_set_std_delta(value);
+  // @@protoc_insertion_point(field_set:omm.proto.Greeks.std_delta)
+}
+
+// double delta_cash = 12;
+inline void Greeks::clear_delta_cash() {
+  _impl_.delta_cash_ = 0;
+}
+inline double Greeks::_internal_delta_cash() const {
+  return _impl_.delta_cash_;
+}
+inline double Greeks::delta_cash() const {
+  // @@protoc_insertion_point(field_get:omm.proto.Greeks.delta_cash)
+  return _internal_delta_cash();
+}
+inline void Greeks::_internal_set_delta_cash(double value) {
+  
+  _impl_.delta_cash_ = value;
+}
+inline void Greeks::set_delta_cash(double value) {
+  _internal_set_delta_cash(value);
+  // @@protoc_insertion_point(field_set:omm.proto.Greeks.delta_cash)
+}
+
+// double std_gamma = 13;
+inline void Greeks::clear_std_gamma() {
+  _impl_.std_gamma_ = 0;
+}
+inline double Greeks::_internal_std_gamma() const {
+  return _impl_.std_gamma_;
+}
+inline double Greeks::std_gamma() const {
+  // @@protoc_insertion_point(field_get:omm.proto.Greeks.std_gamma)
+  return _internal_std_gamma();
+}
+inline void Greeks::_internal_set_std_gamma(double value) {
+  
+  _impl_.std_gamma_ = value;
+}
+inline void Greeks::set_std_gamma(double value) {
+  _internal_set_std_gamma(value);
+  // @@protoc_insertion_point(field_set:omm.proto.Greeks.std_gamma)
+}
+
+// double gamma_cash = 14;
+inline void Greeks::clear_gamma_cash() {
+  _impl_.gamma_cash_ = 0;
+}
+inline double Greeks::_internal_gamma_cash() const {
+  return _impl_.gamma_cash_;
+}
+inline double Greeks::gamma_cash() const {
+  // @@protoc_insertion_point(field_get:omm.proto.Greeks.gamma_cash)
+  return _internal_gamma_cash();
+}
+inline void Greeks::_internal_set_gamma_cash(double value) {
+  
+  _impl_.gamma_cash_ = value;
+}
+inline void Greeks::set_gamma_cash(double value) {
+  _internal_set_gamma_cash(value);
+  // @@protoc_insertion_point(field_set:omm.proto.Greeks.gamma_cash)
+}
+
+// double vega_cash = 15;
+inline void Greeks::clear_vega_cash() {
+  _impl_.vega_cash_ = 0;
+}
+inline double Greeks::_internal_vega_cash() const {
+  return _impl_.vega_cash_;
+}
+inline double Greeks::vega_cash() const {
+  // @@protoc_insertion_point(field_get:omm.proto.Greeks.vega_cash)
+  return _internal_vega_cash();
+}
+inline void Greeks::_internal_set_vega_cash(double value) {
+  
+  _impl_.vega_cash_ = value;
+}
+inline void Greeks::set_vega_cash(double value) {
+  _internal_set_vega_cash(value);
+  // @@protoc_insertion_point(field_set:omm.proto.Greeks.vega_cash)
+}
+
+// double theta_cash = 16;
+inline void Greeks::clear_theta_cash() {
+  _impl_.theta_cash_ = 0;
+}
+inline double Greeks::_internal_theta_cash() const {
+  return _impl_.theta_cash_;
+}
+inline double Greeks::theta_cash() const {
+  // @@protoc_insertion_point(field_get:omm.proto.Greeks.theta_cash)
+  return _internal_theta_cash();
+}
+inline void Greeks::_internal_set_theta_cash(double value) {
+  
+  _impl_.theta_cash_ = value;
+}
+inline void Greeks::set_theta_cash(double value) {
+  _internal_set_theta_cash(value);
+  // @@protoc_insertion_point(field_set:omm.proto.Greeks.theta_cash)
+}
+
+// double rho_cash = 17;
+inline void Greeks::clear_rho_cash() {
+  _impl_.rho_cash_ = 0;
+}
+inline double Greeks::_internal_rho_cash() const {
+  return _impl_.rho_cash_;
+}
+inline double Greeks::rho_cash() const {
+  // @@protoc_insertion_point(field_get:omm.proto.Greeks.rho_cash)
+  return _internal_rho_cash();
+}
+inline void Greeks::_internal_set_rho_cash(double value) {
+  
+  _impl_.rho_cash_ = value;
+}
+inline void Greeks::set_rho_cash(double value) {
+  _internal_set_rho_cash(value);
+  // @@protoc_insertion_point(field_set:omm.proto.Greeks.rho_cash)
+}
+
+// double vanna = 18;
+inline void Greeks::clear_vanna() {
+  _impl_.vanna_ = 0;
+}
+inline double Greeks::_internal_vanna() const {
+  return _impl_.vanna_;
+}
+inline double Greeks::vanna() const {
+  // @@protoc_insertion_point(field_get:omm.proto.Greeks.vanna)
+  return _internal_vanna();
+}
+inline void Greeks::_internal_set_vanna(double value) {
+  
+  _impl_.vanna_ = value;
+}
+inline void Greeks::set_vanna(double value) {
+  _internal_set_vanna(value);
+  // @@protoc_insertion_point(field_set:omm.proto.Greeks.vanna)
+}
+
+// double volga = 19;
+inline void Greeks::clear_volga() {
+  _impl_.volga_ = 0;
+}
+inline double Greeks::_internal_volga() const {
+  return _impl_.volga_;
+}
+inline double Greeks::volga() const {
+  // @@protoc_insertion_point(field_get:omm.proto.Greeks.volga)
+  return _internal_volga();
+}
+inline void Greeks::_internal_set_volga(double value) {
+  
+  _impl_.volga_ = value;
+}
+inline void Greeks::set_volga(double value) {
+  _internal_set_volga(value);
+  // @@protoc_insertion_point(field_set:omm.proto.Greeks.volga)
+}
+
+// double charm = 20;
+inline void Greeks::clear_charm() {
+  _impl_.charm_ = 0;
+}
+inline double Greeks::_internal_charm() const {
+  return _impl_.charm_;
+}
+inline double Greeks::charm() const {
+  // @@protoc_insertion_point(field_get:omm.proto.Greeks.charm)
+  return _internal_charm();
+}
+inline void Greeks::_internal_set_charm(double value) {
+  
+  _impl_.charm_ = value;
+}
+inline void Greeks::set_charm(double value) {
+  _internal_set_charm(value);
+  // @@protoc_insertion_point(field_set:omm.proto.Greeks.charm)
 }
 
 // -------------------------------------------------------------------
@@ -6101,6 +12170,26 @@ inline void OrderUpdate::set_exchange_trade_id(uint64_t value) {
   // @@protoc_insertion_point(field_set:omm.proto.OrderUpdate.exchange_trade_id)
 }
 
+// uint32 book_id = 12;
+inline void OrderUpdate::clear_book_id() {
+  _impl_.book_id_ = 0u;
+}
+inline uint32_t OrderUpdate::_internal_book_id() const {
+  return _impl_.book_id_;
+}
+inline uint32_t OrderUpdate::book_id() const {
+  // @@protoc_insertion_point(field_get:omm.proto.OrderUpdate.book_id)
+  return _internal_book_id();
+}
+inline void OrderUpdate::_internal_set_book_id(uint32_t value) {
+  
+  _impl_.book_id_ = value;
+}
+inline void OrderUpdate::set_book_id(uint32_t value) {
+  _internal_set_book_id(value);
+  // @@protoc_insertion_point(field_set:omm.proto.OrderUpdate.book_id)
+}
+
 // -------------------------------------------------------------------
 
 // QuoteUpdate
@@ -6293,6 +12382,26 @@ inline void QuoteUpdate::_internal_set_ts_ns(int64_t value) {
 inline void QuoteUpdate::set_ts_ns(int64_t value) {
   _internal_set_ts_ns(value);
   // @@protoc_insertion_point(field_set:omm.proto.QuoteUpdate.ts_ns)
+}
+
+// uint32 book_id = 9;
+inline void QuoteUpdate::clear_book_id() {
+  _impl_.book_id_ = 0u;
+}
+inline uint32_t QuoteUpdate::_internal_book_id() const {
+  return _impl_.book_id_;
+}
+inline uint32_t QuoteUpdate::book_id() const {
+  // @@protoc_insertion_point(field_get:omm.proto.QuoteUpdate.book_id)
+  return _internal_book_id();
+}
+inline void QuoteUpdate::_internal_set_book_id(uint32_t value) {
+  
+  _impl_.book_id_ = value;
+}
+inline void QuoteUpdate::set_book_id(uint32_t value) {
+  _internal_set_book_id(value);
+  // @@protoc_insertion_point(field_set:omm.proto.QuoteUpdate.book_id)
 }
 
 // -------------------------------------------------------------------
@@ -6649,6 +12758,1356 @@ inline void InstrumentInfo::set_expiry_date(int32_t value) {
   // @@protoc_insertion_point(field_set:omm.proto.InstrumentInfo.expiry_date)
 }
 
+// double tick_size = 11;
+inline void InstrumentInfo::clear_tick_size() {
+  _impl_.tick_size_ = 0;
+}
+inline double InstrumentInfo::_internal_tick_size() const {
+  return _impl_.tick_size_;
+}
+inline double InstrumentInfo::tick_size() const {
+  // @@protoc_insertion_point(field_get:omm.proto.InstrumentInfo.tick_size)
+  return _internal_tick_size();
+}
+inline void InstrumentInfo::_internal_set_tick_size(double value) {
+  
+  _impl_.tick_size_ = value;
+}
+inline void InstrumentInfo::set_tick_size(double value) {
+  _internal_set_tick_size(value);
+  // @@protoc_insertion_point(field_set:omm.proto.InstrumentInfo.tick_size)
+}
+
+// double multiplier = 12;
+inline void InstrumentInfo::clear_multiplier() {
+  _impl_.multiplier_ = 0;
+}
+inline double InstrumentInfo::_internal_multiplier() const {
+  return _impl_.multiplier_;
+}
+inline double InstrumentInfo::multiplier() const {
+  // @@protoc_insertion_point(field_get:omm.proto.InstrumentInfo.multiplier)
+  return _internal_multiplier();
+}
+inline void InstrumentInfo::_internal_set_multiplier(double value) {
+  
+  _impl_.multiplier_ = value;
+}
+inline void InstrumentInfo::set_multiplier(double value) {
+  _internal_set_multiplier(value);
+  // @@protoc_insertion_point(field_set:omm.proto.InstrumentInfo.multiplier)
+}
+
+// -------------------------------------------------------------------
+
+// UserInfo
+
+// uint32 user_id = 1;
+inline void UserInfo::clear_user_id() {
+  _impl_.user_id_ = 0u;
+}
+inline uint32_t UserInfo::_internal_user_id() const {
+  return _impl_.user_id_;
+}
+inline uint32_t UserInfo::user_id() const {
+  // @@protoc_insertion_point(field_get:omm.proto.UserInfo.user_id)
+  return _internal_user_id();
+}
+inline void UserInfo::_internal_set_user_id(uint32_t value) {
+  
+  _impl_.user_id_ = value;
+}
+inline void UserInfo::set_user_id(uint32_t value) {
+  _internal_set_user_id(value);
+  // @@protoc_insertion_point(field_set:omm.proto.UserInfo.user_id)
+}
+
+// string username = 2;
+inline void UserInfo::clear_username() {
+  _impl_.username_.ClearToEmpty();
+}
+inline const std::string& UserInfo::username() const {
+  // @@protoc_insertion_point(field_get:omm.proto.UserInfo.username)
+  return _internal_username();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void UserInfo::set_username(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.username_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:omm.proto.UserInfo.username)
+}
+inline std::string* UserInfo::mutable_username() {
+  std::string* _s = _internal_mutable_username();
+  // @@protoc_insertion_point(field_mutable:omm.proto.UserInfo.username)
+  return _s;
+}
+inline const std::string& UserInfo::_internal_username() const {
+  return _impl_.username_.Get();
+}
+inline void UserInfo::_internal_set_username(const std::string& value) {
+  
+  _impl_.username_.Set(value, GetArenaForAllocation());
+}
+inline std::string* UserInfo::_internal_mutable_username() {
+  
+  return _impl_.username_.Mutable(GetArenaForAllocation());
+}
+inline std::string* UserInfo::release_username() {
+  // @@protoc_insertion_point(field_release:omm.proto.UserInfo.username)
+  return _impl_.username_.Release();
+}
+inline void UserInfo::set_allocated_username(std::string* username) {
+  if (username != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.username_.SetAllocated(username, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.username_.IsDefault()) {
+    _impl_.username_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.UserInfo.username)
+}
+
+// string display_name = 3;
+inline void UserInfo::clear_display_name() {
+  _impl_.display_name_.ClearToEmpty();
+}
+inline const std::string& UserInfo::display_name() const {
+  // @@protoc_insertion_point(field_get:omm.proto.UserInfo.display_name)
+  return _internal_display_name();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void UserInfo::set_display_name(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.display_name_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:omm.proto.UserInfo.display_name)
+}
+inline std::string* UserInfo::mutable_display_name() {
+  std::string* _s = _internal_mutable_display_name();
+  // @@protoc_insertion_point(field_mutable:omm.proto.UserInfo.display_name)
+  return _s;
+}
+inline const std::string& UserInfo::_internal_display_name() const {
+  return _impl_.display_name_.Get();
+}
+inline void UserInfo::_internal_set_display_name(const std::string& value) {
+  
+  _impl_.display_name_.Set(value, GetArenaForAllocation());
+}
+inline std::string* UserInfo::_internal_mutable_display_name() {
+  
+  return _impl_.display_name_.Mutable(GetArenaForAllocation());
+}
+inline std::string* UserInfo::release_display_name() {
+  // @@protoc_insertion_point(field_release:omm.proto.UserInfo.display_name)
+  return _impl_.display_name_.Release();
+}
+inline void UserInfo::set_allocated_display_name(std::string* display_name) {
+  if (display_name != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.display_name_.SetAllocated(display_name, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.display_name_.IsDefault()) {
+    _impl_.display_name_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.UserInfo.display_name)
+}
+
+// bool active = 4;
+inline void UserInfo::clear_active() {
+  _impl_.active_ = false;
+}
+inline bool UserInfo::_internal_active() const {
+  return _impl_.active_;
+}
+inline bool UserInfo::active() const {
+  // @@protoc_insertion_point(field_get:omm.proto.UserInfo.active)
+  return _internal_active();
+}
+inline void UserInfo::_internal_set_active(bool value) {
+  
+  _impl_.active_ = value;
+}
+inline void UserInfo::set_active(bool value) {
+  _internal_set_active(value);
+  // @@protoc_insertion_point(field_set:omm.proto.UserInfo.active)
+}
+
+// uint32 default_book_id = 5;
+inline void UserInfo::clear_default_book_id() {
+  _impl_.default_book_id_ = 0u;
+}
+inline uint32_t UserInfo::_internal_default_book_id() const {
+  return _impl_.default_book_id_;
+}
+inline uint32_t UserInfo::default_book_id() const {
+  // @@protoc_insertion_point(field_get:omm.proto.UserInfo.default_book_id)
+  return _internal_default_book_id();
+}
+inline void UserInfo::_internal_set_default_book_id(uint32_t value) {
+  
+  _impl_.default_book_id_ = value;
+}
+inline void UserInfo::set_default_book_id(uint32_t value) {
+  _internal_set_default_book_id(value);
+  // @@protoc_insertion_point(field_set:omm.proto.UserInfo.default_book_id)
+}
+
+// -------------------------------------------------------------------
+
+// LoginRequest
+
+// string username = 1;
+inline void LoginRequest::clear_username() {
+  _impl_.username_.ClearToEmpty();
+}
+inline const std::string& LoginRequest::username() const {
+  // @@protoc_insertion_point(field_get:omm.proto.LoginRequest.username)
+  return _internal_username();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void LoginRequest::set_username(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.username_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:omm.proto.LoginRequest.username)
+}
+inline std::string* LoginRequest::mutable_username() {
+  std::string* _s = _internal_mutable_username();
+  // @@protoc_insertion_point(field_mutable:omm.proto.LoginRequest.username)
+  return _s;
+}
+inline const std::string& LoginRequest::_internal_username() const {
+  return _impl_.username_.Get();
+}
+inline void LoginRequest::_internal_set_username(const std::string& value) {
+  
+  _impl_.username_.Set(value, GetArenaForAllocation());
+}
+inline std::string* LoginRequest::_internal_mutable_username() {
+  
+  return _impl_.username_.Mutable(GetArenaForAllocation());
+}
+inline std::string* LoginRequest::release_username() {
+  // @@protoc_insertion_point(field_release:omm.proto.LoginRequest.username)
+  return _impl_.username_.Release();
+}
+inline void LoginRequest::set_allocated_username(std::string* username) {
+  if (username != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.username_.SetAllocated(username, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.username_.IsDefault()) {
+    _impl_.username_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.LoginRequest.username)
+}
+
+// string password = 2;
+inline void LoginRequest::clear_password() {
+  _impl_.password_.ClearToEmpty();
+}
+inline const std::string& LoginRequest::password() const {
+  // @@protoc_insertion_point(field_get:omm.proto.LoginRequest.password)
+  return _internal_password();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void LoginRequest::set_password(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.password_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:omm.proto.LoginRequest.password)
+}
+inline std::string* LoginRequest::mutable_password() {
+  std::string* _s = _internal_mutable_password();
+  // @@protoc_insertion_point(field_mutable:omm.proto.LoginRequest.password)
+  return _s;
+}
+inline const std::string& LoginRequest::_internal_password() const {
+  return _impl_.password_.Get();
+}
+inline void LoginRequest::_internal_set_password(const std::string& value) {
+  
+  _impl_.password_.Set(value, GetArenaForAllocation());
+}
+inline std::string* LoginRequest::_internal_mutable_password() {
+  
+  return _impl_.password_.Mutable(GetArenaForAllocation());
+}
+inline std::string* LoginRequest::release_password() {
+  // @@protoc_insertion_point(field_release:omm.proto.LoginRequest.password)
+  return _impl_.password_.Release();
+}
+inline void LoginRequest::set_allocated_password(std::string* password) {
+  if (password != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.password_.SetAllocated(password, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.password_.IsDefault()) {
+    _impl_.password_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.LoginRequest.password)
+}
+
+// -------------------------------------------------------------------
+
+// LoginResponse
+
+// bool ok = 1;
+inline void LoginResponse::clear_ok() {
+  _impl_.ok_ = false;
+}
+inline bool LoginResponse::_internal_ok() const {
+  return _impl_.ok_;
+}
+inline bool LoginResponse::ok() const {
+  // @@protoc_insertion_point(field_get:omm.proto.LoginResponse.ok)
+  return _internal_ok();
+}
+inline void LoginResponse::_internal_set_ok(bool value) {
+  
+  _impl_.ok_ = value;
+}
+inline void LoginResponse::set_ok(bool value) {
+  _internal_set_ok(value);
+  // @@protoc_insertion_point(field_set:omm.proto.LoginResponse.ok)
+}
+
+// string message = 2;
+inline void LoginResponse::clear_message() {
+  _impl_.message_.ClearToEmpty();
+}
+inline const std::string& LoginResponse::message() const {
+  // @@protoc_insertion_point(field_get:omm.proto.LoginResponse.message)
+  return _internal_message();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void LoginResponse::set_message(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.message_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:omm.proto.LoginResponse.message)
+}
+inline std::string* LoginResponse::mutable_message() {
+  std::string* _s = _internal_mutable_message();
+  // @@protoc_insertion_point(field_mutable:omm.proto.LoginResponse.message)
+  return _s;
+}
+inline const std::string& LoginResponse::_internal_message() const {
+  return _impl_.message_.Get();
+}
+inline void LoginResponse::_internal_set_message(const std::string& value) {
+  
+  _impl_.message_.Set(value, GetArenaForAllocation());
+}
+inline std::string* LoginResponse::_internal_mutable_message() {
+  
+  return _impl_.message_.Mutable(GetArenaForAllocation());
+}
+inline std::string* LoginResponse::release_message() {
+  // @@protoc_insertion_point(field_release:omm.proto.LoginResponse.message)
+  return _impl_.message_.Release();
+}
+inline void LoginResponse::set_allocated_message(std::string* message) {
+  if (message != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.message_.SetAllocated(message, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.message_.IsDefault()) {
+    _impl_.message_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.LoginResponse.message)
+}
+
+// string session_token = 3;
+inline void LoginResponse::clear_session_token() {
+  _impl_.session_token_.ClearToEmpty();
+}
+inline const std::string& LoginResponse::session_token() const {
+  // @@protoc_insertion_point(field_get:omm.proto.LoginResponse.session_token)
+  return _internal_session_token();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void LoginResponse::set_session_token(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.session_token_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:omm.proto.LoginResponse.session_token)
+}
+inline std::string* LoginResponse::mutable_session_token() {
+  std::string* _s = _internal_mutable_session_token();
+  // @@protoc_insertion_point(field_mutable:omm.proto.LoginResponse.session_token)
+  return _s;
+}
+inline const std::string& LoginResponse::_internal_session_token() const {
+  return _impl_.session_token_.Get();
+}
+inline void LoginResponse::_internal_set_session_token(const std::string& value) {
+  
+  _impl_.session_token_.Set(value, GetArenaForAllocation());
+}
+inline std::string* LoginResponse::_internal_mutable_session_token() {
+  
+  return _impl_.session_token_.Mutable(GetArenaForAllocation());
+}
+inline std::string* LoginResponse::release_session_token() {
+  // @@protoc_insertion_point(field_release:omm.proto.LoginResponse.session_token)
+  return _impl_.session_token_.Release();
+}
+inline void LoginResponse::set_allocated_session_token(std::string* session_token) {
+  if (session_token != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.session_token_.SetAllocated(session_token, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.session_token_.IsDefault()) {
+    _impl_.session_token_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.LoginResponse.session_token)
+}
+
+// .omm.proto.UserInfo user = 4;
+inline bool LoginResponse::_internal_has_user() const {
+  return this != internal_default_instance() && _impl_.user_ != nullptr;
+}
+inline bool LoginResponse::has_user() const {
+  return _internal_has_user();
+}
+inline void LoginResponse::clear_user() {
+  if (GetArenaForAllocation() == nullptr && _impl_.user_ != nullptr) {
+    delete _impl_.user_;
+  }
+  _impl_.user_ = nullptr;
+}
+inline const ::omm::proto::UserInfo& LoginResponse::_internal_user() const {
+  const ::omm::proto::UserInfo* p = _impl_.user_;
+  return p != nullptr ? *p : reinterpret_cast<const ::omm::proto::UserInfo&>(
+      ::omm::proto::_UserInfo_default_instance_);
+}
+inline const ::omm::proto::UserInfo& LoginResponse::user() const {
+  // @@protoc_insertion_point(field_get:omm.proto.LoginResponse.user)
+  return _internal_user();
+}
+inline void LoginResponse::unsafe_arena_set_allocated_user(
+    ::omm::proto::UserInfo* user) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.user_);
+  }
+  _impl_.user_ = user;
+  if (user) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:omm.proto.LoginResponse.user)
+}
+inline ::omm::proto::UserInfo* LoginResponse::release_user() {
+  
+  ::omm::proto::UserInfo* temp = _impl_.user_;
+  _impl_.user_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::omm::proto::UserInfo* LoginResponse::unsafe_arena_release_user() {
+  // @@protoc_insertion_point(field_release:omm.proto.LoginResponse.user)
+  
+  ::omm::proto::UserInfo* temp = _impl_.user_;
+  _impl_.user_ = nullptr;
+  return temp;
+}
+inline ::omm::proto::UserInfo* LoginResponse::_internal_mutable_user() {
+  
+  if (_impl_.user_ == nullptr) {
+    auto* p = CreateMaybeMessage<::omm::proto::UserInfo>(GetArenaForAllocation());
+    _impl_.user_ = p;
+  }
+  return _impl_.user_;
+}
+inline ::omm::proto::UserInfo* LoginResponse::mutable_user() {
+  ::omm::proto::UserInfo* _msg = _internal_mutable_user();
+  // @@protoc_insertion_point(field_mutable:omm.proto.LoginResponse.user)
+  return _msg;
+}
+inline void LoginResponse::set_allocated_user(::omm::proto::UserInfo* user) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.user_;
+  }
+  if (user) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(user);
+    if (message_arena != submessage_arena) {
+      user = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, user, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.user_ = user;
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.LoginResponse.user)
+}
+
+// -------------------------------------------------------------------
+
+// LogoutRequest
+
+// -------------------------------------------------------------------
+
+// LogoutResponse
+
+// bool ok = 1;
+inline void LogoutResponse::clear_ok() {
+  _impl_.ok_ = false;
+}
+inline bool LogoutResponse::_internal_ok() const {
+  return _impl_.ok_;
+}
+inline bool LogoutResponse::ok() const {
+  // @@protoc_insertion_point(field_get:omm.proto.LogoutResponse.ok)
+  return _internal_ok();
+}
+inline void LogoutResponse::_internal_set_ok(bool value) {
+  
+  _impl_.ok_ = value;
+}
+inline void LogoutResponse::set_ok(bool value) {
+  _internal_set_ok(value);
+  // @@protoc_insertion_point(field_set:omm.proto.LogoutResponse.ok)
+}
+
+// string message = 2;
+inline void LogoutResponse::clear_message() {
+  _impl_.message_.ClearToEmpty();
+}
+inline const std::string& LogoutResponse::message() const {
+  // @@protoc_insertion_point(field_get:omm.proto.LogoutResponse.message)
+  return _internal_message();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void LogoutResponse::set_message(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.message_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:omm.proto.LogoutResponse.message)
+}
+inline std::string* LogoutResponse::mutable_message() {
+  std::string* _s = _internal_mutable_message();
+  // @@protoc_insertion_point(field_mutable:omm.proto.LogoutResponse.message)
+  return _s;
+}
+inline const std::string& LogoutResponse::_internal_message() const {
+  return _impl_.message_.Get();
+}
+inline void LogoutResponse::_internal_set_message(const std::string& value) {
+  
+  _impl_.message_.Set(value, GetArenaForAllocation());
+}
+inline std::string* LogoutResponse::_internal_mutable_message() {
+  
+  return _impl_.message_.Mutable(GetArenaForAllocation());
+}
+inline std::string* LogoutResponse::release_message() {
+  // @@protoc_insertion_point(field_release:omm.proto.LogoutResponse.message)
+  return _impl_.message_.Release();
+}
+inline void LogoutResponse::set_allocated_message(std::string* message) {
+  if (message != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.message_.SetAllocated(message, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.message_.IsDefault()) {
+    _impl_.message_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.LogoutResponse.message)
+}
+
+// bool triggered_shutdown = 3;
+inline void LogoutResponse::clear_triggered_shutdown() {
+  _impl_.triggered_shutdown_ = false;
+}
+inline bool LogoutResponse::_internal_triggered_shutdown() const {
+  return _impl_.triggered_shutdown_;
+}
+inline bool LogoutResponse::triggered_shutdown() const {
+  // @@protoc_insertion_point(field_get:omm.proto.LogoutResponse.triggered_shutdown)
+  return _internal_triggered_shutdown();
+}
+inline void LogoutResponse::_internal_set_triggered_shutdown(bool value) {
+  
+  _impl_.triggered_shutdown_ = value;
+}
+inline void LogoutResponse::set_triggered_shutdown(bool value) {
+  _internal_set_triggered_shutdown(value);
+  // @@protoc_insertion_point(field_set:omm.proto.LogoutResponse.triggered_shutdown)
+}
+
+// -------------------------------------------------------------------
+
+// WhoAmIRequest
+
+// -------------------------------------------------------------------
+
+// WhoAmIResponse
+
+// bool ok = 1;
+inline void WhoAmIResponse::clear_ok() {
+  _impl_.ok_ = false;
+}
+inline bool WhoAmIResponse::_internal_ok() const {
+  return _impl_.ok_;
+}
+inline bool WhoAmIResponse::ok() const {
+  // @@protoc_insertion_point(field_get:omm.proto.WhoAmIResponse.ok)
+  return _internal_ok();
+}
+inline void WhoAmIResponse::_internal_set_ok(bool value) {
+  
+  _impl_.ok_ = value;
+}
+inline void WhoAmIResponse::set_ok(bool value) {
+  _internal_set_ok(value);
+  // @@protoc_insertion_point(field_set:omm.proto.WhoAmIResponse.ok)
+}
+
+// string message = 2;
+inline void WhoAmIResponse::clear_message() {
+  _impl_.message_.ClearToEmpty();
+}
+inline const std::string& WhoAmIResponse::message() const {
+  // @@protoc_insertion_point(field_get:omm.proto.WhoAmIResponse.message)
+  return _internal_message();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void WhoAmIResponse::set_message(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.message_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:omm.proto.WhoAmIResponse.message)
+}
+inline std::string* WhoAmIResponse::mutable_message() {
+  std::string* _s = _internal_mutable_message();
+  // @@protoc_insertion_point(field_mutable:omm.proto.WhoAmIResponse.message)
+  return _s;
+}
+inline const std::string& WhoAmIResponse::_internal_message() const {
+  return _impl_.message_.Get();
+}
+inline void WhoAmIResponse::_internal_set_message(const std::string& value) {
+  
+  _impl_.message_.Set(value, GetArenaForAllocation());
+}
+inline std::string* WhoAmIResponse::_internal_mutable_message() {
+  
+  return _impl_.message_.Mutable(GetArenaForAllocation());
+}
+inline std::string* WhoAmIResponse::release_message() {
+  // @@protoc_insertion_point(field_release:omm.proto.WhoAmIResponse.message)
+  return _impl_.message_.Release();
+}
+inline void WhoAmIResponse::set_allocated_message(std::string* message) {
+  if (message != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.message_.SetAllocated(message, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.message_.IsDefault()) {
+    _impl_.message_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.WhoAmIResponse.message)
+}
+
+// .omm.proto.UserInfo user = 3;
+inline bool WhoAmIResponse::_internal_has_user() const {
+  return this != internal_default_instance() && _impl_.user_ != nullptr;
+}
+inline bool WhoAmIResponse::has_user() const {
+  return _internal_has_user();
+}
+inline void WhoAmIResponse::clear_user() {
+  if (GetArenaForAllocation() == nullptr && _impl_.user_ != nullptr) {
+    delete _impl_.user_;
+  }
+  _impl_.user_ = nullptr;
+}
+inline const ::omm::proto::UserInfo& WhoAmIResponse::_internal_user() const {
+  const ::omm::proto::UserInfo* p = _impl_.user_;
+  return p != nullptr ? *p : reinterpret_cast<const ::omm::proto::UserInfo&>(
+      ::omm::proto::_UserInfo_default_instance_);
+}
+inline const ::omm::proto::UserInfo& WhoAmIResponse::user() const {
+  // @@protoc_insertion_point(field_get:omm.proto.WhoAmIResponse.user)
+  return _internal_user();
+}
+inline void WhoAmIResponse::unsafe_arena_set_allocated_user(
+    ::omm::proto::UserInfo* user) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.user_);
+  }
+  _impl_.user_ = user;
+  if (user) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:omm.proto.WhoAmIResponse.user)
+}
+inline ::omm::proto::UserInfo* WhoAmIResponse::release_user() {
+  
+  ::omm::proto::UserInfo* temp = _impl_.user_;
+  _impl_.user_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::omm::proto::UserInfo* WhoAmIResponse::unsafe_arena_release_user() {
+  // @@protoc_insertion_point(field_release:omm.proto.WhoAmIResponse.user)
+  
+  ::omm::proto::UserInfo* temp = _impl_.user_;
+  _impl_.user_ = nullptr;
+  return temp;
+}
+inline ::omm::proto::UserInfo* WhoAmIResponse::_internal_mutable_user() {
+  
+  if (_impl_.user_ == nullptr) {
+    auto* p = CreateMaybeMessage<::omm::proto::UserInfo>(GetArenaForAllocation());
+    _impl_.user_ = p;
+  }
+  return _impl_.user_;
+}
+inline ::omm::proto::UserInfo* WhoAmIResponse::mutable_user() {
+  ::omm::proto::UserInfo* _msg = _internal_mutable_user();
+  // @@protoc_insertion_point(field_mutable:omm.proto.WhoAmIResponse.user)
+  return _msg;
+}
+inline void WhoAmIResponse::set_allocated_user(::omm::proto::UserInfo* user) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.user_;
+  }
+  if (user) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(user);
+    if (message_arena != submessage_arena) {
+      user = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, user, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.user_ = user;
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.WhoAmIResponse.user)
+}
+
+// -------------------------------------------------------------------
+
+// BookInfo
+
+// uint32 book_id = 1;
+inline void BookInfo::clear_book_id() {
+  _impl_.book_id_ = 0u;
+}
+inline uint32_t BookInfo::_internal_book_id() const {
+  return _impl_.book_id_;
+}
+inline uint32_t BookInfo::book_id() const {
+  // @@protoc_insertion_point(field_get:omm.proto.BookInfo.book_id)
+  return _internal_book_id();
+}
+inline void BookInfo::_internal_set_book_id(uint32_t value) {
+  
+  _impl_.book_id_ = value;
+}
+inline void BookInfo::set_book_id(uint32_t value) {
+  _internal_set_book_id(value);
+  // @@protoc_insertion_point(field_set:omm.proto.BookInfo.book_id)
+}
+
+// string book_code = 2;
+inline void BookInfo::clear_book_code() {
+  _impl_.book_code_.ClearToEmpty();
+}
+inline const std::string& BookInfo::book_code() const {
+  // @@protoc_insertion_point(field_get:omm.proto.BookInfo.book_code)
+  return _internal_book_code();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void BookInfo::set_book_code(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.book_code_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:omm.proto.BookInfo.book_code)
+}
+inline std::string* BookInfo::mutable_book_code() {
+  std::string* _s = _internal_mutable_book_code();
+  // @@protoc_insertion_point(field_mutable:omm.proto.BookInfo.book_code)
+  return _s;
+}
+inline const std::string& BookInfo::_internal_book_code() const {
+  return _impl_.book_code_.Get();
+}
+inline void BookInfo::_internal_set_book_code(const std::string& value) {
+  
+  _impl_.book_code_.Set(value, GetArenaForAllocation());
+}
+inline std::string* BookInfo::_internal_mutable_book_code() {
+  
+  return _impl_.book_code_.Mutable(GetArenaForAllocation());
+}
+inline std::string* BookInfo::release_book_code() {
+  // @@protoc_insertion_point(field_release:omm.proto.BookInfo.book_code)
+  return _impl_.book_code_.Release();
+}
+inline void BookInfo::set_allocated_book_code(std::string* book_code) {
+  if (book_code != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.book_code_.SetAllocated(book_code, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.book_code_.IsDefault()) {
+    _impl_.book_code_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.BookInfo.book_code)
+}
+
+// string display_name = 3;
+inline void BookInfo::clear_display_name() {
+  _impl_.display_name_.ClearToEmpty();
+}
+inline const std::string& BookInfo::display_name() const {
+  // @@protoc_insertion_point(field_get:omm.proto.BookInfo.display_name)
+  return _internal_display_name();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void BookInfo::set_display_name(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.display_name_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:omm.proto.BookInfo.display_name)
+}
+inline std::string* BookInfo::mutable_display_name() {
+  std::string* _s = _internal_mutable_display_name();
+  // @@protoc_insertion_point(field_mutable:omm.proto.BookInfo.display_name)
+  return _s;
+}
+inline const std::string& BookInfo::_internal_display_name() const {
+  return _impl_.display_name_.Get();
+}
+inline void BookInfo::_internal_set_display_name(const std::string& value) {
+  
+  _impl_.display_name_.Set(value, GetArenaForAllocation());
+}
+inline std::string* BookInfo::_internal_mutable_display_name() {
+  
+  return _impl_.display_name_.Mutable(GetArenaForAllocation());
+}
+inline std::string* BookInfo::release_display_name() {
+  // @@protoc_insertion_point(field_release:omm.proto.BookInfo.display_name)
+  return _impl_.display_name_.Release();
+}
+inline void BookInfo::set_allocated_display_name(std::string* display_name) {
+  if (display_name != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.display_name_.SetAllocated(display_name, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.display_name_.IsDefault()) {
+    _impl_.display_name_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.BookInfo.display_name)
+}
+
+// bool active = 4;
+inline void BookInfo::clear_active() {
+  _impl_.active_ = false;
+}
+inline bool BookInfo::_internal_active() const {
+  return _impl_.active_;
+}
+inline bool BookInfo::active() const {
+  // @@protoc_insertion_point(field_get:omm.proto.BookInfo.active)
+  return _internal_active();
+}
+inline void BookInfo::_internal_set_active(bool value) {
+  
+  _impl_.active_ = value;
+}
+inline void BookInfo::set_active(bool value) {
+  _internal_set_active(value);
+  // @@protoc_insertion_point(field_set:omm.proto.BookInfo.active)
+}
+
+// string description = 5;
+inline void BookInfo::clear_description() {
+  _impl_.description_.ClearToEmpty();
+}
+inline const std::string& BookInfo::description() const {
+  // @@protoc_insertion_point(field_get:omm.proto.BookInfo.description)
+  return _internal_description();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void BookInfo::set_description(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.description_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:omm.proto.BookInfo.description)
+}
+inline std::string* BookInfo::mutable_description() {
+  std::string* _s = _internal_mutable_description();
+  // @@protoc_insertion_point(field_mutable:omm.proto.BookInfo.description)
+  return _s;
+}
+inline const std::string& BookInfo::_internal_description() const {
+  return _impl_.description_.Get();
+}
+inline void BookInfo::_internal_set_description(const std::string& value) {
+  
+  _impl_.description_.Set(value, GetArenaForAllocation());
+}
+inline std::string* BookInfo::_internal_mutable_description() {
+  
+  return _impl_.description_.Mutable(GetArenaForAllocation());
+}
+inline std::string* BookInfo::release_description() {
+  // @@protoc_insertion_point(field_release:omm.proto.BookInfo.description)
+  return _impl_.description_.Release();
+}
+inline void BookInfo::set_allocated_description(std::string* description) {
+  if (description != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.description_.SetAllocated(description, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.description_.IsDefault()) {
+    _impl_.description_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.BookInfo.description)
+}
+
+// -------------------------------------------------------------------
+
+// BookPosition
+
+// uint32 book_id = 1;
+inline void BookPosition::clear_book_id() {
+  _impl_.book_id_ = 0u;
+}
+inline uint32_t BookPosition::_internal_book_id() const {
+  return _impl_.book_id_;
+}
+inline uint32_t BookPosition::book_id() const {
+  // @@protoc_insertion_point(field_get:omm.proto.BookPosition.book_id)
+  return _internal_book_id();
+}
+inline void BookPosition::_internal_set_book_id(uint32_t value) {
+  
+  _impl_.book_id_ = value;
+}
+inline void BookPosition::set_book_id(uint32_t value) {
+  _internal_set_book_id(value);
+  // @@protoc_insertion_point(field_set:omm.proto.BookPosition.book_id)
+}
+
+// uint32 instrument_id = 2;
+inline void BookPosition::clear_instrument_id() {
+  _impl_.instrument_id_ = 0u;
+}
+inline uint32_t BookPosition::_internal_instrument_id() const {
+  return _impl_.instrument_id_;
+}
+inline uint32_t BookPosition::instrument_id() const {
+  // @@protoc_insertion_point(field_get:omm.proto.BookPosition.instrument_id)
+  return _internal_instrument_id();
+}
+inline void BookPosition::_internal_set_instrument_id(uint32_t value) {
+  
+  _impl_.instrument_id_ = value;
+}
+inline void BookPosition::set_instrument_id(uint32_t value) {
+  _internal_set_instrument_id(value);
+  // @@protoc_insertion_point(field_set:omm.proto.BookPosition.instrument_id)
+}
+
+// uint32 product_index = 3;
+inline void BookPosition::clear_product_index() {
+  _impl_.product_index_ = 0u;
+}
+inline uint32_t BookPosition::_internal_product_index() const {
+  return _impl_.product_index_;
+}
+inline uint32_t BookPosition::product_index() const {
+  // @@protoc_insertion_point(field_get:omm.proto.BookPosition.product_index)
+  return _internal_product_index();
+}
+inline void BookPosition::_internal_set_product_index(uint32_t value) {
+  
+  _impl_.product_index_ = value;
+}
+inline void BookPosition::set_product_index(uint32_t value) {
+  _internal_set_product_index(value);
+  // @@protoc_insertion_point(field_set:omm.proto.BookPosition.product_index)
+}
+
+// int32 net_position = 4;
+inline void BookPosition::clear_net_position() {
+  _impl_.net_position_ = 0;
+}
+inline int32_t BookPosition::_internal_net_position() const {
+  return _impl_.net_position_;
+}
+inline int32_t BookPosition::net_position() const {
+  // @@protoc_insertion_point(field_get:omm.proto.BookPosition.net_position)
+  return _internal_net_position();
+}
+inline void BookPosition::_internal_set_net_position(int32_t value) {
+  
+  _impl_.net_position_ = value;
+}
+inline void BookPosition::set_net_position(int32_t value) {
+  _internal_set_net_position(value);
+  // @@protoc_insertion_point(field_set:omm.proto.BookPosition.net_position)
+}
+
+// int32 long_position = 5;
+inline void BookPosition::clear_long_position() {
+  _impl_.long_position_ = 0;
+}
+inline int32_t BookPosition::_internal_long_position() const {
+  return _impl_.long_position_;
+}
+inline int32_t BookPosition::long_position() const {
+  // @@protoc_insertion_point(field_get:omm.proto.BookPosition.long_position)
+  return _internal_long_position();
+}
+inline void BookPosition::_internal_set_long_position(int32_t value) {
+  
+  _impl_.long_position_ = value;
+}
+inline void BookPosition::set_long_position(int32_t value) {
+  _internal_set_long_position(value);
+  // @@protoc_insertion_point(field_set:omm.proto.BookPosition.long_position)
+}
+
+// int32 short_position = 6;
+inline void BookPosition::clear_short_position() {
+  _impl_.short_position_ = 0;
+}
+inline int32_t BookPosition::_internal_short_position() const {
+  return _impl_.short_position_;
+}
+inline int32_t BookPosition::short_position() const {
+  // @@protoc_insertion_point(field_get:omm.proto.BookPosition.short_position)
+  return _internal_short_position();
+}
+inline void BookPosition::_internal_set_short_position(int32_t value) {
+  
+  _impl_.short_position_ = value;
+}
+inline void BookPosition::set_short_position(int32_t value) {
+  _internal_set_short_position(value);
+  // @@protoc_insertion_point(field_set:omm.proto.BookPosition.short_position)
+}
+
+// double avg_long_price = 7;
+inline void BookPosition::clear_avg_long_price() {
+  _impl_.avg_long_price_ = 0;
+}
+inline double BookPosition::_internal_avg_long_price() const {
+  return _impl_.avg_long_price_;
+}
+inline double BookPosition::avg_long_price() const {
+  // @@protoc_insertion_point(field_get:omm.proto.BookPosition.avg_long_price)
+  return _internal_avg_long_price();
+}
+inline void BookPosition::_internal_set_avg_long_price(double value) {
+  
+  _impl_.avg_long_price_ = value;
+}
+inline void BookPosition::set_avg_long_price(double value) {
+  _internal_set_avg_long_price(value);
+  // @@protoc_insertion_point(field_set:omm.proto.BookPosition.avg_long_price)
+}
+
+// double avg_short_price = 8;
+inline void BookPosition::clear_avg_short_price() {
+  _impl_.avg_short_price_ = 0;
+}
+inline double BookPosition::_internal_avg_short_price() const {
+  return _impl_.avg_short_price_;
+}
+inline double BookPosition::avg_short_price() const {
+  // @@protoc_insertion_point(field_get:omm.proto.BookPosition.avg_short_price)
+  return _internal_avg_short_price();
+}
+inline void BookPosition::_internal_set_avg_short_price(double value) {
+  
+  _impl_.avg_short_price_ = value;
+}
+inline void BookPosition::set_avg_short_price(double value) {
+  _internal_set_avg_short_price(value);
+  // @@protoc_insertion_point(field_set:omm.proto.BookPosition.avg_short_price)
+}
+
+// double realized_pnl = 9;
+inline void BookPosition::clear_realized_pnl() {
+  _impl_.realized_pnl_ = 0;
+}
+inline double BookPosition::_internal_realized_pnl() const {
+  return _impl_.realized_pnl_;
+}
+inline double BookPosition::realized_pnl() const {
+  // @@protoc_insertion_point(field_get:omm.proto.BookPosition.realized_pnl)
+  return _internal_realized_pnl();
+}
+inline void BookPosition::_internal_set_realized_pnl(double value) {
+  
+  _impl_.realized_pnl_ = value;
+}
+inline void BookPosition::set_realized_pnl(double value) {
+  _internal_set_realized_pnl(value);
+  // @@protoc_insertion_point(field_set:omm.proto.BookPosition.realized_pnl)
+}
+
+// -------------------------------------------------------------------
+
+// BookPortfolio
+
+// uint32 book_id = 1;
+inline void BookPortfolio::clear_book_id() {
+  _impl_.book_id_ = 0u;
+}
+inline uint32_t BookPortfolio::_internal_book_id() const {
+  return _impl_.book_id_;
+}
+inline uint32_t BookPortfolio::book_id() const {
+  // @@protoc_insertion_point(field_get:omm.proto.BookPortfolio.book_id)
+  return _internal_book_id();
+}
+inline void BookPortfolio::_internal_set_book_id(uint32_t value) {
+  
+  _impl_.book_id_ = value;
+}
+inline void BookPortfolio::set_book_id(uint32_t value) {
+  _internal_set_book_id(value);
+  // @@protoc_insertion_point(field_set:omm.proto.BookPortfolio.book_id)
+}
+
+// uint32 product_index = 2;
+inline void BookPortfolio::clear_product_index() {
+  _impl_.product_index_ = 0u;
+}
+inline uint32_t BookPortfolio::_internal_product_index() const {
+  return _impl_.product_index_;
+}
+inline uint32_t BookPortfolio::product_index() const {
+  // @@protoc_insertion_point(field_get:omm.proto.BookPortfolio.product_index)
+  return _internal_product_index();
+}
+inline void BookPortfolio::_internal_set_product_index(uint32_t value) {
+  
+  _impl_.product_index_ = value;
+}
+inline void BookPortfolio::set_product_index(uint32_t value) {
+  _internal_set_product_index(value);
+  // @@protoc_insertion_point(field_set:omm.proto.BookPortfolio.product_index)
+}
+
+// double total_delta = 3;
+inline void BookPortfolio::clear_total_delta() {
+  _impl_.total_delta_ = 0;
+}
+inline double BookPortfolio::_internal_total_delta() const {
+  return _impl_.total_delta_;
+}
+inline double BookPortfolio::total_delta() const {
+  // @@protoc_insertion_point(field_get:omm.proto.BookPortfolio.total_delta)
+  return _internal_total_delta();
+}
+inline void BookPortfolio::_internal_set_total_delta(double value) {
+  
+  _impl_.total_delta_ = value;
+}
+inline void BookPortfolio::set_total_delta(double value) {
+  _internal_set_total_delta(value);
+  // @@protoc_insertion_point(field_set:omm.proto.BookPortfolio.total_delta)
+}
+
+// double total_gamma = 4;
+inline void BookPortfolio::clear_total_gamma() {
+  _impl_.total_gamma_ = 0;
+}
+inline double BookPortfolio::_internal_total_gamma() const {
+  return _impl_.total_gamma_;
+}
+inline double BookPortfolio::total_gamma() const {
+  // @@protoc_insertion_point(field_get:omm.proto.BookPortfolio.total_gamma)
+  return _internal_total_gamma();
+}
+inline void BookPortfolio::_internal_set_total_gamma(double value) {
+  
+  _impl_.total_gamma_ = value;
+}
+inline void BookPortfolio::set_total_gamma(double value) {
+  _internal_set_total_gamma(value);
+  // @@protoc_insertion_point(field_set:omm.proto.BookPortfolio.total_gamma)
+}
+
+// double total_vega = 5;
+inline void BookPortfolio::clear_total_vega() {
+  _impl_.total_vega_ = 0;
+}
+inline double BookPortfolio::_internal_total_vega() const {
+  return _impl_.total_vega_;
+}
+inline double BookPortfolio::total_vega() const {
+  // @@protoc_insertion_point(field_get:omm.proto.BookPortfolio.total_vega)
+  return _internal_total_vega();
+}
+inline void BookPortfolio::_internal_set_total_vega(double value) {
+  
+  _impl_.total_vega_ = value;
+}
+inline void BookPortfolio::set_total_vega(double value) {
+  _internal_set_total_vega(value);
+  // @@protoc_insertion_point(field_set:omm.proto.BookPortfolio.total_vega)
+}
+
+// double total_theta = 6;
+inline void BookPortfolio::clear_total_theta() {
+  _impl_.total_theta_ = 0;
+}
+inline double BookPortfolio::_internal_total_theta() const {
+  return _impl_.total_theta_;
+}
+inline double BookPortfolio::total_theta() const {
+  // @@protoc_insertion_point(field_get:omm.proto.BookPortfolio.total_theta)
+  return _internal_total_theta();
+}
+inline void BookPortfolio::_internal_set_total_theta(double value) {
+  
+  _impl_.total_theta_ = value;
+}
+inline void BookPortfolio::set_total_theta(double value) {
+  _internal_set_total_theta(value);
+  // @@protoc_insertion_point(field_set:omm.proto.BookPortfolio.total_theta)
+}
+
+// double realized_pnl = 7;
+inline void BookPortfolio::clear_realized_pnl() {
+  _impl_.realized_pnl_ = 0;
+}
+inline double BookPortfolio::_internal_realized_pnl() const {
+  return _impl_.realized_pnl_;
+}
+inline double BookPortfolio::realized_pnl() const {
+  // @@protoc_insertion_point(field_get:omm.proto.BookPortfolio.realized_pnl)
+  return _internal_realized_pnl();
+}
+inline void BookPortfolio::_internal_set_realized_pnl(double value) {
+  
+  _impl_.realized_pnl_ = value;
+}
+inline void BookPortfolio::set_realized_pnl(double value) {
+  _internal_set_realized_pnl(value);
+  // @@protoc_insertion_point(field_set:omm.proto.BookPortfolio.realized_pnl)
+}
+
+// double unrealized_pnl = 8;
+inline void BookPortfolio::clear_unrealized_pnl() {
+  _impl_.unrealized_pnl_ = 0;
+}
+inline double BookPortfolio::_internal_unrealized_pnl() const {
+  return _impl_.unrealized_pnl_;
+}
+inline double BookPortfolio::unrealized_pnl() const {
+  // @@protoc_insertion_point(field_get:omm.proto.BookPortfolio.unrealized_pnl)
+  return _internal_unrealized_pnl();
+}
+inline void BookPortfolio::_internal_set_unrealized_pnl(double value) {
+  
+  _impl_.unrealized_pnl_ = value;
+}
+inline void BookPortfolio::set_unrealized_pnl(double value) {
+  _internal_set_unrealized_pnl(value);
+  // @@protoc_insertion_point(field_set:omm.proto.BookPortfolio.unrealized_pnl)
+}
+
+// int64 calc_ts_ns = 9;
+inline void BookPortfolio::clear_calc_ts_ns() {
+  _impl_.calc_ts_ns_ = int64_t{0};
+}
+inline int64_t BookPortfolio::_internal_calc_ts_ns() const {
+  return _impl_.calc_ts_ns_;
+}
+inline int64_t BookPortfolio::calc_ts_ns() const {
+  // @@protoc_insertion_point(field_get:omm.proto.BookPortfolio.calc_ts_ns)
+  return _internal_calc_ts_ns();
+}
+inline void BookPortfolio::_internal_set_calc_ts_ns(int64_t value) {
+  
+  _impl_.calc_ts_ns_ = value;
+}
+inline void BookPortfolio::set_calc_ts_ns(int64_t value) {
+  _internal_set_calc_ts_ns(value);
+  // @@protoc_insertion_point(field_set:omm.proto.BookPortfolio.calc_ts_ns)
+}
+
 // -------------------------------------------------------------------
 
 // VolSurfaceSlice
@@ -6911,32 +14370,32 @@ inline void MMParams::set_ask_spread(double value) {
   // @@protoc_insertion_point(field_set:omm.proto.MMParams.ask_spread)
 }
 
-// optional double hedge_delta_threshold = 3;
-inline bool MMParams::_internal_has_hedge_delta_threshold() const {
+// optional double product_delta_threshold = 3;
+inline bool MMParams::_internal_has_product_delta_threshold() const {
   bool value = (_impl_._has_bits_[0] & 0x00000004u) != 0;
   return value;
 }
-inline bool MMParams::has_hedge_delta_threshold() const {
-  return _internal_has_hedge_delta_threshold();
+inline bool MMParams::has_product_delta_threshold() const {
+  return _internal_has_product_delta_threshold();
 }
-inline void MMParams::clear_hedge_delta_threshold() {
-  _impl_.hedge_delta_threshold_ = 0;
+inline void MMParams::clear_product_delta_threshold() {
+  _impl_.product_delta_threshold_ = 0;
   _impl_._has_bits_[0] &= ~0x00000004u;
 }
-inline double MMParams::_internal_hedge_delta_threshold() const {
-  return _impl_.hedge_delta_threshold_;
+inline double MMParams::_internal_product_delta_threshold() const {
+  return _impl_.product_delta_threshold_;
 }
-inline double MMParams::hedge_delta_threshold() const {
-  // @@protoc_insertion_point(field_get:omm.proto.MMParams.hedge_delta_threshold)
-  return _internal_hedge_delta_threshold();
+inline double MMParams::product_delta_threshold() const {
+  // @@protoc_insertion_point(field_get:omm.proto.MMParams.product_delta_threshold)
+  return _internal_product_delta_threshold();
 }
-inline void MMParams::_internal_set_hedge_delta_threshold(double value) {
+inline void MMParams::_internal_set_product_delta_threshold(double value) {
   _impl_._has_bits_[0] |= 0x00000004u;
-  _impl_.hedge_delta_threshold_ = value;
+  _impl_.product_delta_threshold_ = value;
 }
-inline void MMParams::set_hedge_delta_threshold(double value) {
-  _internal_set_hedge_delta_threshold(value);
-  // @@protoc_insertion_point(field_set:omm.proto.MMParams.hedge_delta_threshold)
+inline void MMParams::set_product_delta_threshold(double value) {
+  _internal_set_product_delta_threshold(value);
+  // @@protoc_insertion_point(field_set:omm.proto.MMParams.product_delta_threshold)
 }
 
 // optional int32 quote_volume = 4;
@@ -7361,6 +14820,506 @@ inline void MMParams::set_use_one_sided_at_limits(bool value) {
 
 // -------------------------------------------------------------------
 
+// ProductPricingParams
+
+// uint32 product_index = 1;
+inline void ProductPricingParams::clear_product_index() {
+  _impl_.product_index_ = 0u;
+}
+inline uint32_t ProductPricingParams::_internal_product_index() const {
+  return _impl_.product_index_;
+}
+inline uint32_t ProductPricingParams::product_index() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ProductPricingParams.product_index)
+  return _internal_product_index();
+}
+inline void ProductPricingParams::_internal_set_product_index(uint32_t value) {
+  
+  _impl_.product_index_ = value;
+}
+inline void ProductPricingParams::set_product_index(uint32_t value) {
+  _internal_set_product_index(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ProductPricingParams.product_index)
+}
+
+// string base_offset_type = 2;
+inline void ProductPricingParams::clear_base_offset_type() {
+  _impl_.base_offset_type_.ClearToEmpty();
+}
+inline const std::string& ProductPricingParams::base_offset_type() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ProductPricingParams.base_offset_type)
+  return _internal_base_offset_type();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void ProductPricingParams::set_base_offset_type(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.base_offset_type_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:omm.proto.ProductPricingParams.base_offset_type)
+}
+inline std::string* ProductPricingParams::mutable_base_offset_type() {
+  std::string* _s = _internal_mutable_base_offset_type();
+  // @@protoc_insertion_point(field_mutable:omm.proto.ProductPricingParams.base_offset_type)
+  return _s;
+}
+inline const std::string& ProductPricingParams::_internal_base_offset_type() const {
+  return _impl_.base_offset_type_.Get();
+}
+inline void ProductPricingParams::_internal_set_base_offset_type(const std::string& value) {
+  
+  _impl_.base_offset_type_.Set(value, GetArenaForAllocation());
+}
+inline std::string* ProductPricingParams::_internal_mutable_base_offset_type() {
+  
+  return _impl_.base_offset_type_.Mutable(GetArenaForAllocation());
+}
+inline std::string* ProductPricingParams::release_base_offset_type() {
+  // @@protoc_insertion_point(field_release:omm.proto.ProductPricingParams.base_offset_type)
+  return _impl_.base_offset_type_.Release();
+}
+inline void ProductPricingParams::set_allocated_base_offset_type(std::string* base_offset_type) {
+  if (base_offset_type != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.base_offset_type_.SetAllocated(base_offset_type, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.base_offset_type_.IsDefault()) {
+    _impl_.base_offset_type_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.ProductPricingParams.base_offset_type)
+}
+
+// double base_offset_value = 3;
+inline void ProductPricingParams::clear_base_offset_value() {
+  _impl_.base_offset_value_ = 0;
+}
+inline double ProductPricingParams::_internal_base_offset_value() const {
+  return _impl_.base_offset_value_;
+}
+inline double ProductPricingParams::base_offset_value() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ProductPricingParams.base_offset_value)
+  return _internal_base_offset_value();
+}
+inline void ProductPricingParams::_internal_set_base_offset_value(double value) {
+  
+  _impl_.base_offset_value_ = value;
+}
+inline void ProductPricingParams::set_base_offset_value(double value) {
+  _internal_set_base_offset_value(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ProductPricingParams.base_offset_value)
+}
+
+// -------------------------------------------------------------------
+
+// ArbParams
+
+// optional double min_edge_ticks = 1;
+inline bool ArbParams::_internal_has_min_edge_ticks() const {
+  bool value = (_impl_._has_bits_[0] & 0x00000001u) != 0;
+  return value;
+}
+inline bool ArbParams::has_min_edge_ticks() const {
+  return _internal_has_min_edge_ticks();
+}
+inline void ArbParams::clear_min_edge_ticks() {
+  _impl_.min_edge_ticks_ = 0;
+  _impl_._has_bits_[0] &= ~0x00000001u;
+}
+inline double ArbParams::_internal_min_edge_ticks() const {
+  return _impl_.min_edge_ticks_;
+}
+inline double ArbParams::min_edge_ticks() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ArbParams.min_edge_ticks)
+  return _internal_min_edge_ticks();
+}
+inline void ArbParams::_internal_set_min_edge_ticks(double value) {
+  _impl_._has_bits_[0] |= 0x00000001u;
+  _impl_.min_edge_ticks_ = value;
+}
+inline void ArbParams::set_min_edge_ticks(double value) {
+  _internal_set_min_edge_ticks(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ArbParams.min_edge_ticks)
+}
+
+// optional double cooldown_ms = 2;
+inline bool ArbParams::_internal_has_cooldown_ms() const {
+  bool value = (_impl_._has_bits_[0] & 0x00000002u) != 0;
+  return value;
+}
+inline bool ArbParams::has_cooldown_ms() const {
+  return _internal_has_cooldown_ms();
+}
+inline void ArbParams::clear_cooldown_ms() {
+  _impl_.cooldown_ms_ = 0;
+  _impl_._has_bits_[0] &= ~0x00000002u;
+}
+inline double ArbParams::_internal_cooldown_ms() const {
+  return _impl_.cooldown_ms_;
+}
+inline double ArbParams::cooldown_ms() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ArbParams.cooldown_ms)
+  return _internal_cooldown_ms();
+}
+inline void ArbParams::_internal_set_cooldown_ms(double value) {
+  _impl_._has_bits_[0] |= 0x00000002u;
+  _impl_.cooldown_ms_ = value;
+}
+inline void ArbParams::set_cooldown_ms(double value) {
+  _internal_set_cooldown_ms(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ArbParams.cooldown_ms)
+}
+
+// optional double scan_interval_ms = 3;
+inline bool ArbParams::_internal_has_scan_interval_ms() const {
+  bool value = (_impl_._has_bits_[0] & 0x00000004u) != 0;
+  return value;
+}
+inline bool ArbParams::has_scan_interval_ms() const {
+  return _internal_has_scan_interval_ms();
+}
+inline void ArbParams::clear_scan_interval_ms() {
+  _impl_.scan_interval_ms_ = 0;
+  _impl_._has_bits_[0] &= ~0x00000004u;
+}
+inline double ArbParams::_internal_scan_interval_ms() const {
+  return _impl_.scan_interval_ms_;
+}
+inline double ArbParams::scan_interval_ms() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ArbParams.scan_interval_ms)
+  return _internal_scan_interval_ms();
+}
+inline void ArbParams::_internal_set_scan_interval_ms(double value) {
+  _impl_._has_bits_[0] |= 0x00000004u;
+  _impl_.scan_interval_ms_ = value;
+}
+inline void ArbParams::set_scan_interval_ms(double value) {
+  _internal_set_scan_interval_ms(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ArbParams.scan_interval_ms)
+}
+
+// optional double cleanup_timeout_ms = 4;
+inline bool ArbParams::_internal_has_cleanup_timeout_ms() const {
+  bool value = (_impl_._has_bits_[0] & 0x00000008u) != 0;
+  return value;
+}
+inline bool ArbParams::has_cleanup_timeout_ms() const {
+  return _internal_has_cleanup_timeout_ms();
+}
+inline void ArbParams::clear_cleanup_timeout_ms() {
+  _impl_.cleanup_timeout_ms_ = 0;
+  _impl_._has_bits_[0] &= ~0x00000008u;
+}
+inline double ArbParams::_internal_cleanup_timeout_ms() const {
+  return _impl_.cleanup_timeout_ms_;
+}
+inline double ArbParams::cleanup_timeout_ms() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ArbParams.cleanup_timeout_ms)
+  return _internal_cleanup_timeout_ms();
+}
+inline void ArbParams::_internal_set_cleanup_timeout_ms(double value) {
+  _impl_._has_bits_[0] |= 0x00000008u;
+  _impl_.cleanup_timeout_ms_ = value;
+}
+inline void ArbParams::set_cleanup_timeout_ms(double value) {
+  _internal_set_cleanup_timeout_ms(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ArbParams.cleanup_timeout_ms)
+}
+
+// optional int32 max_order_volume = 5;
+inline bool ArbParams::_internal_has_max_order_volume() const {
+  bool value = (_impl_._has_bits_[0] & 0x00000010u) != 0;
+  return value;
+}
+inline bool ArbParams::has_max_order_volume() const {
+  return _internal_has_max_order_volume();
+}
+inline void ArbParams::clear_max_order_volume() {
+  _impl_.max_order_volume_ = 0;
+  _impl_._has_bits_[0] &= ~0x00000010u;
+}
+inline int32_t ArbParams::_internal_max_order_volume() const {
+  return _impl_.max_order_volume_;
+}
+inline int32_t ArbParams::max_order_volume() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ArbParams.max_order_volume)
+  return _internal_max_order_volume();
+}
+inline void ArbParams::_internal_set_max_order_volume(int32_t value) {
+  _impl_._has_bits_[0] |= 0x00000010u;
+  _impl_.max_order_volume_ = value;
+}
+inline void ArbParams::set_max_order_volume(int32_t value) {
+  _internal_set_max_order_volume(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ArbParams.max_order_volume)
+}
+
+// optional int32 max_live_orders = 6;
+inline bool ArbParams::_internal_has_max_live_orders() const {
+  bool value = (_impl_._has_bits_[0] & 0x00000020u) != 0;
+  return value;
+}
+inline bool ArbParams::has_max_live_orders() const {
+  return _internal_has_max_live_orders();
+}
+inline void ArbParams::clear_max_live_orders() {
+  _impl_.max_live_orders_ = 0;
+  _impl_._has_bits_[0] &= ~0x00000020u;
+}
+inline int32_t ArbParams::_internal_max_live_orders() const {
+  return _impl_.max_live_orders_;
+}
+inline int32_t ArbParams::max_live_orders() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ArbParams.max_live_orders)
+  return _internal_max_live_orders();
+}
+inline void ArbParams::_internal_set_max_live_orders(int32_t value) {
+  _impl_._has_bits_[0] |= 0x00000020u;
+  _impl_.max_live_orders_ = value;
+}
+inline void ArbParams::set_max_live_orders(int32_t value) {
+  _internal_set_max_live_orders(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ArbParams.max_live_orders)
+}
+
+// optional bool cleanup_on_partial = 7;
+inline bool ArbParams::_internal_has_cleanup_on_partial() const {
+  bool value = (_impl_._has_bits_[0] & 0x00000040u) != 0;
+  return value;
+}
+inline bool ArbParams::has_cleanup_on_partial() const {
+  return _internal_has_cleanup_on_partial();
+}
+inline void ArbParams::clear_cleanup_on_partial() {
+  _impl_.cleanup_on_partial_ = false;
+  _impl_._has_bits_[0] &= ~0x00000040u;
+}
+inline bool ArbParams::_internal_cleanup_on_partial() const {
+  return _impl_.cleanup_on_partial_;
+}
+inline bool ArbParams::cleanup_on_partial() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ArbParams.cleanup_on_partial)
+  return _internal_cleanup_on_partial();
+}
+inline void ArbParams::_internal_set_cleanup_on_partial(bool value) {
+  _impl_._has_bits_[0] |= 0x00000040u;
+  _impl_.cleanup_on_partial_ = value;
+}
+inline void ArbParams::set_cleanup_on_partial(bool value) {
+  _internal_set_cleanup_on_partial(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ArbParams.cleanup_on_partial)
+}
+
+// optional bool enabled = 8;
+inline bool ArbParams::_internal_has_enabled() const {
+  bool value = (_impl_._has_bits_[0] & 0x00000080u) != 0;
+  return value;
+}
+inline bool ArbParams::has_enabled() const {
+  return _internal_has_enabled();
+}
+inline void ArbParams::clear_enabled() {
+  _impl_.enabled_ = false;
+  _impl_._has_bits_[0] &= ~0x00000080u;
+}
+inline bool ArbParams::_internal_enabled() const {
+  return _impl_.enabled_;
+}
+inline bool ArbParams::enabled() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ArbParams.enabled)
+  return _internal_enabled();
+}
+inline void ArbParams::_internal_set_enabled(bool value) {
+  _impl_._has_bits_[0] |= 0x00000080u;
+  _impl_.enabled_ = value;
+}
+inline void ArbParams::set_enabled(bool value) {
+  _internal_set_enabled(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ArbParams.enabled)
+}
+
+// -------------------------------------------------------------------
+
+// ArbStrategyId
+
+// uint32 product_index = 1;
+inline void ArbStrategyId::clear_product_index() {
+  _impl_.product_index_ = 0u;
+}
+inline uint32_t ArbStrategyId::_internal_product_index() const {
+  return _impl_.product_index_;
+}
+inline uint32_t ArbStrategyId::product_index() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ArbStrategyId.product_index)
+  return _internal_product_index();
+}
+inline void ArbStrategyId::_internal_set_product_index(uint32_t value) {
+  
+  _impl_.product_index_ = value;
+}
+inline void ArbStrategyId::set_product_index(uint32_t value) {
+  _internal_set_product_index(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ArbStrategyId.product_index)
+}
+
+// .omm.proto.ArbitrageStrategyType strategy_type = 2;
+inline void ArbStrategyId::clear_strategy_type() {
+  _impl_.strategy_type_ = 0;
+}
+inline ::omm::proto::ArbitrageStrategyType ArbStrategyId::_internal_strategy_type() const {
+  return static_cast< ::omm::proto::ArbitrageStrategyType >(_impl_.strategy_type_);
+}
+inline ::omm::proto::ArbitrageStrategyType ArbStrategyId::strategy_type() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ArbStrategyId.strategy_type)
+  return _internal_strategy_type();
+}
+inline void ArbStrategyId::_internal_set_strategy_type(::omm::proto::ArbitrageStrategyType value) {
+  
+  _impl_.strategy_type_ = value;
+}
+inline void ArbStrategyId::set_strategy_type(::omm::proto::ArbitrageStrategyType value) {
+  _internal_set_strategy_type(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ArbStrategyId.strategy_type)
+}
+
+// -------------------------------------------------------------------
+
+// ArbStrategyParamsEntry
+
+// uint32 product_index = 1;
+inline void ArbStrategyParamsEntry::clear_product_index() {
+  _impl_.product_index_ = 0u;
+}
+inline uint32_t ArbStrategyParamsEntry::_internal_product_index() const {
+  return _impl_.product_index_;
+}
+inline uint32_t ArbStrategyParamsEntry::product_index() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ArbStrategyParamsEntry.product_index)
+  return _internal_product_index();
+}
+inline void ArbStrategyParamsEntry::_internal_set_product_index(uint32_t value) {
+  
+  _impl_.product_index_ = value;
+}
+inline void ArbStrategyParamsEntry::set_product_index(uint32_t value) {
+  _internal_set_product_index(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ArbStrategyParamsEntry.product_index)
+}
+
+// .omm.proto.ArbitrageStrategyType strategy_type = 2;
+inline void ArbStrategyParamsEntry::clear_strategy_type() {
+  _impl_.strategy_type_ = 0;
+}
+inline ::omm::proto::ArbitrageStrategyType ArbStrategyParamsEntry::_internal_strategy_type() const {
+  return static_cast< ::omm::proto::ArbitrageStrategyType >(_impl_.strategy_type_);
+}
+inline ::omm::proto::ArbitrageStrategyType ArbStrategyParamsEntry::strategy_type() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ArbStrategyParamsEntry.strategy_type)
+  return _internal_strategy_type();
+}
+inline void ArbStrategyParamsEntry::_internal_set_strategy_type(::omm::proto::ArbitrageStrategyType value) {
+  
+  _impl_.strategy_type_ = value;
+}
+inline void ArbStrategyParamsEntry::set_strategy_type(::omm::proto::ArbitrageStrategyType value) {
+  _internal_set_strategy_type(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ArbStrategyParamsEntry.strategy_type)
+}
+
+// .omm.proto.ArbParams params = 3;
+inline bool ArbStrategyParamsEntry::_internal_has_params() const {
+  return this != internal_default_instance() && _impl_.params_ != nullptr;
+}
+inline bool ArbStrategyParamsEntry::has_params() const {
+  return _internal_has_params();
+}
+inline void ArbStrategyParamsEntry::clear_params() {
+  if (GetArenaForAllocation() == nullptr && _impl_.params_ != nullptr) {
+    delete _impl_.params_;
+  }
+  _impl_.params_ = nullptr;
+}
+inline const ::omm::proto::ArbParams& ArbStrategyParamsEntry::_internal_params() const {
+  const ::omm::proto::ArbParams* p = _impl_.params_;
+  return p != nullptr ? *p : reinterpret_cast<const ::omm::proto::ArbParams&>(
+      ::omm::proto::_ArbParams_default_instance_);
+}
+inline const ::omm::proto::ArbParams& ArbStrategyParamsEntry::params() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ArbStrategyParamsEntry.params)
+  return _internal_params();
+}
+inline void ArbStrategyParamsEntry::unsafe_arena_set_allocated_params(
+    ::omm::proto::ArbParams* params) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.params_);
+  }
+  _impl_.params_ = params;
+  if (params) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:omm.proto.ArbStrategyParamsEntry.params)
+}
+inline ::omm::proto::ArbParams* ArbStrategyParamsEntry::release_params() {
+  
+  ::omm::proto::ArbParams* temp = _impl_.params_;
+  _impl_.params_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::omm::proto::ArbParams* ArbStrategyParamsEntry::unsafe_arena_release_params() {
+  // @@protoc_insertion_point(field_release:omm.proto.ArbStrategyParamsEntry.params)
+  
+  ::omm::proto::ArbParams* temp = _impl_.params_;
+  _impl_.params_ = nullptr;
+  return temp;
+}
+inline ::omm::proto::ArbParams* ArbStrategyParamsEntry::_internal_mutable_params() {
+  
+  if (_impl_.params_ == nullptr) {
+    auto* p = CreateMaybeMessage<::omm::proto::ArbParams>(GetArenaForAllocation());
+    _impl_.params_ = p;
+  }
+  return _impl_.params_;
+}
+inline ::omm::proto::ArbParams* ArbStrategyParamsEntry::mutable_params() {
+  ::omm::proto::ArbParams* _msg = _internal_mutable_params();
+  // @@protoc_insertion_point(field_mutable:omm.proto.ArbStrategyParamsEntry.params)
+  return _msg;
+}
+inline void ArbStrategyParamsEntry::set_allocated_params(::omm::proto::ArbParams* params) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.params_;
+  }
+  if (params) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(params);
+    if (message_arena != submessage_arena) {
+      params = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, params, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.params_ = params;
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.ArbStrategyParamsEntry.params)
+}
+
+// -------------------------------------------------------------------
+
 // SetStrategyParamsRequest
 
 // uint32 product_index = 1;
@@ -7549,6 +15508,432 @@ inline void SetStrategyParamsResponse::set_allocated_message(std::string* messag
 
 // -------------------------------------------------------------------
 
+// SetProductPricingParamsRequest
+
+// .omm.proto.ProductPricingParams params = 1;
+inline bool SetProductPricingParamsRequest::_internal_has_params() const {
+  return this != internal_default_instance() && _impl_.params_ != nullptr;
+}
+inline bool SetProductPricingParamsRequest::has_params() const {
+  return _internal_has_params();
+}
+inline void SetProductPricingParamsRequest::clear_params() {
+  if (GetArenaForAllocation() == nullptr && _impl_.params_ != nullptr) {
+    delete _impl_.params_;
+  }
+  _impl_.params_ = nullptr;
+}
+inline const ::omm::proto::ProductPricingParams& SetProductPricingParamsRequest::_internal_params() const {
+  const ::omm::proto::ProductPricingParams* p = _impl_.params_;
+  return p != nullptr ? *p : reinterpret_cast<const ::omm::proto::ProductPricingParams&>(
+      ::omm::proto::_ProductPricingParams_default_instance_);
+}
+inline const ::omm::proto::ProductPricingParams& SetProductPricingParamsRequest::params() const {
+  // @@protoc_insertion_point(field_get:omm.proto.SetProductPricingParamsRequest.params)
+  return _internal_params();
+}
+inline void SetProductPricingParamsRequest::unsafe_arena_set_allocated_params(
+    ::omm::proto::ProductPricingParams* params) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.params_);
+  }
+  _impl_.params_ = params;
+  if (params) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:omm.proto.SetProductPricingParamsRequest.params)
+}
+inline ::omm::proto::ProductPricingParams* SetProductPricingParamsRequest::release_params() {
+  
+  ::omm::proto::ProductPricingParams* temp = _impl_.params_;
+  _impl_.params_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::omm::proto::ProductPricingParams* SetProductPricingParamsRequest::unsafe_arena_release_params() {
+  // @@protoc_insertion_point(field_release:omm.proto.SetProductPricingParamsRequest.params)
+  
+  ::omm::proto::ProductPricingParams* temp = _impl_.params_;
+  _impl_.params_ = nullptr;
+  return temp;
+}
+inline ::omm::proto::ProductPricingParams* SetProductPricingParamsRequest::_internal_mutable_params() {
+  
+  if (_impl_.params_ == nullptr) {
+    auto* p = CreateMaybeMessage<::omm::proto::ProductPricingParams>(GetArenaForAllocation());
+    _impl_.params_ = p;
+  }
+  return _impl_.params_;
+}
+inline ::omm::proto::ProductPricingParams* SetProductPricingParamsRequest::mutable_params() {
+  ::omm::proto::ProductPricingParams* _msg = _internal_mutable_params();
+  // @@protoc_insertion_point(field_mutable:omm.proto.SetProductPricingParamsRequest.params)
+  return _msg;
+}
+inline void SetProductPricingParamsRequest::set_allocated_params(::omm::proto::ProductPricingParams* params) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.params_;
+  }
+  if (params) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(params);
+    if (message_arena != submessage_arena) {
+      params = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, params, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.params_ = params;
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.SetProductPricingParamsRequest.params)
+}
+
+// -------------------------------------------------------------------
+
+// SetProductPricingParamsResponse
+
+// bool ok = 1;
+inline void SetProductPricingParamsResponse::clear_ok() {
+  _impl_.ok_ = false;
+}
+inline bool SetProductPricingParamsResponse::_internal_ok() const {
+  return _impl_.ok_;
+}
+inline bool SetProductPricingParamsResponse::ok() const {
+  // @@protoc_insertion_point(field_get:omm.proto.SetProductPricingParamsResponse.ok)
+  return _internal_ok();
+}
+inline void SetProductPricingParamsResponse::_internal_set_ok(bool value) {
+  
+  _impl_.ok_ = value;
+}
+inline void SetProductPricingParamsResponse::set_ok(bool value) {
+  _internal_set_ok(value);
+  // @@protoc_insertion_point(field_set:omm.proto.SetProductPricingParamsResponse.ok)
+}
+
+// string message = 2;
+inline void SetProductPricingParamsResponse::clear_message() {
+  _impl_.message_.ClearToEmpty();
+}
+inline const std::string& SetProductPricingParamsResponse::message() const {
+  // @@protoc_insertion_point(field_get:omm.proto.SetProductPricingParamsResponse.message)
+  return _internal_message();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void SetProductPricingParamsResponse::set_message(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.message_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:omm.proto.SetProductPricingParamsResponse.message)
+}
+inline std::string* SetProductPricingParamsResponse::mutable_message() {
+  std::string* _s = _internal_mutable_message();
+  // @@protoc_insertion_point(field_mutable:omm.proto.SetProductPricingParamsResponse.message)
+  return _s;
+}
+inline const std::string& SetProductPricingParamsResponse::_internal_message() const {
+  return _impl_.message_.Get();
+}
+inline void SetProductPricingParamsResponse::_internal_set_message(const std::string& value) {
+  
+  _impl_.message_.Set(value, GetArenaForAllocation());
+}
+inline std::string* SetProductPricingParamsResponse::_internal_mutable_message() {
+  
+  return _impl_.message_.Mutable(GetArenaForAllocation());
+}
+inline std::string* SetProductPricingParamsResponse::release_message() {
+  // @@protoc_insertion_point(field_release:omm.proto.SetProductPricingParamsResponse.message)
+  return _impl_.message_.Release();
+}
+inline void SetProductPricingParamsResponse::set_allocated_message(std::string* message) {
+  if (message != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.message_.SetAllocated(message, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.message_.IsDefault()) {
+    _impl_.message_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.SetProductPricingParamsResponse.message)
+}
+
+// -------------------------------------------------------------------
+
+// SetArbStrategyParamsRequest
+
+// .omm.proto.ArbStrategyId id = 1;
+inline bool SetArbStrategyParamsRequest::_internal_has_id() const {
+  return this != internal_default_instance() && _impl_.id_ != nullptr;
+}
+inline bool SetArbStrategyParamsRequest::has_id() const {
+  return _internal_has_id();
+}
+inline void SetArbStrategyParamsRequest::clear_id() {
+  if (GetArenaForAllocation() == nullptr && _impl_.id_ != nullptr) {
+    delete _impl_.id_;
+  }
+  _impl_.id_ = nullptr;
+}
+inline const ::omm::proto::ArbStrategyId& SetArbStrategyParamsRequest::_internal_id() const {
+  const ::omm::proto::ArbStrategyId* p = _impl_.id_;
+  return p != nullptr ? *p : reinterpret_cast<const ::omm::proto::ArbStrategyId&>(
+      ::omm::proto::_ArbStrategyId_default_instance_);
+}
+inline const ::omm::proto::ArbStrategyId& SetArbStrategyParamsRequest::id() const {
+  // @@protoc_insertion_point(field_get:omm.proto.SetArbStrategyParamsRequest.id)
+  return _internal_id();
+}
+inline void SetArbStrategyParamsRequest::unsafe_arena_set_allocated_id(
+    ::omm::proto::ArbStrategyId* id) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.id_);
+  }
+  _impl_.id_ = id;
+  if (id) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:omm.proto.SetArbStrategyParamsRequest.id)
+}
+inline ::omm::proto::ArbStrategyId* SetArbStrategyParamsRequest::release_id() {
+  
+  ::omm::proto::ArbStrategyId* temp = _impl_.id_;
+  _impl_.id_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::omm::proto::ArbStrategyId* SetArbStrategyParamsRequest::unsafe_arena_release_id() {
+  // @@protoc_insertion_point(field_release:omm.proto.SetArbStrategyParamsRequest.id)
+  
+  ::omm::proto::ArbStrategyId* temp = _impl_.id_;
+  _impl_.id_ = nullptr;
+  return temp;
+}
+inline ::omm::proto::ArbStrategyId* SetArbStrategyParamsRequest::_internal_mutable_id() {
+  
+  if (_impl_.id_ == nullptr) {
+    auto* p = CreateMaybeMessage<::omm::proto::ArbStrategyId>(GetArenaForAllocation());
+    _impl_.id_ = p;
+  }
+  return _impl_.id_;
+}
+inline ::omm::proto::ArbStrategyId* SetArbStrategyParamsRequest::mutable_id() {
+  ::omm::proto::ArbStrategyId* _msg = _internal_mutable_id();
+  // @@protoc_insertion_point(field_mutable:omm.proto.SetArbStrategyParamsRequest.id)
+  return _msg;
+}
+inline void SetArbStrategyParamsRequest::set_allocated_id(::omm::proto::ArbStrategyId* id) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.id_;
+  }
+  if (id) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(id);
+    if (message_arena != submessage_arena) {
+      id = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, id, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.id_ = id;
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.SetArbStrategyParamsRequest.id)
+}
+
+// .omm.proto.ArbParams params = 2;
+inline bool SetArbStrategyParamsRequest::_internal_has_params() const {
+  return this != internal_default_instance() && _impl_.params_ != nullptr;
+}
+inline bool SetArbStrategyParamsRequest::has_params() const {
+  return _internal_has_params();
+}
+inline void SetArbStrategyParamsRequest::clear_params() {
+  if (GetArenaForAllocation() == nullptr && _impl_.params_ != nullptr) {
+    delete _impl_.params_;
+  }
+  _impl_.params_ = nullptr;
+}
+inline const ::omm::proto::ArbParams& SetArbStrategyParamsRequest::_internal_params() const {
+  const ::omm::proto::ArbParams* p = _impl_.params_;
+  return p != nullptr ? *p : reinterpret_cast<const ::omm::proto::ArbParams&>(
+      ::omm::proto::_ArbParams_default_instance_);
+}
+inline const ::omm::proto::ArbParams& SetArbStrategyParamsRequest::params() const {
+  // @@protoc_insertion_point(field_get:omm.proto.SetArbStrategyParamsRequest.params)
+  return _internal_params();
+}
+inline void SetArbStrategyParamsRequest::unsafe_arena_set_allocated_params(
+    ::omm::proto::ArbParams* params) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.params_);
+  }
+  _impl_.params_ = params;
+  if (params) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:omm.proto.SetArbStrategyParamsRequest.params)
+}
+inline ::omm::proto::ArbParams* SetArbStrategyParamsRequest::release_params() {
+  
+  ::omm::proto::ArbParams* temp = _impl_.params_;
+  _impl_.params_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::omm::proto::ArbParams* SetArbStrategyParamsRequest::unsafe_arena_release_params() {
+  // @@protoc_insertion_point(field_release:omm.proto.SetArbStrategyParamsRequest.params)
+  
+  ::omm::proto::ArbParams* temp = _impl_.params_;
+  _impl_.params_ = nullptr;
+  return temp;
+}
+inline ::omm::proto::ArbParams* SetArbStrategyParamsRequest::_internal_mutable_params() {
+  
+  if (_impl_.params_ == nullptr) {
+    auto* p = CreateMaybeMessage<::omm::proto::ArbParams>(GetArenaForAllocation());
+    _impl_.params_ = p;
+  }
+  return _impl_.params_;
+}
+inline ::omm::proto::ArbParams* SetArbStrategyParamsRequest::mutable_params() {
+  ::omm::proto::ArbParams* _msg = _internal_mutable_params();
+  // @@protoc_insertion_point(field_mutable:omm.proto.SetArbStrategyParamsRequest.params)
+  return _msg;
+}
+inline void SetArbStrategyParamsRequest::set_allocated_params(::omm::proto::ArbParams* params) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.params_;
+  }
+  if (params) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(params);
+    if (message_arena != submessage_arena) {
+      params = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, params, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.params_ = params;
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.SetArbStrategyParamsRequest.params)
+}
+
+// -------------------------------------------------------------------
+
+// SetArbStrategyParamsResponse
+
+// bool ok = 1;
+inline void SetArbStrategyParamsResponse::clear_ok() {
+  _impl_.ok_ = false;
+}
+inline bool SetArbStrategyParamsResponse::_internal_ok() const {
+  return _impl_.ok_;
+}
+inline bool SetArbStrategyParamsResponse::ok() const {
+  // @@protoc_insertion_point(field_get:omm.proto.SetArbStrategyParamsResponse.ok)
+  return _internal_ok();
+}
+inline void SetArbStrategyParamsResponse::_internal_set_ok(bool value) {
+  
+  _impl_.ok_ = value;
+}
+inline void SetArbStrategyParamsResponse::set_ok(bool value) {
+  _internal_set_ok(value);
+  // @@protoc_insertion_point(field_set:omm.proto.SetArbStrategyParamsResponse.ok)
+}
+
+// string message = 2;
+inline void SetArbStrategyParamsResponse::clear_message() {
+  _impl_.message_.ClearToEmpty();
+}
+inline const std::string& SetArbStrategyParamsResponse::message() const {
+  // @@protoc_insertion_point(field_get:omm.proto.SetArbStrategyParamsResponse.message)
+  return _internal_message();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void SetArbStrategyParamsResponse::set_message(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.message_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:omm.proto.SetArbStrategyParamsResponse.message)
+}
+inline std::string* SetArbStrategyParamsResponse::mutable_message() {
+  std::string* _s = _internal_mutable_message();
+  // @@protoc_insertion_point(field_mutable:omm.proto.SetArbStrategyParamsResponse.message)
+  return _s;
+}
+inline const std::string& SetArbStrategyParamsResponse::_internal_message() const {
+  return _impl_.message_.Get();
+}
+inline void SetArbStrategyParamsResponse::_internal_set_message(const std::string& value) {
+  
+  _impl_.message_.Set(value, GetArenaForAllocation());
+}
+inline std::string* SetArbStrategyParamsResponse::_internal_mutable_message() {
+  
+  return _impl_.message_.Mutable(GetArenaForAllocation());
+}
+inline std::string* SetArbStrategyParamsResponse::release_message() {
+  // @@protoc_insertion_point(field_release:omm.proto.SetArbStrategyParamsResponse.message)
+  return _impl_.message_.Release();
+}
+inline void SetArbStrategyParamsResponse::set_allocated_message(std::string* message) {
+  if (message != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.message_.SetAllocated(message, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.message_.IsDefault()) {
+    _impl_.message_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.SetArbStrategyParamsResponse.message)
+}
+
+// -------------------------------------------------------------------
+
 // StartStopRequest
 
 // int32 product_index = 1;
@@ -7647,6 +16032,174 @@ inline void StartStopResponse::set_allocated_message(std::string* message) {
 
 // -------------------------------------------------------------------
 
+// ArbStartStopRequest
+
+// .omm.proto.ArbStrategyId id = 1;
+inline bool ArbStartStopRequest::_internal_has_id() const {
+  return this != internal_default_instance() && _impl_.id_ != nullptr;
+}
+inline bool ArbStartStopRequest::has_id() const {
+  return _internal_has_id();
+}
+inline void ArbStartStopRequest::clear_id() {
+  if (GetArenaForAllocation() == nullptr && _impl_.id_ != nullptr) {
+    delete _impl_.id_;
+  }
+  _impl_.id_ = nullptr;
+}
+inline const ::omm::proto::ArbStrategyId& ArbStartStopRequest::_internal_id() const {
+  const ::omm::proto::ArbStrategyId* p = _impl_.id_;
+  return p != nullptr ? *p : reinterpret_cast<const ::omm::proto::ArbStrategyId&>(
+      ::omm::proto::_ArbStrategyId_default_instance_);
+}
+inline const ::omm::proto::ArbStrategyId& ArbStartStopRequest::id() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ArbStartStopRequest.id)
+  return _internal_id();
+}
+inline void ArbStartStopRequest::unsafe_arena_set_allocated_id(
+    ::omm::proto::ArbStrategyId* id) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.id_);
+  }
+  _impl_.id_ = id;
+  if (id) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:omm.proto.ArbStartStopRequest.id)
+}
+inline ::omm::proto::ArbStrategyId* ArbStartStopRequest::release_id() {
+  
+  ::omm::proto::ArbStrategyId* temp = _impl_.id_;
+  _impl_.id_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::omm::proto::ArbStrategyId* ArbStartStopRequest::unsafe_arena_release_id() {
+  // @@protoc_insertion_point(field_release:omm.proto.ArbStartStopRequest.id)
+  
+  ::omm::proto::ArbStrategyId* temp = _impl_.id_;
+  _impl_.id_ = nullptr;
+  return temp;
+}
+inline ::omm::proto::ArbStrategyId* ArbStartStopRequest::_internal_mutable_id() {
+  
+  if (_impl_.id_ == nullptr) {
+    auto* p = CreateMaybeMessage<::omm::proto::ArbStrategyId>(GetArenaForAllocation());
+    _impl_.id_ = p;
+  }
+  return _impl_.id_;
+}
+inline ::omm::proto::ArbStrategyId* ArbStartStopRequest::mutable_id() {
+  ::omm::proto::ArbStrategyId* _msg = _internal_mutable_id();
+  // @@protoc_insertion_point(field_mutable:omm.proto.ArbStartStopRequest.id)
+  return _msg;
+}
+inline void ArbStartStopRequest::set_allocated_id(::omm::proto::ArbStrategyId* id) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.id_;
+  }
+  if (id) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(id);
+    if (message_arena != submessage_arena) {
+      id = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, id, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.id_ = id;
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.ArbStartStopRequest.id)
+}
+
+// -------------------------------------------------------------------
+
+// ArbStartStopResponse
+
+// bool ok = 1;
+inline void ArbStartStopResponse::clear_ok() {
+  _impl_.ok_ = false;
+}
+inline bool ArbStartStopResponse::_internal_ok() const {
+  return _impl_.ok_;
+}
+inline bool ArbStartStopResponse::ok() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ArbStartStopResponse.ok)
+  return _internal_ok();
+}
+inline void ArbStartStopResponse::_internal_set_ok(bool value) {
+  
+  _impl_.ok_ = value;
+}
+inline void ArbStartStopResponse::set_ok(bool value) {
+  _internal_set_ok(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ArbStartStopResponse.ok)
+}
+
+// string message = 2;
+inline void ArbStartStopResponse::clear_message() {
+  _impl_.message_.ClearToEmpty();
+}
+inline const std::string& ArbStartStopResponse::message() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ArbStartStopResponse.message)
+  return _internal_message();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void ArbStartStopResponse::set_message(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.message_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:omm.proto.ArbStartStopResponse.message)
+}
+inline std::string* ArbStartStopResponse::mutable_message() {
+  std::string* _s = _internal_mutable_message();
+  // @@protoc_insertion_point(field_mutable:omm.proto.ArbStartStopResponse.message)
+  return _s;
+}
+inline const std::string& ArbStartStopResponse::_internal_message() const {
+  return _impl_.message_.Get();
+}
+inline void ArbStartStopResponse::_internal_set_message(const std::string& value) {
+  
+  _impl_.message_.Set(value, GetArenaForAllocation());
+}
+inline std::string* ArbStartStopResponse::_internal_mutable_message() {
+  
+  return _impl_.message_.Mutable(GetArenaForAllocation());
+}
+inline std::string* ArbStartStopResponse::release_message() {
+  // @@protoc_insertion_point(field_release:omm.proto.ArbStartStopResponse.message)
+  return _impl_.message_.Release();
+}
+inline void ArbStartStopResponse::set_allocated_message(std::string* message) {
+  if (message != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.message_.SetAllocated(message, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.message_.IsDefault()) {
+    _impl_.message_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.ArbStartStopResponse.message)
+}
+
+// -------------------------------------------------------------------
+
 // RiskThreshold
 
 // double max_net_position = 1;
@@ -7727,6 +16280,1205 @@ inline void RiskThreshold::_internal_set_max_vega(double value) {
 inline void RiskThreshold::set_max_vega(double value) {
   _internal_set_max_vega(value);
   // @@protoc_insertion_point(field_set:omm.proto.RiskThreshold.max_vega)
+}
+
+// -------------------------------------------------------------------
+
+// RiskState
+
+// .omm.proto.RiskThreshold threshold = 1;
+inline bool RiskState::_internal_has_threshold() const {
+  return this != internal_default_instance() && _impl_.threshold_ != nullptr;
+}
+inline bool RiskState::has_threshold() const {
+  return _internal_has_threshold();
+}
+inline void RiskState::clear_threshold() {
+  if (GetArenaForAllocation() == nullptr && _impl_.threshold_ != nullptr) {
+    delete _impl_.threshold_;
+  }
+  _impl_.threshold_ = nullptr;
+}
+inline const ::omm::proto::RiskThreshold& RiskState::_internal_threshold() const {
+  const ::omm::proto::RiskThreshold* p = _impl_.threshold_;
+  return p != nullptr ? *p : reinterpret_cast<const ::omm::proto::RiskThreshold&>(
+      ::omm::proto::_RiskThreshold_default_instance_);
+}
+inline const ::omm::proto::RiskThreshold& RiskState::threshold() const {
+  // @@protoc_insertion_point(field_get:omm.proto.RiskState.threshold)
+  return _internal_threshold();
+}
+inline void RiskState::unsafe_arena_set_allocated_threshold(
+    ::omm::proto::RiskThreshold* threshold) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.threshold_);
+  }
+  _impl_.threshold_ = threshold;
+  if (threshold) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:omm.proto.RiskState.threshold)
+}
+inline ::omm::proto::RiskThreshold* RiskState::release_threshold() {
+  
+  ::omm::proto::RiskThreshold* temp = _impl_.threshold_;
+  _impl_.threshold_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::omm::proto::RiskThreshold* RiskState::unsafe_arena_release_threshold() {
+  // @@protoc_insertion_point(field_release:omm.proto.RiskState.threshold)
+  
+  ::omm::proto::RiskThreshold* temp = _impl_.threshold_;
+  _impl_.threshold_ = nullptr;
+  return temp;
+}
+inline ::omm::proto::RiskThreshold* RiskState::_internal_mutable_threshold() {
+  
+  if (_impl_.threshold_ == nullptr) {
+    auto* p = CreateMaybeMessage<::omm::proto::RiskThreshold>(GetArenaForAllocation());
+    _impl_.threshold_ = p;
+  }
+  return _impl_.threshold_;
+}
+inline ::omm::proto::RiskThreshold* RiskState::mutable_threshold() {
+  ::omm::proto::RiskThreshold* _msg = _internal_mutable_threshold();
+  // @@protoc_insertion_point(field_mutable:omm.proto.RiskState.threshold)
+  return _msg;
+}
+inline void RiskState::set_allocated_threshold(::omm::proto::RiskThreshold* threshold) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.threshold_;
+  }
+  if (threshold) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(threshold);
+    if (message_arena != submessage_arena) {
+      threshold = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, threshold, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.threshold_ = threshold;
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.RiskState.threshold)
+}
+
+// bool position_breach = 2;
+inline void RiskState::clear_position_breach() {
+  _impl_.position_breach_ = false;
+}
+inline bool RiskState::_internal_position_breach() const {
+  return _impl_.position_breach_;
+}
+inline bool RiskState::position_breach() const {
+  // @@protoc_insertion_point(field_get:omm.proto.RiskState.position_breach)
+  return _internal_position_breach();
+}
+inline void RiskState::_internal_set_position_breach(bool value) {
+  
+  _impl_.position_breach_ = value;
+}
+inline void RiskState::set_position_breach(bool value) {
+  _internal_set_position_breach(value);
+  // @@protoc_insertion_point(field_set:omm.proto.RiskState.position_breach)
+}
+
+// bool delta_breach = 3;
+inline void RiskState::clear_delta_breach() {
+  _impl_.delta_breach_ = false;
+}
+inline bool RiskState::_internal_delta_breach() const {
+  return _impl_.delta_breach_;
+}
+inline bool RiskState::delta_breach() const {
+  // @@protoc_insertion_point(field_get:omm.proto.RiskState.delta_breach)
+  return _internal_delta_breach();
+}
+inline void RiskState::_internal_set_delta_breach(bool value) {
+  
+  _impl_.delta_breach_ = value;
+}
+inline void RiskState::set_delta_breach(bool value) {
+  _internal_set_delta_breach(value);
+  // @@protoc_insertion_point(field_set:omm.proto.RiskState.delta_breach)
+}
+
+// bool gamma_breach = 4;
+inline void RiskState::clear_gamma_breach() {
+  _impl_.gamma_breach_ = false;
+}
+inline bool RiskState::_internal_gamma_breach() const {
+  return _impl_.gamma_breach_;
+}
+inline bool RiskState::gamma_breach() const {
+  // @@protoc_insertion_point(field_get:omm.proto.RiskState.gamma_breach)
+  return _internal_gamma_breach();
+}
+inline void RiskState::_internal_set_gamma_breach(bool value) {
+  
+  _impl_.gamma_breach_ = value;
+}
+inline void RiskState::set_gamma_breach(bool value) {
+  _internal_set_gamma_breach(value);
+  // @@protoc_insertion_point(field_set:omm.proto.RiskState.gamma_breach)
+}
+
+// bool vega_breach = 5;
+inline void RiskState::clear_vega_breach() {
+  _impl_.vega_breach_ = false;
+}
+inline bool RiskState::_internal_vega_breach() const {
+  return _impl_.vega_breach_;
+}
+inline bool RiskState::vega_breach() const {
+  // @@protoc_insertion_point(field_get:omm.proto.RiskState.vega_breach)
+  return _internal_vega_breach();
+}
+inline void RiskState::_internal_set_vega_breach(bool value) {
+  
+  _impl_.vega_breach_ = value;
+}
+inline void RiskState::set_vega_breach(bool value) {
+  _internal_set_vega_breach(value);
+  // @@protoc_insertion_point(field_set:omm.proto.RiskState.vega_breach)
+}
+
+// -------------------------------------------------------------------
+
+// ProductMMState
+
+// uint32 product_index = 1;
+inline void ProductMMState::clear_product_index() {
+  _impl_.product_index_ = 0u;
+}
+inline uint32_t ProductMMState::_internal_product_index() const {
+  return _impl_.product_index_;
+}
+inline uint32_t ProductMMState::product_index() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ProductMMState.product_index)
+  return _internal_product_index();
+}
+inline void ProductMMState::_internal_set_product_index(uint32_t value) {
+  
+  _impl_.product_index_ = value;
+}
+inline void ProductMMState::set_product_index(uint32_t value) {
+  _internal_set_product_index(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ProductMMState.product_index)
+}
+
+// bool strategy_enabled = 2;
+inline void ProductMMState::clear_strategy_enabled() {
+  _impl_.strategy_enabled_ = false;
+}
+inline bool ProductMMState::_internal_strategy_enabled() const {
+  return _impl_.strategy_enabled_;
+}
+inline bool ProductMMState::strategy_enabled() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ProductMMState.strategy_enabled)
+  return _internal_strategy_enabled();
+}
+inline void ProductMMState::_internal_set_strategy_enabled(bool value) {
+  
+  _impl_.strategy_enabled_ = value;
+}
+inline void ProductMMState::set_strategy_enabled(bool value) {
+  _internal_set_strategy_enabled(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ProductMMState.strategy_enabled)
+}
+
+// bool session_open = 3;
+inline void ProductMMState::clear_session_open() {
+  _impl_.session_open_ = false;
+}
+inline bool ProductMMState::_internal_session_open() const {
+  return _impl_.session_open_;
+}
+inline bool ProductMMState::session_open() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ProductMMState.session_open)
+  return _internal_session_open();
+}
+inline void ProductMMState::_internal_set_session_open(bool value) {
+  
+  _impl_.session_open_ = value;
+}
+inline void ProductMMState::set_session_open(bool value) {
+  _internal_set_session_open(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ProductMMState.session_open)
+}
+
+// bool product_suppressed = 4;
+inline void ProductMMState::clear_product_suppressed() {
+  _impl_.product_suppressed_ = false;
+}
+inline bool ProductMMState::_internal_product_suppressed() const {
+  return _impl_.product_suppressed_;
+}
+inline bool ProductMMState::product_suppressed() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ProductMMState.product_suppressed)
+  return _internal_product_suppressed();
+}
+inline void ProductMMState::_internal_set_product_suppressed(bool value) {
+  
+  _impl_.product_suppressed_ = value;
+}
+inline void ProductMMState::set_product_suppressed(bool value) {
+  _internal_set_product_suppressed(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ProductMMState.product_suppressed)
+}
+
+// repeated .omm.proto.MMSuppressReason reasons = 5;
+inline int ProductMMState::_internal_reasons_size() const {
+  return _impl_.reasons_.size();
+}
+inline int ProductMMState::reasons_size() const {
+  return _internal_reasons_size();
+}
+inline void ProductMMState::clear_reasons() {
+  _impl_.reasons_.Clear();
+}
+inline ::omm::proto::MMSuppressReason ProductMMState::_internal_reasons(int index) const {
+  return static_cast< ::omm::proto::MMSuppressReason >(_impl_.reasons_.Get(index));
+}
+inline ::omm::proto::MMSuppressReason ProductMMState::reasons(int index) const {
+  // @@protoc_insertion_point(field_get:omm.proto.ProductMMState.reasons)
+  return _internal_reasons(index);
+}
+inline void ProductMMState::set_reasons(int index, ::omm::proto::MMSuppressReason value) {
+  _impl_.reasons_.Set(index, value);
+  // @@protoc_insertion_point(field_set:omm.proto.ProductMMState.reasons)
+}
+inline void ProductMMState::_internal_add_reasons(::omm::proto::MMSuppressReason value) {
+  _impl_.reasons_.Add(value);
+}
+inline void ProductMMState::add_reasons(::omm::proto::MMSuppressReason value) {
+  _internal_add_reasons(value);
+  // @@protoc_insertion_point(field_add:omm.proto.ProductMMState.reasons)
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField<int>&
+ProductMMState::reasons() const {
+  // @@protoc_insertion_point(field_list:omm.proto.ProductMMState.reasons)
+  return _impl_.reasons_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField<int>*
+ProductMMState::_internal_mutable_reasons() {
+  return &_impl_.reasons_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField<int>*
+ProductMMState::mutable_reasons() {
+  // @@protoc_insertion_point(field_mutable_list:omm.proto.ProductMMState.reasons)
+  return _internal_mutable_reasons();
+}
+
+// -------------------------------------------------------------------
+
+// InstrumentMMState
+
+// uint32 instrument_id = 1;
+inline void InstrumentMMState::clear_instrument_id() {
+  _impl_.instrument_id_ = 0u;
+}
+inline uint32_t InstrumentMMState::_internal_instrument_id() const {
+  return _impl_.instrument_id_;
+}
+inline uint32_t InstrumentMMState::instrument_id() const {
+  // @@protoc_insertion_point(field_get:omm.proto.InstrumentMMState.instrument_id)
+  return _internal_instrument_id();
+}
+inline void InstrumentMMState::_internal_set_instrument_id(uint32_t value) {
+  
+  _impl_.instrument_id_ = value;
+}
+inline void InstrumentMMState::set_instrument_id(uint32_t value) {
+  _internal_set_instrument_id(value);
+  // @@protoc_insertion_point(field_set:omm.proto.InstrumentMMState.instrument_id)
+}
+
+// uint32 product_index = 2;
+inline void InstrumentMMState::clear_product_index() {
+  _impl_.product_index_ = 0u;
+}
+inline uint32_t InstrumentMMState::_internal_product_index() const {
+  return _impl_.product_index_;
+}
+inline uint32_t InstrumentMMState::product_index() const {
+  // @@protoc_insertion_point(field_get:omm.proto.InstrumentMMState.product_index)
+  return _internal_product_index();
+}
+inline void InstrumentMMState::_internal_set_product_index(uint32_t value) {
+  
+  _impl_.product_index_ = value;
+}
+inline void InstrumentMMState::set_product_index(uint32_t value) {
+  _internal_set_product_index(value);
+  // @@protoc_insertion_point(field_set:omm.proto.InstrumentMMState.product_index)
+}
+
+// .omm.proto.MMQuoteState quote_state = 3;
+inline void InstrumentMMState::clear_quote_state() {
+  _impl_.quote_state_ = 0;
+}
+inline ::omm::proto::MMQuoteState InstrumentMMState::_internal_quote_state() const {
+  return static_cast< ::omm::proto::MMQuoteState >(_impl_.quote_state_);
+}
+inline ::omm::proto::MMQuoteState InstrumentMMState::quote_state() const {
+  // @@protoc_insertion_point(field_get:omm.proto.InstrumentMMState.quote_state)
+  return _internal_quote_state();
+}
+inline void InstrumentMMState::_internal_set_quote_state(::omm::proto::MMQuoteState value) {
+  
+  _impl_.quote_state_ = value;
+}
+inline void InstrumentMMState::set_quote_state(::omm::proto::MMQuoteState value) {
+  _internal_set_quote_state(value);
+  // @@protoc_insertion_point(field_set:omm.proto.InstrumentMMState.quote_state)
+}
+
+// repeated .omm.proto.MMSuppressReason reasons = 4;
+inline int InstrumentMMState::_internal_reasons_size() const {
+  return _impl_.reasons_.size();
+}
+inline int InstrumentMMState::reasons_size() const {
+  return _internal_reasons_size();
+}
+inline void InstrumentMMState::clear_reasons() {
+  _impl_.reasons_.Clear();
+}
+inline ::omm::proto::MMSuppressReason InstrumentMMState::_internal_reasons(int index) const {
+  return static_cast< ::omm::proto::MMSuppressReason >(_impl_.reasons_.Get(index));
+}
+inline ::omm::proto::MMSuppressReason InstrumentMMState::reasons(int index) const {
+  // @@protoc_insertion_point(field_get:omm.proto.InstrumentMMState.reasons)
+  return _internal_reasons(index);
+}
+inline void InstrumentMMState::set_reasons(int index, ::omm::proto::MMSuppressReason value) {
+  _impl_.reasons_.Set(index, value);
+  // @@protoc_insertion_point(field_set:omm.proto.InstrumentMMState.reasons)
+}
+inline void InstrumentMMState::_internal_add_reasons(::omm::proto::MMSuppressReason value) {
+  _impl_.reasons_.Add(value);
+}
+inline void InstrumentMMState::add_reasons(::omm::proto::MMSuppressReason value) {
+  _internal_add_reasons(value);
+  // @@protoc_insertion_point(field_add:omm.proto.InstrumentMMState.reasons)
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField<int>&
+InstrumentMMState::reasons() const {
+  // @@protoc_insertion_point(field_list:omm.proto.InstrumentMMState.reasons)
+  return _impl_.reasons_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField<int>*
+InstrumentMMState::_internal_mutable_reasons() {
+  return &_impl_.reasons_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField<int>*
+InstrumentMMState::mutable_reasons() {
+  // @@protoc_insertion_point(field_mutable_list:omm.proto.InstrumentMMState.reasons)
+  return _internal_mutable_reasons();
+}
+
+// int32 net_position = 5;
+inline void InstrumentMMState::clear_net_position() {
+  _impl_.net_position_ = 0;
+}
+inline int32_t InstrumentMMState::_internal_net_position() const {
+  return _impl_.net_position_;
+}
+inline int32_t InstrumentMMState::net_position() const {
+  // @@protoc_insertion_point(field_get:omm.proto.InstrumentMMState.net_position)
+  return _internal_net_position();
+}
+inline void InstrumentMMState::_internal_set_net_position(int32_t value) {
+  
+  _impl_.net_position_ = value;
+}
+inline void InstrumentMMState::set_net_position(int32_t value) {
+  _internal_set_net_position(value);
+  // @@protoc_insertion_point(field_set:omm.proto.InstrumentMMState.net_position)
+}
+
+// uint32 cancel_attempts = 6;
+inline void InstrumentMMState::clear_cancel_attempts() {
+  _impl_.cancel_attempts_ = 0u;
+}
+inline uint32_t InstrumentMMState::_internal_cancel_attempts() const {
+  return _impl_.cancel_attempts_;
+}
+inline uint32_t InstrumentMMState::cancel_attempts() const {
+  // @@protoc_insertion_point(field_get:omm.proto.InstrumentMMState.cancel_attempts)
+  return _internal_cancel_attempts();
+}
+inline void InstrumentMMState::_internal_set_cancel_attempts(uint32_t value) {
+  
+  _impl_.cancel_attempts_ = value;
+}
+inline void InstrumentMMState::set_cancel_attempts(uint32_t value) {
+  _internal_set_cancel_attempts(value);
+  // @@protoc_insertion_point(field_set:omm.proto.InstrumentMMState.cancel_attempts)
+}
+
+// int64 last_quote_ts_ns = 7;
+inline void InstrumentMMState::clear_last_quote_ts_ns() {
+  _impl_.last_quote_ts_ns_ = int64_t{0};
+}
+inline int64_t InstrumentMMState::_internal_last_quote_ts_ns() const {
+  return _impl_.last_quote_ts_ns_;
+}
+inline int64_t InstrumentMMState::last_quote_ts_ns() const {
+  // @@protoc_insertion_point(field_get:omm.proto.InstrumentMMState.last_quote_ts_ns)
+  return _internal_last_quote_ts_ns();
+}
+inline void InstrumentMMState::_internal_set_last_quote_ts_ns(int64_t value) {
+  
+  _impl_.last_quote_ts_ns_ = value;
+}
+inline void InstrumentMMState::set_last_quote_ts_ns(int64_t value) {
+  _internal_set_last_quote_ts_ns(value);
+  // @@protoc_insertion_point(field_set:omm.proto.InstrumentMMState.last_quote_ts_ns)
+}
+
+// -------------------------------------------------------------------
+
+// ArbStrategyState
+
+// uint32 product_index = 1;
+inline void ArbStrategyState::clear_product_index() {
+  _impl_.product_index_ = 0u;
+}
+inline uint32_t ArbStrategyState::_internal_product_index() const {
+  return _impl_.product_index_;
+}
+inline uint32_t ArbStrategyState::product_index() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ArbStrategyState.product_index)
+  return _internal_product_index();
+}
+inline void ArbStrategyState::_internal_set_product_index(uint32_t value) {
+  
+  _impl_.product_index_ = value;
+}
+inline void ArbStrategyState::set_product_index(uint32_t value) {
+  _internal_set_product_index(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ArbStrategyState.product_index)
+}
+
+// .omm.proto.ArbitrageStrategyType strategy_type = 2;
+inline void ArbStrategyState::clear_strategy_type() {
+  _impl_.strategy_type_ = 0;
+}
+inline ::omm::proto::ArbitrageStrategyType ArbStrategyState::_internal_strategy_type() const {
+  return static_cast< ::omm::proto::ArbitrageStrategyType >(_impl_.strategy_type_);
+}
+inline ::omm::proto::ArbitrageStrategyType ArbStrategyState::strategy_type() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ArbStrategyState.strategy_type)
+  return _internal_strategy_type();
+}
+inline void ArbStrategyState::_internal_set_strategy_type(::omm::proto::ArbitrageStrategyType value) {
+  
+  _impl_.strategy_type_ = value;
+}
+inline void ArbStrategyState::set_strategy_type(::omm::proto::ArbitrageStrategyType value) {
+  _internal_set_strategy_type(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ArbStrategyState.strategy_type)
+}
+
+// bool enabled = 3;
+inline void ArbStrategyState::clear_enabled() {
+  _impl_.enabled_ = false;
+}
+inline bool ArbStrategyState::_internal_enabled() const {
+  return _impl_.enabled_;
+}
+inline bool ArbStrategyState::enabled() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ArbStrategyState.enabled)
+  return _internal_enabled();
+}
+inline void ArbStrategyState::_internal_set_enabled(bool value) {
+  
+  _impl_.enabled_ = value;
+}
+inline void ArbStrategyState::set_enabled(bool value) {
+  _internal_set_enabled(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ArbStrategyState.enabled)
+}
+
+// bool running = 4;
+inline void ArbStrategyState::clear_running() {
+  _impl_.running_ = false;
+}
+inline bool ArbStrategyState::_internal_running() const {
+  return _impl_.running_;
+}
+inline bool ArbStrategyState::running() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ArbStrategyState.running)
+  return _internal_running();
+}
+inline void ArbStrategyState::_internal_set_running(bool value) {
+  
+  _impl_.running_ = value;
+}
+inline void ArbStrategyState::set_running(bool value) {
+  _internal_set_running(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ArbStrategyState.running)
+}
+
+// bool cleanup_active = 5;
+inline void ArbStrategyState::clear_cleanup_active() {
+  _impl_.cleanup_active_ = false;
+}
+inline bool ArbStrategyState::_internal_cleanup_active() const {
+  return _impl_.cleanup_active_;
+}
+inline bool ArbStrategyState::cleanup_active() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ArbStrategyState.cleanup_active)
+  return _internal_cleanup_active();
+}
+inline void ArbStrategyState::_internal_set_cleanup_active(bool value) {
+  
+  _impl_.cleanup_active_ = value;
+}
+inline void ArbStrategyState::set_cleanup_active(bool value) {
+  _internal_set_cleanup_active(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ArbStrategyState.cleanup_active)
+}
+
+// uint32 live_orders = 6;
+inline void ArbStrategyState::clear_live_orders() {
+  _impl_.live_orders_ = 0u;
+}
+inline uint32_t ArbStrategyState::_internal_live_orders() const {
+  return _impl_.live_orders_;
+}
+inline uint32_t ArbStrategyState::live_orders() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ArbStrategyState.live_orders)
+  return _internal_live_orders();
+}
+inline void ArbStrategyState::_internal_set_live_orders(uint32_t value) {
+  
+  _impl_.live_orders_ = value;
+}
+inline void ArbStrategyState::set_live_orders(uint32_t value) {
+  _internal_set_live_orders(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ArbStrategyState.live_orders)
+}
+
+// uint32 pair_count = 7;
+inline void ArbStrategyState::clear_pair_count() {
+  _impl_.pair_count_ = 0u;
+}
+inline uint32_t ArbStrategyState::_internal_pair_count() const {
+  return _impl_.pair_count_;
+}
+inline uint32_t ArbStrategyState::pair_count() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ArbStrategyState.pair_count)
+  return _internal_pair_count();
+}
+inline void ArbStrategyState::_internal_set_pair_count(uint32_t value) {
+  
+  _impl_.pair_count_ = value;
+}
+inline void ArbStrategyState::set_pair_count(uint32_t value) {
+  _internal_set_pair_count(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ArbStrategyState.pair_count)
+}
+
+// uint32 active_call_id = 8;
+inline void ArbStrategyState::clear_active_call_id() {
+  _impl_.active_call_id_ = 0u;
+}
+inline uint32_t ArbStrategyState::_internal_active_call_id() const {
+  return _impl_.active_call_id_;
+}
+inline uint32_t ArbStrategyState::active_call_id() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ArbStrategyState.active_call_id)
+  return _internal_active_call_id();
+}
+inline void ArbStrategyState::_internal_set_active_call_id(uint32_t value) {
+  
+  _impl_.active_call_id_ = value;
+}
+inline void ArbStrategyState::set_active_call_id(uint32_t value) {
+  _internal_set_active_call_id(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ArbStrategyState.active_call_id)
+}
+
+// uint32 active_put_id = 9;
+inline void ArbStrategyState::clear_active_put_id() {
+  _impl_.active_put_id_ = 0u;
+}
+inline uint32_t ArbStrategyState::_internal_active_put_id() const {
+  return _impl_.active_put_id_;
+}
+inline uint32_t ArbStrategyState::active_put_id() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ArbStrategyState.active_put_id)
+  return _internal_active_put_id();
+}
+inline void ArbStrategyState::_internal_set_active_put_id(uint32_t value) {
+  
+  _impl_.active_put_id_ = value;
+}
+inline void ArbStrategyState::set_active_put_id(uint32_t value) {
+  _internal_set_active_put_id(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ArbStrategyState.active_put_id)
+}
+
+// uint32 active_future_id = 10;
+inline void ArbStrategyState::clear_active_future_id() {
+  _impl_.active_future_id_ = 0u;
+}
+inline uint32_t ArbStrategyState::_internal_active_future_id() const {
+  return _impl_.active_future_id_;
+}
+inline uint32_t ArbStrategyState::active_future_id() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ArbStrategyState.active_future_id)
+  return _internal_active_future_id();
+}
+inline void ArbStrategyState::_internal_set_active_future_id(uint32_t value) {
+  
+  _impl_.active_future_id_ = value;
+}
+inline void ArbStrategyState::set_active_future_id(uint32_t value) {
+  _internal_set_active_future_id(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ArbStrategyState.active_future_id)
+}
+
+// repeated .omm.proto.ArbSuppressReason reasons = 11;
+inline int ArbStrategyState::_internal_reasons_size() const {
+  return _impl_.reasons_.size();
+}
+inline int ArbStrategyState::reasons_size() const {
+  return _internal_reasons_size();
+}
+inline void ArbStrategyState::clear_reasons() {
+  _impl_.reasons_.Clear();
+}
+inline ::omm::proto::ArbSuppressReason ArbStrategyState::_internal_reasons(int index) const {
+  return static_cast< ::omm::proto::ArbSuppressReason >(_impl_.reasons_.Get(index));
+}
+inline ::omm::proto::ArbSuppressReason ArbStrategyState::reasons(int index) const {
+  // @@protoc_insertion_point(field_get:omm.proto.ArbStrategyState.reasons)
+  return _internal_reasons(index);
+}
+inline void ArbStrategyState::set_reasons(int index, ::omm::proto::ArbSuppressReason value) {
+  _impl_.reasons_.Set(index, value);
+  // @@protoc_insertion_point(field_set:omm.proto.ArbStrategyState.reasons)
+}
+inline void ArbStrategyState::_internal_add_reasons(::omm::proto::ArbSuppressReason value) {
+  _impl_.reasons_.Add(value);
+}
+inline void ArbStrategyState::add_reasons(::omm::proto::ArbSuppressReason value) {
+  _internal_add_reasons(value);
+  // @@protoc_insertion_point(field_add:omm.proto.ArbStrategyState.reasons)
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField<int>&
+ArbStrategyState::reasons() const {
+  // @@protoc_insertion_point(field_list:omm.proto.ArbStrategyState.reasons)
+  return _impl_.reasons_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField<int>*
+ArbStrategyState::_internal_mutable_reasons() {
+  return &_impl_.reasons_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField<int>*
+ArbStrategyState::mutable_reasons() {
+  // @@protoc_insertion_point(field_mutable_list:omm.proto.ArbStrategyState.reasons)
+  return _internal_mutable_reasons();
+}
+
+// double last_edge_ticks = 12;
+inline void ArbStrategyState::clear_last_edge_ticks() {
+  _impl_.last_edge_ticks_ = 0;
+}
+inline double ArbStrategyState::_internal_last_edge_ticks() const {
+  return _impl_.last_edge_ticks_;
+}
+inline double ArbStrategyState::last_edge_ticks() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ArbStrategyState.last_edge_ticks)
+  return _internal_last_edge_ticks();
+}
+inline void ArbStrategyState::_internal_set_last_edge_ticks(double value) {
+  
+  _impl_.last_edge_ticks_ = value;
+}
+inline void ArbStrategyState::set_last_edge_ticks(double value) {
+  _internal_set_last_edge_ticks(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ArbStrategyState.last_edge_ticks)
+}
+
+// double last_trigger_edge_ticks = 13;
+inline void ArbStrategyState::clear_last_trigger_edge_ticks() {
+  _impl_.last_trigger_edge_ticks_ = 0;
+}
+inline double ArbStrategyState::_internal_last_trigger_edge_ticks() const {
+  return _impl_.last_trigger_edge_ticks_;
+}
+inline double ArbStrategyState::last_trigger_edge_ticks() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ArbStrategyState.last_trigger_edge_ticks)
+  return _internal_last_trigger_edge_ticks();
+}
+inline void ArbStrategyState::_internal_set_last_trigger_edge_ticks(double value) {
+  
+  _impl_.last_trigger_edge_ticks_ = value;
+}
+inline void ArbStrategyState::set_last_trigger_edge_ticks(double value) {
+  _internal_set_last_trigger_edge_ticks(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ArbStrategyState.last_trigger_edge_ticks)
+}
+
+// int64 last_eval_ts_ns = 14;
+inline void ArbStrategyState::clear_last_eval_ts_ns() {
+  _impl_.last_eval_ts_ns_ = int64_t{0};
+}
+inline int64_t ArbStrategyState::_internal_last_eval_ts_ns() const {
+  return _impl_.last_eval_ts_ns_;
+}
+inline int64_t ArbStrategyState::last_eval_ts_ns() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ArbStrategyState.last_eval_ts_ns)
+  return _internal_last_eval_ts_ns();
+}
+inline void ArbStrategyState::_internal_set_last_eval_ts_ns(int64_t value) {
+  
+  _impl_.last_eval_ts_ns_ = value;
+}
+inline void ArbStrategyState::set_last_eval_ts_ns(int64_t value) {
+  _internal_set_last_eval_ts_ns(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ArbStrategyState.last_eval_ts_ns)
+}
+
+// int64 last_trigger_ts_ns = 15;
+inline void ArbStrategyState::clear_last_trigger_ts_ns() {
+  _impl_.last_trigger_ts_ns_ = int64_t{0};
+}
+inline int64_t ArbStrategyState::_internal_last_trigger_ts_ns() const {
+  return _impl_.last_trigger_ts_ns_;
+}
+inline int64_t ArbStrategyState::last_trigger_ts_ns() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ArbStrategyState.last_trigger_ts_ns)
+  return _internal_last_trigger_ts_ns();
+}
+inline void ArbStrategyState::_internal_set_last_trigger_ts_ns(int64_t value) {
+  
+  _impl_.last_trigger_ts_ns_ = value;
+}
+inline void ArbStrategyState::set_last_trigger_ts_ns(int64_t value) {
+  _internal_set_last_trigger_ts_ns(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ArbStrategyState.last_trigger_ts_ns)
+}
+
+// -------------------------------------------------------------------
+
+// PcpOpportunityState
+
+// uint32 product_index = 1;
+inline void PcpOpportunityState::clear_product_index() {
+  _impl_.product_index_ = 0u;
+}
+inline uint32_t PcpOpportunityState::_internal_product_index() const {
+  return _impl_.product_index_;
+}
+inline uint32_t PcpOpportunityState::product_index() const {
+  // @@protoc_insertion_point(field_get:omm.proto.PcpOpportunityState.product_index)
+  return _internal_product_index();
+}
+inline void PcpOpportunityState::_internal_set_product_index(uint32_t value) {
+  
+  _impl_.product_index_ = value;
+}
+inline void PcpOpportunityState::set_product_index(uint32_t value) {
+  _internal_set_product_index(value);
+  // @@protoc_insertion_point(field_set:omm.proto.PcpOpportunityState.product_index)
+}
+
+// .omm.proto.ArbitrageStrategyType strategy_type = 2;
+inline void PcpOpportunityState::clear_strategy_type() {
+  _impl_.strategy_type_ = 0;
+}
+inline ::omm::proto::ArbitrageStrategyType PcpOpportunityState::_internal_strategy_type() const {
+  return static_cast< ::omm::proto::ArbitrageStrategyType >(_impl_.strategy_type_);
+}
+inline ::omm::proto::ArbitrageStrategyType PcpOpportunityState::strategy_type() const {
+  // @@protoc_insertion_point(field_get:omm.proto.PcpOpportunityState.strategy_type)
+  return _internal_strategy_type();
+}
+inline void PcpOpportunityState::_internal_set_strategy_type(::omm::proto::ArbitrageStrategyType value) {
+  
+  _impl_.strategy_type_ = value;
+}
+inline void PcpOpportunityState::set_strategy_type(::omm::proto::ArbitrageStrategyType value) {
+  _internal_set_strategy_type(value);
+  // @@protoc_insertion_point(field_set:omm.proto.PcpOpportunityState.strategy_type)
+}
+
+// uint32 call_id = 3;
+inline void PcpOpportunityState::clear_call_id() {
+  _impl_.call_id_ = 0u;
+}
+inline uint32_t PcpOpportunityState::_internal_call_id() const {
+  return _impl_.call_id_;
+}
+inline uint32_t PcpOpportunityState::call_id() const {
+  // @@protoc_insertion_point(field_get:omm.proto.PcpOpportunityState.call_id)
+  return _internal_call_id();
+}
+inline void PcpOpportunityState::_internal_set_call_id(uint32_t value) {
+  
+  _impl_.call_id_ = value;
+}
+inline void PcpOpportunityState::set_call_id(uint32_t value) {
+  _internal_set_call_id(value);
+  // @@protoc_insertion_point(field_set:omm.proto.PcpOpportunityState.call_id)
+}
+
+// uint32 put_id = 4;
+inline void PcpOpportunityState::clear_put_id() {
+  _impl_.put_id_ = 0u;
+}
+inline uint32_t PcpOpportunityState::_internal_put_id() const {
+  return _impl_.put_id_;
+}
+inline uint32_t PcpOpportunityState::put_id() const {
+  // @@protoc_insertion_point(field_get:omm.proto.PcpOpportunityState.put_id)
+  return _internal_put_id();
+}
+inline void PcpOpportunityState::_internal_set_put_id(uint32_t value) {
+  
+  _impl_.put_id_ = value;
+}
+inline void PcpOpportunityState::set_put_id(uint32_t value) {
+  _internal_set_put_id(value);
+  // @@protoc_insertion_point(field_set:omm.proto.PcpOpportunityState.put_id)
+}
+
+// uint32 future_id = 5;
+inline void PcpOpportunityState::clear_future_id() {
+  _impl_.future_id_ = 0u;
+}
+inline uint32_t PcpOpportunityState::_internal_future_id() const {
+  return _impl_.future_id_;
+}
+inline uint32_t PcpOpportunityState::future_id() const {
+  // @@protoc_insertion_point(field_get:omm.proto.PcpOpportunityState.future_id)
+  return _internal_future_id();
+}
+inline void PcpOpportunityState::_internal_set_future_id(uint32_t value) {
+  
+  _impl_.future_id_ = value;
+}
+inline void PcpOpportunityState::set_future_id(uint32_t value) {
+  _internal_set_future_id(value);
+  // @@protoc_insertion_point(field_set:omm.proto.PcpOpportunityState.future_id)
+}
+
+// int32 expiry_date = 6;
+inline void PcpOpportunityState::clear_expiry_date() {
+  _impl_.expiry_date_ = 0;
+}
+inline int32_t PcpOpportunityState::_internal_expiry_date() const {
+  return _impl_.expiry_date_;
+}
+inline int32_t PcpOpportunityState::expiry_date() const {
+  // @@protoc_insertion_point(field_get:omm.proto.PcpOpportunityState.expiry_date)
+  return _internal_expiry_date();
+}
+inline void PcpOpportunityState::_internal_set_expiry_date(int32_t value) {
+  
+  _impl_.expiry_date_ = value;
+}
+inline void PcpOpportunityState::set_expiry_date(int32_t value) {
+  _internal_set_expiry_date(value);
+  // @@protoc_insertion_point(field_set:omm.proto.PcpOpportunityState.expiry_date)
+}
+
+// double strike = 7;
+inline void PcpOpportunityState::clear_strike() {
+  _impl_.strike_ = 0;
+}
+inline double PcpOpportunityState::_internal_strike() const {
+  return _impl_.strike_;
+}
+inline double PcpOpportunityState::strike() const {
+  // @@protoc_insertion_point(field_get:omm.proto.PcpOpportunityState.strike)
+  return _internal_strike();
+}
+inline void PcpOpportunityState::_internal_set_strike(double value) {
+  
+  _impl_.strike_ = value;
+}
+inline void PcpOpportunityState::set_strike(double value) {
+  _internal_set_strike(value);
+  // @@protoc_insertion_point(field_set:omm.proto.PcpOpportunityState.strike)
+}
+
+// bool market_valid = 8;
+inline void PcpOpportunityState::clear_market_valid() {
+  _impl_.market_valid_ = false;
+}
+inline bool PcpOpportunityState::_internal_market_valid() const {
+  return _impl_.market_valid_;
+}
+inline bool PcpOpportunityState::market_valid() const {
+  // @@protoc_insertion_point(field_get:omm.proto.PcpOpportunityState.market_valid)
+  return _internal_market_valid();
+}
+inline void PcpOpportunityState::_internal_set_market_valid(bool value) {
+  
+  _impl_.market_valid_ = value;
+}
+inline void PcpOpportunityState::set_market_valid(bool value) {
+  _internal_set_market_valid(value);
+  // @@protoc_insertion_point(field_set:omm.proto.PcpOpportunityState.market_valid)
+}
+
+// bool selected = 9;
+inline void PcpOpportunityState::clear_selected() {
+  _impl_.selected_ = false;
+}
+inline bool PcpOpportunityState::_internal_selected() const {
+  return _impl_.selected_;
+}
+inline bool PcpOpportunityState::selected() const {
+  // @@protoc_insertion_point(field_get:omm.proto.PcpOpportunityState.selected)
+  return _internal_selected();
+}
+inline void PcpOpportunityState::_internal_set_selected(bool value) {
+  
+  _impl_.selected_ = value;
+}
+inline void PcpOpportunityState::set_selected(bool value) {
+  _internal_set_selected(value);
+  // @@protoc_insertion_point(field_set:omm.proto.PcpOpportunityState.selected)
+}
+
+// double discount_factor = 10;
+inline void PcpOpportunityState::clear_discount_factor() {
+  _impl_.discount_factor_ = 0;
+}
+inline double PcpOpportunityState::_internal_discount_factor() const {
+  return _impl_.discount_factor_;
+}
+inline double PcpOpportunityState::discount_factor() const {
+  // @@protoc_insertion_point(field_get:omm.proto.PcpOpportunityState.discount_factor)
+  return _internal_discount_factor();
+}
+inline void PcpOpportunityState::_internal_set_discount_factor(double value) {
+  
+  _impl_.discount_factor_ = value;
+}
+inline void PcpOpportunityState::set_discount_factor(double value) {
+  _internal_set_discount_factor(value);
+  // @@protoc_insertion_point(field_set:omm.proto.PcpOpportunityState.discount_factor)
+}
+
+// double synthetic_bid = 11;
+inline void PcpOpportunityState::clear_synthetic_bid() {
+  _impl_.synthetic_bid_ = 0;
+}
+inline double PcpOpportunityState::_internal_synthetic_bid() const {
+  return _impl_.synthetic_bid_;
+}
+inline double PcpOpportunityState::synthetic_bid() const {
+  // @@protoc_insertion_point(field_get:omm.proto.PcpOpportunityState.synthetic_bid)
+  return _internal_synthetic_bid();
+}
+inline void PcpOpportunityState::_internal_set_synthetic_bid(double value) {
+  
+  _impl_.synthetic_bid_ = value;
+}
+inline void PcpOpportunityState::set_synthetic_bid(double value) {
+  _internal_set_synthetic_bid(value);
+  // @@protoc_insertion_point(field_set:omm.proto.PcpOpportunityState.synthetic_bid)
+}
+
+// double synthetic_ask = 12;
+inline void PcpOpportunityState::clear_synthetic_ask() {
+  _impl_.synthetic_ask_ = 0;
+}
+inline double PcpOpportunityState::_internal_synthetic_ask() const {
+  return _impl_.synthetic_ask_;
+}
+inline double PcpOpportunityState::synthetic_ask() const {
+  // @@protoc_insertion_point(field_get:omm.proto.PcpOpportunityState.synthetic_ask)
+  return _internal_synthetic_ask();
+}
+inline void PcpOpportunityState::_internal_set_synthetic_ask(double value) {
+  
+  _impl_.synthetic_ask_ = value;
+}
+inline void PcpOpportunityState::set_synthetic_ask(double value) {
+  _internal_set_synthetic_ask(value);
+  // @@protoc_insertion_point(field_set:omm.proto.PcpOpportunityState.synthetic_ask)
+}
+
+// double future_bid = 13;
+inline void PcpOpportunityState::clear_future_bid() {
+  _impl_.future_bid_ = 0;
+}
+inline double PcpOpportunityState::_internal_future_bid() const {
+  return _impl_.future_bid_;
+}
+inline double PcpOpportunityState::future_bid() const {
+  // @@protoc_insertion_point(field_get:omm.proto.PcpOpportunityState.future_bid)
+  return _internal_future_bid();
+}
+inline void PcpOpportunityState::_internal_set_future_bid(double value) {
+  
+  _impl_.future_bid_ = value;
+}
+inline void PcpOpportunityState::set_future_bid(double value) {
+  _internal_set_future_bid(value);
+  // @@protoc_insertion_point(field_set:omm.proto.PcpOpportunityState.future_bid)
+}
+
+// double future_ask = 14;
+inline void PcpOpportunityState::clear_future_ask() {
+  _impl_.future_ask_ = 0;
+}
+inline double PcpOpportunityState::_internal_future_ask() const {
+  return _impl_.future_ask_;
+}
+inline double PcpOpportunityState::future_ask() const {
+  // @@protoc_insertion_point(field_get:omm.proto.PcpOpportunityState.future_ask)
+  return _internal_future_ask();
+}
+inline void PcpOpportunityState::_internal_set_future_ask(double value) {
+  
+  _impl_.future_ask_ = value;
+}
+inline void PcpOpportunityState::set_future_ask(double value) {
+  _internal_set_future_ask(value);
+  // @@protoc_insertion_point(field_set:omm.proto.PcpOpportunityState.future_ask)
+}
+
+// double long_synth_edge_ticks = 15;
+inline void PcpOpportunityState::clear_long_synth_edge_ticks() {
+  _impl_.long_synth_edge_ticks_ = 0;
+}
+inline double PcpOpportunityState::_internal_long_synth_edge_ticks() const {
+  return _impl_.long_synth_edge_ticks_;
+}
+inline double PcpOpportunityState::long_synth_edge_ticks() const {
+  // @@protoc_insertion_point(field_get:omm.proto.PcpOpportunityState.long_synth_edge_ticks)
+  return _internal_long_synth_edge_ticks();
+}
+inline void PcpOpportunityState::_internal_set_long_synth_edge_ticks(double value) {
+  
+  _impl_.long_synth_edge_ticks_ = value;
+}
+inline void PcpOpportunityState::set_long_synth_edge_ticks(double value) {
+  _internal_set_long_synth_edge_ticks(value);
+  // @@protoc_insertion_point(field_set:omm.proto.PcpOpportunityState.long_synth_edge_ticks)
+}
+
+// double short_synth_edge_ticks = 16;
+inline void PcpOpportunityState::clear_short_synth_edge_ticks() {
+  _impl_.short_synth_edge_ticks_ = 0;
+}
+inline double PcpOpportunityState::_internal_short_synth_edge_ticks() const {
+  return _impl_.short_synth_edge_ticks_;
+}
+inline double PcpOpportunityState::short_synth_edge_ticks() const {
+  // @@protoc_insertion_point(field_get:omm.proto.PcpOpportunityState.short_synth_edge_ticks)
+  return _internal_short_synth_edge_ticks();
+}
+inline void PcpOpportunityState::_internal_set_short_synth_edge_ticks(double value) {
+  
+  _impl_.short_synth_edge_ticks_ = value;
+}
+inline void PcpOpportunityState::set_short_synth_edge_ticks(double value) {
+  _internal_set_short_synth_edge_ticks(value);
+  // @@protoc_insertion_point(field_set:omm.proto.PcpOpportunityState.short_synth_edge_ticks)
+}
+
+// double best_edge_ticks = 17;
+inline void PcpOpportunityState::clear_best_edge_ticks() {
+  _impl_.best_edge_ticks_ = 0;
+}
+inline double PcpOpportunityState::_internal_best_edge_ticks() const {
+  return _impl_.best_edge_ticks_;
+}
+inline double PcpOpportunityState::best_edge_ticks() const {
+  // @@protoc_insertion_point(field_get:omm.proto.PcpOpportunityState.best_edge_ticks)
+  return _internal_best_edge_ticks();
+}
+inline void PcpOpportunityState::_internal_set_best_edge_ticks(double value) {
+  
+  _impl_.best_edge_ticks_ = value;
+}
+inline void PcpOpportunityState::set_best_edge_ticks(double value) {
+  _internal_set_best_edge_ticks(value);
+  // @@protoc_insertion_point(field_set:omm.proto.PcpOpportunityState.best_edge_ticks)
+}
+
+// .omm.proto.PcpOpportunityDirection best_direction = 18;
+inline void PcpOpportunityState::clear_best_direction() {
+  _impl_.best_direction_ = 0;
+}
+inline ::omm::proto::PcpOpportunityDirection PcpOpportunityState::_internal_best_direction() const {
+  return static_cast< ::omm::proto::PcpOpportunityDirection >(_impl_.best_direction_);
+}
+inline ::omm::proto::PcpOpportunityDirection PcpOpportunityState::best_direction() const {
+  // @@protoc_insertion_point(field_get:omm.proto.PcpOpportunityState.best_direction)
+  return _internal_best_direction();
+}
+inline void PcpOpportunityState::_internal_set_best_direction(::omm::proto::PcpOpportunityDirection value) {
+  
+  _impl_.best_direction_ = value;
+}
+inline void PcpOpportunityState::set_best_direction(::omm::proto::PcpOpportunityDirection value) {
+  _internal_set_best_direction(value);
+  // @@protoc_insertion_point(field_set:omm.proto.PcpOpportunityState.best_direction)
+}
+
+// int32 best_volume = 19;
+inline void PcpOpportunityState::clear_best_volume() {
+  _impl_.best_volume_ = 0;
+}
+inline int32_t PcpOpportunityState::_internal_best_volume() const {
+  return _impl_.best_volume_;
+}
+inline int32_t PcpOpportunityState::best_volume() const {
+  // @@protoc_insertion_point(field_get:omm.proto.PcpOpportunityState.best_volume)
+  return _internal_best_volume();
+}
+inline void PcpOpportunityState::_internal_set_best_volume(int32_t value) {
+  
+  _impl_.best_volume_ = value;
+}
+inline void PcpOpportunityState::set_best_volume(int32_t value) {
+  _internal_set_best_volume(value);
+  // @@protoc_insertion_point(field_set:omm.proto.PcpOpportunityState.best_volume)
+}
+
+// int64 eval_ts_ns = 20;
+inline void PcpOpportunityState::clear_eval_ts_ns() {
+  _impl_.eval_ts_ns_ = int64_t{0};
+}
+inline int64_t PcpOpportunityState::_internal_eval_ts_ns() const {
+  return _impl_.eval_ts_ns_;
+}
+inline int64_t PcpOpportunityState::eval_ts_ns() const {
+  // @@protoc_insertion_point(field_get:omm.proto.PcpOpportunityState.eval_ts_ns)
+  return _internal_eval_ts_ns();
+}
+inline void PcpOpportunityState::_internal_set_eval_ts_ns(int64_t value) {
+  
+  _impl_.eval_ts_ns_ = value;
+}
+inline void PcpOpportunityState::set_eval_ts_ns(int64_t value) {
+  _internal_set_eval_ts_ns(value);
+  // @@protoc_insertion_point(field_set:omm.proto.PcpOpportunityState.eval_ts_ns)
 }
 
 // -------------------------------------------------------------------
@@ -8011,6 +17763,34 @@ inline void ManualOrderRequest::set_volume(int32_t value) {
   // @@protoc_insertion_point(field_set:omm.proto.ManualOrderRequest.volume)
 }
 
+// optional uint32 book_id = 5;
+inline bool ManualOrderRequest::_internal_has_book_id() const {
+  bool value = (_impl_._has_bits_[0] & 0x00000001u) != 0;
+  return value;
+}
+inline bool ManualOrderRequest::has_book_id() const {
+  return _internal_has_book_id();
+}
+inline void ManualOrderRequest::clear_book_id() {
+  _impl_.book_id_ = 0u;
+  _impl_._has_bits_[0] &= ~0x00000001u;
+}
+inline uint32_t ManualOrderRequest::_internal_book_id() const {
+  return _impl_.book_id_;
+}
+inline uint32_t ManualOrderRequest::book_id() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ManualOrderRequest.book_id)
+  return _internal_book_id();
+}
+inline void ManualOrderRequest::_internal_set_book_id(uint32_t value) {
+  _impl_._has_bits_[0] |= 0x00000001u;
+  _impl_.book_id_ = value;
+}
+inline void ManualOrderRequest::set_book_id(uint32_t value) {
+  _internal_set_book_id(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ManualOrderRequest.book_id)
+}
+
 // -------------------------------------------------------------------
 
 // ManualOrderResponse
@@ -8103,6 +17883,26 @@ inline void ManualOrderResponse::_internal_set_order_id(uint64_t value) {
 inline void ManualOrderResponse::set_order_id(uint64_t value) {
   _internal_set_order_id(value);
   // @@protoc_insertion_point(field_set:omm.proto.ManualOrderResponse.order_id)
+}
+
+// uint32 book_id = 4;
+inline void ManualOrderResponse::clear_book_id() {
+  _impl_.book_id_ = 0u;
+}
+inline uint32_t ManualOrderResponse::_internal_book_id() const {
+  return _impl_.book_id_;
+}
+inline uint32_t ManualOrderResponse::book_id() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ManualOrderResponse.book_id)
+  return _internal_book_id();
+}
+inline void ManualOrderResponse::_internal_set_book_id(uint32_t value) {
+  
+  _impl_.book_id_ = value;
+}
+inline void ManualOrderResponse::set_book_id(uint32_t value) {
+  _internal_set_book_id(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ManualOrderResponse.book_id)
 }
 
 // -------------------------------------------------------------------
@@ -8221,6 +18021,124 @@ inline void CancelOrderResponse::set_allocated_message(std::string* message) {
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   // @@protoc_insertion_point(field_set_allocated:omm.proto.CancelOrderResponse.message)
+}
+
+// -------------------------------------------------------------------
+
+// CancelQuoteRequest
+
+// uint64 quote_id = 1;
+inline void CancelQuoteRequest::clear_quote_id() {
+  _impl_.quote_id_ = uint64_t{0u};
+}
+inline uint64_t CancelQuoteRequest::_internal_quote_id() const {
+  return _impl_.quote_id_;
+}
+inline uint64_t CancelQuoteRequest::quote_id() const {
+  // @@protoc_insertion_point(field_get:omm.proto.CancelQuoteRequest.quote_id)
+  return _internal_quote_id();
+}
+inline void CancelQuoteRequest::_internal_set_quote_id(uint64_t value) {
+  
+  _impl_.quote_id_ = value;
+}
+inline void CancelQuoteRequest::set_quote_id(uint64_t value) {
+  _internal_set_quote_id(value);
+  // @@protoc_insertion_point(field_set:omm.proto.CancelQuoteRequest.quote_id)
+}
+
+// uint32 instrument_id = 2;
+inline void CancelQuoteRequest::clear_instrument_id() {
+  _impl_.instrument_id_ = 0u;
+}
+inline uint32_t CancelQuoteRequest::_internal_instrument_id() const {
+  return _impl_.instrument_id_;
+}
+inline uint32_t CancelQuoteRequest::instrument_id() const {
+  // @@protoc_insertion_point(field_get:omm.proto.CancelQuoteRequest.instrument_id)
+  return _internal_instrument_id();
+}
+inline void CancelQuoteRequest::_internal_set_instrument_id(uint32_t value) {
+  
+  _impl_.instrument_id_ = value;
+}
+inline void CancelQuoteRequest::set_instrument_id(uint32_t value) {
+  _internal_set_instrument_id(value);
+  // @@protoc_insertion_point(field_set:omm.proto.CancelQuoteRequest.instrument_id)
+}
+
+// -------------------------------------------------------------------
+
+// CancelQuoteResponse
+
+// bool ok = 1;
+inline void CancelQuoteResponse::clear_ok() {
+  _impl_.ok_ = false;
+}
+inline bool CancelQuoteResponse::_internal_ok() const {
+  return _impl_.ok_;
+}
+inline bool CancelQuoteResponse::ok() const {
+  // @@protoc_insertion_point(field_get:omm.proto.CancelQuoteResponse.ok)
+  return _internal_ok();
+}
+inline void CancelQuoteResponse::_internal_set_ok(bool value) {
+  
+  _impl_.ok_ = value;
+}
+inline void CancelQuoteResponse::set_ok(bool value) {
+  _internal_set_ok(value);
+  // @@protoc_insertion_point(field_set:omm.proto.CancelQuoteResponse.ok)
+}
+
+// string message = 2;
+inline void CancelQuoteResponse::clear_message() {
+  _impl_.message_.ClearToEmpty();
+}
+inline const std::string& CancelQuoteResponse::message() const {
+  // @@protoc_insertion_point(field_get:omm.proto.CancelQuoteResponse.message)
+  return _internal_message();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void CancelQuoteResponse::set_message(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.message_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:omm.proto.CancelQuoteResponse.message)
+}
+inline std::string* CancelQuoteResponse::mutable_message() {
+  std::string* _s = _internal_mutable_message();
+  // @@protoc_insertion_point(field_mutable:omm.proto.CancelQuoteResponse.message)
+  return _s;
+}
+inline const std::string& CancelQuoteResponse::_internal_message() const {
+  return _impl_.message_.Get();
+}
+inline void CancelQuoteResponse::_internal_set_message(const std::string& value) {
+  
+  _impl_.message_.Set(value, GetArenaForAllocation());
+}
+inline std::string* CancelQuoteResponse::_internal_mutable_message() {
+  
+  return _impl_.message_.Mutable(GetArenaForAllocation());
+}
+inline std::string* CancelQuoteResponse::release_message() {
+  // @@protoc_insertion_point(field_release:omm.proto.CancelQuoteResponse.message)
+  return _impl_.message_.Release();
+}
+inline void CancelQuoteResponse::set_allocated_message(std::string* message) {
+  if (message != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.message_.SetAllocated(message, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.message_.IsDefault()) {
+    _impl_.message_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.CancelQuoteResponse.message)
 }
 
 // -------------------------------------------------------------------
@@ -8481,6 +18399,546 @@ SnapshotResponse::instruments() const {
   return _impl_.instruments_;
 }
 
+// .omm.proto.RiskState risk_state = 6;
+inline bool SnapshotResponse::_internal_has_risk_state() const {
+  return this != internal_default_instance() && _impl_.risk_state_ != nullptr;
+}
+inline bool SnapshotResponse::has_risk_state() const {
+  return _internal_has_risk_state();
+}
+inline void SnapshotResponse::clear_risk_state() {
+  if (GetArenaForAllocation() == nullptr && _impl_.risk_state_ != nullptr) {
+    delete _impl_.risk_state_;
+  }
+  _impl_.risk_state_ = nullptr;
+}
+inline const ::omm::proto::RiskState& SnapshotResponse::_internal_risk_state() const {
+  const ::omm::proto::RiskState* p = _impl_.risk_state_;
+  return p != nullptr ? *p : reinterpret_cast<const ::omm::proto::RiskState&>(
+      ::omm::proto::_RiskState_default_instance_);
+}
+inline const ::omm::proto::RiskState& SnapshotResponse::risk_state() const {
+  // @@protoc_insertion_point(field_get:omm.proto.SnapshotResponse.risk_state)
+  return _internal_risk_state();
+}
+inline void SnapshotResponse::unsafe_arena_set_allocated_risk_state(
+    ::omm::proto::RiskState* risk_state) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.risk_state_);
+  }
+  _impl_.risk_state_ = risk_state;
+  if (risk_state) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:omm.proto.SnapshotResponse.risk_state)
+}
+inline ::omm::proto::RiskState* SnapshotResponse::release_risk_state() {
+  
+  ::omm::proto::RiskState* temp = _impl_.risk_state_;
+  _impl_.risk_state_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::omm::proto::RiskState* SnapshotResponse::unsafe_arena_release_risk_state() {
+  // @@protoc_insertion_point(field_release:omm.proto.SnapshotResponse.risk_state)
+  
+  ::omm::proto::RiskState* temp = _impl_.risk_state_;
+  _impl_.risk_state_ = nullptr;
+  return temp;
+}
+inline ::omm::proto::RiskState* SnapshotResponse::_internal_mutable_risk_state() {
+  
+  if (_impl_.risk_state_ == nullptr) {
+    auto* p = CreateMaybeMessage<::omm::proto::RiskState>(GetArenaForAllocation());
+    _impl_.risk_state_ = p;
+  }
+  return _impl_.risk_state_;
+}
+inline ::omm::proto::RiskState* SnapshotResponse::mutable_risk_state() {
+  ::omm::proto::RiskState* _msg = _internal_mutable_risk_state();
+  // @@protoc_insertion_point(field_mutable:omm.proto.SnapshotResponse.risk_state)
+  return _msg;
+}
+inline void SnapshotResponse::set_allocated_risk_state(::omm::proto::RiskState* risk_state) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.risk_state_;
+  }
+  if (risk_state) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(risk_state);
+    if (message_arena != submessage_arena) {
+      risk_state = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, risk_state, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.risk_state_ = risk_state;
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.SnapshotResponse.risk_state)
+}
+
+// repeated .omm.proto.ProductMMState product_states = 7;
+inline int SnapshotResponse::_internal_product_states_size() const {
+  return _impl_.product_states_.size();
+}
+inline int SnapshotResponse::product_states_size() const {
+  return _internal_product_states_size();
+}
+inline void SnapshotResponse::clear_product_states() {
+  _impl_.product_states_.Clear();
+}
+inline ::omm::proto::ProductMMState* SnapshotResponse::mutable_product_states(int index) {
+  // @@protoc_insertion_point(field_mutable:omm.proto.SnapshotResponse.product_states)
+  return _impl_.product_states_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::ProductMMState >*
+SnapshotResponse::mutable_product_states() {
+  // @@protoc_insertion_point(field_mutable_list:omm.proto.SnapshotResponse.product_states)
+  return &_impl_.product_states_;
+}
+inline const ::omm::proto::ProductMMState& SnapshotResponse::_internal_product_states(int index) const {
+  return _impl_.product_states_.Get(index);
+}
+inline const ::omm::proto::ProductMMState& SnapshotResponse::product_states(int index) const {
+  // @@protoc_insertion_point(field_get:omm.proto.SnapshotResponse.product_states)
+  return _internal_product_states(index);
+}
+inline ::omm::proto::ProductMMState* SnapshotResponse::_internal_add_product_states() {
+  return _impl_.product_states_.Add();
+}
+inline ::omm::proto::ProductMMState* SnapshotResponse::add_product_states() {
+  ::omm::proto::ProductMMState* _add = _internal_add_product_states();
+  // @@protoc_insertion_point(field_add:omm.proto.SnapshotResponse.product_states)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::ProductMMState >&
+SnapshotResponse::product_states() const {
+  // @@protoc_insertion_point(field_list:omm.proto.SnapshotResponse.product_states)
+  return _impl_.product_states_;
+}
+
+// repeated .omm.proto.InstrumentMMState instrument_states = 8;
+inline int SnapshotResponse::_internal_instrument_states_size() const {
+  return _impl_.instrument_states_.size();
+}
+inline int SnapshotResponse::instrument_states_size() const {
+  return _internal_instrument_states_size();
+}
+inline void SnapshotResponse::clear_instrument_states() {
+  _impl_.instrument_states_.Clear();
+}
+inline ::omm::proto::InstrumentMMState* SnapshotResponse::mutable_instrument_states(int index) {
+  // @@protoc_insertion_point(field_mutable:omm.proto.SnapshotResponse.instrument_states)
+  return _impl_.instrument_states_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::InstrumentMMState >*
+SnapshotResponse::mutable_instrument_states() {
+  // @@protoc_insertion_point(field_mutable_list:omm.proto.SnapshotResponse.instrument_states)
+  return &_impl_.instrument_states_;
+}
+inline const ::omm::proto::InstrumentMMState& SnapshotResponse::_internal_instrument_states(int index) const {
+  return _impl_.instrument_states_.Get(index);
+}
+inline const ::omm::proto::InstrumentMMState& SnapshotResponse::instrument_states(int index) const {
+  // @@protoc_insertion_point(field_get:omm.proto.SnapshotResponse.instrument_states)
+  return _internal_instrument_states(index);
+}
+inline ::omm::proto::InstrumentMMState* SnapshotResponse::_internal_add_instrument_states() {
+  return _impl_.instrument_states_.Add();
+}
+inline ::omm::proto::InstrumentMMState* SnapshotResponse::add_instrument_states() {
+  ::omm::proto::InstrumentMMState* _add = _internal_add_instrument_states();
+  // @@protoc_insertion_point(field_add:omm.proto.SnapshotResponse.instrument_states)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::InstrumentMMState >&
+SnapshotResponse::instrument_states() const {
+  // @@protoc_insertion_point(field_list:omm.proto.SnapshotResponse.instrument_states)
+  return _impl_.instrument_states_;
+}
+
+// repeated .omm.proto.ArbStrategyParamsEntry arb_params = 9;
+inline int SnapshotResponse::_internal_arb_params_size() const {
+  return _impl_.arb_params_.size();
+}
+inline int SnapshotResponse::arb_params_size() const {
+  return _internal_arb_params_size();
+}
+inline void SnapshotResponse::clear_arb_params() {
+  _impl_.arb_params_.Clear();
+}
+inline ::omm::proto::ArbStrategyParamsEntry* SnapshotResponse::mutable_arb_params(int index) {
+  // @@protoc_insertion_point(field_mutable:omm.proto.SnapshotResponse.arb_params)
+  return _impl_.arb_params_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::ArbStrategyParamsEntry >*
+SnapshotResponse::mutable_arb_params() {
+  // @@protoc_insertion_point(field_mutable_list:omm.proto.SnapshotResponse.arb_params)
+  return &_impl_.arb_params_;
+}
+inline const ::omm::proto::ArbStrategyParamsEntry& SnapshotResponse::_internal_arb_params(int index) const {
+  return _impl_.arb_params_.Get(index);
+}
+inline const ::omm::proto::ArbStrategyParamsEntry& SnapshotResponse::arb_params(int index) const {
+  // @@protoc_insertion_point(field_get:omm.proto.SnapshotResponse.arb_params)
+  return _internal_arb_params(index);
+}
+inline ::omm::proto::ArbStrategyParamsEntry* SnapshotResponse::_internal_add_arb_params() {
+  return _impl_.arb_params_.Add();
+}
+inline ::omm::proto::ArbStrategyParamsEntry* SnapshotResponse::add_arb_params() {
+  ::omm::proto::ArbStrategyParamsEntry* _add = _internal_add_arb_params();
+  // @@protoc_insertion_point(field_add:omm.proto.SnapshotResponse.arb_params)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::ArbStrategyParamsEntry >&
+SnapshotResponse::arb_params() const {
+  // @@protoc_insertion_point(field_list:omm.proto.SnapshotResponse.arb_params)
+  return _impl_.arb_params_;
+}
+
+// repeated .omm.proto.ArbStrategyState arb_strategy_states = 10;
+inline int SnapshotResponse::_internal_arb_strategy_states_size() const {
+  return _impl_.arb_strategy_states_.size();
+}
+inline int SnapshotResponse::arb_strategy_states_size() const {
+  return _internal_arb_strategy_states_size();
+}
+inline void SnapshotResponse::clear_arb_strategy_states() {
+  _impl_.arb_strategy_states_.Clear();
+}
+inline ::omm::proto::ArbStrategyState* SnapshotResponse::mutable_arb_strategy_states(int index) {
+  // @@protoc_insertion_point(field_mutable:omm.proto.SnapshotResponse.arb_strategy_states)
+  return _impl_.arb_strategy_states_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::ArbStrategyState >*
+SnapshotResponse::mutable_arb_strategy_states() {
+  // @@protoc_insertion_point(field_mutable_list:omm.proto.SnapshotResponse.arb_strategy_states)
+  return &_impl_.arb_strategy_states_;
+}
+inline const ::omm::proto::ArbStrategyState& SnapshotResponse::_internal_arb_strategy_states(int index) const {
+  return _impl_.arb_strategy_states_.Get(index);
+}
+inline const ::omm::proto::ArbStrategyState& SnapshotResponse::arb_strategy_states(int index) const {
+  // @@protoc_insertion_point(field_get:omm.proto.SnapshotResponse.arb_strategy_states)
+  return _internal_arb_strategy_states(index);
+}
+inline ::omm::proto::ArbStrategyState* SnapshotResponse::_internal_add_arb_strategy_states() {
+  return _impl_.arb_strategy_states_.Add();
+}
+inline ::omm::proto::ArbStrategyState* SnapshotResponse::add_arb_strategy_states() {
+  ::omm::proto::ArbStrategyState* _add = _internal_add_arb_strategy_states();
+  // @@protoc_insertion_point(field_add:omm.proto.SnapshotResponse.arb_strategy_states)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::ArbStrategyState >&
+SnapshotResponse::arb_strategy_states() const {
+  // @@protoc_insertion_point(field_list:omm.proto.SnapshotResponse.arb_strategy_states)
+  return _impl_.arb_strategy_states_;
+}
+
+// repeated .omm.proto.PcpOpportunityState pcp_opportunities = 11;
+inline int SnapshotResponse::_internal_pcp_opportunities_size() const {
+  return _impl_.pcp_opportunities_.size();
+}
+inline int SnapshotResponse::pcp_opportunities_size() const {
+  return _internal_pcp_opportunities_size();
+}
+inline void SnapshotResponse::clear_pcp_opportunities() {
+  _impl_.pcp_opportunities_.Clear();
+}
+inline ::omm::proto::PcpOpportunityState* SnapshotResponse::mutable_pcp_opportunities(int index) {
+  // @@protoc_insertion_point(field_mutable:omm.proto.SnapshotResponse.pcp_opportunities)
+  return _impl_.pcp_opportunities_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::PcpOpportunityState >*
+SnapshotResponse::mutable_pcp_opportunities() {
+  // @@protoc_insertion_point(field_mutable_list:omm.proto.SnapshotResponse.pcp_opportunities)
+  return &_impl_.pcp_opportunities_;
+}
+inline const ::omm::proto::PcpOpportunityState& SnapshotResponse::_internal_pcp_opportunities(int index) const {
+  return _impl_.pcp_opportunities_.Get(index);
+}
+inline const ::omm::proto::PcpOpportunityState& SnapshotResponse::pcp_opportunities(int index) const {
+  // @@protoc_insertion_point(field_get:omm.proto.SnapshotResponse.pcp_opportunities)
+  return _internal_pcp_opportunities(index);
+}
+inline ::omm::proto::PcpOpportunityState* SnapshotResponse::_internal_add_pcp_opportunities() {
+  return _impl_.pcp_opportunities_.Add();
+}
+inline ::omm::proto::PcpOpportunityState* SnapshotResponse::add_pcp_opportunities() {
+  ::omm::proto::PcpOpportunityState* _add = _internal_add_pcp_opportunities();
+  // @@protoc_insertion_point(field_add:omm.proto.SnapshotResponse.pcp_opportunities)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::PcpOpportunityState >&
+SnapshotResponse::pcp_opportunities() const {
+  // @@protoc_insertion_point(field_list:omm.proto.SnapshotResponse.pcp_opportunities)
+  return _impl_.pcp_opportunities_;
+}
+
+// .omm.proto.UserInfo current_user = 12;
+inline bool SnapshotResponse::_internal_has_current_user() const {
+  return this != internal_default_instance() && _impl_.current_user_ != nullptr;
+}
+inline bool SnapshotResponse::has_current_user() const {
+  return _internal_has_current_user();
+}
+inline void SnapshotResponse::clear_current_user() {
+  if (GetArenaForAllocation() == nullptr && _impl_.current_user_ != nullptr) {
+    delete _impl_.current_user_;
+  }
+  _impl_.current_user_ = nullptr;
+}
+inline const ::omm::proto::UserInfo& SnapshotResponse::_internal_current_user() const {
+  const ::omm::proto::UserInfo* p = _impl_.current_user_;
+  return p != nullptr ? *p : reinterpret_cast<const ::omm::proto::UserInfo&>(
+      ::omm::proto::_UserInfo_default_instance_);
+}
+inline const ::omm::proto::UserInfo& SnapshotResponse::current_user() const {
+  // @@protoc_insertion_point(field_get:omm.proto.SnapshotResponse.current_user)
+  return _internal_current_user();
+}
+inline void SnapshotResponse::unsafe_arena_set_allocated_current_user(
+    ::omm::proto::UserInfo* current_user) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.current_user_);
+  }
+  _impl_.current_user_ = current_user;
+  if (current_user) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:omm.proto.SnapshotResponse.current_user)
+}
+inline ::omm::proto::UserInfo* SnapshotResponse::release_current_user() {
+  
+  ::omm::proto::UserInfo* temp = _impl_.current_user_;
+  _impl_.current_user_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::omm::proto::UserInfo* SnapshotResponse::unsafe_arena_release_current_user() {
+  // @@protoc_insertion_point(field_release:omm.proto.SnapshotResponse.current_user)
+  
+  ::omm::proto::UserInfo* temp = _impl_.current_user_;
+  _impl_.current_user_ = nullptr;
+  return temp;
+}
+inline ::omm::proto::UserInfo* SnapshotResponse::_internal_mutable_current_user() {
+  
+  if (_impl_.current_user_ == nullptr) {
+    auto* p = CreateMaybeMessage<::omm::proto::UserInfo>(GetArenaForAllocation());
+    _impl_.current_user_ = p;
+  }
+  return _impl_.current_user_;
+}
+inline ::omm::proto::UserInfo* SnapshotResponse::mutable_current_user() {
+  ::omm::proto::UserInfo* _msg = _internal_mutable_current_user();
+  // @@protoc_insertion_point(field_mutable:omm.proto.SnapshotResponse.current_user)
+  return _msg;
+}
+inline void SnapshotResponse::set_allocated_current_user(::omm::proto::UserInfo* current_user) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.current_user_;
+  }
+  if (current_user) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(current_user);
+    if (message_arena != submessage_arena) {
+      current_user = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, current_user, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.current_user_ = current_user;
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.SnapshotResponse.current_user)
+}
+
+// repeated .omm.proto.BookInfo books = 13;
+inline int SnapshotResponse::_internal_books_size() const {
+  return _impl_.books_.size();
+}
+inline int SnapshotResponse::books_size() const {
+  return _internal_books_size();
+}
+inline void SnapshotResponse::clear_books() {
+  _impl_.books_.Clear();
+}
+inline ::omm::proto::BookInfo* SnapshotResponse::mutable_books(int index) {
+  // @@protoc_insertion_point(field_mutable:omm.proto.SnapshotResponse.books)
+  return _impl_.books_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::BookInfo >*
+SnapshotResponse::mutable_books() {
+  // @@protoc_insertion_point(field_mutable_list:omm.proto.SnapshotResponse.books)
+  return &_impl_.books_;
+}
+inline const ::omm::proto::BookInfo& SnapshotResponse::_internal_books(int index) const {
+  return _impl_.books_.Get(index);
+}
+inline const ::omm::proto::BookInfo& SnapshotResponse::books(int index) const {
+  // @@protoc_insertion_point(field_get:omm.proto.SnapshotResponse.books)
+  return _internal_books(index);
+}
+inline ::omm::proto::BookInfo* SnapshotResponse::_internal_add_books() {
+  return _impl_.books_.Add();
+}
+inline ::omm::proto::BookInfo* SnapshotResponse::add_books() {
+  ::omm::proto::BookInfo* _add = _internal_add_books();
+  // @@protoc_insertion_point(field_add:omm.proto.SnapshotResponse.books)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::BookInfo >&
+SnapshotResponse::books() const {
+  // @@protoc_insertion_point(field_list:omm.proto.SnapshotResponse.books)
+  return _impl_.books_;
+}
+
+// repeated .omm.proto.BookPosition book_positions = 14;
+inline int SnapshotResponse::_internal_book_positions_size() const {
+  return _impl_.book_positions_.size();
+}
+inline int SnapshotResponse::book_positions_size() const {
+  return _internal_book_positions_size();
+}
+inline void SnapshotResponse::clear_book_positions() {
+  _impl_.book_positions_.Clear();
+}
+inline ::omm::proto::BookPosition* SnapshotResponse::mutable_book_positions(int index) {
+  // @@protoc_insertion_point(field_mutable:omm.proto.SnapshotResponse.book_positions)
+  return _impl_.book_positions_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::BookPosition >*
+SnapshotResponse::mutable_book_positions() {
+  // @@protoc_insertion_point(field_mutable_list:omm.proto.SnapshotResponse.book_positions)
+  return &_impl_.book_positions_;
+}
+inline const ::omm::proto::BookPosition& SnapshotResponse::_internal_book_positions(int index) const {
+  return _impl_.book_positions_.Get(index);
+}
+inline const ::omm::proto::BookPosition& SnapshotResponse::book_positions(int index) const {
+  // @@protoc_insertion_point(field_get:omm.proto.SnapshotResponse.book_positions)
+  return _internal_book_positions(index);
+}
+inline ::omm::proto::BookPosition* SnapshotResponse::_internal_add_book_positions() {
+  return _impl_.book_positions_.Add();
+}
+inline ::omm::proto::BookPosition* SnapshotResponse::add_book_positions() {
+  ::omm::proto::BookPosition* _add = _internal_add_book_positions();
+  // @@protoc_insertion_point(field_add:omm.proto.SnapshotResponse.book_positions)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::BookPosition >&
+SnapshotResponse::book_positions() const {
+  // @@protoc_insertion_point(field_list:omm.proto.SnapshotResponse.book_positions)
+  return _impl_.book_positions_;
+}
+
+// repeated .omm.proto.BookPortfolio book_portfolios = 15;
+inline int SnapshotResponse::_internal_book_portfolios_size() const {
+  return _impl_.book_portfolios_.size();
+}
+inline int SnapshotResponse::book_portfolios_size() const {
+  return _internal_book_portfolios_size();
+}
+inline void SnapshotResponse::clear_book_portfolios() {
+  _impl_.book_portfolios_.Clear();
+}
+inline ::omm::proto::BookPortfolio* SnapshotResponse::mutable_book_portfolios(int index) {
+  // @@protoc_insertion_point(field_mutable:omm.proto.SnapshotResponse.book_portfolios)
+  return _impl_.book_portfolios_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::BookPortfolio >*
+SnapshotResponse::mutable_book_portfolios() {
+  // @@protoc_insertion_point(field_mutable_list:omm.proto.SnapshotResponse.book_portfolios)
+  return &_impl_.book_portfolios_;
+}
+inline const ::omm::proto::BookPortfolio& SnapshotResponse::_internal_book_portfolios(int index) const {
+  return _impl_.book_portfolios_.Get(index);
+}
+inline const ::omm::proto::BookPortfolio& SnapshotResponse::book_portfolios(int index) const {
+  // @@protoc_insertion_point(field_get:omm.proto.SnapshotResponse.book_portfolios)
+  return _internal_book_portfolios(index);
+}
+inline ::omm::proto::BookPortfolio* SnapshotResponse::_internal_add_book_portfolios() {
+  return _impl_.book_portfolios_.Add();
+}
+inline ::omm::proto::BookPortfolio* SnapshotResponse::add_book_portfolios() {
+  ::omm::proto::BookPortfolio* _add = _internal_add_book_portfolios();
+  // @@protoc_insertion_point(field_add:omm.proto.SnapshotResponse.book_portfolios)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::BookPortfolio >&
+SnapshotResponse::book_portfolios() const {
+  // @@protoc_insertion_point(field_list:omm.proto.SnapshotResponse.book_portfolios)
+  return _impl_.book_portfolios_;
+}
+
+// repeated .omm.proto.ProductPricingParams product_pricing_params = 16;
+inline int SnapshotResponse::_internal_product_pricing_params_size() const {
+  return _impl_.product_pricing_params_.size();
+}
+inline int SnapshotResponse::product_pricing_params_size() const {
+  return _internal_product_pricing_params_size();
+}
+inline void SnapshotResponse::clear_product_pricing_params() {
+  _impl_.product_pricing_params_.Clear();
+}
+inline ::omm::proto::ProductPricingParams* SnapshotResponse::mutable_product_pricing_params(int index) {
+  // @@protoc_insertion_point(field_mutable:omm.proto.SnapshotResponse.product_pricing_params)
+  return _impl_.product_pricing_params_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::ProductPricingParams >*
+SnapshotResponse::mutable_product_pricing_params() {
+  // @@protoc_insertion_point(field_mutable_list:omm.proto.SnapshotResponse.product_pricing_params)
+  return &_impl_.product_pricing_params_;
+}
+inline const ::omm::proto::ProductPricingParams& SnapshotResponse::_internal_product_pricing_params(int index) const {
+  return _impl_.product_pricing_params_.Get(index);
+}
+inline const ::omm::proto::ProductPricingParams& SnapshotResponse::product_pricing_params(int index) const {
+  // @@protoc_insertion_point(field_get:omm.proto.SnapshotResponse.product_pricing_params)
+  return _internal_product_pricing_params(index);
+}
+inline ::omm::proto::ProductPricingParams* SnapshotResponse::_internal_add_product_pricing_params() {
+  return _impl_.product_pricing_params_.Add();
+}
+inline ::omm::proto::ProductPricingParams* SnapshotResponse::add_product_pricing_params() {
+  ::omm::proto::ProductPricingParams* _add = _internal_add_product_pricing_params();
+  // @@protoc_insertion_point(field_add:omm.proto.SnapshotResponse.product_pricing_params)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::ProductPricingParams >&
+SnapshotResponse::product_pricing_params() const {
+  // @@protoc_insertion_point(field_list:omm.proto.SnapshotResponse.product_pricing_params)
+  return _impl_.product_pricing_params_;
+}
+
 // -------------------------------------------------------------------
 
 // StreamRequest
@@ -8556,6 +19014,60 @@ inline void StreamRequest::set_product_index(uint32_t value) {
 
 // -------------------------------------------------------------------
 
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 
 // @@protoc_insertion_point(namespace_scope)
 
@@ -8568,6 +19080,31 @@ template <> struct is_proto_enum< ::omm::proto::RiskAlert_AlertType> : ::std::tr
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::omm::proto::RiskAlert_AlertType>() {
   return ::omm::proto::RiskAlert_AlertType_descriptor();
+}
+template <> struct is_proto_enum< ::omm::proto::ArbitrageStrategyType> : ::std::true_type {};
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::omm::proto::ArbitrageStrategyType>() {
+  return ::omm::proto::ArbitrageStrategyType_descriptor();
+}
+template <> struct is_proto_enum< ::omm::proto::MMQuoteState> : ::std::true_type {};
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::omm::proto::MMQuoteState>() {
+  return ::omm::proto::MMQuoteState_descriptor();
+}
+template <> struct is_proto_enum< ::omm::proto::MMSuppressReason> : ::std::true_type {};
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::omm::proto::MMSuppressReason>() {
+  return ::omm::proto::MMSuppressReason_descriptor();
+}
+template <> struct is_proto_enum< ::omm::proto::ArbSuppressReason> : ::std::true_type {};
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::omm::proto::ArbSuppressReason>() {
+  return ::omm::proto::ArbSuppressReason_descriptor();
+}
+template <> struct is_proto_enum< ::omm::proto::PcpOpportunityDirection> : ::std::true_type {};
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::omm::proto::PcpOpportunityDirection>() {
+  return ::omm::proto::PcpOpportunityDirection_descriptor();
 }
 
 PROTOBUF_NAMESPACE_CLOSE

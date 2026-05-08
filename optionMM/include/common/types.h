@@ -164,17 +164,26 @@ struct alignas(64) Greeks {
     uint16_t instrument_id;
     uint8_t  _pad[6];
     double   theo_price;
-    double   delta;     // ∂V/∂F
-    double   gamma;     // ∂²V/∂F²
-    double   vega;      // ∂V/∂σ
-    double   theta;     // ∂V/∂T  (per calendar day)
-    double   rho;       // ∂V/∂r
+    double   std_delta; // D * s * N(s*d1)
+    double   delta;     // std_delta * option_multiplier / future_multiplier
+    double   delta_cash;
+    double   std_gamma;
+    double   gamma;
+    double   gamma_cash;
+    double   vega;      // per 1 vol point
+    double   vega_cash;
+    double   theta;     // per trading day
+    double   theta_cash;
+    double   rho;       // per 1% rate move
+    double   rho_cash;  // rho * option_multiplier
+    double   vanna;
+    double   volga;
+    double   charm;
     double   iv;        // implied volatility used
     double   T;         // time to expiry in years at calculation time
     int64_t  calc_ts_ns;
-    uint8_t  _pad2[16];
 };
-static_assert(sizeof(Greeks) == 128);
+static_assert(sizeof(Greeks) == 192);
 static_assert(alignof(Greeks) == 64);
 
 // ─── Pricing signal (pricer → strategy thread) ───────────────────────────────
@@ -194,10 +203,12 @@ struct alignas(64) PricingSignal {
     int64_t  calc_ts_ns{0};
     double   theo_bid{0.0};
     double   theo_ask{0.0};
+    float    std_delta{0.0F};
     float    delta{0.0F};
     float    vega{0.0F};
     float    underlying_ref_bid{0.0F};
     float    underlying_ref_ask{0.0F};
+    uint8_t  _pad1[4]{};
 };
 static_assert(sizeof(PricingSignal) == 64);
 static_assert(alignof(PricingSignal) == 64);

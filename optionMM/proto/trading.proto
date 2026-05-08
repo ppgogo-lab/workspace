@@ -15,6 +15,16 @@ message Greeks {
     double iv            = 8;
     double T             = 9;
     int64  calc_ts_ns    = 10;
+    double std_delta     = 11;
+    double delta_cash    = 12;
+    double std_gamma     = 13;
+    double gamma_cash    = 14;
+    double vega_cash     = 15;
+    double theta_cash    = 16;
+    double rho_cash      = 17;
+    double vanna         = 18;
+    double volga         = 19;
+    double charm         = 20;
 }
 
 message Position {

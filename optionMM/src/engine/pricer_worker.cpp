@@ -16,6 +16,12 @@
 #include <ctime>
 
 namespace omm {
+namespace {
+
+constexpr double kTradingDaysPerYear = 252.0;
+
+} // namespace
+
 // ─── Pricer thread ────────────────────────────────────────────────────────────
 // Trigger model: a FUTURE tick drives repricing of ALL options for that product.
 //   - Future tick arrives �?update tick_snapshot_ for the future �?for each
@@ -119,6 +125,8 @@ void TradingEngine::pricer_loop() noexcept {
         alignas(32) double sqrt_T_arr[128];
         alignas(32) double disc_arr[128];
         alignas(32) double sigma_arr[128];
+        alignas(32) double option_multiplier_arr[128];
+        alignas(32) double future_multiplier_arr[128];
         alignas(32) uint8_t is_call_arr[128];
         alignas(32) Black76Result results[128];
         const double log_F_mid = std::log(F_mid);
@@ -133,6 +141,9 @@ void TradingEngine::pricer_loop() noexcept {
             sqrt_T_arr[bi] = option_sqrt_T_[prod][oi];
             disc_arr[bi] = option_disc_[prod][oi];
             sigma_arr[bi] = 0.20;
+            option_multiplier_arr[bi] = opt.multiplier > 0.0 ? opt.multiplier : 1.0;
+            future_multiplier_arr[bi] = instruments_[future_id].multiplier > 0.0
+                ? instruments_[future_id].multiplier : 1.0;
             is_call_arr[bi] = (opt.option_type == OptionType::Call) ? 1 : 0;
         }
 
@@ -146,16 +157,34 @@ void TradingEngine::pricer_loop() noexcept {
             }
         }
 
-        compute_batch_precomputed(F_arr, K_arr, T_arr, sqrt_T_arr, disc_arr,
-                                  sigma_arr, is_call_arr, results, batch_n);
+        compute_batch_precomputed_scaled(F_arr, K_arr, T_arr, sqrt_T_arr, disc_arr,
+                                         sigma_arr, option_multiplier_arr,
+                                         future_multiplier_arr, is_call_arr,
+                                         kTradingDaysPerYear, results, batch_n);
 
         for (uint16_t bi = 0; bi < batch_n; ++bi) {
             const uint16_t opt_id = option_ids_[prod][start + bi];
             Greeks greek{};
             (void)greeks_snapshot_.read(opt_id, &greek);
+            greek.theo_price = results[bi].price;
+            greek.std_delta = results[bi].std_delta;
+            greek.delta = results[bi].delta;
+            greek.delta_cash = results[bi].delta_cash;
+            greek.std_gamma = results[bi].std_gamma;
+            greek.gamma = results[bi].gamma;
+            greek.gamma_cash = results[bi].gamma_cash;
+            greek.vega = results[bi].vega;
+            greek.vega_cash = results[bi].vega_cash;
             greek.theta = results[bi].theta;
+            greek.theta_cash = results[bi].theta_cash;
             greek.rho = results[bi].rho;
+            greek.rho_cash = results[bi].rho_cash;
+            greek.vanna = results[bi].vanna;
+            greek.volga = results[bi].volga;
+            greek.charm = results[bi].charm;
+            greek.iv = sigma_arr[bi];
             greek.T = T_arr[bi];
+            greek.calc_ts_ns = now;
             greeks_snapshot_.publish(opt_id, greek);
         }
 
@@ -275,6 +304,8 @@ void TradingEngine::pricer_loop() noexcept {
         alignas(32) double sqrt_T_arr[MAX_BATCH];
         alignas(32) double disc_arr[MAX_BATCH];
         alignas(32) double sigma_arr[MAX_BATCH];
+        alignas(32) double option_multiplier_arr[MAX_BATCH];
+        alignas(32) double future_multiplier_arr[MAX_BATCH];
         alignas(32) uint8_t is_call_arr[MAX_BATCH];
         alignas(32) Black76QuoteResult mid_results[MAX_BATCH];
         alignas(32) Black76QuoteResult bid_results[MAX_BATCH];
@@ -299,6 +330,9 @@ void TradingEngine::pricer_loop() noexcept {
             T_arr[bi] = option_T_[prod][oi];
             sqrt_T_arr[bi] = option_sqrt_T_[prod][oi];
             disc_arr[bi] = option_disc_[prod][oi];
+            option_multiplier_arr[bi] = opt.multiplier > 0.0 ? opt.multiplier : 1.0;
+            future_multiplier_arr[bi] = instruments_[future_id].multiplier > 0.0
+                ? instruments_[future_id].multiplier : 1.0;
             is_call_arr[bi] = (opt.option_type == OptionType::Call) ? 1 : 0;
         }
 
@@ -333,9 +367,11 @@ void TradingEngine::pricer_loop() noexcept {
         }
 
         // Fused batch pricing: computes bid, mid, ask in single pass (3× �?1×)
-        compute_batch_quote_fused(F_bid_arr, F_mid_arr, F_ask_arr, K_arr,
-                                  sqrt_T_arr, disc_arr, sigma_arr, is_call_arr,
-                                  bid_results, mid_results, ask_results, batch_n);
+        compute_batch_quote_fused_scaled(F_bid_arr, F_mid_arr, F_ask_arr, K_arr,
+                                         sqrt_T_arr, disc_arr, sigma_arr,
+                                         option_multiplier_arr, future_multiplier_arr,
+                                         is_call_arr, bid_results, mid_results,
+                                         ask_results, batch_n);
 
         alignas(64) PricingSignal emitted_sigs[MAX_BATCH];
         uint16_t emitted_slots[MAX_BATCH];
@@ -355,6 +391,7 @@ void TradingEngine::pricer_loop() noexcept {
             sig.calc_ts_ns = now;
             sig.theo_bid = std::min(bid_results[bi].price, ask_results[bi].price);
             sig.theo_ask = std::max(bid_results[bi].price, ask_results[bi].price);
+            sig.std_delta = static_cast<float>(mid_res.std_delta);
             sig.delta = static_cast<float>(mid_res.delta);
             sig.vega = static_cast<float>(mid_res.vega);
             sig.underlying_ref_bid = static_cast<float>(future_tick.bid_price[0]);
@@ -364,9 +401,12 @@ void TradingEngine::pricer_loop() noexcept {
             (void)greeks_snapshot_.read(opt_id, &greek);
             greek.instrument_id = opt_id;
             greek.theo_price = mid_res.price;
+            greek.std_delta = mid_res.std_delta;
             greek.delta = mid_res.delta;
+            greek.delta_cash = mid_res.std_delta * option_multiplier_arr[bi] * F_mid_arr[bi];
             greek.gamma = mid_res.gamma;
             greek.vega = mid_res.vega;
+            greek.vega_cash = mid_res.vega_cash;
             greek.iv = sigma_arr[bi];
             greek.T = T_arr[bi];
             greek.calc_ts_ns = now;

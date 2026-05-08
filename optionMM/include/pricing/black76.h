@@ -7,18 +7,30 @@ namespace omm {
 
 struct Black76Result {
     double price;
+    double std_delta;
     double delta;
+    double delta_cash;
+    double std_gamma;
     double gamma;
+    double gamma_cash;
     double vega;
+    double vega_cash;
     double theta;
+    double theta_cash;
     double rho;
+    double rho_cash;
+    double vanna;
+    double volga;
+    double charm;
 };
 
 struct Black76QuoteResult {
     double price;
+    double std_delta;
     double delta;
     double gamma;
     double vega;
+    double vega_cash;
 };
 
 enum class Black76Backend : uint8_t {
@@ -37,7 +49,10 @@ enum class Black76Backend : uint8_t {
     double T,
     double r,
     double sigma,
-    bool   is_call
+    bool   is_call,
+    double option_multiplier = 1.0,
+    double future_multiplier = 1.0,
+    double trading_days_per_year = 252.0
 ) noexcept;
 
 void compute_batch(
@@ -63,6 +78,21 @@ void compute_batch_precomputed(
     int            count
 ) noexcept;
 
+void compute_batch_precomputed_scaled(
+    const double*  F,
+    const double*  K,
+    const double*  T,
+    const double*  sqrt_T,
+    const double*  disc,
+    const double*  sigma,
+    const double*  option_multiplier,
+    const double*  future_multiplier,
+    const uint8_t* is_call,
+    double         trading_days_per_year,
+    Black76Result* out,
+    int            count
+) noexcept;
+
 void compute_batch_quote_precomputed(
     const double*  F,
     const double*  K,
@@ -84,6 +114,23 @@ void compute_batch_quote_fused(
     const double*  sqrt_T,
     const double*  disc,
     const double*  sigma,
+    const uint8_t* is_call,
+    Black76QuoteResult* bid_out,
+    Black76QuoteResult* mid_out,
+    Black76QuoteResult* ask_out,
+    int            count
+) noexcept;
+
+void compute_batch_quote_fused_scaled(
+    const double*  F_bid,
+    const double*  F_mid,
+    const double*  F_ask,
+    const double*  K,
+    const double*  sqrt_T,
+    const double*  disc,
+    const double*  sigma,
+    const double*  option_multiplier,
+    const double*  future_multiplier,
     const uint8_t* is_call,
     Black76QuoteResult* bid_out,
     Black76QuoteResult* mid_out,
