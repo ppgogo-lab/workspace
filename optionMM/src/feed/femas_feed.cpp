@@ -85,18 +85,11 @@ void FEMASFeedHandler::push_tick(const CUstpFtdcDepthMarketDataField& md) noexce
     const uint16_t instrument_id = resolve_instrument(md.InstrumentID);
     if (instrument_id == INVALID_INSTRUMENT_ID) return;
 
-    MarketTick tick{};
+    TopOfBookTick tick{};
     tick.recv_ts_ns     = recv_ts_ns;
     tick.exchange_ts_ns = recv_ts_ns;
     tick.instrument_id  = instrument_id;
     tick.last_price     = md.LastPrice;
-    tick.open_interest  = md.OpenInterest;
-    tick.volume         = md.Volume;
-    tick.open_price     = md.OpenPrice;
-    tick.high_price     = md.HighestPrice;
-    tick.low_price      = md.LowestPrice;
-    tick.pre_settlement = md.PreSettlementPrice;
-    tick.pre_close      = md.PreClosePrice;
     tick.sequence_no    = static_cast<uint64_t>(
         current_sequence_no_.load(std::memory_order_relaxed));
 
@@ -112,7 +105,7 @@ void FEMASFeedHandler::push_tick(const CUstpFtdcDepthMarketDataField& md) noexce
     tick.ask_price[3] = md.AskPrice4; tick.ask_volume[3] = md.AskVolume4;
     tick.ask_price[4] = md.AskPrice5; tick.ask_volume[4] = md.AskVolume5;
 
-    if (!tick_buf_->try_push(to_top_of_book_tick(tick))) {
+    if (!tick_buf_->try_push(tick)) {
         dropped_count_.fetch_add(1, std::memory_order_relaxed);
     } else {
         msg_count_.fetch_add(1, std::memory_order_relaxed);

@@ -203,6 +203,20 @@ static PricingConfig parse_pricing(const YAML::Node& n) {
         n["signal_emit_vega_epsilon"],
         "pricing.signal_emit_vega_epsilon",
         0.0);
+    const std::string hot_greeks_mode = get<std::string>(
+        n["hot_path_greeks_mode"],
+        "pricing.hot_path_greeks_mode",
+        "full");
+    if (hot_greeks_mode == "full") {
+        c.hot_path_greeks_mode = HotPathGreeksMode::Full;
+    } else if (hot_greeks_mode == "compact") {
+        c.hot_path_greeks_mode = HotPathGreeksMode::Compact;
+    } else if (hot_greeks_mode == "off") {
+        c.hot_path_greeks_mode = HotPathGreeksMode::Off;
+    } else {
+        throw std::runtime_error(
+            "config: pricing.hot_path_greeks_mode must be full/compact/off");
+    }
     c.cold_greeks_interval_ms = get<int>(
         n["cold_greeks_interval_ms"],
         "pricing.cold_greeks_interval_ms",
@@ -220,6 +234,15 @@ static PricingConfig parse_pricing(const YAML::Node& n) {
     else if (method == "wing")         c.vol_method = VolMethod::Wing;
     else if (method == "orcWing")      c.vol_method = VolMethod::OrcWing;
     else throw std::runtime_error("config: pricing.vol_surface.method must be svi/sabr/cubic_spline/wing/orcWing");
+    return c;
+}
+
+static ExecutionConfig parse_execution(const YAML::Node& n) {
+    ExecutionConfig c;
+    if (!n) return c;
+    c.low_latency_mode = get<bool>(n["low_latency_mode"],
+                                   "execution.low_latency_mode",
+                                   false);
     return c;
 }
 
@@ -582,6 +605,7 @@ SystemConfig load_config(std::string_view path) {
     cfg.timer     = parse_timer(root["timer"]);
     cfg.monitoring = parse_monitoring(root["monitoring"]);
     cfg.persistence = parse_persistence(root["persistence"]);
+    cfg.execution = parse_execution(root["execution"]);
     cfg.affinity  = parse_affinity(root["thread_affinity"]);
     cfg.scheduling = parse_scheduling(root["thread_scheduling"]);
 

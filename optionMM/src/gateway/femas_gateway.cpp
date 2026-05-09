@@ -606,56 +606,68 @@ bool FEMASGateway::send_quote(const Quote& quote,
 bool FEMASGateway::cancel_order(OrderId id, uint16_t instrument_id) noexcept {
     if (!api_ || !trading_ready_.load(std::memory_order_relaxed)) return false;
 
+    CUstpFtdcQuoteActionField quote_req{};
+    bool has_quote_cancel = false;
     {
-        std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
+        std::shared_lock<std::shared_mutex> lk(state_rw_lock_);
         if (QuoteState* quote = find_quote_by_client_id(id)) {
-            CUstpFtdcQuoteActionField req{};
-            std::strncpy(req.BrokerID, cfg_.femas.broker_id, sizeof(req.BrokerID) - 1);
-            std::strncpy(req.ExchangeID, exchange_id(), sizeof(req.ExchangeID) - 1);
-            std::strncpy(req.InvestorID, cfg_.femas.user_id, sizeof(req.InvestorID) - 1);
-            std::strncpy(req.UserID, cfg_.femas.user_id, sizeof(req.UserID) - 1);
-            std::strncpy(req.UserQuoteLocalID, quote->quote_local_id, sizeof(req.UserQuoteLocalID) - 1);
+            std::strncpy(quote_req.BrokerID, cfg_.femas.broker_id, sizeof(quote_req.BrokerID) - 1);
+            std::strncpy(quote_req.ExchangeID, exchange_id(), sizeof(quote_req.ExchangeID) - 1);
+            std::strncpy(quote_req.InvestorID, cfg_.femas.user_id, sizeof(quote_req.InvestorID) - 1);
+            std::strncpy(quote_req.UserID, cfg_.femas.user_id, sizeof(quote_req.UserID) - 1);
+            std::strncpy(quote_req.UserQuoteLocalID,
+                         quote->quote_local_id,
+                         sizeof(quote_req.UserQuoteLocalID) - 1);
             if (quote->quote_sys_id[0]) {
-                std::strncpy(req.QuoteSysID, quote->quote_sys_id, sizeof(req.QuoteSysID) - 1);
+                std::strncpy(quote_req.QuoteSysID,
+                             quote->quote_sys_id,
+                             sizeof(quote_req.QuoteSysID) - 1);
             }
-            encode_local_id(req.UserQuoteActionLocalID, next_local_id());
-            req.ActionFlag = USTP_FTDC_AF_Delete;
-
-            const int ret = api_->ReqQuoteAction(&req, next_req_id());
-            if (ret != 0) {
-                OMM_LOG_WARN("femas", "ReqQuoteAction failed ret={} quote_id={}", ret, id);
-                return false;
-            }
-            return true;
+            encode_local_id(quote_req.UserQuoteActionLocalID, next_local_id());
+            quote_req.ActionFlag = USTP_FTDC_AF_Delete;
+            has_quote_cancel = true;
         }
+    }
+    if (has_quote_cancel) {
+        const int ret = api_->ReqQuoteAction(&quote_req, next_req_id());
+        if (ret != 0) {
+            OMM_LOG_WARN("femas", "ReqQuoteAction failed ret={} quote_id={}", ret, id);
+            return false;
+        }
+        return true;
     }
 
     CUstpFtdcOrderActionField req{};
+    bool has_order_cancel = false;
     {
-        std::unique_lock<std::shared_mutex> lk(state_rw_lock_);
-        const OrderState* order_state = nullptr;
-        for (auto& candidate : order_states_) {
-            if (!candidate.used || candidate.is_quote_leg) continue;
-            if (candidate.client_order_id == id) {
-                order_state = &candidate;
-                break;
+        std::shared_lock<std::shared_mutex> lk(state_rw_lock_);
+        const std::size_t* idx = order_client_index_.find(id);
+        if (idx != nullptr && *idx < order_states_.size()) {
+            const OrderState* order_state = &order_states_[*idx];
+            if (order_state->used.load(std::memory_order_relaxed)
+                && !order_state->is_quote_leg
+                && order_state->client_order_id == id) {
+                std::strncpy(req.BrokerID, cfg_.femas.broker_id, sizeof(req.BrokerID) - 1);
+                std::strncpy(req.ExchangeID, exchange_id(), sizeof(req.ExchangeID) - 1);
+                std::strncpy(req.InvestorID, cfg_.femas.user_id, sizeof(req.InvestorID) - 1);
+                std::strncpy(req.UserID, cfg_.femas.user_id, sizeof(req.UserID) - 1);
+                std::strncpy(req.UserOrderLocalID,
+                             order_state->exchange_local_id,
+                             sizeof(req.UserOrderLocalID) - 1);
+                if (order_state->order_sys_id[0]) {
+                    std::strncpy(req.OrderSysID,
+                                 order_state->order_sys_id,
+                                 sizeof(req.OrderSysID) - 1);
+                }
+                encode_local_id(req.UserOrderActionLocalID, next_local_id());
+                req.ActionFlag = USTP_FTDC_AF_Delete;
+                has_order_cancel = true;
             }
         }
-        if (!order_state) {
-            OMM_LOG_WARN("femas", "cancel_order missing state order_id={} instrument_id={}", id, instrument_id);
-            return false;
-        }
-
-        std::strncpy(req.BrokerID, cfg_.femas.broker_id, sizeof(req.BrokerID) - 1);
-        std::strncpy(req.ExchangeID, exchange_id(), sizeof(req.ExchangeID) - 1);
-        std::strncpy(req.InvestorID, cfg_.femas.user_id, sizeof(req.InvestorID) - 1);
-        std::strncpy(req.UserID, cfg_.femas.user_id, sizeof(req.UserID) - 1);
-        std::strncpy(req.UserOrderLocalID, order_state->exchange_local_id, sizeof(req.UserOrderLocalID) - 1);
-        if (order_state->order_sys_id[0]) {
-            std::strncpy(req.OrderSysID, order_state->order_sys_id, sizeof(req.OrderSysID) - 1);
-        }
-        encode_local_id(req.UserOrderActionLocalID, next_local_id());
-        req.ActionFlag = USTP_FTDC_AF_Delete;
+    }
+    if (!has_order_cancel) {
+        OMM_LOG_WARN("femas", "cancel_order missing state order_id={} instrument_id={}", id, instrument_id);
+        return false;
     }
 
     const int ret = api_->ReqOrderAction(&req, next_req_id());

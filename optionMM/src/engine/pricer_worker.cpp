@@ -58,6 +58,8 @@ void TradingEngine::pricer_loop() noexcept {
         static_cast<int64_t>(std::max(1, cfg_.pricing.cold_greeks_interval_ms)) * 1'000'000LL;
     const uint16_t cold_greeks_batch_cap = static_cast<uint16_t>(
         std::max(1, std::min(cfg_.pricing.cold_greeks_batch_size, 128)));
+    const bool publish_full_hot_greeks =
+        cfg_.pricing.hot_path_greeks_mode == HotPathGreeksMode::Full;
 
     auto refresh_cold_greeks_batch = [&](int product_count) noexcept -> bool {
         const int64_t now = get_monotonic_ns();
@@ -377,6 +379,24 @@ void TradingEngine::pricer_loop() noexcept {
         uint16_t emitted_slots[MAX_BATCH];
         int emitted_count = 0;
 
+        auto publish_hot_greek = [&](uint16_t opt_id,
+                                     uint16_t bi,
+                                     const Black76QuoteResult& mid_res) noexcept {
+            Greeks greek{};
+            (void)greeks_snapshot_.read(opt_id, &greek);
+            greek.instrument_id = opt_id;
+            greek.theo_price = mid_res.price;
+            greek.std_delta = mid_res.std_delta;
+            greek.delta = mid_res.delta;
+            greek.delta_cash = mid_res.std_delta * option_multiplier_arr[bi] * F_mid_arr[bi];
+            greek.gamma = mid_res.gamma;
+            greek.vega = mid_res.vega;
+            greek.vega_cash = mid_res.vega_cash;
+            greek.iv = sigma_arr[bi];
+            greek.T = T_arr[bi];
+            greek.calc_ts_ns = now;
+            greeks_snapshot_.publish(opt_id, greek);
+        };
         for (uint16_t bi = 0; bi < batch_n; ++bi) {
             const uint16_t oi = start + bi;
             const uint16_t opt_id = option_ids_[prod][oi];
@@ -397,25 +417,15 @@ void TradingEngine::pricer_loop() noexcept {
             sig.underlying_ref_bid = static_cast<float>(future_tick.bid_price[0]);
             sig.underlying_ref_ask = static_cast<float>(future_tick.ask_price[0]);
 
-            Greeks greek{};
-            (void)greeks_snapshot_.read(opt_id, &greek);
-            greek.instrument_id = opt_id;
-            greek.theo_price = mid_res.price;
-            greek.std_delta = mid_res.std_delta;
-            greek.delta = mid_res.delta;
-            greek.delta_cash = mid_res.std_delta * option_multiplier_arr[bi] * F_mid_arr[bi];
-            greek.gamma = mid_res.gamma;
-            greek.vega = mid_res.vega;
-            greek.vega_cash = mid_res.vega_cash;
-            greek.iv = sigma_arr[bi];
-            greek.T = T_arr[bi];
-            greek.calc_ts_ns = now;
-            greeks_snapshot_.publish(opt_id, greek);
+            if (publish_full_hot_greeks) {
+                publish_hot_greek(opt_id, bi, mid_res);
+            }
 
             if (!should_emit_signal(prod, oi, sig, surface_version)) {
                 ++signal_suppressed_count_[prod];  // Plain increment (single writer)
                 continue;
             }
+
 
             emitted_slots[emitted_count] = oi;
             emitted_sigs[emitted_count] = sig;

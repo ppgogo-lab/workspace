@@ -289,6 +289,12 @@ If your strategy needs snapshots, post-trade risk, or alert topics, follow the
 - Do not publish monitor text from the quote decision path. Store compact state
   and let monitor-side code format it.
 - Prefer product-level regime gates over repeated per-instrument expensive checks.
+- For production FEMAS latency runs, use `config/low_latency_femas.yaml` as the
+  starting point: hot-path monitoring off, persistence off, low-latency spin on,
+  and `pricing.hot_path_greeks_mode: compact`.
+- Do not depend on every market signal refreshing the full Greeks snapshot. In
+  compact/off modes the strategy gets fresh `PricingSignal` values immediately,
+  while full Greeks are maintained by the cold refresh path for monitoring/risk.
 
 ## Testing Checklist
 
@@ -318,4 +324,3 @@ snapshots and monitoring, but they do not directly trigger option repricing.
    alerts.
 7. Register `strategy_type` in `TradingEngine::init_strategies()`.
 8. Add focused strategy tests before running full engine integration.
-

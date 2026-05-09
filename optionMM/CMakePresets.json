@@ -62,6 +62,7 @@
       },
       "environment": {
         "OMM_LATENCY_MONITORING": "deferred",
+        "OMM_LATENCY_GREEKS": "compact",
         "OMM_LATENCY_PIN_CORES": "auto"
       }
     },
@@ -79,6 +80,7 @@
       },
       "environment": {
         "OMM_LATENCY_MONITORING": "off",
+        "OMM_LATENCY_GREEKS": "compact",
         "OMM_LATENCY_PIN_CORES": "auto"
       }
     },
@@ -96,6 +98,7 @@
       },
       "environment": {
         "OMM_LATENCY_MONITORING": "deferred",
+        "OMM_LATENCY_GREEKS": "compact",
         "OMM_LATENCY_PIN_CORES": "auto"
       }
     },
@@ -113,6 +116,7 @@
       },
       "environment": {
         "OMM_LATENCY_MONITORING": "off",
+        "OMM_LATENCY_GREEKS": "compact",
         "OMM_LATENCY_PIN_CORES": "auto"
       }
     }

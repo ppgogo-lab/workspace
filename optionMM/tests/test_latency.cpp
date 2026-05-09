@@ -51,6 +51,15 @@ const char* monitoring_mode_name(MonitoringPublishMode mode) {
     }
 }
 
+const char* hot_path_greeks_mode_name(HotPathGreeksMode mode) {
+    switch (mode) {
+    case HotPathGreeksMode::Full: return "full";
+    case HotPathGreeksMode::Compact: return "compact";
+    case HotPathGreeksMode::Off: return "off";
+    default: return "unknown";
+    }
+}
+
 MonitoringPublishMode monitoring_mode_from_env() {
     const char* value = std::getenv("OMM_LATENCY_MONITORING");
     if (value == nullptr || value[0] == '\0') return MonitoringPublishMode::Deferred;
@@ -58,6 +67,15 @@ MonitoringPublishMode monitoring_mode_from_env() {
     if (std::strcmp(value, "deferred") == 0) return MonitoringPublishMode::Deferred;
     if (std::strcmp(value, "full") == 0) return MonitoringPublishMode::Full;
     return MonitoringPublishMode::Deferred;
+}
+
+HotPathGreeksMode hot_path_greeks_mode_from_env() {
+    const char* value = std::getenv("OMM_LATENCY_GREEKS");
+    if (value == nullptr || value[0] == '\0') return HotPathGreeksMode::Compact;
+    if (std::strcmp(value, "off") == 0) return HotPathGreeksMode::Off;
+    if (std::strcmp(value, "compact") == 0) return HotPathGreeksMode::Compact;
+    if (std::strcmp(value, "full") == 0) return HotPathGreeksMode::Full;
+    return HotPathGreeksMode::Compact;
 }
 
 std::vector<int> parse_core_list(const char* value) {
@@ -260,6 +278,7 @@ struct ScenarioConfig {
     int iterations{200};
     int64_t timeout_ns{5'000'000LL};
     MonitoringPublishMode monitoring_mode{MonitoringPublishMode::Deferred};
+    HotPathGreeksMode hot_path_greeks_mode{HotPathGreeksMode::Compact};
     int gateway_cancel_latency_ms{0};
     double signal_emit_price_epsilon_ticks{0.0};
     double signal_emit_underlying_epsilon_ticks{0.0};
@@ -440,6 +459,10 @@ static ScenarioResult run_latency_scenario(const ScenarioConfig& cfg) {
     sys.timer.hedge_check_interval_ms = 60000;
     sys.timer.quote_refresh_interval_ms = 60000;
     sys.monitoring.hot_path_publish_mode = cfg.monitoring_mode;
+    sys.pricing.hot_path_greeks_mode = cfg.hot_path_greeks_mode;
+    sys.execution.low_latency_mode =
+        cfg.monitoring_mode == MonitoringPublishMode::Off
+        && cfg.hot_path_greeks_mode != HotPathGreeksMode::Full;
     sys.scheduling.low_latency_spin = true;
     sys.affinity.feed_core = -1;
     sys.affinity.pricer_core = -1;
@@ -657,6 +680,8 @@ static ScenarioResult run_latency_scenario(const ScenarioConfig& cfg) {
               << " iterations=" << cfg.iterations
               << " cancel_latency_ms=" << cfg.gateway_cancel_latency_ms
               << " monitoring=" << monitoring_mode_name(cfg.monitoring_mode)
+              << " hot_path_greeks=" << hot_path_greeks_mode_name(cfg.hot_path_greeks_mode)
+              << " execution_low_latency=" << (sys.execution.low_latency_mode ? "on" : "off")
               << " low_latency_spin=" << (sys.scheduling.low_latency_spin ? "on" : "off")
               << "\n";
     if (latency_cores.size() >= static_cast<size_t>(7 + cfg.product_count)) {
@@ -724,6 +749,7 @@ TEST(LatencyTest, TickToQuoteLatency) {
     cfg.iterations = 320;
     cfg.timeout_ns = 6'000'000LL;
     cfg.monitoring_mode = monitoring_mode_from_env();
+    cfg.hot_path_greeks_mode = hot_path_greeks_mode_from_env();
 
     ScenarioResult result = run_latency_scenario(cfg);
 
@@ -767,6 +793,7 @@ TEST(LatencyTest, TickToQuoteLatencyCancelFirst) {
     cfg.iterations = 120;
     cfg.timeout_ns = 10'000'000LL;
     cfg.monitoring_mode = monitoring_mode_from_env();
+    cfg.hot_path_greeks_mode = hot_path_greeks_mode_from_env();
     cfg.gateway_cancel_latency_ms = 1;
 
     ScenarioResult result = run_latency_scenario(cfg);

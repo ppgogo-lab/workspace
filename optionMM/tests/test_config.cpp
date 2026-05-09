@@ -103,3 +103,30 @@ TEST(ConfigParsing, RejectsInvalidProductBaseOffsetType) {
             "      base_offset_value: 1.0\n")),
         std::runtime_error);
 }
+
+TEST(ConfigParsing, ParsesLowLatencyHotPathModes) {
+    const SystemConfig cfg = load_temp_config(
+        "instance:\n"
+        "  exchange_id: \"SHFE\"\n"
+        "  account_id: \"TEST\"\n"
+        "feed:\n"
+        "  type: sim\n"
+        "gateway:\n"
+        "  type: sim\n"
+        "pricing:\n"
+        "  hot_path_greeks_mode: compact\n"
+        "  vol_surface:\n"
+        "    method: svi\n"
+        "monitoring:\n"
+        "  hot_path_publish_mode: off\n"
+        "execution:\n"
+        "  low_latency_mode: true\n"
+        "products:\n"
+        "  - underlying_id: \"cu2501\"\n"
+        "    exchange_id: \"SHFE\"\n"
+        "    strategy_core: 4\n");
+
+    EXPECT_EQ(cfg.pricing.hot_path_greeks_mode, HotPathGreeksMode::Compact);
+    EXPECT_EQ(cfg.monitoring.hot_path_publish_mode, MonitoringPublishMode::Off);
+    EXPECT_TRUE(cfg.execution.low_latency_mode);
+}

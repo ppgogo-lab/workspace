@@ -93,6 +93,7 @@ struct SimConfig {
 // ─── Pricing configuration ────────────────────────────────────────────────────
 enum class VolMethod : uint8_t { SVI, SABR, CubicSpline, Wing, OrcWing };
 enum class BaseOffsetType : uint8_t { Tick, Price, Percentage };
+enum class HotPathGreeksMode : uint8_t { Full, Compact, Off };
 
 struct PricingConfig {
     double    risk_free_rate{0.025};   // annualised, e.g. 2.5%
@@ -103,6 +104,7 @@ struct PricingConfig {
     double    signal_emit_underlying_epsilon_ticks{0.0};
     double    signal_emit_delta_epsilon{0.0};
     double    signal_emit_vega_epsilon{0.0};
+    HotPathGreeksMode hot_path_greeks_mode{HotPathGreeksMode::Full};
     int       cold_greeks_interval_ms{1000};
     int       cold_greeks_batch_size{64};
 };
@@ -298,6 +300,11 @@ struct PersistenceConfig {
     int  busy_timeout_ms{1000};
 };
 
+struct ExecutionConfig {
+    bool low_latency_mode{false};
+    uint8_t _pad[3]{};
+};
+
 // ─── Instance configuration ───────────────────────────────────────────────────
 struct InstanceConfig {
     ExchangeId exchange_id;
@@ -317,6 +324,7 @@ struct SystemConfig {
     TimerConfig         timer;
     MonitoringConfig    monitoring;
     PersistenceConfig   persistence;
+    ExecutionConfig     execution;
     ThreadAffinityConfig affinity;
     ThreadSchedulingConfig scheduling;
     BookBootstrapConfig books[MAX_BOOKS]{};

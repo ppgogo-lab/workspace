@@ -35,6 +35,11 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
     };
 
     int spin_count = 0;  // Adaptive spinning counter
+    const bool monitor_hot_path_enabled =
+        cfg_.monitoring.hot_path_publish_mode != MonitoringPublishMode::Off
+        && !cfg_.execution.low_latency_mode;
+    const bool persistence_hot_path_enabled =
+        repository_ != nullptr && !cfg_.execution.low_latency_mode;
     while (!stop_flag_.load(std::memory_order_relaxed)) {
         bool did_work = false;
         if (cancel_all_live_requested_.exchange(false, std::memory_order_acquire)) {
@@ -111,33 +116,43 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                 DeferredCallbackSideEffect& side = deferred[i];
                 switch (side.event.type) {
                 case GatewayEventType::OrderAck:
-                    publish_monitor_order(side.event.order);
-                    defer_order_persistence(OrderPersistenceEventType::Ack,
-                                            side.event.order);
+                    if (monitor_hot_path_enabled) publish_monitor_order(side.event.order);
+                    if (persistence_hot_path_enabled) {
+                        defer_order_persistence(OrderPersistenceEventType::Ack,
+                                                side.event.order);
+                    }
                     break;
                 case GatewayEventType::QuoteAck: {
-                    publish_monitor_quote(side.event.quote);
-                    defer_quote_persistence(QuotePersistenceEventType::Ack,
-                                            side.event.quote,
-                                            nullptr);
+                    if (monitor_hot_path_enabled) publish_monitor_quote(side.event.quote);
+                    if (persistence_hot_path_enabled) {
+                        defer_quote_persistence(QuotePersistenceEventType::Ack,
+                                                side.event.quote,
+                                                nullptr);
+                    }
                     break;
                 }
                 case GatewayEventType::QuoteCancel:
-                    publish_monitor_quote(side.event.quote);
-                    defer_quote_persistence(QuotePersistenceEventType::Cancel,
-                                            side.event.quote,
-                                            nullptr);
+                    if (monitor_hot_path_enabled) publish_monitor_quote(side.event.quote);
+                    if (persistence_hot_path_enabled) {
+                        defer_quote_persistence(QuotePersistenceEventType::Cancel,
+                                                side.event.quote,
+                                                nullptr);
+                    }
                     break;
                 case GatewayEventType::QuoteReject:
-                    publish_monitor_quote(side.event.quote);
-                    defer_quote_persistence(QuotePersistenceEventType::Reject,
-                                            side.event.quote,
-                                            nullptr);
+                    if (monitor_hot_path_enabled) publish_monitor_quote(side.event.quote);
+                    if (persistence_hot_path_enabled) {
+                        defer_quote_persistence(QuotePersistenceEventType::Reject,
+                                                side.event.quote,
+                                                nullptr);
+                    }
                     break;
                 case GatewayEventType::OrderFill:
                 case GatewayEventType::QuoteFill: {
-                    publish_monitor_trade(side.event.trade);
-                    defer_trade_persistence(side.event.trade);
+                    if (monitor_hot_path_enabled) publish_monitor_trade(side.event.trade);
+                    if (persistence_hot_path_enabled) {
+                        defer_trade_persistence(side.event.trade);
+                    }
 
                     Order filled{};
                     filled.client_order_id = side.event.trade.client_order_id;
@@ -152,19 +167,23 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                     filled.filled_volume   = side.event.trade.fill_volume;
                     filled.ack_ts          = side.event.trade.fill_ts;
                     filled.book_id         = side.event.trade.book_id;
-                    publish_monitor_order(filled);
+                    if (monitor_hot_path_enabled) publish_monitor_order(filled);
                     (void)risk_buf_.try_push(side.event.trade);
                     break;
                 }
                 case GatewayEventType::OrderCancel:
-                    publish_monitor_order(side.event.order);
-                    defer_order_persistence(OrderPersistenceEventType::Cancel,
-                                            side.event.order);
+                    if (monitor_hot_path_enabled) publish_monitor_order(side.event.order);
+                    if (persistence_hot_path_enabled) {
+                        defer_order_persistence(OrderPersistenceEventType::Cancel,
+                                                side.event.order);
+                    }
                     break;
                 case GatewayEventType::OrderReject:
-                    publish_monitor_order(side.event.order);
-                    defer_order_persistence(OrderPersistenceEventType::Reject,
-                                            side.event.order);
+                    if (monitor_hot_path_enabled) publish_monitor_order(side.event.order);
+                    if (persistence_hot_path_enabled) {
+                        defer_order_persistence(OrderPersistenceEventType::Reject,
+                                                side.event.order);
+                    }
                     break;
                 default:
                     break;
@@ -199,15 +218,19 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                     order.book_id = mm_book_ids_[i];
                 }
                 const bool sent = gateway_->send_order(order);
-                publish_monitor_order(order);
+                if (monitor_hot_path_enabled) publish_monitor_order(order);
                 if (sent) {
                     track_live_order_submit(order);
-                    defer_order_persistence(OrderPersistenceEventType::Submit, order);
+                    if (persistence_hot_path_enabled) {
+                        defer_order_persistence(OrderPersistenceEventType::Submit, order);
+                    }
                 } else {
                     Order rejected = order;
                     rejected.status = OrderStatus::Rejected;
                     rejected.ack_ts = get_monotonic_ns();
-                    defer_order_persistence(OrderPersistenceEventType::Reject, rejected);
+                    if (persistence_hot_path_enabled) {
+                        defer_order_persistence(OrderPersistenceEventType::Reject, rejected);
+                    }
                 }
                 if (((drained + 1) % kDispatcherCallbackInterleaveBurstCap) == 0) {
                     drain_callbacks(kDispatcherCallbackInterleaveBurstCap);
@@ -226,16 +249,20 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                 OrderId bid_order_id = 0;
                 OrderId ask_order_id = 0;
                 const bool sent = gateway_->send_quote(quote, &bid_order_id, &ask_order_id);
-                publish_monitor_quote(quote);
+                if (monitor_hot_path_enabled) publish_monitor_quote(quote);
                 if (sent && (quote.bid_volume > 0 || quote.ask_volume > 0)) {
                     track_live_quote_submit(quote, bid_order_id, ask_order_id);
-                    defer_quote_persistence(QuotePersistenceEventType::Submit, quote, nullptr);
+                    if (persistence_hot_path_enabled) {
+                        defer_quote_persistence(QuotePersistenceEventType::Submit, quote, nullptr);
+                    }
                 } else if (!sent) {
                     Quote rejected = quote;
                     rejected.bid_status = OrderStatus::Rejected;
                     rejected.ask_status = OrderStatus::Rejected;
                     rejected.ack_ts = get_monotonic_ns();
-                    defer_quote_persistence(QuotePersistenceEventType::Reject, rejected, nullptr);
+                    if (persistence_hot_path_enabled) {
+                        defer_quote_persistence(QuotePersistenceEventType::Reject, rejected, nullptr);
+                    }
                 }
                 if (((drained + 1) % kDispatcherCallbackInterleaveBurstCap) == 0) {
                     drain_callbacks(kDispatcherCallbackInterleaveBurstCap);
@@ -253,15 +280,19 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                 if (intent.kind == ArbIntentKind::SubmitOrder) {
                     intent.order.book_id = arb_book_id_for_type(i, intent.strategy_type);
                     const bool sent = gateway_->send_order(intent.order);
-                    publish_monitor_order(intent.order);
+                    if (monitor_hot_path_enabled) publish_monitor_order(intent.order);
                     if (sent) {
                         track_live_order_submit(intent.order);
-                        defer_order_persistence(OrderPersistenceEventType::Submit, intent.order);
+                        if (persistence_hot_path_enabled) {
+                            defer_order_persistence(OrderPersistenceEventType::Submit, intent.order);
+                        }
                     } else {
                         Order rejected = intent.order;
                         rejected.status = OrderStatus::Rejected;
                         rejected.ack_ts = get_monotonic_ns();
-                        defer_order_persistence(OrderPersistenceEventType::Reject, rejected);
+                        if (persistence_hot_path_enabled) {
+                            defer_order_persistence(OrderPersistenceEventType::Reject, rejected);
+                        }
                     }
                 } else if (intent.kind == ArbIntentKind::CancelOrder) {
                     gateway_->cancel_order(intent.order.client_order_id, intent.order.instrument_id);

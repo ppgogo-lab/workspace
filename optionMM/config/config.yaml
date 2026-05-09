@@ -42,6 +42,7 @@ pricing:
   signal_emit_underlying_epsilon_ticks: 0.5
   signal_emit_delta_epsilon: 0.01
   signal_emit_vega_epsilon: 0.02
+  hot_path_greeks_mode: full       # full | compact | off
   vol_surface:
     method: svi                 # svi | sabr | cubic_spline
     fit_interval_seconds: 60
@@ -185,6 +186,9 @@ persistence:
   flush_interval_ms: 10
   snapshot_interval_ms: 1000
   busy_timeout_ms: 1000
+
+execution:
+  low_latency_mode: false
 
 thread_affinity:
   feed_core:               2

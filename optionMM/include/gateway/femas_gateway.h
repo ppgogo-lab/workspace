@@ -14,7 +14,6 @@
 #include <cstring>
 #include <mutex>
 #include <shared_mutex>
-#include <shared_mutex>
 
 namespace omm {
 

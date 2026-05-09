@@ -1,0 +1,121 @@
+instance:
+  exchange_id: "CFFEX"
+  account_id:  "ACC001"
+
+feed:
+  type: femas
+  femas:
+    front_addr: "tcp://127.0.0.1:17002"
+    broker_id:  ""
+    user_id:    ""
+    password:   ""
+    exchange_id: "CFFEX"
+    topic_id: 100
+    heartbeat_timeout_sec: 30
+
+gateway:
+  type: femas
+  femas:
+    front_addr: "tcp://127.0.0.1:17001"
+    broker_id:  "0001"
+    user_id:    "000001"
+    password:   "changeme"
+
+pricing:
+  risk_free_rate: 0.025
+  signal_emit_price_epsilon_ticks: 0.25
+  signal_emit_underlying_epsilon_ticks: 0.5
+  signal_emit_delta_epsilon: 0.01
+  signal_emit_vega_epsilon: 0.02
+  hot_path_greeks_mode: compact
+  cold_greeks_interval_ms: 1000
+  cold_greeks_batch_size: 64
+  vol_surface:
+    method: svi
+    fit_interval_seconds: 60
+
+risk:
+  hard:
+    max_volume_per_order: 100
+  soft:
+    max_net_position: 500
+    max_delta: 1000.0
+    max_gamma: 500.0
+    max_vega: 10000.0
+
+books:
+  - book_id: 101
+    book_code: "MM_DEFAULT"
+    display_name: "Default MM"
+    active: true
+
+products:
+  - underlying_id: "IF2506"
+    exchange_id: "CFFEX"
+    strategy_core: 4
+    strategy_type: option_mm_core
+    book_id: 101
+    pricing:
+      base_offset_type: price
+      base_offset_value: 0.0
+    params:
+      quote_volume: 10
+      min_quote_interval_ms: 1.0
+      base_half_spread_ticks: 1.0
+      min_half_spread_ticks: 1.0
+      max_half_spread_ticks: 8.0
+      requote_price_epsilon_ticks: 1.0
+      enabled: true
+
+timer:
+  hedge_check_interval_ms: 1000
+  quote_refresh_interval_ms: 500
+
+exchange_calendars:
+  - exchange_id: "CFFEX"
+    ranges:
+      - start: 20260501
+        end: 20261231
+        trading: true
+
+exchange_trading_times:
+  - exchange_id: "CFFEX"
+    sessions:
+      - start_day_offset: 0
+        start: "09:30:00"
+        end_day_offset: 0
+        end: "11:30:00"
+      - start_day_offset: 0
+        start: "13:00:00"
+        end_day_offset: 0
+        end: "15:00:00"
+
+monitoring:
+  grpc_listen_addr: "0.0.0.0:50051"
+  hot_path_publish_mode: off
+
+persistence:
+  enabled: false
+
+execution:
+  low_latency_mode: true
+
+thread_affinity:
+  feed_core: 2
+  pricer_core: 3
+  gateway_dispatcher_core: 12
+  vol_fitter_core: 13
+  risk_monitor_core: 14
+  timer_core: 11
+  grpc_server_core: 15
+
+thread_scheduling:
+  enable_realtime: true
+  low_latency_spin: true
+  pricer_priority: 80
+  strategy_priority: 70
+  arbitrage_priority: 60
+  gateway_dispatcher_priority: 75
+  vol_fitter_priority: 20
+  risk_monitor_priority: 30
+  timer_priority: 40
