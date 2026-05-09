@@ -95,9 +95,6 @@ optionmm: CMakeFiles/optionmm.dir/build.make
 optionmm: libmonitoring_lib.a
 optionmm: libengine_lib.a
 optionmm: libpricing_lib.a
-optionmm: /usr/lib/x86_64-linux-gnu/libceres.so.2.2.0
-optionmm: /usr/lib/x86_64-linux-gnu/libglog.so.0.6.0
-optionmm: /usr/lib/x86_64-linux-gnu/libgflags.so.2.2.2
 optionmm: libstrategy_lib.a
 optionmm: librisk_lib.a
 optionmm: libfeed_lib.a

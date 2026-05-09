@@ -6,5 +6,5 @@ CXX_DEFINES = -DFMT_SHARED -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -DSPDLOG_
 
 CXX_INCLUDES = -I/mnt/d/workspace/optionMM/include -I/mnt/d/workspace/optionMM -I/mnt/d/workspace/optionMM/third_party/femas
 
-CXX_FLAGS = -O3 -DNDEBUG -Wall -Wextra -Wpedantic -fno-rtti -std=c++17
+CXX_FLAGS = -O0 -g3 -fsanitize=address,undefined -Wall -Wextra -Wpedantic -fno-rtti -std=c++17
 

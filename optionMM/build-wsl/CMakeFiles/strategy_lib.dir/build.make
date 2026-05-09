@@ -83,10 +83,24 @@ CMakeFiles/strategy_lib.dir/src/strategy/mm_framework.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/strategy_lib.dir/src/strategy/mm_framework.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/d/workspace/optionMM/src/strategy/mm_framework.cpp -o CMakeFiles/strategy_lib.dir/src/strategy/mm_framework.cpp.s
 
+CMakeFiles/strategy_lib.dir/src/strategy/base_quoting_strategy.cpp.o: CMakeFiles/strategy_lib.dir/flags.make
+CMakeFiles/strategy_lib.dir/src/strategy/base_quoting_strategy.cpp.o: /mnt/d/workspace/optionMM/src/strategy/base_quoting_strategy.cpp
+CMakeFiles/strategy_lib.dir/src/strategy/base_quoting_strategy.cpp.o: CMakeFiles/strategy_lib.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/strategy_lib.dir/src/strategy/base_quoting_strategy.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/strategy_lib.dir/src/strategy/base_quoting_strategy.cpp.o -MF CMakeFiles/strategy_lib.dir/src/strategy/base_quoting_strategy.cpp.o.d -o CMakeFiles/strategy_lib.dir/src/strategy/base_quoting_strategy.cpp.o -c /mnt/d/workspace/optionMM/src/strategy/base_quoting_strategy.cpp
+
+CMakeFiles/strategy_lib.dir/src/strategy/base_quoting_strategy.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/strategy_lib.dir/src/strategy/base_quoting_strategy.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/d/workspace/optionMM/src/strategy/base_quoting_strategy.cpp > CMakeFiles/strategy_lib.dir/src/strategy/base_quoting_strategy.cpp.i
+
+CMakeFiles/strategy_lib.dir/src/strategy/base_quoting_strategy.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/strategy_lib.dir/src/strategy/base_quoting_strategy.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/d/workspace/optionMM/src/strategy/base_quoting_strategy.cpp -o CMakeFiles/strategy_lib.dir/src/strategy/base_quoting_strategy.cpp.s
+
 CMakeFiles/strategy_lib.dir/src/strategy/simple_mm.cpp.o: CMakeFiles/strategy_lib.dir/flags.make
 CMakeFiles/strategy_lib.dir/src/strategy/simple_mm.cpp.o: /mnt/d/workspace/optionMM/src/strategy/simple_mm.cpp
 CMakeFiles/strategy_lib.dir/src/strategy/simple_mm.cpp.o: CMakeFiles/strategy_lib.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/strategy_lib.dir/src/strategy/simple_mm.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/strategy_lib.dir/src/strategy/simple_mm.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/strategy_lib.dir/src/strategy/simple_mm.cpp.o -MF CMakeFiles/strategy_lib.dir/src/strategy/simple_mm.cpp.o.d -o CMakeFiles/strategy_lib.dir/src/strategy/simple_mm.cpp.o -c /mnt/d/workspace/optionMM/src/strategy/simple_mm.cpp
 
 CMakeFiles/strategy_lib.dir/src/strategy/simple_mm.cpp.i: cmake_force
@@ -100,7 +114,7 @@ CMakeFiles/strategy_lib.dir/src/strategy/simple_mm.cpp.s: cmake_force
 CMakeFiles/strategy_lib.dir/src/strategy/option_mm_core.cpp.o: CMakeFiles/strategy_lib.dir/flags.make
 CMakeFiles/strategy_lib.dir/src/strategy/option_mm_core.cpp.o: /mnt/d/workspace/optionMM/src/strategy/option_mm_core.cpp
 CMakeFiles/strategy_lib.dir/src/strategy/option_mm_core.cpp.o: CMakeFiles/strategy_lib.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/strategy_lib.dir/src/strategy/option_mm_core.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/strategy_lib.dir/src/strategy/option_mm_core.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/strategy_lib.dir/src/strategy/option_mm_core.cpp.o -MF CMakeFiles/strategy_lib.dir/src/strategy/option_mm_core.cpp.o.d -o CMakeFiles/strategy_lib.dir/src/strategy/option_mm_core.cpp.o -c /mnt/d/workspace/optionMM/src/strategy/option_mm_core.cpp
 
 CMakeFiles/strategy_lib.dir/src/strategy/option_mm_core.cpp.i: cmake_force
@@ -114,7 +128,7 @@ CMakeFiles/strategy_lib.dir/src/strategy/option_mm_core.cpp.s: cmake_force
 CMakeFiles/strategy_lib.dir/src/strategy/pcp_arbitrage.cpp.o: CMakeFiles/strategy_lib.dir/flags.make
 CMakeFiles/strategy_lib.dir/src/strategy/pcp_arbitrage.cpp.o: /mnt/d/workspace/optionMM/src/strategy/pcp_arbitrage.cpp
 CMakeFiles/strategy_lib.dir/src/strategy/pcp_arbitrage.cpp.o: CMakeFiles/strategy_lib.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/strategy_lib.dir/src/strategy/pcp_arbitrage.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/strategy_lib.dir/src/strategy/pcp_arbitrage.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/strategy_lib.dir/src/strategy/pcp_arbitrage.cpp.o -MF CMakeFiles/strategy_lib.dir/src/strategy/pcp_arbitrage.cpp.o.d -o CMakeFiles/strategy_lib.dir/src/strategy/pcp_arbitrage.cpp.o -c /mnt/d/workspace/optionMM/src/strategy/pcp_arbitrage.cpp
 
 CMakeFiles/strategy_lib.dir/src/strategy/pcp_arbitrage.cpp.i: cmake_force
@@ -128,6 +142,7 @@ CMakeFiles/strategy_lib.dir/src/strategy/pcp_arbitrage.cpp.s: cmake_force
 # Object files for target strategy_lib
 strategy_lib_OBJECTS = \
 "CMakeFiles/strategy_lib.dir/src/strategy/mm_framework.cpp.o" \
+"CMakeFiles/strategy_lib.dir/src/strategy/base_quoting_strategy.cpp.o" \
 "CMakeFiles/strategy_lib.dir/src/strategy/simple_mm.cpp.o" \
 "CMakeFiles/strategy_lib.dir/src/strategy/option_mm_core.cpp.o" \
 "CMakeFiles/strategy_lib.dir/src/strategy/pcp_arbitrage.cpp.o"
@@ -136,12 +151,13 @@ strategy_lib_OBJECTS = \
 strategy_lib_EXTERNAL_OBJECTS =
 
 libstrategy_lib.a: CMakeFiles/strategy_lib.dir/src/strategy/mm_framework.cpp.o
+libstrategy_lib.a: CMakeFiles/strategy_lib.dir/src/strategy/base_quoting_strategy.cpp.o
 libstrategy_lib.a: CMakeFiles/strategy_lib.dir/src/strategy/simple_mm.cpp.o
 libstrategy_lib.a: CMakeFiles/strategy_lib.dir/src/strategy/option_mm_core.cpp.o
 libstrategy_lib.a: CMakeFiles/strategy_lib.dir/src/strategy/pcp_arbitrage.cpp.o
 libstrategy_lib.a: CMakeFiles/strategy_lib.dir/build.make
 libstrategy_lib.a: CMakeFiles/strategy_lib.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking CXX static library libstrategy_lib.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Linking CXX static library libstrategy_lib.a"
 	$(CMAKE_COMMAND) -P CMakeFiles/strategy_lib.dir/cmake_clean_target.cmake
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/strategy_lib.dir/link.txt --verbose=$(VERBOSE)
 

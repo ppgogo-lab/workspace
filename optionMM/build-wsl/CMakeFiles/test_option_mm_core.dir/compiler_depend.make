@@ -10,9 +10,11 @@ CMakeFiles/test_option_mm_core.dir/tests/test_option_mm_core.cpp.o: /mnt/d/works
   /mnt/d/workspace/optionMM/include/monitoring/topic.h \
   /mnt/d/workspace/optionMM/include/risk/post_trade_risk.h \
   /mnt/d/workspace/optionMM/include/risk/pre_trade_risk.h \
+  /mnt/d/workspace/optionMM/include/strategy/base_quoting_strategy.h \
   /mnt/d/workspace/optionMM/include/strategy/mm_framework.h \
   /mnt/d/workspace/optionMM/include/strategy/mm_params.h \
   /mnt/d/workspace/optionMM/include/strategy/option_mm_core.h \
+  /mnt/d/workspace/optionMM/include/strategy/order_lifecycle.h \
   /mnt/d/workspace/optionMM/include/strategy/quote_lifecycle.h \
   /usr/include/alloca.h \
   /usr/include/asm-generic/bitsperlong.h \
@@ -287,9 +289,7 @@ CMakeFiles/test_option_mm_core.dir/tests/test_option_mm_core.cpp.o: /mnt/d/works
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
   /usr/include/x86_64-linux-gnu/bits/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/select-decl.h \
   /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/select2.h \
   /usr/include/x86_64-linux-gnu/bits/setjmp.h \
   /usr/include/x86_64-linux-gnu/bits/sigaction.h \
   /usr/include/x86_64-linux-gnu/bits/sigcontext.h \
@@ -310,15 +310,8 @@ CMakeFiles/test_option_mm_core.dir/tests/test_option_mm_core.cpp.o: /mnt/d/works
   /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio2-decl.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio2.h \
   /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h \
   /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib.h \
-  /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
-  /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
   /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
   /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
   /usr/include/x86_64-linux-gnu/bits/struct_stat.h \
@@ -364,14 +357,10 @@ CMakeFiles/test_option_mm_core.dir/tests/test_option_mm_core.cpp.o: /mnt/d/works
   /usr/include/x86_64-linux-gnu/bits/types/wint_t.h \
   /usr/include/x86_64-linux-gnu/bits/typesizes.h \
   /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
-  /usr/include/x86_64-linux-gnu/bits/unistd-decl.h \
-  /usr/include/x86_64-linux-gnu/bits/unistd.h \
   /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
   /usr/include/x86_64-linux-gnu/bits/waitflags.h \
   /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
   /usr/include/x86_64-linux-gnu/bits/wchar.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar2-decl.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar2.h \
   /usr/include/x86_64-linux-gnu/bits/wctype-wchar.h \
   /usr/include/x86_64-linux-gnu/bits/wordsize.h \
   /usr/include/x86_64-linux-gnu/c++/13/bits/atomic_word.h \
@@ -587,9 +576,9 @@ CMakeFiles/test_option_mm_core.dir/tests/test_option_mm_core.cpp.o: /mnt/d/works
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/avx5124fmapsintrin.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/amxtileintrin.h:
+/usr/lib/gcc/x86_64-linux-gnu/13/include/avx2intrin.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/amxint8intrin.h:
+/usr/lib/gcc/x86_64-linux-gnu/13/include/amxtileintrin.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/amxfp16intrin.h:
 
@@ -649,10 +638,6 @@ CMakeFiles/test_option_mm_core.dir/tests/test_option_mm_core.cpp.o: /mnt/d/works
 
 /usr/include/x86_64-linux-gnu/bits/unistd_ext.h:
 
-/usr/include/x86_64-linux-gnu/bits/unistd.h:
-
-/usr/include/x86_64-linux-gnu/bits/unistd-decl.h:
-
 /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512fintrin.h:
 
 /usr/include/x86_64-linux-gnu/bits/uintn-identity.h:
@@ -674,6 +659,10 @@ CMakeFiles/test_option_mm_core.dir/tests/test_option_mm_core.cpp.o: /mnt/d/works
 /usr/include/x86_64-linux-gnu/bits/types/sigevent_t.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/idtype_t.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/clockid_t.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/clock_t.h:
 
@@ -700,20 +689,6 @@ CMakeFiles/test_option_mm_core.dir/tests/test_option_mm_core.cpp.o: /mnt/d/works
 /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h:
 
 /usr/include/x86_64-linux-gnu/bits/struct_mutex.h:
-
-/usr/include/x86_64-linux-gnu/bits/strings_fortified.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx2intrin.h:
-
-/usr/include/x86_64-linux-gnu/bits/string_fortified.h:
-
-/usr/include/x86_64-linux-gnu/bits/stdlib.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/clockid_t.h:
-
-/usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h:
 
 /usr/include/x86_64-linux-gnu/bits/timex.h:
 
@@ -779,8 +754,6 @@ CMakeFiles/test_option_mm_core.dir/tests/test_option_mm_core.cpp.o: /mnt/d/works
 
 /usr/include/x86_64-linux-gnu/bits/getopt_core.h:
 
-/usr/include/x86_64-linux-gnu/bits/wchar2.h:
-
 /usr/include/x86_64-linux-gnu/bits/fp-logb.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/pconfigintrin.h:
@@ -799,15 +772,11 @@ CMakeFiles/test_option_mm_core.dir/tests/test_option_mm_core.cpp.o: /mnt/d/works
 
 /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h:
 
-/usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h:
+/usr/include/x86_64-linux-gnu/asm/types.h:
 
-/usr/include/c++/13/bits/utility.h:
+/usr/include/x86_64-linux-gnu/bits/cpu-set.h:
 
-/usr/include/c++/13/bits/stl_function.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/hresetintrin.h:
-
-/usr/include/c++/13/tr1/beta_function.tcc:
+/usr/include/x86_64-linux-gnu/asm/posix_types_64.h:
 
 /usr/include/c++/13/bits/uses_allocator_args.h:
 
@@ -824,8 +793,6 @@ CMakeFiles/test_option_mm_core.dir/tests/test_option_mm_core.cpp.o: /mnt/d/works
 /usr/include/c++/13/bits/unordered_map.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/clwbintrin.h:
-
-/usr/include/x86_64-linux-gnu/bits/stdio2.h:
 
 /usr/include/c++/13/bits/quoted_string.h:
 
@@ -849,8 +816,6 @@ CMakeFiles/test_option_mm_core.dir/tests/test_option_mm_core.cpp.o: /mnt/d/works
 
 /usr/include/asm-generic/errno.h:
 
-/usr/include/c++/13/bits/functexcept.h:
-
 /usr/include/c++/13/bits/stl_bvector.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/avxintrin.h:
@@ -872,8 +837,6 @@ CMakeFiles/test_option_mm_core.dir/tests/test_option_mm_core.cpp.o: /mnt/d/works
 /usr/include/c++/13/cstdint:
 
 /usr/include/c++/13/cstdlib:
-
-/usr/include/x86_64-linux-gnu/bits/wchar2-decl.h:
 
 /usr/include/c++/13/bits/erase_if.h:
 
@@ -909,6 +872,16 @@ CMakeFiles/test_option_mm_core.dir/tests/test_option_mm_core.cpp.o: /mnt/d/works
 
 /usr/include/c++/13/bits/ostream_insert.h:
 
+/usr/include/c++/13/bits/stl_function.h:
+
+/usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h:
+
+/usr/include/c++/13/bits/utility.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/hresetintrin.h:
+
+/usr/include/c++/13/tr1/beta_function.tcc:
+
 /usr/lib/gcc/x86_64-linux-gnu/13/include/avxneconvertintrin.h:
 
 /usr/include/c++/13/bits/move.h:
@@ -943,6 +916,10 @@ CMakeFiles/test_option_mm_core.dir/tests/test_option_mm_core.cpp.o: /mnt/d/works
 
 /usr/include/gtest/internal/gtest-death-test-internal.h:
 
+/usr/include/c++/13/bits/invoke.h:
+
+/usr/include/gtest/gtest_pred_impl.h:
+
 /usr/include/gtest/internal/custom/gtest-port.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/struct_sigstack.h:
@@ -965,14 +942,6 @@ CMakeFiles/test_option_mm_core.dir/tests/test_option_mm_core.cpp.o: /mnt/d/works
 
 /usr/include/x86_64-linux-gnu/asm/errno.h:
 
-/usr/include/c++/13/bits/stl_vector.h:
-
-/usr/include/c++/13/bits/stl_tempbuf.h:
-
-/usr/include/c++/13/bits/stl_tree.h:
-
-/usr/include/c++/13/bits/codecvt.h:
-
 /usr/include/x86_64-linux-gnu/c++/13/bits/ctype_base.h:
 
 /usr/include/c++/13/any:
@@ -989,6 +958,14 @@ CMakeFiles/test_option_mm_core.dir/tests/test_option_mm_core.cpp.o: /mnt/d/works
 
 /usr/include/stdc-predef.h:
 
+/usr/include/c++/13/cctype:
+
+/usr/include/x86_64-linux-gnu/bits/types/struct_tm.h:
+
+/usr/include/c++/13/ext/atomicity.h:
+
+/usr/include/c++/13/tr1/gamma.tcc:
+
 /usr/include/asm-generic/int-ll64.h:
 
 /usr/include/c++/13/bits/shared_ptr_atomic.h:
@@ -1003,13 +980,15 @@ CMakeFiles/test_option_mm_core.dir/tests/test_option_mm_core.cpp.o: /mnt/d/works
 
 /usr/include/c++/13/bits/alloc_traits.h:
 
-/usr/include/c++/13/cctype:
+/usr/include/x86_64-linux-gnu/bits/flt-eval-method.h:
 
-/usr/include/x86_64-linux-gnu/bits/types/struct_tm.h:
+/usr/include/c++/13/bits/streambuf_iterator.h:
 
-/usr/include/c++/13/ext/atomicity.h:
+/usr/include/c++/13/ostream:
 
-/usr/include/c++/13/tr1/gamma.tcc:
+/mnt/d/workspace/optionMM/include/monitoring/topic.h:
+
+/usr/include/c++/13/tr1/riemann_zeta.tcc:
 
 /usr/include/c++/13/bits/ostream.tcc:
 
@@ -1069,14 +1048,6 @@ CMakeFiles/test_option_mm_core.dir/tests/test_option_mm_core.cpp.o: /mnt/d/works
 
 /usr/include/linux/stddef.h:
 
-/usr/include/x86_64-linux-gnu/bits/long-double.h:
-
-/usr/include/c++/13/bits/algorithmfwd.h:
-
-/usr/include/x86_64-linux-gnu/gnu/stubs-64.h:
-
-/usr/include/c++/13/bits/node_handle.h:
-
 /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512fp16intrin.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h:
@@ -1095,10 +1066,6 @@ CMakeFiles/test_option_mm_core.dir/tests/test_option_mm_core.cpp.o: /mnt/d/works
 
 /usr/include/asm-generic/errno-base.h:
 
-/usr/include/x86_64-linux-gnu/bits/cpu-set.h:
-
-/usr/include/x86_64-linux-gnu/asm/posix_types_64.h:
-
 /usr/include/c++/13/bits/sstream.tcc:
 
 /usr/include/c++/13/ratio:
@@ -1108,6 +1075,12 @@ CMakeFiles/test_option_mm_core.dir/tests/test_option_mm_core.cpp.o: /mnt/d/works
 /usr/include/gtest/gtest.h:
 
 /usr/include/c++/13/bits/stl_raw_storage_iter.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/amxint8intrin.h:
+
+/mnt/d/workspace/optionMM/include/strategy/order_lifecycle.h:
+
+/usr/include/c++/13/bits/functexcept.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/mmintrin.h:
 
@@ -1139,6 +1112,30 @@ CMakeFiles/test_option_mm_core.dir/tests/test_option_mm_core.cpp.o: /mnt/d/works
 
 /usr/include/c++/13/cwchar:
 
+/usr/include/c++/13/bits/stl_vector.h:
+
+/usr/include/c++/13/bits/stl_tempbuf.h:
+
+/usr/include/c++/13/bits/stl_tree.h:
+
+/usr/include/c++/13/bits/codecvt.h:
+
+/mnt/d/workspace/optionMM/include/strategy/base_quoting_strategy.h:
+
+/usr/include/string.h:
+
+/mnt/d/workspace/optionMM/include/strategy/quote_lifecycle.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/error_t.h:
+
+/usr/include/c++/13/bits/hashtable.h:
+
+/mnt/d/workspace/optionMM/include/common/latest_snapshot.h:
+
+/usr/include/c++/13/tr1/legendre_function.tcc:
+
+/mnt/d/workspace/optionMM/include/strategy/mm_framework.h:
+
 /usr/include/c++/13/bits/basic_ios.h:
 
 /mnt/d/workspace/optionMM/include/strategy/mm_params.h:
@@ -1147,27 +1144,17 @@ CMakeFiles/test_option_mm_core.dir/tests/test_option_mm_core.cpp.o: /mnt/d/works
 
 /usr/include/errno.h:
 
-/usr/include/assert.h:
-
 /usr/include/c++/13/backward/auto_ptr.h:
 
-/mnt/d/workspace/optionMM/include/common/latest_snapshot.h:
+/usr/include/assert.h:
 
-/usr/include/c++/13/tr1/legendre_function.tcc:
+/usr/include/x86_64-linux-gnu/bits/long-double.h:
 
-/mnt/d/workspace/optionMM/include/strategy/mm_framework.h:
+/usr/include/c++/13/bits/algorithmfwd.h:
 
-/usr/include/c++/13/optional:
+/usr/include/x86_64-linux-gnu/gnu/stubs-64.h:
 
-/usr/include/c++/13/bits/vector.tcc:
-
-/usr/include/c++/13/variant:
-
-/mnt/d/workspace/optionMM/include/strategy/quote_lifecycle.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/error_t.h:
-
-/usr/include/c++/13/bits/hashtable.h:
+/usr/include/c++/13/bits/node_handle.h:
 
 /usr/include/c++/13/bits/predefined_ops.h:
 
@@ -1197,29 +1184,13 @@ CMakeFiles/test_option_mm_core.dir/tests/test_option_mm_core.cpp.o: /mnt/d/works
 
 /usr/include/libintl.h:
 
-/usr/include/c++/13/bits/invoke.h:
-
-/usr/include/gtest/gtest_pred_impl.h:
-
 /usr/include/alloca.h:
 
 /usr/include/x86_64-linux-gnu/bits/endianness.h:
 
 /usr/include/c++/13/bits/chrono.h:
 
-/usr/include/x86_64-linux-gnu/bits/flt-eval-method.h:
-
-/usr/include/c++/13/bits/streambuf_iterator.h:
-
-/usr/include/c++/13/ostream:
-
-/mnt/d/workspace/optionMM/include/monitoring/topic.h:
-
-/usr/include/c++/13/tr1/riemann_zeta.tcc:
-
 /usr/include/c++/13/bits/localefwd.h:
-
-/usr/include/x86_64-linux-gnu/bits/stdio2-decl.h:
 
 /usr/include/c++/13/bits/ptr_traits.h:
 
@@ -1245,6 +1216,12 @@ CMakeFiles/test_option_mm_core.dir/tests/test_option_mm_core.cpp.o: /mnt/d/works
 
 /usr/include/c++/13/streambuf:
 
+/usr/include/c++/13/optional:
+
+/usr/include/c++/13/bits/vector.tcc:
+
+/usr/include/c++/13/variant:
+
 /usr/lib/gcc/x86_64-linux-gnu/13/include/avxvnniintrin.h:
 
 /usr/include/c++/13/bits/cpp_type_traits.h:
@@ -1260,8 +1237,6 @@ CMakeFiles/test_option_mm_core.dir/tests/test_option_mm_core.cpp.o: /mnt/d/works
 /usr/lib/gcc/x86_64-linux-gnu/13/include/cetintrin.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vlintrin.h:
-
-/usr/include/x86_64-linux-gnu/bits/select2.h:
 
 /mnt/d/workspace/optionMM/include/common/types.h:
 
@@ -1401,8 +1376,6 @@ CMakeFiles/test_option_mm_core.dir/tests/test_option_mm_core.cpp.o: /mnt/d/works
 
 /usr/include/gtest/gtest-assertion-result.h:
 
-/usr/include/x86_64-linux-gnu/bits/stdio.h:
-
 /usr/include/gtest/gtest-death-test.h:
 
 /usr/include/gtest/gtest-matchers.h:
@@ -1424,8 +1397,6 @@ CMakeFiles/test_option_mm_core.dir/tests/test_option_mm_core.cpp.o: /mnt/d/works
 /usr/include/gtest/internal/gtest-param-util.h:
 
 /usr/include/gtest/internal/gtest-port-arch.h:
-
-/usr/include/x86_64-linux-gnu/bits/select-decl.h:
 
 /usr/include/gtest/internal/gtest-port.h:
 
@@ -1471,8 +1442,6 @@ CMakeFiles/test_option_mm_core.dir/tests/test_option_mm_core.cpp.o: /mnt/d/works
 
 /usr/include/stdlib.h:
 
-/usr/include/string.h:
-
 /usr/lib/gcc/x86_64-linux-gnu/13/include/fmaintrin.h:
 
 /usr/include/x86_64-linux-gnu/bits/statx.h:
@@ -1482,5 +1451,3 @@ CMakeFiles/test_option_mm_core.dir/tests/test_option_mm_core.cpp.o: /mnt/d/works
 /usr/include/c++/13/cwctype:
 
 /usr/include/x86_64-linux-gnu/asm/posix_types.h:
-
-/usr/include/x86_64-linux-gnu/asm/types.h:

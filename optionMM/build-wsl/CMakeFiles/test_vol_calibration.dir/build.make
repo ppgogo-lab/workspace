@@ -94,9 +94,6 @@ test_vol_calibration: CMakeFiles/test_vol_calibration.dir/tests/test_vol_calibra
 test_vol_calibration: CMakeFiles/test_vol_calibration.dir/build.make
 test_vol_calibration: libpricing_lib.a
 test_vol_calibration: /usr/lib/x86_64-linux-gnu/libgtest_main.a
-test_vol_calibration: /usr/lib/x86_64-linux-gnu/libceres.so.2.2.0
-test_vol_calibration: /usr/lib/x86_64-linux-gnu/libglog.so.0.6.0
-test_vol_calibration: /usr/lib/x86_64-linux-gnu/libgflags.so.2.2.2
 test_vol_calibration: /usr/lib/x86_64-linux-gnu/libgtest.a
 test_vol_calibration: CMakeFiles/test_vol_calibration.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable test_vol_calibration"

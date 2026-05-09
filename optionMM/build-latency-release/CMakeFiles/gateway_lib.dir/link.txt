@@ -1,2 +1,0 @@
-/usr/bin/ar qc libgateway_lib.a CMakeFiles/gateway_lib.dir/src/gateway/sim_gateway.cpp.o CMakeFiles/gateway_lib.dir/src/gateway/ctp_gateway.cpp.o CMakeFiles/gateway_lib.dir/src/gateway/femas_gateway.cpp.o
-/usr/bin/ranlib libgateway_lib.a

@@ -1,2 +1,0 @@
-/usr/bin/ar qc libengine_lib_test.a CMakeFiles/engine_lib_test.dir/src/engine/trading_engine.cpp.o
-/usr/bin/ranlib libengine_lib_test.a

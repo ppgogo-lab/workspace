@@ -94,9 +94,6 @@ test_black76: CMakeFiles/test_black76.dir/tests/test_black76.cpp.o
 test_black76: CMakeFiles/test_black76.dir/build.make
 test_black76: libpricing_lib.a
 test_black76: /usr/lib/x86_64-linux-gnu/libgtest_main.a
-test_black76: /usr/lib/x86_64-linux-gnu/libceres.so.2.2.0
-test_black76: /usr/lib/x86_64-linux-gnu/libglog.so.0.6.0
-test_black76: /usr/lib/x86_64-linux-gnu/libgflags.so.2.2.2
 test_black76: /usr/lib/x86_64-linux-gnu/libgtest.a
 test_black76: CMakeFiles/test_black76.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable test_black76"

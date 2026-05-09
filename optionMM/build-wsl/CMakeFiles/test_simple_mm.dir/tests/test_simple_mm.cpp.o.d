@@ -38,8 +38,6 @@ CMakeFiles/test_simple_mm.dir/tests/test_simple_mm.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
- /usr/include/x86_64-linux-gnu/bits/wchar2-decl.h \
- /usr/include/x86_64-linux-gnu/bits/wchar2.h \
  /usr/include/c++/13/bits/ios_base.h /usr/include/c++/13/ext/atomicity.h \
  /usr/include/x86_64-linux-gnu/c++/13/bits/gthr.h \
  /usr/include/x86_64-linux-gnu/c++/13/bits/gthr-default.h \
@@ -120,22 +118,16 @@ CMakeFiles/test_simple_mm.dir/tests/test_simple_mm.cpp.o: \
  /usr/include/x86_64-linux-gnu/sys/select.h \
  /usr/include/x86_64-linux-gnu/bits/select.h \
  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
- /usr/include/x86_64-linux-gnu/bits/select2.h \
- /usr/include/x86_64-linux-gnu/bits/select-decl.h /usr/include/alloca.h \
- /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h \
- /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
- /usr/include/x86_64-linux-gnu/bits/stdlib.h \
+ /usr/include/alloca.h /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
  /usr/include/c++/13/bits/std_abs.h /usr/include/c++/13/cstdio \
  /usr/include/stdio.h /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
- /usr/include/x86_64-linux-gnu/bits/stdio2-decl.h \
- /usr/include/x86_64-linux-gnu/bits/stdio.h \
- /usr/include/x86_64-linux-gnu/bits/stdio2.h /usr/include/c++/13/cerrno \
- /usr/include/errno.h /usr/include/x86_64-linux-gnu/bits/errno.h \
- /usr/include/linux/errno.h /usr/include/x86_64-linux-gnu/asm/errno.h \
+ /usr/include/c++/13/cerrno /usr/include/errno.h \
+ /usr/include/x86_64-linux-gnu/bits/errno.h /usr/include/linux/errno.h \
+ /usr/include/x86_64-linux-gnu/asm/errno.h \
  /usr/include/asm-generic/errno.h /usr/include/asm-generic/errno-base.h \
  /usr/include/x86_64-linux-gnu/bits/types/error_t.h \
  /usr/include/c++/13/bits/charconv.h \
@@ -198,8 +190,6 @@ CMakeFiles/test_simple_mm.dir/tests/test_simple_mm.cpp.o: \
  /usr/include/gtest/gtest-message.h \
  /usr/include/gtest/internal/gtest-port.h /usr/include/c++/13/stdlib.h \
  /usr/include/string.h /usr/include/strings.h \
- /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
- /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
  /usr/include/c++/13/iostream /usr/include/x86_64-linux-gnu/sys/stat.h \
  /usr/include/x86_64-linux-gnu/bits/stat.h \
  /usr/include/x86_64-linux-gnu/bits/struct_stat.h \
@@ -222,8 +212,6 @@ CMakeFiles/test_simple_mm.dir/tests/test_simple_mm.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/confname.h \
  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
- /usr/include/x86_64-linux-gnu/bits/unistd.h \
- /usr/include/x86_64-linux-gnu/bits/unistd-decl.h \
  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
  /usr/include/linux/close_range.h /usr/include/regex.h \
  /usr/include/c++/13/condition_variable /usr/include/c++/13/bits/chrono.h \
@@ -287,9 +275,11 @@ CMakeFiles/test_simple_mm.dir/tests/test_simple_mm.cpp.o: \
  /usr/include/gtest/gtest-typed-test.h \
  /usr/include/gtest/gtest_pred_impl.h /usr/include/gtest/gtest_prod.h \
  /mnt/d/workspace/optionMM/include/strategy/simple_mm.h \
- /mnt/d/workspace/optionMM/include/strategy/mm_framework.h \
- /mnt/d/workspace/optionMM/include/common/types.h \
- /usr/include/c++/13/cstring \
+ /mnt/d/workspace/optionMM/include/strategy/base_quoting_strategy.h \
+ /mnt/d/workspace/optionMM/include/common/ring_buffer.h \
+ /usr/include/c++/13/cstring /usr/include/c++/13/thread \
+ /usr/include/c++/13/bits/std_thread.h \
+ /usr/include/c++/13/bits/this_thread_sleep.h /usr/include/c++/13/chrono \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/immintrin.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/x86gprintrin.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/ia32intrin.h \
@@ -384,18 +374,17 @@ CMakeFiles/test_simple_mm.dir/tests/test_simple_mm.cpp.o: \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/prfchwintrin.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/keylockerintrin.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/amxfp16intrin.h \
- /mnt/d/workspace/optionMM/include/common/ring_buffer.h \
- /usr/include/c++/13/thread /usr/include/c++/13/bits/std_thread.h \
- /usr/include/c++/13/bits/this_thread_sleep.h /usr/include/c++/13/chrono \
+ /mnt/d/workspace/optionMM/include/common/thread_utils.h \
+ /mnt/d/workspace/optionMM/include/common/types.h \
  /mnt/d/workspace/optionMM/include/risk/pre_trade_risk.h \
  /mnt/d/workspace/optionMM/include/common/config.h \
+ /mnt/d/workspace/optionMM/include/strategy/mm_framework.h \
  /mnt/d/workspace/optionMM/include/strategy/mm_params.h \
- /mnt/d/workspace/optionMM/include/common/thread_utils.h \
- /mnt/d/workspace/optionMM/include/gateway/sim_gateway.h \
- /mnt/d/workspace/optionMM/include/gateway/gateway.h \
- /mnt/d/workspace/optionMM/include/common/instrument_lookup.h \
- /mnt/d/workspace/optionMM/include/common/fixed_hash_table.h \
- /usr/include/c++/13/random /usr/include/c++/13/cmath /usr/include/math.h \
+ /mnt/d/workspace/optionMM/include/strategy/order_lifecycle.h \
+ /usr/include/c++/13/algorithm \
+ /usr/include/c++/13/pstl/glue_algorithm_defs.h \
+ /mnt/d/workspace/optionMM/include/strategy/quote_lifecycle.h \
+ /usr/include/c++/13/cmath /usr/include/math.h \
  /usr/include/x86_64-linux-gnu/bits/math-vector.h \
  /usr/include/x86_64-linux-gnu/bits/libm-simd-decl-stubs.h \
  /usr/include/x86_64-linux-gnu/bits/flt-eval-method.h \
@@ -417,7 +406,12 @@ CMakeFiles/test_simple_mm.dir/tests/test_simple_mm.cpp.o: \
  /usr/include/c++/13/tr1/poly_hermite.tcc \
  /usr/include/c++/13/tr1/poly_laguerre.tcc \
  /usr/include/c++/13/tr1/riemann_zeta.tcc \
- /usr/include/c++/13/bits/random.h \
+ /mnt/d/workspace/optionMM/include/common/trading_calendar.h \
+ /mnt/d/workspace/optionMM/include/gateway/sim_gateway.h \
+ /mnt/d/workspace/optionMM/include/gateway/gateway.h \
+ /mnt/d/workspace/optionMM/include/common/instrument_lookup.h \
+ /mnt/d/workspace/optionMM/include/common/fixed_hash_table.h \
+ /usr/include/c++/13/random /usr/include/c++/13/bits/random.h \
  /usr/include/x86_64-linux-gnu/c++/13/bits/opt_random.h \
  /usr/include/c++/13/bits/random.tcc /usr/include/c++/13/numeric \
  /usr/include/c++/13/bits/stl_numeric.h \
@@ -430,13 +424,10 @@ CMakeFiles/test_simple_mm.dir/tests/test_simple_mm.cpp.o: \
  /mnt/d/workspace/optionMM/include/pricing/svi.h \
  /mnt/d/workspace/optionMM/include/pricing/sabr.h \
  /mnt/d/workspace/optionMM/include/pricing/cubic_spline.h \
- /usr/include/c++/13/algorithm \
- /usr/include/c++/13/pstl/glue_algorithm_defs.h \
  /mnt/d/workspace/optionMM/include/pricing/wing.h \
  /mnt/d/workspace/optionMM/include/pricing/orc_wing.h \
  /mnt/d/workspace/optionMM/include/strategy/arbitrage_strategy.h \
  /mnt/d/workspace/optionMM/include/strategy/arb_params.h \
  /mnt/d/workspace/optionMM/include/risk/post_trade_risk.h \
  /mnt/d/workspace/optionMM/include/monitoring/topic.h \
- /mnt/d/workspace/optionMM/include/persistence/data_repository.h \
- /mnt/d/workspace/optionMM/include/common/trading_calendar.h
+ /mnt/d/workspace/optionMM/include/persistence/data_repository.h

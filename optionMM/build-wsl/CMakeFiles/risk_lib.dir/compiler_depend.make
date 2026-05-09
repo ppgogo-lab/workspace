@@ -137,21 +137,12 @@ CMakeFiles/risk_lib.dir/src/risk/post_trade_risk.cpp.o: /mnt/d/workspace/optionM
   /usr/include/x86_64-linux-gnu/bits/mathcalls.h \
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
-  /usr/include/x86_64-linux-gnu/bits/select-decl.h \
   /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/select2.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio2-decl.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio2.h \
   /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h \
   /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib.h \
-  /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
-  /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
   /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
   /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
   /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
@@ -183,8 +174,6 @@ CMakeFiles/risk_lib.dir/src/risk/post_trade_risk.cpp.o: /mnt/d/workspace/optionM
   /usr/include/x86_64-linux-gnu/bits/waitflags.h \
   /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
   /usr/include/x86_64-linux-gnu/bits/wchar.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar2-decl.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar2.h \
   /usr/include/x86_64-linux-gnu/bits/wordsize.h \
   /usr/include/x86_64-linux-gnu/c++/13/bits/c++allocator.h \
   /usr/include/x86_64-linux-gnu/c++/13/bits/c++config.h \
@@ -402,21 +391,12 @@ CMakeFiles/risk_lib.dir/src/risk/pre_trade_risk.cpp.o: /mnt/d/workspace/optionMM
   /usr/include/x86_64-linux-gnu/bits/long-double.h \
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
-  /usr/include/x86_64-linux-gnu/bits/select-decl.h \
   /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/select2.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio2-decl.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio2.h \
   /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h \
   /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib.h \
-  /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
-  /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
   /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
   /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
   /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
@@ -448,8 +428,6 @@ CMakeFiles/risk_lib.dir/src/risk/pre_trade_risk.cpp.o: /mnt/d/workspace/optionMM
   /usr/include/x86_64-linux-gnu/bits/waitflags.h \
   /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
   /usr/include/x86_64-linux-gnu/bits/wchar.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar2-decl.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar2.h \
   /usr/include/x86_64-linux-gnu/bits/wordsize.h \
   /usr/include/x86_64-linux-gnu/c++/13/bits/c++allocator.h \
   /usr/include/x86_64-linux-gnu/c++/13/bits/c++config.h \
@@ -594,16 +572,6 @@ CMakeFiles/risk_lib.dir/src/risk/pre_trade_risk.cpp.o: /mnt/d/workspace/optionMM
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/rtmintrin.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/rdseedintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/raointintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/popcntintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/pmmintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/pkuintrin.h:
-
 /usr/include/x86_64-linux-gnu/bits/flt-eval-method.h:
 
 /usr/include/c++/13/bits/localefwd.h:
@@ -626,19 +594,11 @@ CMakeFiles/risk_lib.dir/src/risk/pre_trade_risk.cpp.o: /mnt/d/workspace/optionMM
 
 /usr/include/c++/13/bits/atomic_lockfree_defines.h:
 
-/usr/include/x86_64-linux-gnu/bits/stdlib.h:
-
 /usr/include/x86_64-linux-gnu/bits/endian.h:
 
 /usr/include/string.h:
 
-/usr/include/x86_64-linux-gnu/bits/stdio.h:
-
 /usr/include/stdlib.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/pconfigintrin.h:
-
-/usr/include/x86_64-linux-gnu/bits/fp-fast.h:
 
 /usr/include/features-time64.h:
 
@@ -647,6 +607,8 @@ CMakeFiles/risk_lib.dir/src/risk/pre_trade_risk.cpp.o: /mnt/d/workspace/optionMM
 /usr/include/endian.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/bmiintrin.h:
+
+/usr/include/x86_64-linux-gnu/bits/fp-logb.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/avxintrin.h:
 
@@ -676,10 +638,6 @@ CMakeFiles/risk_lib.dir/src/risk/pre_trade_risk.cpp.o: /mnt/d/workspace/optionMM
 
 /usr/include/c++/13/tr1/ell_integral.tcc:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/mwaitxintrin.h:
-
-/usr/include/c++/13/tr1/exp_integral.tcc:
-
 /usr/lib/gcc/x86_64-linux-gnu/13/include/gfniintrin.h:
 
 /usr/include/x86_64-linux-gnu/bits/wordsize.h:
@@ -696,17 +654,17 @@ CMakeFiles/risk_lib.dir/src/risk/pre_trade_risk.cpp.o: /mnt/d/workspace/optionMM
 
 /usr/include/c++/13/initializer_list:
 
-/usr/include/x86_64-linux-gnu/bits/wchar2-decl.h:
-
 /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vnniintrin.h:
 
 /usr/include/errno.h:
 
 /usr/include/c++/13/bits/functional_hash.h:
 
-/usr/include/c++/13/debug/assertions.h:
+/usr/include/x86_64-linux-gnu/bits/fp-fast.h:
 
-/usr/include/x86_64-linux-gnu/bits/select-decl.h:
+/usr/lib/gcc/x86_64-linux-gnu/13/include/pconfigintrin.h:
+
+/usr/include/c++/13/debug/assertions.h:
 
 /usr/include/c++/13/bits/stl_function.h:
 
@@ -752,6 +710,8 @@ CMakeFiles/risk_lib.dir/src/risk/pre_trade_risk.cpp.o: /mnt/d/workspace/optionMM
 
 /usr/include/c++/13/bits/memory_resource.h:
 
+/usr/lib/gcc/x86_64-linux-gnu/13/include/pkuintrin.h:
+
 /usr/include/c++/13/tuple:
 
 /usr/include/c++/13/bits/nested_exception.h:
@@ -759,8 +719,6 @@ CMakeFiles/risk_lib.dir/src/risk/pre_trade_risk.cpp.o: /mnt/d/workspace/optionMM
 /usr/include/c++/13/cerrno:
 
 /usr/include/x86_64-linux-gnu/bits/stdint-least.h:
-
-/usr/include/x86_64-linux-gnu/bits/strings_fortified.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/mbstate_t.h:
 
@@ -770,6 +728,10 @@ CMakeFiles/risk_lib.dir/src/risk/pre_trade_risk.cpp.o: /mnt/d/workspace/optionMM
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/fxsrintrin.h:
 
+/usr/lib/gcc/x86_64-linux-gnu/13/include/raointintrin.h:
+
+/usr/include/c++/13/bits/ptr_traits.h:
+
 /usr/include/x86_64-linux-gnu/c++/13/bits/c++locale.h:
 
 /usr/include/x86_64-linux-gnu/c++/13/bits/os_defines.h:
@@ -777,12 +739,6 @@ CMakeFiles/risk_lib.dir/src/risk/pre_trade_risk.cpp.o: /mnt/d/workspace/optionMM
 /usr/include/c++/13/bits/char_traits.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/clock_t.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/movdirintrin.h:
-
-/usr/include/stdio.h:
-
-/usr/include/c++/13/bits/stl_iterator_base_types.h:
 
 /usr/include/c++/13/bits/basic_string.tcc:
 
@@ -814,10 +770,6 @@ CMakeFiles/risk_lib.dir/src/risk/pre_trade_risk.cpp.o: /mnt/d/workspace/optionMM
 
 /usr/include/x86_64-linux-gnu/bits/iscanonical.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/prfchwintrin.h:
-
-/usr/include/c++/13/iosfwd:
-
 /usr/include/c++/13/bits/predefined_ops.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/wbnoinvdintrin.h:
@@ -833,6 +785,8 @@ CMakeFiles/risk_lib.dir/src/risk/pre_trade_risk.cpp.o: /mnt/d/workspace/optionMM
 /usr/include/c++/13/bits/hash_bytes.h:
 
 /usr/include/x86_64-linux-gnu/bits/math-vector.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/pmmintrin.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/clflushoptintrin.h:
 
@@ -910,6 +864,10 @@ CMakeFiles/risk_lib.dir/src/risk/pre_trade_risk.cpp.o: /mnt/d/workspace/optionMM
 
 /usr/include/features.h:
 
+/usr/include/c++/13/iosfwd:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/prfchwintrin.h:
+
 /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512bwintrin.h:
 
 /usr/include/c++/13/bits/exception_defines.h:
@@ -956,10 +914,6 @@ CMakeFiles/risk_lib.dir/src/risk/pre_trade_risk.cpp.o: /mnt/d/workspace/optionMM
 
 /usr/include/x86_64-linux-gnu/sys/select.h:
 
-/usr/include/c++/13/bits/ptr_traits.h:
-
-/usr/include/x86_64-linux-gnu/bits/stdio2-decl.h:
-
 /usr/include/x86_64-linux-gnu/bits/stdio_lim.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/FILE.h:
@@ -998,8 +952,6 @@ CMakeFiles/risk_lib.dir/src/risk/pre_trade_risk.cpp.o: /mnt/d/workspace/optionMM
 
 /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h:
 
-/usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h:
-
 /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h:
@@ -1030,16 +982,6 @@ CMakeFiles/risk_lib.dir/src/risk/pre_trade_risk.cpp.o: /mnt/d/workspace/optionMM
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512fintrin.h:
 
-/usr/include/x86_64-linux-gnu/bits/fp-logb.h:
-
-/usr/include/x86_64-linux-gnu/bits/wchar2.h:
-
-/usr/include/x86_64-linux-gnu/gnu/stubs.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vbmivlintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/lwpintrin.h:
-
 /usr/lib/gcc/x86_64-linux-gnu/13/include/sgxintrin.h:
 
 /usr/include/x86_64-linux-gnu/c++/13/bits/c++config.h:
@@ -1059,8 +1001,6 @@ CMakeFiles/risk_lib.dir/src/risk/pre_trade_risk.cpp.o: /mnt/d/workspace/optionMM
 /usr/lib/gcc/x86_64-linux-gnu/13/include/amxfp16intrin.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/emmintrin.h:
-
-/usr/include/x86_64-linux-gnu/bits/string_fortified.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/avx2intrin.h:
 
@@ -1092,9 +1032,13 @@ CMakeFiles/risk_lib.dir/src/risk/pre_trade_risk.cpp.o: /mnt/d/workspace/optionMM
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vbmi2vlintrin.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/prfchiintrin.h:
+/usr/include/x86_64-linux-gnu/gnu/stubs.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vbmiintrin.h:
+/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vbmivlintrin.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/lwpintrin.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/rdseedintrin.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vlbwintrin.h:
 
@@ -1103,8 +1047,6 @@ CMakeFiles/risk_lib.dir/src/risk/pre_trade_risk.cpp.o: /mnt/d/workspace/optionMM
 /usr/include/c++/13/cmath:
 
 /mnt/d/workspace/optionMM/include/common/types.h:
-
-/usr/include/x86_64-linux-gnu/bits/select2.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vlintrin.h:
 
@@ -1124,8 +1066,6 @@ CMakeFiles/risk_lib.dir/src/risk/pre_trade_risk.cpp.o: /mnt/d/workspace/optionMM
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/cldemoteintrin.h:
 
-/usr/include/x86_64-linux-gnu/bits/stdio2.h:
-
 /usr/lib/gcc/x86_64-linux-gnu/13/include/clwbintrin.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/cmpccxaddintrin.h:
@@ -1133,10 +1073,6 @@ CMakeFiles/risk_lib.dir/src/risk/pre_trade_risk.cpp.o: /mnt/d/workspace/optionMM
 /usr/include/wchar.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/enqcmdintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/mwaitintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/f16cintrin.h:
 
 /usr/include/c++/13/tr1/beta_function.tcc:
 
@@ -1147,3 +1083,23 @@ CMakeFiles/risk_lib.dir/src/risk/pre_trade_risk.cpp.o: /mnt/d/workspace/optionMM
 /usr/lib/gcc/x86_64-linux-gnu/13/include/lzcntintrin.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/mm_malloc.h:
+
+/usr/include/stdio.h:
+
+/usr/include/c++/13/bits/stl_iterator_base_types.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/movdirintrin.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/f16cintrin.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/mwaitintrin.h:
+
+/usr/include/c++/13/tr1/exp_integral.tcc:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/mwaitxintrin.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/popcntintrin.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vbmiintrin.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/prfchiintrin.h:

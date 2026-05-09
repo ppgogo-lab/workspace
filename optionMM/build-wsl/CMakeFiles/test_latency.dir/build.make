@@ -95,9 +95,6 @@ test_latency: CMakeFiles/test_latency.dir/build.make
 test_latency: libengine_lib_test.a
 test_latency: /usr/lib/x86_64-linux-gnu/libgtest_main.a
 test_latency: libpricing_lib.a
-test_latency: /usr/lib/x86_64-linux-gnu/libceres.so.2.2.0
-test_latency: /usr/lib/x86_64-linux-gnu/libglog.so.0.6.0
-test_latency: /usr/lib/x86_64-linux-gnu/libgflags.so.2.2.2
 test_latency: libstrategy_lib.a
 test_latency: librisk_lib.a
 test_latency: libsim_gateway_lib.a

@@ -33,6 +33,16 @@ PROTOBUF_CONSTEXPR Greeks::Greeks(
   , /*decltype(_impl_.iv_)*/0
   , /*decltype(_impl_.t_)*/0
   , /*decltype(_impl_.calc_ts_ns_)*/int64_t{0}
+  , /*decltype(_impl_.std_delta_)*/0
+  , /*decltype(_impl_.delta_cash_)*/0
+  , /*decltype(_impl_.std_gamma_)*/0
+  , /*decltype(_impl_.gamma_cash_)*/0
+  , /*decltype(_impl_.vega_cash_)*/0
+  , /*decltype(_impl_.theta_cash_)*/0
+  , /*decltype(_impl_.rho_cash_)*/0
+  , /*decltype(_impl_.vanna_)*/0
+  , /*decltype(_impl_.volga_)*/0
+  , /*decltype(_impl_.charm_)*/0
   , /*decltype(_impl_.instrument_id_)*/0u
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct GreeksDefaultTypeInternal {
@@ -169,6 +179,8 @@ PROTOBUF_CONSTEXPR InstrumentInfo::InstrumentInfo(
   , /*decltype(_impl_.strike_)*/0
   , /*decltype(_impl_.underlying_id_)*/0u
   , /*decltype(_impl_.expiry_date_)*/0
+  , /*decltype(_impl_.tick_size_)*/0
+  , /*decltype(_impl_.multiplier_)*/0
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct InstrumentInfoDefaultTypeInternal {
   PROTOBUF_CONSTEXPR InstrumentInfoDefaultTypeInternal()
@@ -398,6 +410,21 @@ struct MMParamsDefaultTypeInternal {
   };
 };
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 MMParamsDefaultTypeInternal _MMParams_default_instance_;
+PROTOBUF_CONSTEXPR ProductPricingParams::ProductPricingParams(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.base_offset_type_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.base_offset_value_)*/0
+  , /*decltype(_impl_.product_index_)*/0u
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct ProductPricingParamsDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR ProductPricingParamsDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~ProductPricingParamsDefaultTypeInternal() {}
+  union {
+    ProductPricingParams _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 ProductPricingParamsDefaultTypeInternal _ProductPricingParams_default_instance_;
 PROTOBUF_CONSTEXPR ArbParams::ArbParams(
     ::_pbi::ConstantInitialized): _impl_{
     /*decltype(_impl_._has_bits_)*/{}
@@ -476,6 +503,33 @@ struct SetStrategyParamsResponseDefaultTypeInternal {
   };
 };
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 SetStrategyParamsResponseDefaultTypeInternal _SetStrategyParamsResponse_default_instance_;
+PROTOBUF_CONSTEXPR SetProductPricingParamsRequest::SetProductPricingParamsRequest(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.params_)*/nullptr
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct SetProductPricingParamsRequestDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR SetProductPricingParamsRequestDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~SetProductPricingParamsRequestDefaultTypeInternal() {}
+  union {
+    SetProductPricingParamsRequest _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 SetProductPricingParamsRequestDefaultTypeInternal _SetProductPricingParamsRequest_default_instance_;
+PROTOBUF_CONSTEXPR SetProductPricingParamsResponse::SetProductPricingParamsResponse(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.message_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.ok_)*/false
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct SetProductPricingParamsResponseDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR SetProductPricingParamsResponseDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~SetProductPricingParamsResponseDefaultTypeInternal() {}
+  union {
+    SetProductPricingParamsResponse _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 SetProductPricingParamsResponseDefaultTypeInternal _SetProductPricingParamsResponse_default_instance_;
 PROTOBUF_CONSTEXPR SetArbStrategyParamsRequest::SetArbStrategyParamsRequest(
     ::_pbi::ConstantInitialized): _impl_{
     /*decltype(_impl_.id_)*/nullptr
@@ -831,6 +885,7 @@ PROTOBUF_CONSTEXPR SnapshotResponse::SnapshotResponse(
   , /*decltype(_impl_.books_)*/{}
   , /*decltype(_impl_.book_positions_)*/{}
   , /*decltype(_impl_.book_portfolios_)*/{}
+  , /*decltype(_impl_.product_pricing_params_)*/{}
   , /*decltype(_impl_.portfolio_)*/nullptr
   , /*decltype(_impl_.risk_state_)*/nullptr
   , /*decltype(_impl_.current_user_)*/nullptr
@@ -859,7 +914,7 @@ struct StreamRequestDefaultTypeInternal {
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 StreamRequestDefaultTypeInternal _StreamRequest_default_instance_;
 }  // namespace proto
 }  // namespace omm
-static ::_pb::Metadata file_level_metadata_trading_2eproto[49];
+static ::_pb::Metadata file_level_metadata_trading_2eproto[52];
 static const ::_pb::EnumDescriptor* file_level_enum_descriptors_trading_2eproto[6];
 static constexpr ::_pb::ServiceDescriptor const** file_level_service_descriptors_trading_2eproto = nullptr;
 
@@ -880,6 +935,16 @@ const uint32_t TableStruct_trading_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(
   PROTOBUF_FIELD_OFFSET(::omm::proto::Greeks, _impl_.iv_),
   PROTOBUF_FIELD_OFFSET(::omm::proto::Greeks, _impl_.t_),
   PROTOBUF_FIELD_OFFSET(::omm::proto::Greeks, _impl_.calc_ts_ns_),
+  PROTOBUF_FIELD_OFFSET(::omm::proto::Greeks, _impl_.std_delta_),
+  PROTOBUF_FIELD_OFFSET(::omm::proto::Greeks, _impl_.delta_cash_),
+  PROTOBUF_FIELD_OFFSET(::omm::proto::Greeks, _impl_.std_gamma_),
+  PROTOBUF_FIELD_OFFSET(::omm::proto::Greeks, _impl_.gamma_cash_),
+  PROTOBUF_FIELD_OFFSET(::omm::proto::Greeks, _impl_.vega_cash_),
+  PROTOBUF_FIELD_OFFSET(::omm::proto::Greeks, _impl_.theta_cash_),
+  PROTOBUF_FIELD_OFFSET(::omm::proto::Greeks, _impl_.rho_cash_),
+  PROTOBUF_FIELD_OFFSET(::omm::proto::Greeks, _impl_.vanna_),
+  PROTOBUF_FIELD_OFFSET(::omm::proto::Greeks, _impl_.volga_),
+  PROTOBUF_FIELD_OFFSET(::omm::proto::Greeks, _impl_.charm_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::omm::proto::Position, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -973,6 +1038,8 @@ const uint32_t TableStruct_trading_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(
   PROTOBUF_FIELD_OFFSET(::omm::proto::InstrumentInfo, _impl_.underlying_id_),
   PROTOBUF_FIELD_OFFSET(::omm::proto::InstrumentInfo, _impl_.exchange_id_),
   PROTOBUF_FIELD_OFFSET(::omm::proto::InstrumentInfo, _impl_.expiry_date_),
+  PROTOBUF_FIELD_OFFSET(::omm::proto::InstrumentInfo, _impl_.tick_size_),
+  PROTOBUF_FIELD_OFFSET(::omm::proto::InstrumentInfo, _impl_.multiplier_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::omm::proto::UserInfo, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -1133,6 +1200,15 @@ const uint32_t TableStruct_trading_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(
   16,
   17,
   11,
+  ~0u,  // no _has_bits_
+  PROTOBUF_FIELD_OFFSET(::omm::proto::ProductPricingParams, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
+  ~0u,  // no _inlined_string_donated_
+  PROTOBUF_FIELD_OFFSET(::omm::proto::ProductPricingParams, _impl_.product_index_),
+  PROTOBUF_FIELD_OFFSET(::omm::proto::ProductPricingParams, _impl_.base_offset_type_),
+  PROTOBUF_FIELD_OFFSET(::omm::proto::ProductPricingParams, _impl_.base_offset_value_),
   PROTOBUF_FIELD_OFFSET(::omm::proto::ArbParams, _impl_._has_bits_),
   PROTOBUF_FIELD_OFFSET(::omm::proto::ArbParams, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -1188,6 +1264,21 @@ const uint32_t TableStruct_trading_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(
   ~0u,  // no _inlined_string_donated_
   PROTOBUF_FIELD_OFFSET(::omm::proto::SetStrategyParamsResponse, _impl_.ok_),
   PROTOBUF_FIELD_OFFSET(::omm::proto::SetStrategyParamsResponse, _impl_.message_),
+  ~0u,  // no _has_bits_
+  PROTOBUF_FIELD_OFFSET(::omm::proto::SetProductPricingParamsRequest, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
+  ~0u,  // no _inlined_string_donated_
+  PROTOBUF_FIELD_OFFSET(::omm::proto::SetProductPricingParamsRequest, _impl_.params_),
+  ~0u,  // no _has_bits_
+  PROTOBUF_FIELD_OFFSET(::omm::proto::SetProductPricingParamsResponse, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
+  ~0u,  // no _inlined_string_donated_
+  PROTOBUF_FIELD_OFFSET(::omm::proto::SetProductPricingParamsResponse, _impl_.ok_),
+  PROTOBUF_FIELD_OFFSET(::omm::proto::SetProductPricingParamsResponse, _impl_.message_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::omm::proto::SetArbStrategyParamsRequest, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -1426,6 +1517,7 @@ const uint32_t TableStruct_trading_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(
   PROTOBUF_FIELD_OFFSET(::omm::proto::SnapshotResponse, _impl_.books_),
   PROTOBUF_FIELD_OFFSET(::omm::proto::SnapshotResponse, _impl_.book_positions_),
   PROTOBUF_FIELD_OFFSET(::omm::proto::SnapshotResponse, _impl_.book_portfolios_),
+  PROTOBUF_FIELD_OFFSET(::omm::proto::SnapshotResponse, _impl_.product_pricing_params_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::omm::proto::StreamRequest, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -1436,54 +1528,57 @@ const uint32_t TableStruct_trading_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(
 };
 static const ::_pbi::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   { 0, -1, -1, sizeof(::omm::proto::Greeks)},
-  { 16, -1, -1, sizeof(::omm::proto::Position)},
-  { 27, -1, -1, sizeof(::omm::proto::PortfolioGreeks)},
-  { 37, -1, -1, sizeof(::omm::proto::RiskAlert)},
-  { 46, -1, -1, sizeof(::omm::proto::Tick)},
-  { 60, -1, -1, sizeof(::omm::proto::OrderUpdate)},
-  { 78, -1, -1, sizeof(::omm::proto::QuoteUpdate)},
-  { 93, -1, -1, sizeof(::omm::proto::InstrumentInfo)},
-  { 109, -1, -1, sizeof(::omm::proto::UserInfo)},
-  { 120, -1, -1, sizeof(::omm::proto::LoginRequest)},
-  { 128, -1, -1, sizeof(::omm::proto::LoginResponse)},
-  { 138, -1, -1, sizeof(::omm::proto::LogoutRequest)},
-  { 144, -1, -1, sizeof(::omm::proto::LogoutResponse)},
-  { 153, -1, -1, sizeof(::omm::proto::WhoAmIRequest)},
-  { 159, -1, -1, sizeof(::omm::proto::WhoAmIResponse)},
-  { 168, -1, -1, sizeof(::omm::proto::BookInfo)},
-  { 179, -1, -1, sizeof(::omm::proto::BookPosition)},
-  { 194, -1, -1, sizeof(::omm::proto::BookPortfolio)},
-  { 209, -1, -1, sizeof(::omm::proto::VolSurfaceSlice)},
-  { 218, -1, -1, sizeof(::omm::proto::VolSurface)},
-  { 227, 251, -1, sizeof(::omm::proto::MMParams)},
-  { 269, 283, -1, sizeof(::omm::proto::ArbParams)},
-  { 291, -1, -1, sizeof(::omm::proto::ArbStrategyId)},
-  { 299, -1, -1, sizeof(::omm::proto::ArbStrategyParamsEntry)},
-  { 308, -1, -1, sizeof(::omm::proto::SetStrategyParamsRequest)},
-  { 316, -1, -1, sizeof(::omm::proto::SetStrategyParamsResponse)},
-  { 324, -1, -1, sizeof(::omm::proto::SetArbStrategyParamsRequest)},
-  { 332, -1, -1, sizeof(::omm::proto::SetArbStrategyParamsResponse)},
-  { 340, -1, -1, sizeof(::omm::proto::StartStopRequest)},
-  { 347, -1, -1, sizeof(::omm::proto::StartStopResponse)},
-  { 355, -1, -1, sizeof(::omm::proto::ArbStartStopRequest)},
-  { 362, -1, -1, sizeof(::omm::proto::ArbStartStopResponse)},
-  { 370, -1, -1, sizeof(::omm::proto::RiskThreshold)},
-  { 380, -1, -1, sizeof(::omm::proto::RiskState)},
-  { 391, -1, -1, sizeof(::omm::proto::ProductMMState)},
-  { 402, -1, -1, sizeof(::omm::proto::InstrumentMMState)},
-  { 415, -1, -1, sizeof(::omm::proto::ArbStrategyState)},
-  { 436, -1, -1, sizeof(::omm::proto::PcpOpportunityState)},
-  { 462, -1, -1, sizeof(::omm::proto::SetRiskThresholdRequest)},
-  { 469, -1, -1, sizeof(::omm::proto::SetRiskThresholdResponse)},
-  { 477, 488, -1, sizeof(::omm::proto::ManualOrderRequest)},
-  { 493, -1, -1, sizeof(::omm::proto::ManualOrderResponse)},
-  { 503, -1, -1, sizeof(::omm::proto::CancelOrderRequest)},
-  { 511, -1, -1, sizeof(::omm::proto::CancelOrderResponse)},
-  { 519, -1, -1, sizeof(::omm::proto::CancelQuoteRequest)},
-  { 527, -1, -1, sizeof(::omm::proto::CancelQuoteResponse)},
-  { 535, -1, -1, sizeof(::omm::proto::SnapshotRequest)},
-  { 541, -1, -1, sizeof(::omm::proto::SnapshotResponse)},
-  { 562, -1, -1, sizeof(::omm::proto::StreamRequest)},
+  { 26, -1, -1, sizeof(::omm::proto::Position)},
+  { 37, -1, -1, sizeof(::omm::proto::PortfolioGreeks)},
+  { 47, -1, -1, sizeof(::omm::proto::RiskAlert)},
+  { 56, -1, -1, sizeof(::omm::proto::Tick)},
+  { 70, -1, -1, sizeof(::omm::proto::OrderUpdate)},
+  { 88, -1, -1, sizeof(::omm::proto::QuoteUpdate)},
+  { 103, -1, -1, sizeof(::omm::proto::InstrumentInfo)},
+  { 121, -1, -1, sizeof(::omm::proto::UserInfo)},
+  { 132, -1, -1, sizeof(::omm::proto::LoginRequest)},
+  { 140, -1, -1, sizeof(::omm::proto::LoginResponse)},
+  { 150, -1, -1, sizeof(::omm::proto::LogoutRequest)},
+  { 156, -1, -1, sizeof(::omm::proto::LogoutResponse)},
+  { 165, -1, -1, sizeof(::omm::proto::WhoAmIRequest)},
+  { 171, -1, -1, sizeof(::omm::proto::WhoAmIResponse)},
+  { 180, -1, -1, sizeof(::omm::proto::BookInfo)},
+  { 191, -1, -1, sizeof(::omm::proto::BookPosition)},
+  { 206, -1, -1, sizeof(::omm::proto::BookPortfolio)},
+  { 221, -1, -1, sizeof(::omm::proto::VolSurfaceSlice)},
+  { 230, -1, -1, sizeof(::omm::proto::VolSurface)},
+  { 239, 263, -1, sizeof(::omm::proto::MMParams)},
+  { 281, -1, -1, sizeof(::omm::proto::ProductPricingParams)},
+  { 290, 304, -1, sizeof(::omm::proto::ArbParams)},
+  { 312, -1, -1, sizeof(::omm::proto::ArbStrategyId)},
+  { 320, -1, -1, sizeof(::omm::proto::ArbStrategyParamsEntry)},
+  { 329, -1, -1, sizeof(::omm::proto::SetStrategyParamsRequest)},
+  { 337, -1, -1, sizeof(::omm::proto::SetStrategyParamsResponse)},
+  { 345, -1, -1, sizeof(::omm::proto::SetProductPricingParamsRequest)},
+  { 352, -1, -1, sizeof(::omm::proto::SetProductPricingParamsResponse)},
+  { 360, -1, -1, sizeof(::omm::proto::SetArbStrategyParamsRequest)},
+  { 368, -1, -1, sizeof(::omm::proto::SetArbStrategyParamsResponse)},
+  { 376, -1, -1, sizeof(::omm::proto::StartStopRequest)},
+  { 383, -1, -1, sizeof(::omm::proto::StartStopResponse)},
+  { 391, -1, -1, sizeof(::omm::proto::ArbStartStopRequest)},
+  { 398, -1, -1, sizeof(::omm::proto::ArbStartStopResponse)},
+  { 406, -1, -1, sizeof(::omm::proto::RiskThreshold)},
+  { 416, -1, -1, sizeof(::omm::proto::RiskState)},
+  { 427, -1, -1, sizeof(::omm::proto::ProductMMState)},
+  { 438, -1, -1, sizeof(::omm::proto::InstrumentMMState)},
+  { 451, -1, -1, sizeof(::omm::proto::ArbStrategyState)},
+  { 472, -1, -1, sizeof(::omm::proto::PcpOpportunityState)},
+  { 498, -1, -1, sizeof(::omm::proto::SetRiskThresholdRequest)},
+  { 505, -1, -1, sizeof(::omm::proto::SetRiskThresholdResponse)},
+  { 513, 524, -1, sizeof(::omm::proto::ManualOrderRequest)},
+  { 529, -1, -1, sizeof(::omm::proto::ManualOrderResponse)},
+  { 539, -1, -1, sizeof(::omm::proto::CancelOrderRequest)},
+  { 547, -1, -1, sizeof(::omm::proto::CancelOrderResponse)},
+  { 555, -1, -1, sizeof(::omm::proto::CancelQuoteRequest)},
+  { 563, -1, -1, sizeof(::omm::proto::CancelQuoteResponse)},
+  { 571, -1, -1, sizeof(::omm::proto::SnapshotRequest)},
+  { 577, -1, -1, sizeof(::omm::proto::SnapshotResponse)},
+  { 599, -1, -1, sizeof(::omm::proto::StreamRequest)},
 };
 
 static const ::_pb::Message* const file_default_instances[] = {
@@ -1508,11 +1603,14 @@ static const ::_pb::Message* const file_default_instances[] = {
   &::omm::proto::_VolSurfaceSlice_default_instance_._instance,
   &::omm::proto::_VolSurface_default_instance_._instance,
   &::omm::proto::_MMParams_default_instance_._instance,
+  &::omm::proto::_ProductPricingParams_default_instance_._instance,
   &::omm::proto::_ArbParams_default_instance_._instance,
   &::omm::proto::_ArbStrategyId_default_instance_._instance,
   &::omm::proto::_ArbStrategyParamsEntry_default_instance_._instance,
   &::omm::proto::_SetStrategyParamsRequest_default_instance_._instance,
   &::omm::proto::_SetStrategyParamsResponse_default_instance_._instance,
+  &::omm::proto::_SetProductPricingParamsRequest_default_instance_._instance,
+  &::omm::proto::_SetProductPricingParamsResponse_default_instance_._instance,
   &::omm::proto::_SetArbStrategyParamsRequest_default_instance_._instance,
   &::omm::proto::_SetArbStrategyParamsResponse_default_instance_._instance,
   &::omm::proto::_StartStopRequest_default_instance_._instance,
@@ -1539,273 +1637,289 @@ static const ::_pb::Message* const file_default_instances[] = {
 };
 
 const char descriptor_table_protodef_trading_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
-  "\n\rtrading.proto\022\tomm.proto\"\246\001\n\006Greeks\022\025\n"
+  "\n\rtrading.proto\022\tomm.proto\"\332\002\n\006Greeks\022\025\n"
   "\rinstrument_id\030\001 \001(\r\022\022\n\ntheo_price\030\002 \001(\001"
   "\022\r\n\005delta\030\003 \001(\001\022\r\n\005gamma\030\004 \001(\001\022\014\n\004vega\030\005"
   " \001(\001\022\r\n\005theta\030\006 \001(\001\022\013\n\003rho\030\007 \001(\001\022\n\n\002iv\030\010"
-  " \001(\001\022\t\n\001T\030\t \001(\001\022\022\n\ncalc_ts_ns\030\n \001(\003\"x\n\010P"
-  "osition\022\025\n\rinstrument_id\030\001 \001(\r\022\024\n\014net_po"
-  "sition\030\002 \001(\005\022\021\n\tavg_price\030\003 \001(\001\022\024\n\014reali"
-  "zed_pnl\030\004 \001(\001\022\026\n\016unrealized_pnl\030\005 \001(\001\"d\n"
-  "\017PortfolioGreeks\022\023\n\013total_delta\030\001 \001(\001\022\023\n"
-  "\013total_gamma\030\002 \001(\001\022\022\n\ntotal_vega\030\003 \001(\001\022\023"
-  "\n\013total_theta\030\004 \001(\001\"\312\001\n\tRiskAlert\022,\n\004typ"
-  "e\030\001 \001(\0162\036.omm.proto.RiskAlert.AlertType\022"
-  "\017\n\007message\030\002 \001(\t\022\r\n\005ts_ns\030\003 \001(\003\"o\n\tAlert"
-  "Type\022\023\n\017POSITION_BREACH\020\000\022\020\n\014DELTA_BREAC"
-  "H\020\001\022\020\n\014GAMMA_BREACH\020\002\022\017\n\013VEGA_BREACH\020\003\022\030"
-  "\n\024QUOTE_CANCEL_GIVE_UP\020\004\"\253\001\n\004Tick\022\025\n\rins"
-  "trument_id\030\001 \001(\r\022\022\n\nlast_price\030\002 \001(\001\022\021\n\t"
-  "bid_price\030\003 \001(\001\022\021\n\task_price\030\004 \001(\001\022\022\n\nbi"
-  "d_volume\030\005 \001(\005\022\022\n\nask_volume\030\006 \001(\005\022\026\n\016ex"
-  "change_ts_ns\030\007 \001(\003\022\022\n\nrecv_ts_ns\030\010 \001(\003\"\363"
-  "\001\n\013OrderUpdate\022\027\n\017client_order_id\030\001 \001(\004\022"
-  "\025\n\rinstrument_id\030\002 \001(\r\022\016\n\006status\030\003 \001(\t\022\022"
-  "\n\nfill_price\030\004 \001(\001\022\023\n\013fill_volume\030\005 \001(\005\022"
-  "\r\n\005ts_ns\030\006 \001(\003\022\023\n\013exchange_id\030\007 \001(\t\022\014\n\004s"
-  "ide\030\010 \001(\t\022\r\n\005price\030\t \001(\001\022\016\n\006volume\030\n \001(\005"
-  "\022\031\n\021exchange_trade_id\030\013 \001(\004\022\017\n\007book_id\030\014"
-  " \001(\r\"\273\001\n\013QuoteUpdate\022\027\n\017client_quote_id\030"
-  "\001 \001(\004\022\025\n\rinstrument_id\030\002 \001(\r\022\021\n\tbid_pric"
-  "e\030\003 \001(\001\022\021\n\task_price\030\004 \001(\001\022\022\n\nbid_volume"
-  "\030\005 \001(\005\022\022\n\nask_volume\030\006 \001(\005\022\016\n\006status\030\007 \001"
-  "(\t\022\r\n\005ts_ns\030\010 \001(\003\022\017\n\007book_id\030\t \001(\r\"\331\001\n\016I"
-  "nstrumentInfo\022\025\n\rinstrument_id\030\001 \001(\r\022\014\n\004"
-  "code\030\002 \001(\t\022\027\n\017underlying_code\030\003 \001(\t\022\014\n\004k"
-  "ind\030\004 \001(\t\022\023\n\013option_type\030\005 \001(\t\022\016\n\006strike"
-  "\030\006 \001(\001\022\025\n\rproduct_index\030\007 \001(\r\022\025\n\runderly"
-  "ing_id\030\010 \001(\r\022\023\n\013exchange_id\030\t \001(\t\022\023\n\013exp"
-  "iry_date\030\n \001(\005\"l\n\010UserInfo\022\017\n\007user_id\030\001 "
-  "\001(\r\022\020\n\010username\030\002 \001(\t\022\024\n\014display_name\030\003 "
-  "\001(\t\022\016\n\006active\030\004 \001(\010\022\027\n\017default_book_id\030\005"
-  " \001(\r\"2\n\014LoginRequest\022\020\n\010username\030\001 \001(\t\022\020"
-  "\n\010password\030\002 \001(\t\"f\n\rLoginResponse\022\n\n\002ok\030"
-  "\001 \001(\010\022\017\n\007message\030\002 \001(\t\022\025\n\rsession_token\030"
-  "\003 \001(\t\022!\n\004user\030\004 \001(\0132\023.omm.proto.UserInfo"
-  "\"\017\n\rLogoutRequest\"I\n\016LogoutResponse\022\n\n\002o"
-  "k\030\001 \001(\010\022\017\n\007message\030\002 \001(\t\022\032\n\022triggered_sh"
-  "utdown\030\003 \001(\010\"\017\n\rWhoAmIRequest\"P\n\016WhoAmIR"
-  "esponse\022\n\n\002ok\030\001 \001(\010\022\017\n\007message\030\002 \001(\t\022!\n\004"
-  "user\030\003 \001(\0132\023.omm.proto.UserInfo\"i\n\010BookI"
-  "nfo\022\017\n\007book_id\030\001 \001(\r\022\021\n\tbook_code\030\002 \001(\t\022"
-  "\024\n\014display_name\030\003 \001(\t\022\016\n\006active\030\004 \001(\010\022\023\n"
-  "\013description\030\005 \001(\t\"\331\001\n\014BookPosition\022\017\n\007b"
-  "ook_id\030\001 \001(\r\022\025\n\rinstrument_id\030\002 \001(\r\022\025\n\rp"
-  "roduct_index\030\003 \001(\r\022\024\n\014net_position\030\004 \001(\005"
-  "\022\025\n\rlong_position\030\005 \001(\005\022\026\n\016short_positio"
-  "n\030\006 \001(\005\022\026\n\016avg_long_price\030\007 \001(\001\022\027\n\017avg_s"
-  "hort_price\030\010 \001(\001\022\024\n\014realized_pnl\030\t \001(\001\"\314"
-  "\001\n\rBookPortfolio\022\017\n\007book_id\030\001 \001(\r\022\025\n\rpro"
-  "duct_index\030\002 \001(\r\022\023\n\013total_delta\030\003 \001(\001\022\023\n"
-  "\013total_gamma\030\004 \001(\001\022\022\n\ntotal_vega\030\005 \001(\001\022\023"
-  "\n\013total_theta\030\006 \001(\001\022\024\n\014realized_pnl\030\007 \001("
-  "\001\022\026\n\016unrealized_pnl\030\010 \001(\001\022\022\n\ncalc_ts_ns\030"
-  "\t \001(\003\"B\n\017VolSurfaceSlice\022\020\n\010expiry_T\030\001 \001"
-  "(\001\022\017\n\007strikes\030\002 \003(\001\022\014\n\004vols\030\003 \003(\001\"b\n\nVol"
-  "Surface\022\025\n\rproduct_index\030\001 \001(\r\022*\n\006slices"
-  "\030\002 \003(\0132\032.omm.proto.VolSurfaceSlice\022\021\n\tfi"
-  "t_ts_ns\030\003 \001(\003\"\300\010\n\010MMParams\022\027\n\nbid_spread"
-  "\030\001 \001(\001H\000\210\001\001\022\027\n\nask_spread\030\002 \001(\001H\001\210\001\001\022$\n\027"
-  "product_delta_threshold\030\003 \001(\001H\002\210\001\001\022\031\n\014qu"
-  "ote_volume\030\004 \001(\005H\003\210\001\001\022\031\n\014max_position\030\005 "
-  "\001(\005H\004\210\001\001\022\024\n\007enabled\030\006 \001(\010H\005\210\001\001\022#\n\026produc"
-  "t_vega_threshold\030\007 \001(\001H\006\210\001\001\022\"\n\025min_quote"
-  "_interval_ms\030\010 \001(\001H\007\210\001\001\022\035\n\020warning_posit"
-  "ion\030\t \001(\005H\010\210\001\001\022#\n\026base_half_spread_ticks"
-  "\030\n \001(\001H\t\210\001\001\022\"\n\025min_half_spread_ticks\030\013 \001"
-  "(\001H\n\210\001\001\022\"\n\025max_half_spread_ticks\030\014 \001(\001H\013"
-  "\210\001\001\022)\n\034inventory_skew_per_lot_ticks\030\r \001("
-  "\001H\014\210\001\001\022\032\n\rfollow_weight\030\016 \001(\001H\r\210\001\001\022(\n\033re"
-  "quote_price_epsilon_ticks\030\017 \001(\001H\016\210\001\001\022/\n\""
-  "market_width_widen_threshold_ticks\030\020 \001(\001"
-  "H\017\210\001\001\0222\n%underlying_move_widen_threshold"
-  "_ticks\030\021 \001(\001H\020\210\001\001\022$\n\027use_one_sided_at_li"
-  "mits\030\022 \001(\010H\021\210\001\001B\r\n\013_bid_spreadB\r\n\013_ask_s"
-  "preadB\032\n\030_product_delta_thresholdB\017\n\r_qu"
-  "ote_volumeB\017\n\r_max_positionB\n\n\010_enabledB"
-  "\031\n\027_product_vega_thresholdB\030\n\026_min_quote"
-  "_interval_msB\023\n\021_warning_positionB\031\n\027_ba"
-  "se_half_spread_ticksB\030\n\026_min_half_spread"
-  "_ticksB\030\n\026_max_half_spread_ticksB\037\n\035_inv"
-  "entory_skew_per_lot_ticksB\020\n\016_follow_wei"
-  "ghtB\036\n\034_requote_price_epsilon_ticksB%\n#_"
-  "market_width_widen_threshold_ticksB(\n&_u"
-  "nderlying_move_widen_threshold_ticksB\032\n\030"
-  "_use_one_sided_at_limits\"\221\003\n\tArbParams\022\033"
-  "\n\016min_edge_ticks\030\001 \001(\001H\000\210\001\001\022\030\n\013cooldown_"
-  "ms\030\002 \001(\001H\001\210\001\001\022\035\n\020scan_interval_ms\030\003 \001(\001H"
-  "\002\210\001\001\022\037\n\022cleanup_timeout_ms\030\004 \001(\001H\003\210\001\001\022\035\n"
-  "\020max_order_volume\030\005 \001(\005H\004\210\001\001\022\034\n\017max_live"
-  "_orders\030\006 \001(\005H\005\210\001\001\022\037\n\022cleanup_on_partial"
-  "\030\007 \001(\010H\006\210\001\001\022\024\n\007enabled\030\010 \001(\010H\007\210\001\001B\021\n\017_mi"
-  "n_edge_ticksB\016\n\014_cooldown_msB\023\n\021_scan_in"
-  "terval_msB\025\n\023_cleanup_timeout_msB\023\n\021_max"
-  "_order_volumeB\022\n\020_max_live_ordersB\025\n\023_cl"
-  "eanup_on_partialB\n\n\010_enabled\"_\n\rArbStrat"
-  "egyId\022\025\n\rproduct_index\030\001 \001(\r\0227\n\rstrategy"
-  "_type\030\002 \001(\0162 .omm.proto.ArbitrageStrateg"
-  "yType\"\216\001\n\026ArbStrategyParamsEntry\022\025\n\rprod"
-  "uct_index\030\001 \001(\r\0227\n\rstrategy_type\030\002 \001(\0162 "
-  ".omm.proto.ArbitrageStrategyType\022$\n\006para"
-  "ms\030\003 \001(\0132\024.omm.proto.ArbParams\"V\n\030SetStr"
-  "ategyParamsRequest\022\025\n\rproduct_index\030\001 \001("
-  "\r\022#\n\006params\030\002 \001(\0132\023.omm.proto.MMParams\"8"
-  "\n\031SetStrategyParamsResponse\022\n\n\002ok\030\001 \001(\010\022"
-  "\017\n\007message\030\002 \001(\t\"i\n\033SetArbStrategyParams"
-  "Request\022$\n\002id\030\001 \001(\0132\030.omm.proto.ArbStrat"
-  "egyId\022$\n\006params\030\002 \001(\0132\024.omm.proto.ArbPar"
-  "ams\";\n\034SetArbStrategyParamsResponse\022\n\n\002o"
-  "k\030\001 \001(\010\022\017\n\007message\030\002 \001(\t\")\n\020StartStopReq"
-  "uest\022\025\n\rproduct_index\030\001 \001(\005\"0\n\021StartStop"
-  "Response\022\n\n\002ok\030\001 \001(\010\022\017\n\007message\030\002 \001(\t\";\n"
-  "\023ArbStartStopRequest\022$\n\002id\030\001 \001(\0132\030.omm.p"
-  "roto.ArbStrategyId\"3\n\024ArbStartStopRespon"
-  "se\022\n\n\002ok\030\001 \001(\010\022\017\n\007message\030\002 \001(\t\"a\n\rRiskT"
-  "hreshold\022\030\n\020max_net_position\030\001 \001(\001\022\021\n\tma"
-  "x_delta\030\002 \001(\001\022\021\n\tmax_gamma\030\003 \001(\001\022\020\n\010max_"
-  "vega\030\004 \001(\001\"\222\001\n\tRiskState\022+\n\tthreshold\030\001 "
-  "\001(\0132\030.omm.proto.RiskThreshold\022\027\n\017positio"
-  "n_breach\030\002 \001(\010\022\024\n\014delta_breach\030\003 \001(\010\022\024\n\014"
-  "gamma_breach\030\004 \001(\010\022\023\n\013vega_breach\030\005 \001(\010\""
-  "\241\001\n\016ProductMMState\022\025\n\rproduct_index\030\001 \001("
-  "\r\022\030\n\020strategy_enabled\030\002 \001(\010\022\024\n\014session_o"
-  "pen\030\003 \001(\010\022\032\n\022product_suppressed\030\004 \001(\010\022,\n"
-  "\007reasons\030\005 \003(\0162\033.omm.proto.MMSuppressRea"
-  "son\"\346\001\n\021InstrumentMMState\022\025\n\rinstrument_"
-  "id\030\001 \001(\r\022\025\n\rproduct_index\030\002 \001(\r\022,\n\013quote"
-  "_state\030\003 \001(\0162\027.omm.proto.MMQuoteState\022,\n"
-  "\007reasons\030\004 \003(\0162\033.omm.proto.MMSuppressRea"
-  "son\022\024\n\014net_position\030\005 \001(\005\022\027\n\017cancel_atte"
-  "mpts\030\006 \001(\r\022\030\n\020last_quote_ts_ns\030\007 \001(\003\"\254\003\n"
-  "\020ArbStrategyState\022\025\n\rproduct_index\030\001 \001(\r"
-  "\0227\n\rstrategy_type\030\002 \001(\0162 .omm.proto.Arbi"
-  "trageStrategyType\022\017\n\007enabled\030\003 \001(\010\022\017\n\007ru"
-  "nning\030\004 \001(\010\022\026\n\016cleanup_active\030\005 \001(\010\022\023\n\013l"
-  "ive_orders\030\006 \001(\r\022\022\n\npair_count\030\007 \001(\r\022\026\n\016"
-  "active_call_id\030\010 \001(\r\022\025\n\ractive_put_id\030\t "
-  "\001(\r\022\030\n\020active_future_id\030\n \001(\r\022-\n\007reasons"
-  "\030\013 \003(\0162\034.omm.proto.ArbSuppressReason\022\027\n\017"
-  "last_edge_ticks\030\014 \001(\001\022\037\n\027last_trigger_ed"
-  "ge_ticks\030\r \001(\001\022\027\n\017last_eval_ts_ns\030\016 \001(\003\022"
-  "\032\n\022last_trigger_ts_ns\030\017 \001(\003\"\222\004\n\023PcpOppor"
-  "tunityState\022\025\n\rproduct_index\030\001 \001(\r\0227\n\rst"
-  "rategy_type\030\002 \001(\0162 .omm.proto.ArbitrageS"
-  "trategyType\022\017\n\007call_id\030\003 \001(\r\022\016\n\006put_id\030\004"
-  " \001(\r\022\021\n\tfuture_id\030\005 \001(\r\022\023\n\013expiry_date\030\006"
-  " \001(\005\022\016\n\006strike\030\007 \001(\001\022\024\n\014market_valid\030\010 \001"
-  "(\010\022\020\n\010selected\030\t \001(\010\022\027\n\017discount_factor\030"
-  "\n \001(\001\022\025\n\rsynthetic_bid\030\013 \001(\001\022\025\n\rsyntheti"
-  "c_ask\030\014 \001(\001\022\022\n\nfuture_bid\030\r \001(\001\022\022\n\nfutur"
-  "e_ask\030\016 \001(\001\022\035\n\025long_synth_edge_ticks\030\017 \001"
-  "(\001\022\036\n\026short_synth_edge_ticks\030\020 \001(\001\022\027\n\017be"
-  "st_edge_ticks\030\021 \001(\001\022:\n\016best_direction\030\022 "
-  "\001(\0162\".omm.proto.PcpOpportunityDirection\022"
-  "\023\n\013best_volume\030\023 \001(\005\022\022\n\neval_ts_ns\030\024 \001(\003"
-  "\"F\n\027SetRiskThresholdRequest\022+\n\tthreshold"
-  "\030\001 \001(\0132\030.omm.proto.RiskThreshold\"7\n\030SetR"
-  "iskThresholdResponse\022\n\n\002ok\030\001 \001(\010\022\017\n\007mess"
-  "age\030\002 \001(\t\"z\n\022ManualOrderRequest\022\025\n\rinstr"
-  "ument_id\030\001 \001(\r\022\014\n\004side\030\002 \001(\t\022\r\n\005price\030\003 "
-  "\001(\001\022\016\n\006volume\030\004 \001(\005\022\024\n\007book_id\030\005 \001(\rH\000\210\001"
-  "\001B\n\n\010_book_id\"U\n\023ManualOrderResponse\022\n\n\002"
-  "ok\030\001 \001(\010\022\017\n\007message\030\002 \001(\t\022\020\n\010order_id\030\003 "
-  "\001(\004\022\017\n\007book_id\030\004 \001(\r\"=\n\022CancelOrderReque"
-  "st\022\020\n\010order_id\030\001 \001(\004\022\025\n\rinstrument_id\030\002 "
-  "\001(\r\"2\n\023CancelOrderResponse\022\n\n\002ok\030\001 \001(\010\022\017"
-  "\n\007message\030\002 \001(\t\"=\n\022CancelQuoteRequest\022\020\n"
-  "\010quote_id\030\001 \001(\004\022\025\n\rinstrument_id\030\002 \001(\r\"2"
-  "\n\023CancelQuoteResponse\022\n\n\002ok\030\001 \001(\010\022\017\n\007mes"
-  "sage\030\002 \001(\t\"\021\n\017SnapshotRequest\"\331\005\n\020Snapsh"
-  "otResponse\022!\n\006greeks\030\001 \003(\0132\021.omm.proto.G"
-  "reeks\022&\n\tpositions\030\002 \003(\0132\023.omm.proto.Pos"
-  "ition\022-\n\tportfolio\030\003 \001(\0132\032.omm.proto.Por"
-  "tfolioGreeks\022&\n\tmm_params\030\004 \003(\0132\023.omm.pr"
-  "oto.MMParams\022.\n\013instruments\030\005 \003(\0132\031.omm."
-  "proto.InstrumentInfo\022(\n\nrisk_state\030\006 \001(\013"
-  "2\024.omm.proto.RiskState\0221\n\016product_states"
-  "\030\007 \003(\0132\031.omm.proto.ProductMMState\0227\n\021ins"
-  "trument_states\030\010 \003(\0132\034.omm.proto.Instrum"
-  "entMMState\0225\n\narb_params\030\t \003(\0132!.omm.pro"
-  "to.ArbStrategyParamsEntry\0228\n\023arb_strateg"
-  "y_states\030\n \003(\0132\033.omm.proto.ArbStrategySt"
-  "ate\0229\n\021pcp_opportunities\030\013 \003(\0132\036.omm.pro"
-  "to.PcpOpportunityState\022)\n\014current_user\030\014"
-  " \001(\0132\023.omm.proto.UserInfo\022\"\n\005books\030\r \003(\013"
-  "2\023.omm.proto.BookInfo\022/\n\016book_positions\030"
-  "\016 \003(\0132\027.omm.proto.BookPosition\0221\n\017book_p"
-  "ortfolios\030\017 \003(\0132\030.omm.proto.BookPortfoli"
-  "o\"&\n\rStreamRequest\022\025\n\rproduct_index\030\001 \001("
-  "\r*D\n\025ArbitrageStrategyType\022\025\n\021ARB_STRATE"
-  "GY_NONE\020\000\022\024\n\020ARB_STRATEGY_PCP\020\001*\240\001\n\014MMQu"
-  "oteState\022\021\n\rMM_QUOTE_IDLE\020\000\022\021\n\rMM_QUOTE_"
-  "LIVE\020\001\022\030\n\024MM_QUOTE_ACK_PENDING\020\002\022\033\n\027MM_Q"
-  "UOTE_CANCEL_PENDING\020\003\022\032\n\026MM_QUOTE_CANCEL"
-  "_FAILED\020\004\022\027\n\023MM_QUOTE_SUPPRESSED\020\005*\300\002\n\020M"
-  "MSuppressReason\022\022\n\016MM_REASON_NONE\020\000\022\026\n\022M"
-  "M_REASON_DISABLED\020\001\022\034\n\030MM_REASON_SESSION"
-  "_CLOSED\020\002\022\030\n\024MM_REASON_STALE_THEO\020\003\022\034\n\030M"
-  "M_REASON_INVALID_MARKET\020\004\022\034\n\030MM_REASON_P"
-  "OSITION_LIMIT\020\005\022\030\n\024MM_REASON_RISK_LIMIT\020"
-  "\006\022\026\n\022MM_REASON_THROTTLE\020\007\022\036\n\032MM_REASON_U"
-  "NDERLYING_SHOCK\020\010\022\036\n\032MM_REASON_PRODUCT_E"
-  "XPOSURE\020\t\022\032\n\026MM_REASON_CANCEL_STUCK\020\n*\362\001"
-  "\n\021ArbSuppressReason\022\023\n\017ARB_REASON_NONE\020\000"
-  "\022\027\n\023ARB_REASON_DISABLED\020\001\022\027\n\023ARB_REASON_"
-  "NO_PAIRS\020\002\022\035\n\031ARB_REASON_INVALID_MARKET\020"
-  "\003\022\027\n\023ARB_REASON_COOLDOWN\020\004\022\"\n\036ARB_REASON"
-  "_INTENT_BACKPRESSURE\020\005\022\032\n\026ARB_REASON_LIV"
-  "E_ORDERS\020\006\022\036\n\032ARB_REASON_CLEANUP_PENDING"
-  "\020\007*u\n\027PcpOpportunityDirection\022\020\n\014PCP_DIR"
-  "_NONE\020\000\022#\n\037PCP_DIR_LONG_SYNTH_SHORT_FUTU"
-  "RE\020\001\022#\n\037PCP_DIR_SHORT_SYNTH_LONG_FUTURE\020"
-  "\0022\376\014\n\016TradingMonitor\022:\n\005Login\022\027.omm.prot"
-  "o.LoginRequest\032\030.omm.proto.LoginResponse"
-  "\022=\n\006Logout\022\030.omm.proto.LogoutRequest\032\031.o"
-  "mm.proto.LogoutResponse\022=\n\006WhoAmI\022\030.omm."
-  "proto.WhoAmIRequest\032\031.omm.proto.WhoAmIRe"
-  "sponse\022=\n\014StreamGreeks\022\030.omm.proto.Strea"
-  "mRequest\032\021.omm.proto.Greeks0\001\022B\n\017StreamP"
-  "ositions\022\030.omm.proto.StreamRequest\032\023.omm"
-  ".proto.Position0\001\022:\n\013StreamTicks\022\030.omm.p"
-  "roto.StreamRequest\032\017.omm.proto.Tick0\001\022B\n"
-  "\014StreamOrders\022\030.omm.proto.StreamRequest\032"
-  "\026.omm.proto.OrderUpdate0\001\022B\n\014StreamTrade"
-  "s\022\030.omm.proto.StreamRequest\032\026.omm.proto."
-  "OrderUpdate0\001\022B\n\014StreamQuotes\022\030.omm.prot"
-  "o.StreamRequest\032\026.omm.proto.QuoteUpdate0"
-  "\001\022D\n\020StreamRiskAlerts\022\030.omm.proto.Stream"
-  "Request\032\024.omm.proto.RiskAlert0\001\022E\n\020Strea"
-  "mVolSurface\022\030.omm.proto.StreamRequest\032\025."
-  "omm.proto.VolSurface0\001\022^\n\021SetStrategyPar"
-  "ams\022#.omm.proto.SetStrategyParamsRequest"
-  "\032$.omm.proto.SetStrategyParamsResponse\022J"
-  "\n\rStartStrategy\022\033.omm.proto.StartStopReq"
-  "uest\032\034.omm.proto.StartStopResponse\022I\n\014St"
-  "opStrategy\022\033.omm.proto.StartStopRequest\032"
-  "\034.omm.proto.StartStopResponse\022g\n\024SetArbS"
-  "trategyParams\022&.omm.proto.SetArbStrategy"
-  "ParamsRequest\032\'.omm.proto.SetArbStrategy"
-  "ParamsResponse\022S\n\020StartArbStrategy\022\036.omm"
-  ".proto.ArbStartStopRequest\032\037.omm.proto.A"
-  "rbStartStopResponse\022R\n\017StopArbStrategy\022\036"
-  ".omm.proto.ArbStartStopRequest\032\037.omm.pro"
-  "to.ArbStartStopResponse\022[\n\020SetRiskThresh"
-  "old\022\".omm.proto.SetRiskThresholdRequest\032"
-  "#.omm.proto.SetRiskThresholdResponse\022P\n\017"
-  "SendManualOrder\022\035.omm.proto.ManualOrderR"
-  "equest\032\036.omm.proto.ManualOrderResponse\022L"
-  "\n\013CancelOrder\022\035.omm.proto.CancelOrderReq"
-  "uest\032\036.omm.proto.CancelOrderResponse\022L\n\013"
-  "CancelQuote\022\035.omm.proto.CancelQuoteReque"
-  "st\032\036.omm.proto.CancelQuoteResponse\022F\n\013Ge"
-  "tSnapshot\022\032.omm.proto.SnapshotRequest\032\033."
-  "omm.proto.SnapshotResponseb\006proto3"
+  " \001(\001\022\t\n\001T\030\t \001(\001\022\022\n\ncalc_ts_ns\030\n \001(\003\022\021\n\ts"
+  "td_delta\030\013 \001(\001\022\022\n\ndelta_cash\030\014 \001(\001\022\021\n\tst"
+  "d_gamma\030\r \001(\001\022\022\n\ngamma_cash\030\016 \001(\001\022\021\n\tveg"
+  "a_cash\030\017 \001(\001\022\022\n\ntheta_cash\030\020 \001(\001\022\020\n\010rho_"
+  "cash\030\021 \001(\001\022\r\n\005vanna\030\022 \001(\001\022\r\n\005volga\030\023 \001(\001"
+  "\022\r\n\005charm\030\024 \001(\001\"x\n\010Position\022\025\n\rinstrumen"
+  "t_id\030\001 \001(\r\022\024\n\014net_position\030\002 \001(\005\022\021\n\tavg_"
+  "price\030\003 \001(\001\022\024\n\014realized_pnl\030\004 \001(\001\022\026\n\016unr"
+  "ealized_pnl\030\005 \001(\001\"d\n\017PortfolioGreeks\022\023\n\013"
+  "total_delta\030\001 \001(\001\022\023\n\013total_gamma\030\002 \001(\001\022\022"
+  "\n\ntotal_vega\030\003 \001(\001\022\023\n\013total_theta\030\004 \001(\001\""
+  "\312\001\n\tRiskAlert\022,\n\004type\030\001 \001(\0162\036.omm.proto."
+  "RiskAlert.AlertType\022\017\n\007message\030\002 \001(\t\022\r\n\005"
+  "ts_ns\030\003 \001(\003\"o\n\tAlertType\022\023\n\017POSITION_BRE"
+  "ACH\020\000\022\020\n\014DELTA_BREACH\020\001\022\020\n\014GAMMA_BREACH\020"
+  "\002\022\017\n\013VEGA_BREACH\020\003\022\030\n\024QUOTE_CANCEL_GIVE_"
+  "UP\020\004\"\253\001\n\004Tick\022\025\n\rinstrument_id\030\001 \001(\r\022\022\n\n"
+  "last_price\030\002 \001(\001\022\021\n\tbid_price\030\003 \001(\001\022\021\n\ta"
+  "sk_price\030\004 \001(\001\022\022\n\nbid_volume\030\005 \001(\005\022\022\n\nas"
+  "k_volume\030\006 \001(\005\022\026\n\016exchange_ts_ns\030\007 \001(\003\022\022"
+  "\n\nrecv_ts_ns\030\010 \001(\003\"\363\001\n\013OrderUpdate\022\027\n\017cl"
+  "ient_order_id\030\001 \001(\004\022\025\n\rinstrument_id\030\002 \001"
+  "(\r\022\016\n\006status\030\003 \001(\t\022\022\n\nfill_price\030\004 \001(\001\022\023"
+  "\n\013fill_volume\030\005 \001(\005\022\r\n\005ts_ns\030\006 \001(\003\022\023\n\013ex"
+  "change_id\030\007 \001(\t\022\014\n\004side\030\010 \001(\t\022\r\n\005price\030\t"
+  " \001(\001\022\016\n\006volume\030\n \001(\005\022\031\n\021exchange_trade_i"
+  "d\030\013 \001(\004\022\017\n\007book_id\030\014 \001(\r\"\273\001\n\013QuoteUpdate"
+  "\022\027\n\017client_quote_id\030\001 \001(\004\022\025\n\rinstrument_"
+  "id\030\002 \001(\r\022\021\n\tbid_price\030\003 \001(\001\022\021\n\task_price"
+  "\030\004 \001(\001\022\022\n\nbid_volume\030\005 \001(\005\022\022\n\nask_volume"
+  "\030\006 \001(\005\022\016\n\006status\030\007 \001(\t\022\r\n\005ts_ns\030\010 \001(\003\022\017\n"
+  "\007book_id\030\t \001(\r\"\200\002\n\016InstrumentInfo\022\025\n\rins"
+  "trument_id\030\001 \001(\r\022\014\n\004code\030\002 \001(\t\022\027\n\017underl"
+  "ying_code\030\003 \001(\t\022\014\n\004kind\030\004 \001(\t\022\023\n\013option_"
+  "type\030\005 \001(\t\022\016\n\006strike\030\006 \001(\001\022\025\n\rproduct_in"
+  "dex\030\007 \001(\r\022\025\n\runderlying_id\030\010 \001(\r\022\023\n\013exch"
+  "ange_id\030\t \001(\t\022\023\n\013expiry_date\030\n \001(\005\022\021\n\tti"
+  "ck_size\030\013 \001(\001\022\022\n\nmultiplier\030\014 \001(\001\"l\n\010Use"
+  "rInfo\022\017\n\007user_id\030\001 \001(\r\022\020\n\010username\030\002 \001(\t"
+  "\022\024\n\014display_name\030\003 \001(\t\022\016\n\006active\030\004 \001(\010\022\027"
+  "\n\017default_book_id\030\005 \001(\r\"2\n\014LoginRequest\022"
+  "\020\n\010username\030\001 \001(\t\022\020\n\010password\030\002 \001(\t\"f\n\rL"
+  "oginResponse\022\n\n\002ok\030\001 \001(\010\022\017\n\007message\030\002 \001("
+  "\t\022\025\n\rsession_token\030\003 \001(\t\022!\n\004user\030\004 \001(\0132\023"
+  ".omm.proto.UserInfo\"\017\n\rLogoutRequest\"I\n\016"
+  "LogoutResponse\022\n\n\002ok\030\001 \001(\010\022\017\n\007message\030\002 "
+  "\001(\t\022\032\n\022triggered_shutdown\030\003 \001(\010\"\017\n\rWhoAm"
+  "IRequest\"P\n\016WhoAmIResponse\022\n\n\002ok\030\001 \001(\010\022\017"
+  "\n\007message\030\002 \001(\t\022!\n\004user\030\003 \001(\0132\023.omm.prot"
+  "o.UserInfo\"i\n\010BookInfo\022\017\n\007book_id\030\001 \001(\r\022"
+  "\021\n\tbook_code\030\002 \001(\t\022\024\n\014display_name\030\003 \001(\t"
+  "\022\016\n\006active\030\004 \001(\010\022\023\n\013description\030\005 \001(\t\"\331\001"
+  "\n\014BookPosition\022\017\n\007book_id\030\001 \001(\r\022\025\n\rinstr"
+  "ument_id\030\002 \001(\r\022\025\n\rproduct_index\030\003 \001(\r\022\024\n"
+  "\014net_position\030\004 \001(\005\022\025\n\rlong_position\030\005 \001"
+  "(\005\022\026\n\016short_position\030\006 \001(\005\022\026\n\016avg_long_p"
+  "rice\030\007 \001(\001\022\027\n\017avg_short_price\030\010 \001(\001\022\024\n\014r"
+  "ealized_pnl\030\t \001(\001\"\314\001\n\rBookPortfolio\022\017\n\007b"
+  "ook_id\030\001 \001(\r\022\025\n\rproduct_index\030\002 \001(\r\022\023\n\013t"
+  "otal_delta\030\003 \001(\001\022\023\n\013total_gamma\030\004 \001(\001\022\022\n"
+  "\ntotal_vega\030\005 \001(\001\022\023\n\013total_theta\030\006 \001(\001\022\024"
+  "\n\014realized_pnl\030\007 \001(\001\022\026\n\016unrealized_pnl\030\010"
+  " \001(\001\022\022\n\ncalc_ts_ns\030\t \001(\003\"B\n\017VolSurfaceSl"
+  "ice\022\020\n\010expiry_T\030\001 \001(\001\022\017\n\007strikes\030\002 \003(\001\022\014"
+  "\n\004vols\030\003 \003(\001\"b\n\nVolSurface\022\025\n\rproduct_in"
+  "dex\030\001 \001(\r\022*\n\006slices\030\002 \003(\0132\032.omm.proto.Vo"
+  "lSurfaceSlice\022\021\n\tfit_ts_ns\030\003 \001(\003\"\300\010\n\010MMP"
+  "arams\022\027\n\nbid_spread\030\001 \001(\001H\000\210\001\001\022\027\n\nask_sp"
+  "read\030\002 \001(\001H\001\210\001\001\022$\n\027product_delta_thresho"
+  "ld\030\003 \001(\001H\002\210\001\001\022\031\n\014quote_volume\030\004 \001(\005H\003\210\001\001"
+  "\022\031\n\014max_position\030\005 \001(\005H\004\210\001\001\022\024\n\007enabled\030\006"
+  " \001(\010H\005\210\001\001\022#\n\026product_vega_threshold\030\007 \001("
+  "\001H\006\210\001\001\022\"\n\025min_quote_interval_ms\030\010 \001(\001H\007\210"
+  "\001\001\022\035\n\020warning_position\030\t \001(\005H\010\210\001\001\022#\n\026bas"
+  "e_half_spread_ticks\030\n \001(\001H\t\210\001\001\022\"\n\025min_ha"
+  "lf_spread_ticks\030\013 \001(\001H\n\210\001\001\022\"\n\025max_half_s"
+  "pread_ticks\030\014 \001(\001H\013\210\001\001\022)\n\034inventory_skew"
+  "_per_lot_ticks\030\r \001(\001H\014\210\001\001\022\032\n\rfollow_weig"
+  "ht\030\016 \001(\001H\r\210\001\001\022(\n\033requote_price_epsilon_t"
+  "icks\030\017 \001(\001H\016\210\001\001\022/\n\"market_width_widen_th"
+  "reshold_ticks\030\020 \001(\001H\017\210\001\001\0222\n%underlying_m"
+  "ove_widen_threshold_ticks\030\021 \001(\001H\020\210\001\001\022$\n\027"
+  "use_one_sided_at_limits\030\022 \001(\010H\021\210\001\001B\r\n\013_b"
+  "id_spreadB\r\n\013_ask_spreadB\032\n\030_product_del"
+  "ta_thresholdB\017\n\r_quote_volumeB\017\n\r_max_po"
+  "sitionB\n\n\010_enabledB\031\n\027_product_vega_thre"
+  "sholdB\030\n\026_min_quote_interval_msB\023\n\021_warn"
+  "ing_positionB\031\n\027_base_half_spread_ticksB"
+  "\030\n\026_min_half_spread_ticksB\030\n\026_max_half_s"
+  "pread_ticksB\037\n\035_inventory_skew_per_lot_t"
+  "icksB\020\n\016_follow_weightB\036\n\034_requote_price"
+  "_epsilon_ticksB%\n#_market_width_widen_th"
+  "reshold_ticksB(\n&_underlying_move_widen_"
+  "threshold_ticksB\032\n\030_use_one_sided_at_lim"
+  "its\"b\n\024ProductPricingParams\022\025\n\rproduct_i"
+  "ndex\030\001 \001(\r\022\030\n\020base_offset_type\030\002 \001(\t\022\031\n\021"
+  "base_offset_value\030\003 \001(\001\"\221\003\n\tArbParams\022\033\n"
+  "\016min_edge_ticks\030\001 \001(\001H\000\210\001\001\022\030\n\013cooldown_m"
+  "s\030\002 \001(\001H\001\210\001\001\022\035\n\020scan_interval_ms\030\003 \001(\001H\002"
+  "\210\001\001\022\037\n\022cleanup_timeout_ms\030\004 \001(\001H\003\210\001\001\022\035\n\020"
+  "max_order_volume\030\005 \001(\005H\004\210\001\001\022\034\n\017max_live_"
+  "orders\030\006 \001(\005H\005\210\001\001\022\037\n\022cleanup_on_partial\030"
+  "\007 \001(\010H\006\210\001\001\022\024\n\007enabled\030\010 \001(\010H\007\210\001\001B\021\n\017_min"
+  "_edge_ticksB\016\n\014_cooldown_msB\023\n\021_scan_int"
+  "erval_msB\025\n\023_cleanup_timeout_msB\023\n\021_max_"
+  "order_volumeB\022\n\020_max_live_ordersB\025\n\023_cle"
+  "anup_on_partialB\n\n\010_enabled\"_\n\rArbStrate"
+  "gyId\022\025\n\rproduct_index\030\001 \001(\r\0227\n\rstrategy_"
+  "type\030\002 \001(\0162 .omm.proto.ArbitrageStrategy"
+  "Type\"\216\001\n\026ArbStrategyParamsEntry\022\025\n\rprodu"
+  "ct_index\030\001 \001(\r\0227\n\rstrategy_type\030\002 \001(\0162 ."
+  "omm.proto.ArbitrageStrategyType\022$\n\006param"
+  "s\030\003 \001(\0132\024.omm.proto.ArbParams\"V\n\030SetStra"
+  "tegyParamsRequest\022\025\n\rproduct_index\030\001 \001(\r"
+  "\022#\n\006params\030\002 \001(\0132\023.omm.proto.MMParams\"8\n"
+  "\031SetStrategyParamsResponse\022\n\n\002ok\030\001 \001(\010\022\017"
+  "\n\007message\030\002 \001(\t\"Q\n\036SetProductPricingPara"
+  "msRequest\022/\n\006params\030\001 \001(\0132\037.omm.proto.Pr"
+  "oductPricingParams\">\n\037SetProductPricingP"
+  "aramsResponse\022\n\n\002ok\030\001 \001(\010\022\017\n\007message\030\002 \001"
+  "(\t\"i\n\033SetArbStrategyParamsRequest\022$\n\002id\030"
+  "\001 \001(\0132\030.omm.proto.ArbStrategyId\022$\n\006param"
+  "s\030\002 \001(\0132\024.omm.proto.ArbParams\";\n\034SetArbS"
+  "trategyParamsResponse\022\n\n\002ok\030\001 \001(\010\022\017\n\007mes"
+  "sage\030\002 \001(\t\")\n\020StartStopRequest\022\025\n\rproduc"
+  "t_index\030\001 \001(\005\"0\n\021StartStopResponse\022\n\n\002ok"
+  "\030\001 \001(\010\022\017\n\007message\030\002 \001(\t\";\n\023ArbStartStopR"
+  "equest\022$\n\002id\030\001 \001(\0132\030.omm.proto.ArbStrate"
+  "gyId\"3\n\024ArbStartStopResponse\022\n\n\002ok\030\001 \001(\010"
+  "\022\017\n\007message\030\002 \001(\t\"a\n\rRiskThreshold\022\030\n\020ma"
+  "x_net_position\030\001 \001(\001\022\021\n\tmax_delta\030\002 \001(\001\022"
+  "\021\n\tmax_gamma\030\003 \001(\001\022\020\n\010max_vega\030\004 \001(\001\"\222\001\n"
+  "\tRiskState\022+\n\tthreshold\030\001 \001(\0132\030.omm.prot"
+  "o.RiskThreshold\022\027\n\017position_breach\030\002 \001(\010"
+  "\022\024\n\014delta_breach\030\003 \001(\010\022\024\n\014gamma_breach\030\004"
+  " \001(\010\022\023\n\013vega_breach\030\005 \001(\010\"\241\001\n\016ProductMMS"
+  "tate\022\025\n\rproduct_index\030\001 \001(\r\022\030\n\020strategy_"
+  "enabled\030\002 \001(\010\022\024\n\014session_open\030\003 \001(\010\022\032\n\022p"
+  "roduct_suppressed\030\004 \001(\010\022,\n\007reasons\030\005 \003(\016"
+  "2\033.omm.proto.MMSuppressReason\"\346\001\n\021Instru"
+  "mentMMState\022\025\n\rinstrument_id\030\001 \001(\r\022\025\n\rpr"
+  "oduct_index\030\002 \001(\r\022,\n\013quote_state\030\003 \001(\0162\027"
+  ".omm.proto.MMQuoteState\022,\n\007reasons\030\004 \003(\016"
+  "2\033.omm.proto.MMSuppressReason\022\024\n\014net_pos"
+  "ition\030\005 \001(\005\022\027\n\017cancel_attempts\030\006 \001(\r\022\030\n\020"
+  "last_quote_ts_ns\030\007 \001(\003\"\254\003\n\020ArbStrategySt"
+  "ate\022\025\n\rproduct_index\030\001 \001(\r\0227\n\rstrategy_t"
+  "ype\030\002 \001(\0162 .omm.proto.ArbitrageStrategyT"
+  "ype\022\017\n\007enabled\030\003 \001(\010\022\017\n\007running\030\004 \001(\010\022\026\n"
+  "\016cleanup_active\030\005 \001(\010\022\023\n\013live_orders\030\006 \001"
+  "(\r\022\022\n\npair_count\030\007 \001(\r\022\026\n\016active_call_id"
+  "\030\010 \001(\r\022\025\n\ractive_put_id\030\t \001(\r\022\030\n\020active_"
+  "future_id\030\n \001(\r\022-\n\007reasons\030\013 \003(\0162\034.omm.p"
+  "roto.ArbSuppressReason\022\027\n\017last_edge_tick"
+  "s\030\014 \001(\001\022\037\n\027last_trigger_edge_ticks\030\r \001(\001"
+  "\022\027\n\017last_eval_ts_ns\030\016 \001(\003\022\032\n\022last_trigge"
+  "r_ts_ns\030\017 \001(\003\"\222\004\n\023PcpOpportunityState\022\025\n"
+  "\rproduct_index\030\001 \001(\r\0227\n\rstrategy_type\030\002 "
+  "\001(\0162 .omm.proto.ArbitrageStrategyType\022\017\n"
+  "\007call_id\030\003 \001(\r\022\016\n\006put_id\030\004 \001(\r\022\021\n\tfuture"
+  "_id\030\005 \001(\r\022\023\n\013expiry_date\030\006 \001(\005\022\016\n\006strike"
+  "\030\007 \001(\001\022\024\n\014market_valid\030\010 \001(\010\022\020\n\010selected"
+  "\030\t \001(\010\022\027\n\017discount_factor\030\n \001(\001\022\025\n\rsynth"
+  "etic_bid\030\013 \001(\001\022\025\n\rsynthetic_ask\030\014 \001(\001\022\022\n"
+  "\nfuture_bid\030\r \001(\001\022\022\n\nfuture_ask\030\016 \001(\001\022\035\n"
+  "\025long_synth_edge_ticks\030\017 \001(\001\022\036\n\026short_sy"
+  "nth_edge_ticks\030\020 \001(\001\022\027\n\017best_edge_ticks\030"
+  "\021 \001(\001\022:\n\016best_direction\030\022 \001(\0162\".omm.prot"
+  "o.PcpOpportunityDirection\022\023\n\013best_volume"
+  "\030\023 \001(\005\022\022\n\neval_ts_ns\030\024 \001(\003\"F\n\027SetRiskThr"
+  "esholdRequest\022+\n\tthreshold\030\001 \001(\0132\030.omm.p"
+  "roto.RiskThreshold\"7\n\030SetRiskThresholdRe"
+  "sponse\022\n\n\002ok\030\001 \001(\010\022\017\n\007message\030\002 \001(\t\"z\n\022M"
+  "anualOrderRequest\022\025\n\rinstrument_id\030\001 \001(\r"
+  "\022\014\n\004side\030\002 \001(\t\022\r\n\005price\030\003 \001(\001\022\016\n\006volume\030"
+  "\004 \001(\005\022\024\n\007book_id\030\005 \001(\rH\000\210\001\001B\n\n\010_book_id\""
+  "U\n\023ManualOrderResponse\022\n\n\002ok\030\001 \001(\010\022\017\n\007me"
+  "ssage\030\002 \001(\t\022\020\n\010order_id\030\003 \001(\004\022\017\n\007book_id"
+  "\030\004 \001(\r\"=\n\022CancelOrderRequest\022\020\n\010order_id"
+  "\030\001 \001(\004\022\025\n\rinstrument_id\030\002 \001(\r\"2\n\023CancelO"
+  "rderResponse\022\n\n\002ok\030\001 \001(\010\022\017\n\007message\030\002 \001("
+  "\t\"=\n\022CancelQuoteRequest\022\020\n\010quote_id\030\001 \001("
+  "\004\022\025\n\rinstrument_id\030\002 \001(\r\"2\n\023CancelQuoteR"
+  "esponse\022\n\n\002ok\030\001 \001(\010\022\017\n\007message\030\002 \001(\t\"\021\n\017"
+  "SnapshotRequest\"\232\006\n\020SnapshotResponse\022!\n\006"
+  "greeks\030\001 \003(\0132\021.omm.proto.Greeks\022&\n\tposit"
+  "ions\030\002 \003(\0132\023.omm.proto.Position\022-\n\tportf"
+  "olio\030\003 \001(\0132\032.omm.proto.PortfolioGreeks\022&"
+  "\n\tmm_params\030\004 \003(\0132\023.omm.proto.MMParams\022."
+  "\n\013instruments\030\005 \003(\0132\031.omm.proto.Instrume"
+  "ntInfo\022(\n\nrisk_state\030\006 \001(\0132\024.omm.proto.R"
+  "iskState\0221\n\016product_states\030\007 \003(\0132\031.omm.p"
+  "roto.ProductMMState\0227\n\021instrument_states"
+  "\030\010 \003(\0132\034.omm.proto.InstrumentMMState\0225\n\n"
+  "arb_params\030\t \003(\0132!.omm.proto.ArbStrategy"
+  "ParamsEntry\0228\n\023arb_strategy_states\030\n \003(\013"
+  "2\033.omm.proto.ArbStrategyState\0229\n\021pcp_opp"
+  "ortunities\030\013 \003(\0132\036.omm.proto.PcpOpportun"
+  "ityState\022)\n\014current_user\030\014 \001(\0132\023.omm.pro"
+  "to.UserInfo\022\"\n\005books\030\r \003(\0132\023.omm.proto.B"
+  "ookInfo\022/\n\016book_positions\030\016 \003(\0132\027.omm.pr"
+  "oto.BookPosition\0221\n\017book_portfolios\030\017 \003("
+  "\0132\030.omm.proto.BookPortfolio\022\?\n\026product_p"
+  "ricing_params\030\020 \003(\0132\037.omm.proto.ProductP"
+  "ricingParams\"&\n\rStreamRequest\022\025\n\rproduct"
+  "_index\030\001 \001(\r*D\n\025ArbitrageStrategyType\022\025\n"
+  "\021ARB_STRATEGY_NONE\020\000\022\024\n\020ARB_STRATEGY_PCP"
+  "\020\001*\240\001\n\014MMQuoteState\022\021\n\rMM_QUOTE_IDLE\020\000\022\021"
+  "\n\rMM_QUOTE_LIVE\020\001\022\030\n\024MM_QUOTE_ACK_PENDIN"
+  "G\020\002\022\033\n\027MM_QUOTE_CANCEL_PENDING\020\003\022\032\n\026MM_Q"
+  "UOTE_CANCEL_FAILED\020\004\022\027\n\023MM_QUOTE_SUPPRES"
+  "SED\020\005*\300\002\n\020MMSuppressReason\022\022\n\016MM_REASON_"
+  "NONE\020\000\022\026\n\022MM_REASON_DISABLED\020\001\022\034\n\030MM_REA"
+  "SON_SESSION_CLOSED\020\002\022\030\n\024MM_REASON_STALE_"
+  "THEO\020\003\022\034\n\030MM_REASON_INVALID_MARKET\020\004\022\034\n\030"
+  "MM_REASON_POSITION_LIMIT\020\005\022\030\n\024MM_REASON_"
+  "RISK_LIMIT\020\006\022\026\n\022MM_REASON_THROTTLE\020\007\022\036\n\032"
+  "MM_REASON_UNDERLYING_SHOCK\020\010\022\036\n\032MM_REASO"
+  "N_PRODUCT_EXPOSURE\020\t\022\032\n\026MM_REASON_CANCEL"
+  "_STUCK\020\n*\362\001\n\021ArbSuppressReason\022\023\n\017ARB_RE"
+  "ASON_NONE\020\000\022\027\n\023ARB_REASON_DISABLED\020\001\022\027\n\023"
+  "ARB_REASON_NO_PAIRS\020\002\022\035\n\031ARB_REASON_INVA"
+  "LID_MARKET\020\003\022\027\n\023ARB_REASON_COOLDOWN\020\004\022\"\n"
+  "\036ARB_REASON_INTENT_BACKPRESSURE\020\005\022\032\n\026ARB"
+  "_REASON_LIVE_ORDERS\020\006\022\036\n\032ARB_REASON_CLEA"
+  "NUP_PENDING\020\007*u\n\027PcpOpportunityDirection"
+  "\022\020\n\014PCP_DIR_NONE\020\000\022#\n\037PCP_DIR_LONG_SYNTH"
+  "_SHORT_FUTURE\020\001\022#\n\037PCP_DIR_SHORT_SYNTH_L"
+  "ONG_FUTURE\020\0022\360\r\n\016TradingMonitor\022:\n\005Login"
+  "\022\027.omm.proto.LoginRequest\032\030.omm.proto.Lo"
+  "ginResponse\022=\n\006Logout\022\030.omm.proto.Logout"
+  "Request\032\031.omm.proto.LogoutResponse\022=\n\006Wh"
+  "oAmI\022\030.omm.proto.WhoAmIRequest\032\031.omm.pro"
+  "to.WhoAmIResponse\022=\n\014StreamGreeks\022\030.omm."
+  "proto.StreamRequest\032\021.omm.proto.Greeks0\001"
+  "\022B\n\017StreamPositions\022\030.omm.proto.StreamRe"
+  "quest\032\023.omm.proto.Position0\001\022:\n\013StreamTi"
+  "cks\022\030.omm.proto.StreamRequest\032\017.omm.prot"
+  "o.Tick0\001\022B\n\014StreamOrders\022\030.omm.proto.Str"
+  "eamRequest\032\026.omm.proto.OrderUpdate0\001\022B\n\014"
+  "StreamTrades\022\030.omm.proto.StreamRequest\032\026"
+  ".omm.proto.OrderUpdate0\001\022B\n\014StreamQuotes"
+  "\022\030.omm.proto.StreamRequest\032\026.omm.proto.Q"
+  "uoteUpdate0\001\022D\n\020StreamRiskAlerts\022\030.omm.p"
+  "roto.StreamRequest\032\024.omm.proto.RiskAlert"
+  "0\001\022E\n\020StreamVolSurface\022\030.omm.proto.Strea"
+  "mRequest\032\025.omm.proto.VolSurface0\001\022^\n\021Set"
+  "StrategyParams\022#.omm.proto.SetStrategyPa"
+  "ramsRequest\032$.omm.proto.SetStrategyParam"
+  "sResponse\022p\n\027SetProductPricingParams\022).o"
+  "mm.proto.SetProductPricingParamsRequest\032"
+  "*.omm.proto.SetProductPricingParamsRespo"
+  "nse\022J\n\rStartStrategy\022\033.omm.proto.StartSt"
+  "opRequest\032\034.omm.proto.StartStopResponse\022"
+  "I\n\014StopStrategy\022\033.omm.proto.StartStopReq"
+  "uest\032\034.omm.proto.StartStopResponse\022g\n\024Se"
+  "tArbStrategyParams\022&.omm.proto.SetArbStr"
+  "ategyParamsRequest\032\'.omm.proto.SetArbStr"
+  "ategyParamsResponse\022S\n\020StartArbStrategy\022"
+  "\036.omm.proto.ArbStartStopRequest\032\037.omm.pr"
+  "oto.ArbStartStopResponse\022R\n\017StopArbStrat"
+  "egy\022\036.omm.proto.ArbStartStopRequest\032\037.om"
+  "m.proto.ArbStartStopResponse\022[\n\020SetRiskT"
+  "hreshold\022\".omm.proto.SetRiskThresholdReq"
+  "uest\032#.omm.proto.SetRiskThresholdRespons"
+  "e\022P\n\017SendManualOrder\022\035.omm.proto.ManualO"
+  "rderRequest\032\036.omm.proto.ManualOrderRespo"
+  "nse\022L\n\013CancelOrder\022\035.omm.proto.CancelOrd"
+  "erRequest\032\036.omm.proto.CancelOrderRespons"
+  "e\022L\n\013CancelQuote\022\035.omm.proto.CancelQuote"
+  "Request\032\036.omm.proto.CancelQuoteResponse\022"
+  "F\n\013GetSnapshot\022\032.omm.proto.SnapshotReque"
+  "st\032\033.omm.proto.SnapshotResponseb\006proto3"
   ;
 static ::_pbi::once_flag descriptor_table_trading_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_trading_2eproto = {
-    false, false, 10434, descriptor_table_protodef_trading_2eproto,
+    false, false, 11079, descriptor_table_protodef_trading_2eproto,
     "trading.proto",
-    &descriptor_table_trading_2eproto_once, nullptr, 0, 49,
+    &descriptor_table_trading_2eproto_once, nullptr, 0, 52,
     schemas, file_default_instances, TableStruct_trading_2eproto::offsets,
     file_level_metadata_trading_2eproto, file_level_enum_descriptors_trading_2eproto,
     file_level_service_descriptors_trading_2eproto,
@@ -1961,6 +2075,16 @@ Greeks::Greeks(const Greeks& from)
     , decltype(_impl_.iv_){}
     , decltype(_impl_.t_){}
     , decltype(_impl_.calc_ts_ns_){}
+    , decltype(_impl_.std_delta_){}
+    , decltype(_impl_.delta_cash_){}
+    , decltype(_impl_.std_gamma_){}
+    , decltype(_impl_.gamma_cash_){}
+    , decltype(_impl_.vega_cash_){}
+    , decltype(_impl_.theta_cash_){}
+    , decltype(_impl_.rho_cash_){}
+    , decltype(_impl_.vanna_){}
+    , decltype(_impl_.volga_){}
+    , decltype(_impl_.charm_){}
     , decltype(_impl_.instrument_id_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
@@ -1985,6 +2109,16 @@ inline void Greeks::SharedCtor(
     , decltype(_impl_.iv_){0}
     , decltype(_impl_.t_){0}
     , decltype(_impl_.calc_ts_ns_){int64_t{0}}
+    , decltype(_impl_.std_delta_){0}
+    , decltype(_impl_.delta_cash_){0}
+    , decltype(_impl_.std_gamma_){0}
+    , decltype(_impl_.gamma_cash_){0}
+    , decltype(_impl_.vega_cash_){0}
+    , decltype(_impl_.theta_cash_){0}
+    , decltype(_impl_.rho_cash_){0}
+    , decltype(_impl_.vanna_){0}
+    , decltype(_impl_.volga_){0}
+    , decltype(_impl_.charm_){0}
     , decltype(_impl_.instrument_id_){0u}
     , /*decltype(_impl_._cached_size_)*/{}
   };
@@ -2102,6 +2236,86 @@ const char* Greeks::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 80)) {
           _impl_.calc_ts_ns_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // double std_delta = 11;
+      case 11:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 89)) {
+          _impl_.std_delta_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr);
+          ptr += sizeof(double);
+        } else
+          goto handle_unusual;
+        continue;
+      // double delta_cash = 12;
+      case 12:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 97)) {
+          _impl_.delta_cash_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr);
+          ptr += sizeof(double);
+        } else
+          goto handle_unusual;
+        continue;
+      // double std_gamma = 13;
+      case 13:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 105)) {
+          _impl_.std_gamma_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr);
+          ptr += sizeof(double);
+        } else
+          goto handle_unusual;
+        continue;
+      // double gamma_cash = 14;
+      case 14:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 113)) {
+          _impl_.gamma_cash_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr);
+          ptr += sizeof(double);
+        } else
+          goto handle_unusual;
+        continue;
+      // double vega_cash = 15;
+      case 15:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 121)) {
+          _impl_.vega_cash_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr);
+          ptr += sizeof(double);
+        } else
+          goto handle_unusual;
+        continue;
+      // double theta_cash = 16;
+      case 16:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 129)) {
+          _impl_.theta_cash_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr);
+          ptr += sizeof(double);
+        } else
+          goto handle_unusual;
+        continue;
+      // double rho_cash = 17;
+      case 17:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 137)) {
+          _impl_.rho_cash_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr);
+          ptr += sizeof(double);
+        } else
+          goto handle_unusual;
+        continue;
+      // double vanna = 18;
+      case 18:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 145)) {
+          _impl_.vanna_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr);
+          ptr += sizeof(double);
+        } else
+          goto handle_unusual;
+        continue;
+      // double volga = 19;
+      case 19:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 153)) {
+          _impl_.volga_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr);
+          ptr += sizeof(double);
+        } else
+          goto handle_unusual;
+        continue;
+      // double charm = 20;
+      case 20:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 161)) {
+          _impl_.charm_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr);
+          ptr += sizeof(double);
         } else
           goto handle_unusual;
         continue;
@@ -2226,6 +2440,106 @@ uint8_t* Greeks::_InternalSerialize(
     target = ::_pbi::WireFormatLite::WriteInt64ToArray(10, this->_internal_calc_ts_ns(), target);
   }
 
+  // double std_delta = 11;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_std_delta = this->_internal_std_delta();
+  uint64_t raw_std_delta;
+  memcpy(&raw_std_delta, &tmp_std_delta, sizeof(tmp_std_delta));
+  if (raw_std_delta != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteDoubleToArray(11, this->_internal_std_delta(), target);
+  }
+
+  // double delta_cash = 12;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_delta_cash = this->_internal_delta_cash();
+  uint64_t raw_delta_cash;
+  memcpy(&raw_delta_cash, &tmp_delta_cash, sizeof(tmp_delta_cash));
+  if (raw_delta_cash != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteDoubleToArray(12, this->_internal_delta_cash(), target);
+  }
+
+  // double std_gamma = 13;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_std_gamma = this->_internal_std_gamma();
+  uint64_t raw_std_gamma;
+  memcpy(&raw_std_gamma, &tmp_std_gamma, sizeof(tmp_std_gamma));
+  if (raw_std_gamma != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteDoubleToArray(13, this->_internal_std_gamma(), target);
+  }
+
+  // double gamma_cash = 14;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_gamma_cash = this->_internal_gamma_cash();
+  uint64_t raw_gamma_cash;
+  memcpy(&raw_gamma_cash, &tmp_gamma_cash, sizeof(tmp_gamma_cash));
+  if (raw_gamma_cash != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteDoubleToArray(14, this->_internal_gamma_cash(), target);
+  }
+
+  // double vega_cash = 15;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_vega_cash = this->_internal_vega_cash();
+  uint64_t raw_vega_cash;
+  memcpy(&raw_vega_cash, &tmp_vega_cash, sizeof(tmp_vega_cash));
+  if (raw_vega_cash != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteDoubleToArray(15, this->_internal_vega_cash(), target);
+  }
+
+  // double theta_cash = 16;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_theta_cash = this->_internal_theta_cash();
+  uint64_t raw_theta_cash;
+  memcpy(&raw_theta_cash, &tmp_theta_cash, sizeof(tmp_theta_cash));
+  if (raw_theta_cash != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteDoubleToArray(16, this->_internal_theta_cash(), target);
+  }
+
+  // double rho_cash = 17;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_rho_cash = this->_internal_rho_cash();
+  uint64_t raw_rho_cash;
+  memcpy(&raw_rho_cash, &tmp_rho_cash, sizeof(tmp_rho_cash));
+  if (raw_rho_cash != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteDoubleToArray(17, this->_internal_rho_cash(), target);
+  }
+
+  // double vanna = 18;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_vanna = this->_internal_vanna();
+  uint64_t raw_vanna;
+  memcpy(&raw_vanna, &tmp_vanna, sizeof(tmp_vanna));
+  if (raw_vanna != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteDoubleToArray(18, this->_internal_vanna(), target);
+  }
+
+  // double volga = 19;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_volga = this->_internal_volga();
+  uint64_t raw_volga;
+  memcpy(&raw_volga, &tmp_volga, sizeof(tmp_volga));
+  if (raw_volga != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteDoubleToArray(19, this->_internal_volga(), target);
+  }
+
+  // double charm = 20;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_charm = this->_internal_charm();
+  uint64_t raw_charm;
+  memcpy(&raw_charm, &tmp_charm, sizeof(tmp_charm));
+  if (raw_charm != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteDoubleToArray(20, this->_internal_charm(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -2319,6 +2633,96 @@ size_t Greeks::ByteSizeLong() const {
     total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_calc_ts_ns());
   }
 
+  // double std_delta = 11;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_std_delta = this->_internal_std_delta();
+  uint64_t raw_std_delta;
+  memcpy(&raw_std_delta, &tmp_std_delta, sizeof(tmp_std_delta));
+  if (raw_std_delta != 0) {
+    total_size += 1 + 8;
+  }
+
+  // double delta_cash = 12;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_delta_cash = this->_internal_delta_cash();
+  uint64_t raw_delta_cash;
+  memcpy(&raw_delta_cash, &tmp_delta_cash, sizeof(tmp_delta_cash));
+  if (raw_delta_cash != 0) {
+    total_size += 1 + 8;
+  }
+
+  // double std_gamma = 13;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_std_gamma = this->_internal_std_gamma();
+  uint64_t raw_std_gamma;
+  memcpy(&raw_std_gamma, &tmp_std_gamma, sizeof(tmp_std_gamma));
+  if (raw_std_gamma != 0) {
+    total_size += 1 + 8;
+  }
+
+  // double gamma_cash = 14;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_gamma_cash = this->_internal_gamma_cash();
+  uint64_t raw_gamma_cash;
+  memcpy(&raw_gamma_cash, &tmp_gamma_cash, sizeof(tmp_gamma_cash));
+  if (raw_gamma_cash != 0) {
+    total_size += 1 + 8;
+  }
+
+  // double vega_cash = 15;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_vega_cash = this->_internal_vega_cash();
+  uint64_t raw_vega_cash;
+  memcpy(&raw_vega_cash, &tmp_vega_cash, sizeof(tmp_vega_cash));
+  if (raw_vega_cash != 0) {
+    total_size += 1 + 8;
+  }
+
+  // double theta_cash = 16;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_theta_cash = this->_internal_theta_cash();
+  uint64_t raw_theta_cash;
+  memcpy(&raw_theta_cash, &tmp_theta_cash, sizeof(tmp_theta_cash));
+  if (raw_theta_cash != 0) {
+    total_size += 2 + 8;
+  }
+
+  // double rho_cash = 17;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_rho_cash = this->_internal_rho_cash();
+  uint64_t raw_rho_cash;
+  memcpy(&raw_rho_cash, &tmp_rho_cash, sizeof(tmp_rho_cash));
+  if (raw_rho_cash != 0) {
+    total_size += 2 + 8;
+  }
+
+  // double vanna = 18;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_vanna = this->_internal_vanna();
+  uint64_t raw_vanna;
+  memcpy(&raw_vanna, &tmp_vanna, sizeof(tmp_vanna));
+  if (raw_vanna != 0) {
+    total_size += 2 + 8;
+  }
+
+  // double volga = 19;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_volga = this->_internal_volga();
+  uint64_t raw_volga;
+  memcpy(&raw_volga, &tmp_volga, sizeof(tmp_volga));
+  if (raw_volga != 0) {
+    total_size += 2 + 8;
+  }
+
+  // double charm = 20;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_charm = this->_internal_charm();
+  uint64_t raw_charm;
+  memcpy(&raw_charm, &tmp_charm, sizeof(tmp_charm));
+  if (raw_charm != 0) {
+    total_size += 2 + 8;
+  }
+
   // uint32 instrument_id = 1;
   if (this->_internal_instrument_id() != 0) {
     total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_instrument_id());
@@ -2400,6 +2804,76 @@ void Greeks::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBU
   }
   if (from._internal_calc_ts_ns() != 0) {
     _this->_internal_set_calc_ts_ns(from._internal_calc_ts_ns());
+  }
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_std_delta = from._internal_std_delta();
+  uint64_t raw_std_delta;
+  memcpy(&raw_std_delta, &tmp_std_delta, sizeof(tmp_std_delta));
+  if (raw_std_delta != 0) {
+    _this->_internal_set_std_delta(from._internal_std_delta());
+  }
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_delta_cash = from._internal_delta_cash();
+  uint64_t raw_delta_cash;
+  memcpy(&raw_delta_cash, &tmp_delta_cash, sizeof(tmp_delta_cash));
+  if (raw_delta_cash != 0) {
+    _this->_internal_set_delta_cash(from._internal_delta_cash());
+  }
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_std_gamma = from._internal_std_gamma();
+  uint64_t raw_std_gamma;
+  memcpy(&raw_std_gamma, &tmp_std_gamma, sizeof(tmp_std_gamma));
+  if (raw_std_gamma != 0) {
+    _this->_internal_set_std_gamma(from._internal_std_gamma());
+  }
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_gamma_cash = from._internal_gamma_cash();
+  uint64_t raw_gamma_cash;
+  memcpy(&raw_gamma_cash, &tmp_gamma_cash, sizeof(tmp_gamma_cash));
+  if (raw_gamma_cash != 0) {
+    _this->_internal_set_gamma_cash(from._internal_gamma_cash());
+  }
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_vega_cash = from._internal_vega_cash();
+  uint64_t raw_vega_cash;
+  memcpy(&raw_vega_cash, &tmp_vega_cash, sizeof(tmp_vega_cash));
+  if (raw_vega_cash != 0) {
+    _this->_internal_set_vega_cash(from._internal_vega_cash());
+  }
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_theta_cash = from._internal_theta_cash();
+  uint64_t raw_theta_cash;
+  memcpy(&raw_theta_cash, &tmp_theta_cash, sizeof(tmp_theta_cash));
+  if (raw_theta_cash != 0) {
+    _this->_internal_set_theta_cash(from._internal_theta_cash());
+  }
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_rho_cash = from._internal_rho_cash();
+  uint64_t raw_rho_cash;
+  memcpy(&raw_rho_cash, &tmp_rho_cash, sizeof(tmp_rho_cash));
+  if (raw_rho_cash != 0) {
+    _this->_internal_set_rho_cash(from._internal_rho_cash());
+  }
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_vanna = from._internal_vanna();
+  uint64_t raw_vanna;
+  memcpy(&raw_vanna, &tmp_vanna, sizeof(tmp_vanna));
+  if (raw_vanna != 0) {
+    _this->_internal_set_vanna(from._internal_vanna());
+  }
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_volga = from._internal_volga();
+  uint64_t raw_volga;
+  memcpy(&raw_volga, &tmp_volga, sizeof(tmp_volga));
+  if (raw_volga != 0) {
+    _this->_internal_set_volga(from._internal_volga());
+  }
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_charm = from._internal_charm();
+  uint64_t raw_charm;
+  memcpy(&raw_charm, &tmp_charm, sizeof(tmp_charm));
+  if (raw_charm != 0) {
+    _this->_internal_set_charm(from._internal_charm());
   }
   if (from._internal_instrument_id() != 0) {
     _this->_internal_set_instrument_id(from._internal_instrument_id());
@@ -4730,6 +5204,8 @@ InstrumentInfo::InstrumentInfo(const InstrumentInfo& from)
     , decltype(_impl_.strike_){}
     , decltype(_impl_.underlying_id_){}
     , decltype(_impl_.expiry_date_){}
+    , decltype(_impl_.tick_size_){}
+    , decltype(_impl_.multiplier_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
@@ -4774,8 +5250,8 @@ InstrumentInfo::InstrumentInfo(const InstrumentInfo& from)
       _this->GetArenaForAllocation());
   }
   ::memcpy(&_impl_.instrument_id_, &from._impl_.instrument_id_,
-    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.expiry_date_) -
-    reinterpret_cast<char*>(&_impl_.instrument_id_)) + sizeof(_impl_.expiry_date_));
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.multiplier_) -
+    reinterpret_cast<char*>(&_impl_.instrument_id_)) + sizeof(_impl_.multiplier_));
   // @@protoc_insertion_point(copy_constructor:omm.proto.InstrumentInfo)
 }
 
@@ -4794,6 +5270,8 @@ inline void InstrumentInfo::SharedCtor(
     , decltype(_impl_.strike_){0}
     , decltype(_impl_.underlying_id_){0u}
     , decltype(_impl_.expiry_date_){0}
+    , decltype(_impl_.tick_size_){0}
+    , decltype(_impl_.multiplier_){0}
     , /*decltype(_impl_._cached_size_)*/{}
   };
   _impl_.code_.InitDefault();
@@ -4852,8 +5330,8 @@ void InstrumentInfo::Clear() {
   _impl_.option_type_.ClearToEmpty();
   _impl_.exchange_id_.ClearToEmpty();
   ::memset(&_impl_.instrument_id_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&_impl_.expiry_date_) -
-      reinterpret_cast<char*>(&_impl_.instrument_id_)) + sizeof(_impl_.expiry_date_));
+      reinterpret_cast<char*>(&_impl_.multiplier_) -
+      reinterpret_cast<char*>(&_impl_.instrument_id_)) + sizeof(_impl_.multiplier_));
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -4950,6 +5428,22 @@ const char* InstrumentInfo::_InternalParse(const char* ptr, ::_pbi::ParseContext
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 80)) {
           _impl_.expiry_date_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // double tick_size = 11;
+      case 11:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 89)) {
+          _impl_.tick_size_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr);
+          ptr += sizeof(double);
+        } else
+          goto handle_unusual;
+        continue;
+      // double multiplier = 12;
+      case 12:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 97)) {
+          _impl_.multiplier_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr);
+          ptr += sizeof(double);
         } else
           goto handle_unusual;
         continue;
@@ -5066,6 +5560,26 @@ uint8_t* InstrumentInfo::_InternalSerialize(
     target = ::_pbi::WireFormatLite::WriteInt32ToArray(10, this->_internal_expiry_date(), target);
   }
 
+  // double tick_size = 11;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_tick_size = this->_internal_tick_size();
+  uint64_t raw_tick_size;
+  memcpy(&raw_tick_size, &tmp_tick_size, sizeof(tmp_tick_size));
+  if (raw_tick_size != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteDoubleToArray(11, this->_internal_tick_size(), target);
+  }
+
+  // double multiplier = 12;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_multiplier = this->_internal_multiplier();
+  uint64_t raw_multiplier;
+  memcpy(&raw_multiplier, &tmp_multiplier, sizeof(tmp_multiplier));
+  if (raw_multiplier != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteDoubleToArray(12, this->_internal_multiplier(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -5146,6 +5660,24 @@ size_t InstrumentInfo::ByteSizeLong() const {
     total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_expiry_date());
   }
 
+  // double tick_size = 11;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_tick_size = this->_internal_tick_size();
+  uint64_t raw_tick_size;
+  memcpy(&raw_tick_size, &tmp_tick_size, sizeof(tmp_tick_size));
+  if (raw_tick_size != 0) {
+    total_size += 1 + 8;
+  }
+
+  // double multiplier = 12;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_multiplier = this->_internal_multiplier();
+  uint64_t raw_multiplier;
+  memcpy(&raw_multiplier, &tmp_multiplier, sizeof(tmp_multiplier));
+  if (raw_multiplier != 0) {
+    total_size += 1 + 8;
+  }
+
   return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
@@ -5198,6 +5730,20 @@ void InstrumentInfo::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const :
   if (from._internal_expiry_date() != 0) {
     _this->_internal_set_expiry_date(from._internal_expiry_date());
   }
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_tick_size = from._internal_tick_size();
+  uint64_t raw_tick_size;
+  memcpy(&raw_tick_size, &tmp_tick_size, sizeof(tmp_tick_size));
+  if (raw_tick_size != 0) {
+    _this->_internal_set_tick_size(from._internal_tick_size());
+  }
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_multiplier = from._internal_multiplier();
+  uint64_t raw_multiplier;
+  memcpy(&raw_multiplier, &tmp_multiplier, sizeof(tmp_multiplier));
+  if (raw_multiplier != 0) {
+    _this->_internal_set_multiplier(from._internal_multiplier());
+  }
   _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
@@ -5238,8 +5784,8 @@ void InstrumentInfo::InternalSwap(InstrumentInfo* other) {
       &other->_impl_.exchange_id_, rhs_arena
   );
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(InstrumentInfo, _impl_.expiry_date_)
-      + sizeof(InstrumentInfo::_impl_.expiry_date_)
+      PROTOBUF_FIELD_OFFSET(InstrumentInfo, _impl_.multiplier_)
+      + sizeof(InstrumentInfo::_impl_.multiplier_)
       - PROTOBUF_FIELD_OFFSET(InstrumentInfo, _impl_.instrument_id_)>(
           reinterpret_cast<char*>(&_impl_.instrument_id_),
           reinterpret_cast<char*>(&other->_impl_.instrument_id_));
@@ -9222,6 +9768,281 @@ void MMParams::InternalSwap(MMParams* other) {
 
 // ===================================================================
 
+class ProductPricingParams::_Internal {
+ public:
+};
+
+ProductPricingParams::ProductPricingParams(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:omm.proto.ProductPricingParams)
+}
+ProductPricingParams::ProductPricingParams(const ProductPricingParams& from)
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  ProductPricingParams* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.base_offset_type_){}
+    , decltype(_impl_.base_offset_value_){}
+    , decltype(_impl_.product_index_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  _impl_.base_offset_type_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.base_offset_type_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_base_offset_type().empty()) {
+    _this->_impl_.base_offset_type_.Set(from._internal_base_offset_type(), 
+      _this->GetArenaForAllocation());
+  }
+  ::memcpy(&_impl_.base_offset_value_, &from._impl_.base_offset_value_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.product_index_) -
+    reinterpret_cast<char*>(&_impl_.base_offset_value_)) + sizeof(_impl_.product_index_));
+  // @@protoc_insertion_point(copy_constructor:omm.proto.ProductPricingParams)
+}
+
+inline void ProductPricingParams::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.base_offset_type_){}
+    , decltype(_impl_.base_offset_value_){0}
+    , decltype(_impl_.product_index_){0u}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+  _impl_.base_offset_type_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.base_offset_type_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+}
+
+ProductPricingParams::~ProductPricingParams() {
+  // @@protoc_insertion_point(destructor:omm.proto.ProductPricingParams)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void ProductPricingParams::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.base_offset_type_.Destroy();
+}
+
+void ProductPricingParams::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void ProductPricingParams::Clear() {
+// @@protoc_insertion_point(message_clear_start:omm.proto.ProductPricingParams)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  _impl_.base_offset_type_.ClearToEmpty();
+  ::memset(&_impl_.base_offset_value_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.product_index_) -
+      reinterpret_cast<char*>(&_impl_.base_offset_value_)) + sizeof(_impl_.product_index_));
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+}
+
+const char* ProductPricingParams::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // uint32 product_index = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          _impl_.product_index_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // string base_offset_type = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
+          auto str = _internal_mutable_base_offset_type();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, "omm.proto.ProductPricingParams.base_offset_type"));
+        } else
+          goto handle_unusual;
+        continue;
+      // double base_offset_value = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 25)) {
+          _impl_.base_offset_value_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr);
+          ptr += sizeof(double);
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* ProductPricingParams::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:omm.proto.ProductPricingParams)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // uint32 product_index = 1;
+  if (this->_internal_product_index() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(1, this->_internal_product_index(), target);
+  }
+
+  // string base_offset_type = 2;
+  if (!this->_internal_base_offset_type().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_base_offset_type().data(), static_cast<int>(this->_internal_base_offset_type().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "omm.proto.ProductPricingParams.base_offset_type");
+    target = stream->WriteStringMaybeAliased(
+        2, this->_internal_base_offset_type(), target);
+  }
+
+  // double base_offset_value = 3;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_base_offset_value = this->_internal_base_offset_value();
+  uint64_t raw_base_offset_value;
+  memcpy(&raw_base_offset_value, &tmp_base_offset_value, sizeof(tmp_base_offset_value));
+  if (raw_base_offset_value != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteDoubleToArray(3, this->_internal_base_offset_value(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:omm.proto.ProductPricingParams)
+  return target;
+}
+
+size_t ProductPricingParams::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:omm.proto.ProductPricingParams)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // string base_offset_type = 2;
+  if (!this->_internal_base_offset_type().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_base_offset_type());
+  }
+
+  // double base_offset_value = 3;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_base_offset_value = this->_internal_base_offset_value();
+  uint64_t raw_base_offset_value;
+  memcpy(&raw_base_offset_value, &tmp_base_offset_value, sizeof(tmp_base_offset_value));
+  if (raw_base_offset_value != 0) {
+    total_size += 1 + 8;
+  }
+
+  // uint32 product_index = 1;
+  if (this->_internal_product_index() != 0) {
+    total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_product_index());
+  }
+
+  return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
+}
+
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData ProductPricingParams::_class_data_ = {
+    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSourceCheck,
+    ProductPricingParams::MergeImpl
+};
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*ProductPricingParams::GetClassData() const { return &_class_data_; }
+
+
+void ProductPricingParams::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg) {
+  auto* const _this = static_cast<ProductPricingParams*>(&to_msg);
+  auto& from = static_cast<const ProductPricingParams&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:omm.proto.ProductPricingParams)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (!from._internal_base_offset_type().empty()) {
+    _this->_internal_set_base_offset_type(from._internal_base_offset_type());
+  }
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_base_offset_value = from._internal_base_offset_value();
+  uint64_t raw_base_offset_value;
+  memcpy(&raw_base_offset_value, &tmp_base_offset_value, sizeof(tmp_base_offset_value));
+  if (raw_base_offset_value != 0) {
+    _this->_internal_set_base_offset_value(from._internal_base_offset_value());
+  }
+  if (from._internal_product_index() != 0) {
+    _this->_internal_set_product_index(from._internal_product_index());
+  }
+  _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void ProductPricingParams::CopyFrom(const ProductPricingParams& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:omm.proto.ProductPricingParams)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool ProductPricingParams::IsInitialized() const {
+  return true;
+}
+
+void ProductPricingParams::InternalSwap(ProductPricingParams* other) {
+  using std::swap;
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.base_offset_type_, lhs_arena,
+      &other->_impl_.base_offset_type_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(ProductPricingParams, _impl_.product_index_)
+      + sizeof(ProductPricingParams::_impl_.product_index_)
+      - PROTOBUF_FIELD_OFFSET(ProductPricingParams, _impl_.base_offset_value_)>(
+          reinterpret_cast<char*>(&_impl_.base_offset_value_),
+          reinterpret_cast<char*>(&other->_impl_.base_offset_value_));
+}
+
+::PROTOBUF_NAMESPACE_ID::Metadata ProductPricingParams::GetMetadata() const {
+  return ::_pbi::AssignDescriptors(
+      &descriptor_table_trading_2eproto_getter, &descriptor_table_trading_2eproto_once,
+      file_level_metadata_trading_2eproto[21]);
+}
+
+// ===================================================================
+
 class ArbParams::_Internal {
  public:
   using HasBits = decltype(std::declval<ArbParams>()._impl_._has_bits_);
@@ -9621,7 +10442,7 @@ void ArbParams::InternalSwap(ArbParams* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata ArbParams::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_trading_2eproto_getter, &descriptor_table_trading_2eproto_once,
-      file_level_metadata_trading_2eproto[21]);
+      file_level_metadata_trading_2eproto[22]);
 }
 
 // ===================================================================
@@ -9835,7 +10656,7 @@ void ArbStrategyId::InternalSwap(ArbStrategyId* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata ArbStrategyId::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_trading_2eproto_getter, &descriptor_table_trading_2eproto_once,
-      file_level_metadata_trading_2eproto[22]);
+      file_level_metadata_trading_2eproto[23]);
 }
 
 // ===================================================================
@@ -10090,7 +10911,7 @@ void ArbStrategyParamsEntry::InternalSwap(ArbStrategyParamsEntry* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata ArbStrategyParamsEntry::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_trading_2eproto_getter, &descriptor_table_trading_2eproto_once,
-      file_level_metadata_trading_2eproto[23]);
+      file_level_metadata_trading_2eproto[24]);
 }
 
 // ===================================================================
@@ -10314,7 +11135,7 @@ void SetStrategyParamsRequest::InternalSwap(SetStrategyParamsRequest* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata SetStrategyParamsRequest::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_trading_2eproto_getter, &descriptor_table_trading_2eproto_once,
-      file_level_metadata_trading_2eproto[24]);
+      file_level_metadata_trading_2eproto[25]);
 }
 
 // ===================================================================
@@ -10544,7 +11365,430 @@ void SetStrategyParamsResponse::InternalSwap(SetStrategyParamsResponse* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata SetStrategyParamsResponse::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_trading_2eproto_getter, &descriptor_table_trading_2eproto_once,
-      file_level_metadata_trading_2eproto[25]);
+      file_level_metadata_trading_2eproto[26]);
+}
+
+// ===================================================================
+
+class SetProductPricingParamsRequest::_Internal {
+ public:
+  static const ::omm::proto::ProductPricingParams& params(const SetProductPricingParamsRequest* msg);
+};
+
+const ::omm::proto::ProductPricingParams&
+SetProductPricingParamsRequest::_Internal::params(const SetProductPricingParamsRequest* msg) {
+  return *msg->_impl_.params_;
+}
+SetProductPricingParamsRequest::SetProductPricingParamsRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:omm.proto.SetProductPricingParamsRequest)
+}
+SetProductPricingParamsRequest::SetProductPricingParamsRequest(const SetProductPricingParamsRequest& from)
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  SetProductPricingParamsRequest* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.params_){nullptr}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  if (from._internal_has_params()) {
+    _this->_impl_.params_ = new ::omm::proto::ProductPricingParams(*from._impl_.params_);
+  }
+  // @@protoc_insertion_point(copy_constructor:omm.proto.SetProductPricingParamsRequest)
+}
+
+inline void SetProductPricingParamsRequest::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.params_){nullptr}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+}
+
+SetProductPricingParamsRequest::~SetProductPricingParamsRequest() {
+  // @@protoc_insertion_point(destructor:omm.proto.SetProductPricingParamsRequest)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void SetProductPricingParamsRequest::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  if (this != internal_default_instance()) delete _impl_.params_;
+}
+
+void SetProductPricingParamsRequest::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void SetProductPricingParamsRequest::Clear() {
+// @@protoc_insertion_point(message_clear_start:omm.proto.SetProductPricingParamsRequest)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  if (GetArenaForAllocation() == nullptr && _impl_.params_ != nullptr) {
+    delete _impl_.params_;
+  }
+  _impl_.params_ = nullptr;
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+}
+
+const char* SetProductPricingParamsRequest::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // .omm.proto.ProductPricingParams params = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
+          ptr = ctx->ParseMessage(_internal_mutable_params(), ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* SetProductPricingParamsRequest::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:omm.proto.SetProductPricingParamsRequest)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // .omm.proto.ProductPricingParams params = 1;
+  if (this->_internal_has_params()) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(1, _Internal::params(this),
+        _Internal::params(this).GetCachedSize(), target, stream);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:omm.proto.SetProductPricingParamsRequest)
+  return target;
+}
+
+size_t SetProductPricingParamsRequest::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:omm.proto.SetProductPricingParamsRequest)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // .omm.proto.ProductPricingParams params = 1;
+  if (this->_internal_has_params()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
+        *_impl_.params_);
+  }
+
+  return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
+}
+
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData SetProductPricingParamsRequest::_class_data_ = {
+    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSourceCheck,
+    SetProductPricingParamsRequest::MergeImpl
+};
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*SetProductPricingParamsRequest::GetClassData() const { return &_class_data_; }
+
+
+void SetProductPricingParamsRequest::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg) {
+  auto* const _this = static_cast<SetProductPricingParamsRequest*>(&to_msg);
+  auto& from = static_cast<const SetProductPricingParamsRequest&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:omm.proto.SetProductPricingParamsRequest)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from._internal_has_params()) {
+    _this->_internal_mutable_params()->::omm::proto::ProductPricingParams::MergeFrom(
+        from._internal_params());
+  }
+  _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void SetProductPricingParamsRequest::CopyFrom(const SetProductPricingParamsRequest& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:omm.proto.SetProductPricingParamsRequest)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool SetProductPricingParamsRequest::IsInitialized() const {
+  return true;
+}
+
+void SetProductPricingParamsRequest::InternalSwap(SetProductPricingParamsRequest* other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_.params_, other->_impl_.params_);
+}
+
+::PROTOBUF_NAMESPACE_ID::Metadata SetProductPricingParamsRequest::GetMetadata() const {
+  return ::_pbi::AssignDescriptors(
+      &descriptor_table_trading_2eproto_getter, &descriptor_table_trading_2eproto_once,
+      file_level_metadata_trading_2eproto[27]);
+}
+
+// ===================================================================
+
+class SetProductPricingParamsResponse::_Internal {
+ public:
+};
+
+SetProductPricingParamsResponse::SetProductPricingParamsResponse(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:omm.proto.SetProductPricingParamsResponse)
+}
+SetProductPricingParamsResponse::SetProductPricingParamsResponse(const SetProductPricingParamsResponse& from)
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  SetProductPricingParamsResponse* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.message_){}
+    , decltype(_impl_.ok_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  _impl_.message_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.message_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_message().empty()) {
+    _this->_impl_.message_.Set(from._internal_message(), 
+      _this->GetArenaForAllocation());
+  }
+  _this->_impl_.ok_ = from._impl_.ok_;
+  // @@protoc_insertion_point(copy_constructor:omm.proto.SetProductPricingParamsResponse)
+}
+
+inline void SetProductPricingParamsResponse::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.message_){}
+    , decltype(_impl_.ok_){false}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+  _impl_.message_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.message_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+}
+
+SetProductPricingParamsResponse::~SetProductPricingParamsResponse() {
+  // @@protoc_insertion_point(destructor:omm.proto.SetProductPricingParamsResponse)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void SetProductPricingParamsResponse::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.message_.Destroy();
+}
+
+void SetProductPricingParamsResponse::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void SetProductPricingParamsResponse::Clear() {
+// @@protoc_insertion_point(message_clear_start:omm.proto.SetProductPricingParamsResponse)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  _impl_.message_.ClearToEmpty();
+  _impl_.ok_ = false;
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+}
+
+const char* SetProductPricingParamsResponse::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // bool ok = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          _impl_.ok_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // string message = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
+          auto str = _internal_mutable_message();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, "omm.proto.SetProductPricingParamsResponse.message"));
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* SetProductPricingParamsResponse::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:omm.proto.SetProductPricingParamsResponse)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // bool ok = 1;
+  if (this->_internal_ok() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteBoolToArray(1, this->_internal_ok(), target);
+  }
+
+  // string message = 2;
+  if (!this->_internal_message().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_message().data(), static_cast<int>(this->_internal_message().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "omm.proto.SetProductPricingParamsResponse.message");
+    target = stream->WriteStringMaybeAliased(
+        2, this->_internal_message(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:omm.proto.SetProductPricingParamsResponse)
+  return target;
+}
+
+size_t SetProductPricingParamsResponse::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:omm.proto.SetProductPricingParamsResponse)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // string message = 2;
+  if (!this->_internal_message().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_message());
+  }
+
+  // bool ok = 1;
+  if (this->_internal_ok() != 0) {
+    total_size += 1 + 1;
+  }
+
+  return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
+}
+
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData SetProductPricingParamsResponse::_class_data_ = {
+    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSourceCheck,
+    SetProductPricingParamsResponse::MergeImpl
+};
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*SetProductPricingParamsResponse::GetClassData() const { return &_class_data_; }
+
+
+void SetProductPricingParamsResponse::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg) {
+  auto* const _this = static_cast<SetProductPricingParamsResponse*>(&to_msg);
+  auto& from = static_cast<const SetProductPricingParamsResponse&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:omm.proto.SetProductPricingParamsResponse)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (!from._internal_message().empty()) {
+    _this->_internal_set_message(from._internal_message());
+  }
+  if (from._internal_ok() != 0) {
+    _this->_internal_set_ok(from._internal_ok());
+  }
+  _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void SetProductPricingParamsResponse::CopyFrom(const SetProductPricingParamsResponse& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:omm.proto.SetProductPricingParamsResponse)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool SetProductPricingParamsResponse::IsInitialized() const {
+  return true;
+}
+
+void SetProductPricingParamsResponse::InternalSwap(SetProductPricingParamsResponse* other) {
+  using std::swap;
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.message_, lhs_arena,
+      &other->_impl_.message_, rhs_arena
+  );
+  swap(_impl_.ok_, other->_impl_.ok_);
+}
+
+::PROTOBUF_NAMESPACE_ID::Metadata SetProductPricingParamsResponse::GetMetadata() const {
+  return ::_pbi::AssignDescriptors(
+      &descriptor_table_trading_2eproto_getter, &descriptor_table_trading_2eproto_once,
+      file_level_metadata_trading_2eproto[28]);
 }
 
 // ===================================================================
@@ -10783,7 +12027,7 @@ void SetArbStrategyParamsRequest::InternalSwap(SetArbStrategyParamsRequest* othe
 ::PROTOBUF_NAMESPACE_ID::Metadata SetArbStrategyParamsRequest::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_trading_2eproto_getter, &descriptor_table_trading_2eproto_once,
-      file_level_metadata_trading_2eproto[26]);
+      file_level_metadata_trading_2eproto[29]);
 }
 
 // ===================================================================
@@ -11013,7 +12257,7 @@ void SetArbStrategyParamsResponse::InternalSwap(SetArbStrategyParamsResponse* ot
 ::PROTOBUF_NAMESPACE_ID::Metadata SetArbStrategyParamsResponse::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_trading_2eproto_getter, &descriptor_table_trading_2eproto_once,
-      file_level_metadata_trading_2eproto[27]);
+      file_level_metadata_trading_2eproto[30]);
 }
 
 // ===================================================================
@@ -11191,7 +12435,7 @@ void StartStopRequest::InternalSwap(StartStopRequest* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata StartStopRequest::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_trading_2eproto_getter, &descriptor_table_trading_2eproto_once,
-      file_level_metadata_trading_2eproto[28]);
+      file_level_metadata_trading_2eproto[31]);
 }
 
 // ===================================================================
@@ -11421,7 +12665,7 @@ void StartStopResponse::InternalSwap(StartStopResponse* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata StartStopResponse::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_trading_2eproto_getter, &descriptor_table_trading_2eproto_once,
-      file_level_metadata_trading_2eproto[29]);
+      file_level_metadata_trading_2eproto[32]);
 }
 
 // ===================================================================
@@ -11614,7 +12858,7 @@ void ArbStartStopRequest::InternalSwap(ArbStartStopRequest* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata ArbStartStopRequest::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_trading_2eproto_getter, &descriptor_table_trading_2eproto_once,
-      file_level_metadata_trading_2eproto[30]);
+      file_level_metadata_trading_2eproto[33]);
 }
 
 // ===================================================================
@@ -11844,7 +13088,7 @@ void ArbStartStopResponse::InternalSwap(ArbStartStopResponse* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata ArbStartStopResponse::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_trading_2eproto_getter, &descriptor_table_trading_2eproto_once,
-      file_level_metadata_trading_2eproto[31]);
+      file_level_metadata_trading_2eproto[34]);
 }
 
 // ===================================================================
@@ -12151,7 +13395,7 @@ void RiskThreshold::InternalSwap(RiskThreshold* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata RiskThreshold::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_trading_2eproto_getter, &descriptor_table_trading_2eproto_once,
-      file_level_metadata_trading_2eproto[32]);
+      file_level_metadata_trading_2eproto[35]);
 }
 
 // ===================================================================
@@ -12451,7 +13695,7 @@ void RiskState::InternalSwap(RiskState* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata RiskState::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_trading_2eproto_getter, &descriptor_table_trading_2eproto_once,
-      file_level_metadata_trading_2eproto[33]);
+      file_level_metadata_trading_2eproto[36]);
 }
 
 // ===================================================================
@@ -12756,7 +14000,7 @@ void ProductMMState::InternalSwap(ProductMMState* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata ProductMMState::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_trading_2eproto_getter, &descriptor_table_trading_2eproto_once,
-      file_level_metadata_trading_2eproto[34]);
+      file_level_metadata_trading_2eproto[37]);
 }
 
 // ===================================================================
@@ -13112,7 +14356,7 @@ void InstrumentMMState::InternalSwap(InstrumentMMState* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata InstrumentMMState::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_trading_2eproto_getter, &descriptor_table_trading_2eproto_once,
-      file_level_metadata_trading_2eproto[35]);
+      file_level_metadata_trading_2eproto[38]);
 }
 
 // ===================================================================
@@ -13684,7 +14928,7 @@ void ArbStrategyState::InternalSwap(ArbStrategyState* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata ArbStrategyState::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_trading_2eproto_getter, &descriptor_table_trading_2eproto_once,
-      file_level_metadata_trading_2eproto[36]);
+      file_level_metadata_trading_2eproto[39]);
 }
 
 // ===================================================================
@@ -14445,7 +15689,7 @@ void PcpOpportunityState::InternalSwap(PcpOpportunityState* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata PcpOpportunityState::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_trading_2eproto_getter, &descriptor_table_trading_2eproto_once,
-      file_level_metadata_trading_2eproto[37]);
+      file_level_metadata_trading_2eproto[40]);
 }
 
 // ===================================================================
@@ -14638,7 +15882,7 @@ void SetRiskThresholdRequest::InternalSwap(SetRiskThresholdRequest* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata SetRiskThresholdRequest::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_trading_2eproto_getter, &descriptor_table_trading_2eproto_once,
-      file_level_metadata_trading_2eproto[38]);
+      file_level_metadata_trading_2eproto[41]);
 }
 
 // ===================================================================
@@ -14868,7 +16112,7 @@ void SetRiskThresholdResponse::InternalSwap(SetRiskThresholdResponse* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata SetRiskThresholdResponse::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_trading_2eproto_getter, &descriptor_table_trading_2eproto_once,
-      file_level_metadata_trading_2eproto[39]);
+      file_level_metadata_trading_2eproto[42]);
 }
 
 // ===================================================================
@@ -15204,7 +16448,7 @@ void ManualOrderRequest::InternalSwap(ManualOrderRequest* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata ManualOrderRequest::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_trading_2eproto_getter, &descriptor_table_trading_2eproto_once,
-      file_level_metadata_trading_2eproto[40]);
+      file_level_metadata_trading_2eproto[43]);
 }
 
 // ===================================================================
@@ -15491,7 +16735,7 @@ void ManualOrderResponse::InternalSwap(ManualOrderResponse* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata ManualOrderResponse::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_trading_2eproto_getter, &descriptor_table_trading_2eproto_once,
-      file_level_metadata_trading_2eproto[41]);
+      file_level_metadata_trading_2eproto[44]);
 }
 
 // ===================================================================
@@ -15702,7 +16946,7 @@ void CancelOrderRequest::InternalSwap(CancelOrderRequest* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata CancelOrderRequest::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_trading_2eproto_getter, &descriptor_table_trading_2eproto_once,
-      file_level_metadata_trading_2eproto[42]);
+      file_level_metadata_trading_2eproto[45]);
 }
 
 // ===================================================================
@@ -15932,7 +17176,7 @@ void CancelOrderResponse::InternalSwap(CancelOrderResponse* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata CancelOrderResponse::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_trading_2eproto_getter, &descriptor_table_trading_2eproto_once,
-      file_level_metadata_trading_2eproto[43]);
+      file_level_metadata_trading_2eproto[46]);
 }
 
 // ===================================================================
@@ -16143,7 +17387,7 @@ void CancelQuoteRequest::InternalSwap(CancelQuoteRequest* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata CancelQuoteRequest::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_trading_2eproto_getter, &descriptor_table_trading_2eproto_once,
-      file_level_metadata_trading_2eproto[44]);
+      file_level_metadata_trading_2eproto[47]);
 }
 
 // ===================================================================
@@ -16373,7 +17617,7 @@ void CancelQuoteResponse::InternalSwap(CancelQuoteResponse* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata CancelQuoteResponse::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_trading_2eproto_getter, &descriptor_table_trading_2eproto_once,
-      file_level_metadata_trading_2eproto[45]);
+      file_level_metadata_trading_2eproto[48]);
 }
 
 // ===================================================================
@@ -16413,7 +17657,7 @@ const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*SnapshotRequest::GetClassData(
 ::PROTOBUF_NAMESPACE_ID::Metadata SnapshotRequest::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_trading_2eproto_getter, &descriptor_table_trading_2eproto_once,
-      file_level_metadata_trading_2eproto[46]);
+      file_level_metadata_trading_2eproto[49]);
 }
 
 // ===================================================================
@@ -16459,6 +17703,7 @@ SnapshotResponse::SnapshotResponse(const SnapshotResponse& from)
     , decltype(_impl_.books_){from._impl_.books_}
     , decltype(_impl_.book_positions_){from._impl_.book_positions_}
     , decltype(_impl_.book_portfolios_){from._impl_.book_portfolios_}
+    , decltype(_impl_.product_pricing_params_){from._impl_.product_pricing_params_}
     , decltype(_impl_.portfolio_){nullptr}
     , decltype(_impl_.risk_state_){nullptr}
     , decltype(_impl_.current_user_){nullptr}
@@ -16494,6 +17739,7 @@ inline void SnapshotResponse::SharedCtor(
     , decltype(_impl_.books_){arena}
     , decltype(_impl_.book_positions_){arena}
     , decltype(_impl_.book_portfolios_){arena}
+    , decltype(_impl_.product_pricing_params_){arena}
     , decltype(_impl_.portfolio_){nullptr}
     , decltype(_impl_.risk_state_){nullptr}
     , decltype(_impl_.current_user_){nullptr}
@@ -16524,6 +17770,7 @@ inline void SnapshotResponse::SharedDtor() {
   _impl_.books_.~RepeatedPtrField();
   _impl_.book_positions_.~RepeatedPtrField();
   _impl_.book_portfolios_.~RepeatedPtrField();
+  _impl_.product_pricing_params_.~RepeatedPtrField();
   if (this != internal_default_instance()) delete _impl_.portfolio_;
   if (this != internal_default_instance()) delete _impl_.risk_state_;
   if (this != internal_default_instance()) delete _impl_.current_user_;
@@ -16551,6 +17798,7 @@ void SnapshotResponse::Clear() {
   _impl_.books_.Clear();
   _impl_.book_positions_.Clear();
   _impl_.book_portfolios_.Clear();
+  _impl_.product_pricing_params_.Clear();
   if (GetArenaForAllocation() == nullptr && _impl_.portfolio_ != nullptr) {
     delete _impl_.portfolio_;
   }
@@ -16752,6 +18000,19 @@ const char* SnapshotResponse::_InternalParse(const char* ptr, ::_pbi::ParseConte
         } else
           goto handle_unusual;
         continue;
+      // repeated .omm.proto.ProductPricingParams product_pricing_params = 16;
+      case 16:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 130)) {
+          ptr -= 2;
+          do {
+            ptr += 2;
+            ptr = ctx->ParseMessage(_internal_add_product_pricing_params(), ptr);
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<130>(ptr));
+        } else
+          goto handle_unusual;
+        continue;
       default:
         goto handle_unusual;
     }  // switch
@@ -16898,6 +18159,14 @@ uint8_t* SnapshotResponse::_InternalSerialize(
         InternalWriteMessage(15, repfield, repfield.GetCachedSize(), target, stream);
   }
 
+  // repeated .omm.proto.ProductPricingParams product_pricing_params = 16;
+  for (unsigned i = 0,
+      n = static_cast<unsigned>(this->_internal_product_pricing_params_size()); i < n; i++) {
+    const auto& repfield = this->_internal_product_pricing_params(i);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+        InternalWriteMessage(16, repfield, repfield.GetCachedSize(), target, stream);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -16998,6 +18267,13 @@ size_t SnapshotResponse::ByteSizeLong() const {
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
   }
 
+  // repeated .omm.proto.ProductPricingParams product_pricing_params = 16;
+  total_size += 2UL * this->_internal_product_pricing_params_size();
+  for (const auto& msg : this->_impl_.product_pricing_params_) {
+    total_size +=
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
+  }
+
   // .omm.proto.PortfolioGreeks portfolio = 3;
   if (this->_internal_has_portfolio()) {
     total_size += 1 +
@@ -17049,6 +18325,7 @@ void SnapshotResponse::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const
   _this->_impl_.books_.MergeFrom(from._impl_.books_);
   _this->_impl_.book_positions_.MergeFrom(from._impl_.book_positions_);
   _this->_impl_.book_portfolios_.MergeFrom(from._impl_.book_portfolios_);
+  _this->_impl_.product_pricing_params_.MergeFrom(from._impl_.product_pricing_params_);
   if (from._internal_has_portfolio()) {
     _this->_internal_mutable_portfolio()->::omm::proto::PortfolioGreeks::MergeFrom(
         from._internal_portfolio());
@@ -17090,6 +18367,7 @@ void SnapshotResponse::InternalSwap(SnapshotResponse* other) {
   _impl_.books_.InternalSwap(&other->_impl_.books_);
   _impl_.book_positions_.InternalSwap(&other->_impl_.book_positions_);
   _impl_.book_portfolios_.InternalSwap(&other->_impl_.book_portfolios_);
+  _impl_.product_pricing_params_.InternalSwap(&other->_impl_.product_pricing_params_);
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
       PROTOBUF_FIELD_OFFSET(SnapshotResponse, _impl_.current_user_)
       + sizeof(SnapshotResponse::_impl_.current_user_)
@@ -17101,7 +18379,7 @@ void SnapshotResponse::InternalSwap(SnapshotResponse* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata SnapshotResponse::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_trading_2eproto_getter, &descriptor_table_trading_2eproto_once,
-      file_level_metadata_trading_2eproto[47]);
+      file_level_metadata_trading_2eproto[50]);
 }
 
 // ===================================================================
@@ -17279,7 +18557,7 @@ void StreamRequest::InternalSwap(StreamRequest* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata StreamRequest::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_trading_2eproto_getter, &descriptor_table_trading_2eproto_once,
-      file_level_metadata_trading_2eproto[48]);
+      file_level_metadata_trading_2eproto[51]);
 }
 
 // @@protoc_insertion_point(namespace_scope)
@@ -17370,6 +18648,10 @@ template<> PROTOBUF_NOINLINE ::omm::proto::MMParams*
 Arena::CreateMaybeMessage< ::omm::proto::MMParams >(Arena* arena) {
   return Arena::CreateMessageInternal< ::omm::proto::MMParams >(arena);
 }
+template<> PROTOBUF_NOINLINE ::omm::proto::ProductPricingParams*
+Arena::CreateMaybeMessage< ::omm::proto::ProductPricingParams >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::omm::proto::ProductPricingParams >(arena);
+}
 template<> PROTOBUF_NOINLINE ::omm::proto::ArbParams*
 Arena::CreateMaybeMessage< ::omm::proto::ArbParams >(Arena* arena) {
   return Arena::CreateMessageInternal< ::omm::proto::ArbParams >(arena);
@@ -17389,6 +18671,14 @@ Arena::CreateMaybeMessage< ::omm::proto::SetStrategyParamsRequest >(Arena* arena
 template<> PROTOBUF_NOINLINE ::omm::proto::SetStrategyParamsResponse*
 Arena::CreateMaybeMessage< ::omm::proto::SetStrategyParamsResponse >(Arena* arena) {
   return Arena::CreateMessageInternal< ::omm::proto::SetStrategyParamsResponse >(arena);
+}
+template<> PROTOBUF_NOINLINE ::omm::proto::SetProductPricingParamsRequest*
+Arena::CreateMaybeMessage< ::omm::proto::SetProductPricingParamsRequest >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::omm::proto::SetProductPricingParamsRequest >(arena);
+}
+template<> PROTOBUF_NOINLINE ::omm::proto::SetProductPricingParamsResponse*
+Arena::CreateMaybeMessage< ::omm::proto::SetProductPricingParamsResponse >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::omm::proto::SetProductPricingParamsResponse >(arena);
 }
 template<> PROTOBUF_NOINLINE ::omm::proto::SetArbStrategyParamsRequest*
 Arena::CreateMaybeMessage< ::omm::proto::SetArbStrategyParamsRequest >(Arena* arena) {

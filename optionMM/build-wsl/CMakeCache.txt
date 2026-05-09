@@ -100,7 +100,7 @@ CMAKE_AR:FILEPATH=/usr/bin/ar
 
 //Choose the type of build, options are: None Debug Release RelWithDebInfo
 // MinSizeRel ...
-CMAKE_BUILD_TYPE:STRING=Release
+CMAKE_BUILD_TYPE:STRING=Debug
 
 //Enable/Disable color output during build.
 CMAKE_COLOR_MAKEFILE:BOOL=ON
@@ -341,6 +341,9 @@ OMM_ENABLE_DPDK:BOOL=OFF
 
 //Enable IPO/LTO for release builds when supported
 OMM_ENABLE_IPO_RELEASE:BOOL=OFF
+
+//Register latency benchmarks as explicit CTest tests
+OMM_ENABLE_LATENCY_CTEST:BOOL=OFF
 
 //Enable host-native release tuning (-march/-mtune=native)
 OMM_ENABLE_NATIVE_RELEASE:BOOL=OFF

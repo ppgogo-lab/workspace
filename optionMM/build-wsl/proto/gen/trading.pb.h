@@ -132,6 +132,9 @@ extern PositionDefaultTypeInternal _Position_default_instance_;
 class ProductMMState;
 struct ProductMMStateDefaultTypeInternal;
 extern ProductMMStateDefaultTypeInternal _ProductMMState_default_instance_;
+class ProductPricingParams;
+struct ProductPricingParamsDefaultTypeInternal;
+extern ProductPricingParamsDefaultTypeInternal _ProductPricingParams_default_instance_;
 class QuoteUpdate;
 struct QuoteUpdateDefaultTypeInternal;
 extern QuoteUpdateDefaultTypeInternal _QuoteUpdate_default_instance_;
@@ -150,6 +153,12 @@ extern SetArbStrategyParamsRequestDefaultTypeInternal _SetArbStrategyParamsReque
 class SetArbStrategyParamsResponse;
 struct SetArbStrategyParamsResponseDefaultTypeInternal;
 extern SetArbStrategyParamsResponseDefaultTypeInternal _SetArbStrategyParamsResponse_default_instance_;
+class SetProductPricingParamsRequest;
+struct SetProductPricingParamsRequestDefaultTypeInternal;
+extern SetProductPricingParamsRequestDefaultTypeInternal _SetProductPricingParamsRequest_default_instance_;
+class SetProductPricingParamsResponse;
+struct SetProductPricingParamsResponseDefaultTypeInternal;
+extern SetProductPricingParamsResponseDefaultTypeInternal _SetProductPricingParamsResponse_default_instance_;
 class SetRiskThresholdRequest;
 struct SetRiskThresholdRequestDefaultTypeInternal;
 extern SetRiskThresholdRequestDefaultTypeInternal _SetRiskThresholdRequest_default_instance_;
@@ -226,12 +235,15 @@ template<> ::omm::proto::PcpOpportunityState* Arena::CreateMaybeMessage<::omm::p
 template<> ::omm::proto::PortfolioGreeks* Arena::CreateMaybeMessage<::omm::proto::PortfolioGreeks>(Arena*);
 template<> ::omm::proto::Position* Arena::CreateMaybeMessage<::omm::proto::Position>(Arena*);
 template<> ::omm::proto::ProductMMState* Arena::CreateMaybeMessage<::omm::proto::ProductMMState>(Arena*);
+template<> ::omm::proto::ProductPricingParams* Arena::CreateMaybeMessage<::omm::proto::ProductPricingParams>(Arena*);
 template<> ::omm::proto::QuoteUpdate* Arena::CreateMaybeMessage<::omm::proto::QuoteUpdate>(Arena*);
 template<> ::omm::proto::RiskAlert* Arena::CreateMaybeMessage<::omm::proto::RiskAlert>(Arena*);
 template<> ::omm::proto::RiskState* Arena::CreateMaybeMessage<::omm::proto::RiskState>(Arena*);
 template<> ::omm::proto::RiskThreshold* Arena::CreateMaybeMessage<::omm::proto::RiskThreshold>(Arena*);
 template<> ::omm::proto::SetArbStrategyParamsRequest* Arena::CreateMaybeMessage<::omm::proto::SetArbStrategyParamsRequest>(Arena*);
 template<> ::omm::proto::SetArbStrategyParamsResponse* Arena::CreateMaybeMessage<::omm::proto::SetArbStrategyParamsResponse>(Arena*);
+template<> ::omm::proto::SetProductPricingParamsRequest* Arena::CreateMaybeMessage<::omm::proto::SetProductPricingParamsRequest>(Arena*);
+template<> ::omm::proto::SetProductPricingParamsResponse* Arena::CreateMaybeMessage<::omm::proto::SetProductPricingParamsResponse>(Arena*);
 template<> ::omm::proto::SetRiskThresholdRequest* Arena::CreateMaybeMessage<::omm::proto::SetRiskThresholdRequest>(Arena*);
 template<> ::omm::proto::SetRiskThresholdResponse* Arena::CreateMaybeMessage<::omm::proto::SetRiskThresholdResponse>(Arena*);
 template<> ::omm::proto::SetStrategyParamsRequest* Arena::CreateMaybeMessage<::omm::proto::SetStrategyParamsRequest>(Arena*);
@@ -556,6 +568,16 @@ class Greeks final :
     kIvFieldNumber = 8,
     kTFieldNumber = 9,
     kCalcTsNsFieldNumber = 10,
+    kStdDeltaFieldNumber = 11,
+    kDeltaCashFieldNumber = 12,
+    kStdGammaFieldNumber = 13,
+    kGammaCashFieldNumber = 14,
+    kVegaCashFieldNumber = 15,
+    kThetaCashFieldNumber = 16,
+    kRhoCashFieldNumber = 17,
+    kVannaFieldNumber = 18,
+    kVolgaFieldNumber = 19,
+    kCharmFieldNumber = 20,
     kInstrumentIdFieldNumber = 1,
   };
   // double theo_price = 2;
@@ -639,6 +661,96 @@ class Greeks final :
   void _internal_set_calc_ts_ns(int64_t value);
   public:
 
+  // double std_delta = 11;
+  void clear_std_delta();
+  double std_delta() const;
+  void set_std_delta(double value);
+  private:
+  double _internal_std_delta() const;
+  void _internal_set_std_delta(double value);
+  public:
+
+  // double delta_cash = 12;
+  void clear_delta_cash();
+  double delta_cash() const;
+  void set_delta_cash(double value);
+  private:
+  double _internal_delta_cash() const;
+  void _internal_set_delta_cash(double value);
+  public:
+
+  // double std_gamma = 13;
+  void clear_std_gamma();
+  double std_gamma() const;
+  void set_std_gamma(double value);
+  private:
+  double _internal_std_gamma() const;
+  void _internal_set_std_gamma(double value);
+  public:
+
+  // double gamma_cash = 14;
+  void clear_gamma_cash();
+  double gamma_cash() const;
+  void set_gamma_cash(double value);
+  private:
+  double _internal_gamma_cash() const;
+  void _internal_set_gamma_cash(double value);
+  public:
+
+  // double vega_cash = 15;
+  void clear_vega_cash();
+  double vega_cash() const;
+  void set_vega_cash(double value);
+  private:
+  double _internal_vega_cash() const;
+  void _internal_set_vega_cash(double value);
+  public:
+
+  // double theta_cash = 16;
+  void clear_theta_cash();
+  double theta_cash() const;
+  void set_theta_cash(double value);
+  private:
+  double _internal_theta_cash() const;
+  void _internal_set_theta_cash(double value);
+  public:
+
+  // double rho_cash = 17;
+  void clear_rho_cash();
+  double rho_cash() const;
+  void set_rho_cash(double value);
+  private:
+  double _internal_rho_cash() const;
+  void _internal_set_rho_cash(double value);
+  public:
+
+  // double vanna = 18;
+  void clear_vanna();
+  double vanna() const;
+  void set_vanna(double value);
+  private:
+  double _internal_vanna() const;
+  void _internal_set_vanna(double value);
+  public:
+
+  // double volga = 19;
+  void clear_volga();
+  double volga() const;
+  void set_volga(double value);
+  private:
+  double _internal_volga() const;
+  void _internal_set_volga(double value);
+  public:
+
+  // double charm = 20;
+  void clear_charm();
+  double charm() const;
+  void set_charm(double value);
+  private:
+  double _internal_charm() const;
+  void _internal_set_charm(double value);
+  public:
+
   // uint32 instrument_id = 1;
   void clear_instrument_id();
   uint32_t instrument_id() const;
@@ -665,6 +777,16 @@ class Greeks final :
     double iv_;
     double t_;
     int64_t calc_ts_ns_;
+    double std_delta_;
+    double delta_cash_;
+    double std_gamma_;
+    double gamma_cash_;
+    double vega_cash_;
+    double theta_cash_;
+    double rho_cash_;
+    double vanna_;
+    double volga_;
+    double charm_;
     uint32_t instrument_id_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
@@ -2138,6 +2260,8 @@ class InstrumentInfo final :
     kStrikeFieldNumber = 6,
     kUnderlyingIdFieldNumber = 8,
     kExpiryDateFieldNumber = 10,
+    kTickSizeFieldNumber = 11,
+    kMultiplierFieldNumber = 12,
   };
   // string code = 2;
   void clear_code();
@@ -2254,6 +2378,24 @@ class InstrumentInfo final :
   void _internal_set_expiry_date(int32_t value);
   public:
 
+  // double tick_size = 11;
+  void clear_tick_size();
+  double tick_size() const;
+  void set_tick_size(double value);
+  private:
+  double _internal_tick_size() const;
+  void _internal_set_tick_size(double value);
+  public:
+
+  // double multiplier = 12;
+  void clear_multiplier();
+  double multiplier() const;
+  void set_multiplier(double value);
+  private:
+  double _internal_multiplier() const;
+  void _internal_set_multiplier(double value);
+  public:
+
   // @@protoc_insertion_point(class_scope:omm.proto.InstrumentInfo)
  private:
   class _Internal;
@@ -2272,6 +2414,8 @@ class InstrumentInfo final :
     double strike_;
     uint32_t underlying_id_;
     int32_t expiry_date_;
+    double tick_size_;
+    double multiplier_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -4907,6 +5051,181 @@ class MMParams final :
 };
 // -------------------------------------------------------------------
 
+class ProductPricingParams final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.ProductPricingParams) */ {
+ public:
+  inline ProductPricingParams() : ProductPricingParams(nullptr) {}
+  ~ProductPricingParams() override;
+  explicit PROTOBUF_CONSTEXPR ProductPricingParams(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  ProductPricingParams(const ProductPricingParams& from);
+  ProductPricingParams(ProductPricingParams&& from) noexcept
+    : ProductPricingParams() {
+    *this = ::std::move(from);
+  }
+
+  inline ProductPricingParams& operator=(const ProductPricingParams& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline ProductPricingParams& operator=(ProductPricingParams&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const ProductPricingParams& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const ProductPricingParams* internal_default_instance() {
+    return reinterpret_cast<const ProductPricingParams*>(
+               &_ProductPricingParams_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    21;
+
+  friend void swap(ProductPricingParams& a, ProductPricingParams& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(ProductPricingParams* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(ProductPricingParams* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  ProductPricingParams* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<ProductPricingParams>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const ProductPricingParams& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const ProductPricingParams& from) {
+    ProductPricingParams::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(ProductPricingParams* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "omm.proto.ProductPricingParams";
+  }
+  protected:
+  explicit ProductPricingParams(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kBaseOffsetTypeFieldNumber = 2,
+    kBaseOffsetValueFieldNumber = 3,
+    kProductIndexFieldNumber = 1,
+  };
+  // string base_offset_type = 2;
+  void clear_base_offset_type();
+  const std::string& base_offset_type() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_base_offset_type(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_base_offset_type();
+  PROTOBUF_NODISCARD std::string* release_base_offset_type();
+  void set_allocated_base_offset_type(std::string* base_offset_type);
+  private:
+  const std::string& _internal_base_offset_type() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_base_offset_type(const std::string& value);
+  std::string* _internal_mutable_base_offset_type();
+  public:
+
+  // double base_offset_value = 3;
+  void clear_base_offset_value();
+  double base_offset_value() const;
+  void set_base_offset_value(double value);
+  private:
+  double _internal_base_offset_value() const;
+  void _internal_set_base_offset_value(double value);
+  public:
+
+  // uint32 product_index = 1;
+  void clear_product_index();
+  uint32_t product_index() const;
+  void set_product_index(uint32_t value);
+  private:
+  uint32_t _internal_product_index() const;
+  void _internal_set_product_index(uint32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:omm.proto.ProductPricingParams)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr base_offset_type_;
+    double base_offset_value_;
+    uint32_t product_index_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_trading_2eproto;
+};
+// -------------------------------------------------------------------
+
 class ArbParams final :
     public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.ArbParams) */ {
  public:
@@ -4955,7 +5274,7 @@ class ArbParams final :
                &_ArbParams_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    21;
+    22;
 
   friend void swap(ArbParams& a, ArbParams& b) {
     a.Swap(&b);
@@ -5213,7 +5532,7 @@ class ArbStrategyId final :
                &_ArbStrategyId_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    22;
+    23;
 
   friend void swap(ArbStrategyId& a, ArbStrategyId& b) {
     a.Swap(&b);
@@ -5372,7 +5691,7 @@ class ArbStrategyParamsEntry final :
                &_ArbStrategyParamsEntry_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    23;
+    24;
 
   friend void swap(ArbStrategyParamsEntry& a, ArbStrategyParamsEntry& b) {
     a.Swap(&b);
@@ -5551,7 +5870,7 @@ class SetStrategyParamsRequest final :
                &_SetStrategyParamsRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    24;
+    25;
 
   friend void swap(SetStrategyParamsRequest& a, SetStrategyParamsRequest& b) {
     a.Swap(&b);
@@ -5719,7 +6038,7 @@ class SetStrategyParamsResponse final :
                &_SetStrategyParamsResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    25;
+    26;
 
   friend void swap(SetStrategyParamsResponse& a, SetStrategyParamsResponse& b) {
     a.Swap(&b);
@@ -5835,6 +6154,327 @@ class SetStrategyParamsResponse final :
 };
 // -------------------------------------------------------------------
 
+class SetProductPricingParamsRequest final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.SetProductPricingParamsRequest) */ {
+ public:
+  inline SetProductPricingParamsRequest() : SetProductPricingParamsRequest(nullptr) {}
+  ~SetProductPricingParamsRequest() override;
+  explicit PROTOBUF_CONSTEXPR SetProductPricingParamsRequest(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  SetProductPricingParamsRequest(const SetProductPricingParamsRequest& from);
+  SetProductPricingParamsRequest(SetProductPricingParamsRequest&& from) noexcept
+    : SetProductPricingParamsRequest() {
+    *this = ::std::move(from);
+  }
+
+  inline SetProductPricingParamsRequest& operator=(const SetProductPricingParamsRequest& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline SetProductPricingParamsRequest& operator=(SetProductPricingParamsRequest&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const SetProductPricingParamsRequest& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const SetProductPricingParamsRequest* internal_default_instance() {
+    return reinterpret_cast<const SetProductPricingParamsRequest*>(
+               &_SetProductPricingParamsRequest_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    27;
+
+  friend void swap(SetProductPricingParamsRequest& a, SetProductPricingParamsRequest& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(SetProductPricingParamsRequest* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(SetProductPricingParamsRequest* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  SetProductPricingParamsRequest* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<SetProductPricingParamsRequest>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const SetProductPricingParamsRequest& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const SetProductPricingParamsRequest& from) {
+    SetProductPricingParamsRequest::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(SetProductPricingParamsRequest* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "omm.proto.SetProductPricingParamsRequest";
+  }
+  protected:
+  explicit SetProductPricingParamsRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kParamsFieldNumber = 1,
+  };
+  // .omm.proto.ProductPricingParams params = 1;
+  bool has_params() const;
+  private:
+  bool _internal_has_params() const;
+  public:
+  void clear_params();
+  const ::omm::proto::ProductPricingParams& params() const;
+  PROTOBUF_NODISCARD ::omm::proto::ProductPricingParams* release_params();
+  ::omm::proto::ProductPricingParams* mutable_params();
+  void set_allocated_params(::omm::proto::ProductPricingParams* params);
+  private:
+  const ::omm::proto::ProductPricingParams& _internal_params() const;
+  ::omm::proto::ProductPricingParams* _internal_mutable_params();
+  public:
+  void unsafe_arena_set_allocated_params(
+      ::omm::proto::ProductPricingParams* params);
+  ::omm::proto::ProductPricingParams* unsafe_arena_release_params();
+
+  // @@protoc_insertion_point(class_scope:omm.proto.SetProductPricingParamsRequest)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::omm::proto::ProductPricingParams* params_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_trading_2eproto;
+};
+// -------------------------------------------------------------------
+
+class SetProductPricingParamsResponse final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.SetProductPricingParamsResponse) */ {
+ public:
+  inline SetProductPricingParamsResponse() : SetProductPricingParamsResponse(nullptr) {}
+  ~SetProductPricingParamsResponse() override;
+  explicit PROTOBUF_CONSTEXPR SetProductPricingParamsResponse(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  SetProductPricingParamsResponse(const SetProductPricingParamsResponse& from);
+  SetProductPricingParamsResponse(SetProductPricingParamsResponse&& from) noexcept
+    : SetProductPricingParamsResponse() {
+    *this = ::std::move(from);
+  }
+
+  inline SetProductPricingParamsResponse& operator=(const SetProductPricingParamsResponse& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline SetProductPricingParamsResponse& operator=(SetProductPricingParamsResponse&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const SetProductPricingParamsResponse& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const SetProductPricingParamsResponse* internal_default_instance() {
+    return reinterpret_cast<const SetProductPricingParamsResponse*>(
+               &_SetProductPricingParamsResponse_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    28;
+
+  friend void swap(SetProductPricingParamsResponse& a, SetProductPricingParamsResponse& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(SetProductPricingParamsResponse* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(SetProductPricingParamsResponse* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  SetProductPricingParamsResponse* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<SetProductPricingParamsResponse>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const SetProductPricingParamsResponse& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const SetProductPricingParamsResponse& from) {
+    SetProductPricingParamsResponse::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(SetProductPricingParamsResponse* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "omm.proto.SetProductPricingParamsResponse";
+  }
+  protected:
+  explicit SetProductPricingParamsResponse(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kMessageFieldNumber = 2,
+    kOkFieldNumber = 1,
+  };
+  // string message = 2;
+  void clear_message();
+  const std::string& message() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_message(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_message();
+  PROTOBUF_NODISCARD std::string* release_message();
+  void set_allocated_message(std::string* message);
+  private:
+  const std::string& _internal_message() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_message(const std::string& value);
+  std::string* _internal_mutable_message();
+  public:
+
+  // bool ok = 1;
+  void clear_ok();
+  bool ok() const;
+  void set_ok(bool value);
+  private:
+  bool _internal_ok() const;
+  void _internal_set_ok(bool value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:omm.proto.SetProductPricingParamsResponse)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr message_;
+    bool ok_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_trading_2eproto;
+};
+// -------------------------------------------------------------------
+
 class SetArbStrategyParamsRequest final :
     public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:omm.proto.SetArbStrategyParamsRequest) */ {
  public:
@@ -5883,7 +6523,7 @@ class SetArbStrategyParamsRequest final :
                &_SetArbStrategyParamsRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    26;
+    29;
 
   friend void swap(SetArbStrategyParamsRequest& a, SetArbStrategyParamsRequest& b) {
     a.Swap(&b);
@@ -6060,7 +6700,7 @@ class SetArbStrategyParamsResponse final :
                &_SetArbStrategyParamsResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    27;
+    30;
 
   friend void swap(SetArbStrategyParamsResponse& a, SetArbStrategyParamsResponse& b) {
     a.Swap(&b);
@@ -6224,7 +6864,7 @@ class StartStopRequest final :
                &_StartStopRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    28;
+    31;
 
   friend void swap(StartStopRequest& a, StartStopRequest& b) {
     a.Swap(&b);
@@ -6372,7 +7012,7 @@ class StartStopResponse final :
                &_StartStopResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    29;
+    32;
 
   friend void swap(StartStopResponse& a, StartStopResponse& b) {
     a.Swap(&b);
@@ -6536,7 +7176,7 @@ class ArbStartStopRequest final :
                &_ArbStartStopRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    30;
+    33;
 
   friend void swap(ArbStartStopRequest& a, ArbStartStopRequest& b) {
     a.Swap(&b);
@@ -6693,7 +7333,7 @@ class ArbStartStopResponse final :
                &_ArbStartStopResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    31;
+    34;
 
   friend void swap(ArbStartStopResponse& a, ArbStartStopResponse& b) {
     a.Swap(&b);
@@ -6857,7 +7497,7 @@ class RiskThreshold final :
                &_RiskThreshold_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    32;
+    35;
 
   friend void swap(RiskThreshold& a, RiskThreshold& b) {
     a.Swap(&b);
@@ -7038,7 +7678,7 @@ class RiskState final :
                &_RiskState_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    33;
+    36;
 
   friend void swap(RiskState& a, RiskState& b) {
     a.Swap(&b);
@@ -7239,7 +7879,7 @@ class ProductMMState final :
                &_ProductMMState_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    34;
+    37;
 
   friend void swap(ProductMMState& a, ProductMMState& b) {
     a.Swap(&b);
@@ -7440,7 +8080,7 @@ class InstrumentMMState final :
                &_InstrumentMMState_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    35;
+    38;
 
   friend void swap(InstrumentMMState& a, InstrumentMMState& b) {
     a.Swap(&b);
@@ -7663,7 +8303,7 @@ class ArbStrategyState final :
                &_ArbStrategyState_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    36;
+    39;
 
   friend void swap(ArbStrategyState& a, ArbStrategyState& b) {
     a.Swap(&b);
@@ -7974,7 +8614,7 @@ class PcpOpportunityState final :
                &_PcpOpportunityState_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    37;
+    40;
 
   friend void swap(PcpOpportunityState& a, PcpOpportunityState& b) {
     a.Swap(&b);
@@ -8331,7 +8971,7 @@ class SetRiskThresholdRequest final :
                &_SetRiskThresholdRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    38;
+    41;
 
   friend void swap(SetRiskThresholdRequest& a, SetRiskThresholdRequest& b) {
     a.Swap(&b);
@@ -8488,7 +9128,7 @@ class SetRiskThresholdResponse final :
                &_SetRiskThresholdResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    39;
+    42;
 
   friend void swap(SetRiskThresholdResponse& a, SetRiskThresholdResponse& b) {
     a.Swap(&b);
@@ -8652,7 +9292,7 @@ class ManualOrderRequest final :
                &_ManualOrderRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    40;
+    43;
 
   friend void swap(ManualOrderRequest& a, ManualOrderRequest& b) {
     a.Swap(&b);
@@ -8854,7 +9494,7 @@ class ManualOrderResponse final :
                &_ManualOrderResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    41;
+    44;
 
   friend void swap(ManualOrderResponse& a, ManualOrderResponse& b) {
     a.Swap(&b);
@@ -9040,7 +9680,7 @@ class CancelOrderRequest final :
                &_CancelOrderRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    42;
+    45;
 
   friend void swap(CancelOrderRequest& a, CancelOrderRequest& b) {
     a.Swap(&b);
@@ -9199,7 +9839,7 @@ class CancelOrderResponse final :
                &_CancelOrderResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    43;
+    46;
 
   friend void swap(CancelOrderResponse& a, CancelOrderResponse& b) {
     a.Swap(&b);
@@ -9363,7 +10003,7 @@ class CancelQuoteRequest final :
                &_CancelQuoteRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    44;
+    47;
 
   friend void swap(CancelQuoteRequest& a, CancelQuoteRequest& b) {
     a.Swap(&b);
@@ -9522,7 +10162,7 @@ class CancelQuoteResponse final :
                &_CancelQuoteResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    45;
+    48;
 
   friend void swap(CancelQuoteResponse& a, CancelQuoteResponse& b) {
     a.Swap(&b);
@@ -9685,7 +10325,7 @@ class SnapshotRequest final :
                &_SnapshotRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    46;
+    49;
 
   friend void swap(SnapshotRequest& a, SnapshotRequest& b) {
     a.Swap(&b);
@@ -9804,7 +10444,7 @@ class SnapshotResponse final :
                &_SnapshotResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    47;
+    50;
 
   friend void swap(SnapshotResponse& a, SnapshotResponse& b) {
     a.Swap(&b);
@@ -9889,6 +10529,7 @@ class SnapshotResponse final :
     kBooksFieldNumber = 13,
     kBookPositionsFieldNumber = 14,
     kBookPortfoliosFieldNumber = 15,
+    kProductPricingParamsFieldNumber = 16,
     kPortfolioFieldNumber = 3,
     kRiskStateFieldNumber = 6,
     kCurrentUserFieldNumber = 12,
@@ -10109,6 +10750,24 @@ class SnapshotResponse final :
   const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::BookPortfolio >&
       book_portfolios() const;
 
+  // repeated .omm.proto.ProductPricingParams product_pricing_params = 16;
+  int product_pricing_params_size() const;
+  private:
+  int _internal_product_pricing_params_size() const;
+  public:
+  void clear_product_pricing_params();
+  ::omm::proto::ProductPricingParams* mutable_product_pricing_params(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::ProductPricingParams >*
+      mutable_product_pricing_params();
+  private:
+  const ::omm::proto::ProductPricingParams& _internal_product_pricing_params(int index) const;
+  ::omm::proto::ProductPricingParams* _internal_add_product_pricing_params();
+  public:
+  const ::omm::proto::ProductPricingParams& product_pricing_params(int index) const;
+  ::omm::proto::ProductPricingParams* add_product_pricing_params();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::ProductPricingParams >&
+      product_pricing_params() const;
+
   // .omm.proto.PortfolioGreeks portfolio = 3;
   bool has_portfolio() const;
   private:
@@ -10183,6 +10842,7 @@ class SnapshotResponse final :
     ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::BookInfo > books_;
     ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::BookPosition > book_positions_;
     ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::BookPortfolio > book_portfolios_;
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::ProductPricingParams > product_pricing_params_;
     ::omm::proto::PortfolioGreeks* portfolio_;
     ::omm::proto::RiskState* risk_state_;
     ::omm::proto::UserInfo* current_user_;
@@ -10241,7 +10901,7 @@ class StreamRequest final :
                &_StreamRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    48;
+    51;
 
   friend void swap(StreamRequest& a, StreamRequest& b) {
     a.Swap(&b);
@@ -10548,6 +11208,206 @@ inline void Greeks::_internal_set_calc_ts_ns(int64_t value) {
 inline void Greeks::set_calc_ts_ns(int64_t value) {
   _internal_set_calc_ts_ns(value);
   // @@protoc_insertion_point(field_set:omm.proto.Greeks.calc_ts_ns)
+}
+
+// double std_delta = 11;
+inline void Greeks::clear_std_delta() {
+  _impl_.std_delta_ = 0;
+}
+inline double Greeks::_internal_std_delta() const {
+  return _impl_.std_delta_;
+}
+inline double Greeks::std_delta() const {
+  // @@protoc_insertion_point(field_get:omm.proto.Greeks.std_delta)
+  return _internal_std_delta();
+}
+inline void Greeks::_internal_set_std_delta(double value) {
+  
+  _impl_.std_delta_ = value;
+}
+inline void Greeks::set_std_delta(double value) {
+  _internal_set_std_delta(value);
+  // @@protoc_insertion_point(field_set:omm.proto.Greeks.std_delta)
+}
+
+// double delta_cash = 12;
+inline void Greeks::clear_delta_cash() {
+  _impl_.delta_cash_ = 0;
+}
+inline double Greeks::_internal_delta_cash() const {
+  return _impl_.delta_cash_;
+}
+inline double Greeks::delta_cash() const {
+  // @@protoc_insertion_point(field_get:omm.proto.Greeks.delta_cash)
+  return _internal_delta_cash();
+}
+inline void Greeks::_internal_set_delta_cash(double value) {
+  
+  _impl_.delta_cash_ = value;
+}
+inline void Greeks::set_delta_cash(double value) {
+  _internal_set_delta_cash(value);
+  // @@protoc_insertion_point(field_set:omm.proto.Greeks.delta_cash)
+}
+
+// double std_gamma = 13;
+inline void Greeks::clear_std_gamma() {
+  _impl_.std_gamma_ = 0;
+}
+inline double Greeks::_internal_std_gamma() const {
+  return _impl_.std_gamma_;
+}
+inline double Greeks::std_gamma() const {
+  // @@protoc_insertion_point(field_get:omm.proto.Greeks.std_gamma)
+  return _internal_std_gamma();
+}
+inline void Greeks::_internal_set_std_gamma(double value) {
+  
+  _impl_.std_gamma_ = value;
+}
+inline void Greeks::set_std_gamma(double value) {
+  _internal_set_std_gamma(value);
+  // @@protoc_insertion_point(field_set:omm.proto.Greeks.std_gamma)
+}
+
+// double gamma_cash = 14;
+inline void Greeks::clear_gamma_cash() {
+  _impl_.gamma_cash_ = 0;
+}
+inline double Greeks::_internal_gamma_cash() const {
+  return _impl_.gamma_cash_;
+}
+inline double Greeks::gamma_cash() const {
+  // @@protoc_insertion_point(field_get:omm.proto.Greeks.gamma_cash)
+  return _internal_gamma_cash();
+}
+inline void Greeks::_internal_set_gamma_cash(double value) {
+  
+  _impl_.gamma_cash_ = value;
+}
+inline void Greeks::set_gamma_cash(double value) {
+  _internal_set_gamma_cash(value);
+  // @@protoc_insertion_point(field_set:omm.proto.Greeks.gamma_cash)
+}
+
+// double vega_cash = 15;
+inline void Greeks::clear_vega_cash() {
+  _impl_.vega_cash_ = 0;
+}
+inline double Greeks::_internal_vega_cash() const {
+  return _impl_.vega_cash_;
+}
+inline double Greeks::vega_cash() const {
+  // @@protoc_insertion_point(field_get:omm.proto.Greeks.vega_cash)
+  return _internal_vega_cash();
+}
+inline void Greeks::_internal_set_vega_cash(double value) {
+  
+  _impl_.vega_cash_ = value;
+}
+inline void Greeks::set_vega_cash(double value) {
+  _internal_set_vega_cash(value);
+  // @@protoc_insertion_point(field_set:omm.proto.Greeks.vega_cash)
+}
+
+// double theta_cash = 16;
+inline void Greeks::clear_theta_cash() {
+  _impl_.theta_cash_ = 0;
+}
+inline double Greeks::_internal_theta_cash() const {
+  return _impl_.theta_cash_;
+}
+inline double Greeks::theta_cash() const {
+  // @@protoc_insertion_point(field_get:omm.proto.Greeks.theta_cash)
+  return _internal_theta_cash();
+}
+inline void Greeks::_internal_set_theta_cash(double value) {
+  
+  _impl_.theta_cash_ = value;
+}
+inline void Greeks::set_theta_cash(double value) {
+  _internal_set_theta_cash(value);
+  // @@protoc_insertion_point(field_set:omm.proto.Greeks.theta_cash)
+}
+
+// double rho_cash = 17;
+inline void Greeks::clear_rho_cash() {
+  _impl_.rho_cash_ = 0;
+}
+inline double Greeks::_internal_rho_cash() const {
+  return _impl_.rho_cash_;
+}
+inline double Greeks::rho_cash() const {
+  // @@protoc_insertion_point(field_get:omm.proto.Greeks.rho_cash)
+  return _internal_rho_cash();
+}
+inline void Greeks::_internal_set_rho_cash(double value) {
+  
+  _impl_.rho_cash_ = value;
+}
+inline void Greeks::set_rho_cash(double value) {
+  _internal_set_rho_cash(value);
+  // @@protoc_insertion_point(field_set:omm.proto.Greeks.rho_cash)
+}
+
+// double vanna = 18;
+inline void Greeks::clear_vanna() {
+  _impl_.vanna_ = 0;
+}
+inline double Greeks::_internal_vanna() const {
+  return _impl_.vanna_;
+}
+inline double Greeks::vanna() const {
+  // @@protoc_insertion_point(field_get:omm.proto.Greeks.vanna)
+  return _internal_vanna();
+}
+inline void Greeks::_internal_set_vanna(double value) {
+  
+  _impl_.vanna_ = value;
+}
+inline void Greeks::set_vanna(double value) {
+  _internal_set_vanna(value);
+  // @@protoc_insertion_point(field_set:omm.proto.Greeks.vanna)
+}
+
+// double volga = 19;
+inline void Greeks::clear_volga() {
+  _impl_.volga_ = 0;
+}
+inline double Greeks::_internal_volga() const {
+  return _impl_.volga_;
+}
+inline double Greeks::volga() const {
+  // @@protoc_insertion_point(field_get:omm.proto.Greeks.volga)
+  return _internal_volga();
+}
+inline void Greeks::_internal_set_volga(double value) {
+  
+  _impl_.volga_ = value;
+}
+inline void Greeks::set_volga(double value) {
+  _internal_set_volga(value);
+  // @@protoc_insertion_point(field_set:omm.proto.Greeks.volga)
+}
+
+// double charm = 20;
+inline void Greeks::clear_charm() {
+  _impl_.charm_ = 0;
+}
+inline double Greeks::_internal_charm() const {
+  return _impl_.charm_;
+}
+inline double Greeks::charm() const {
+  // @@protoc_insertion_point(field_get:omm.proto.Greeks.charm)
+  return _internal_charm();
+}
+inline void Greeks::_internal_set_charm(double value) {
+  
+  _impl_.charm_ = value;
+}
+inline void Greeks::set_charm(double value) {
+  _internal_set_charm(value);
+  // @@protoc_insertion_point(field_set:omm.proto.Greeks.charm)
 }
 
 // -------------------------------------------------------------------
@@ -11896,6 +12756,46 @@ inline void InstrumentInfo::_internal_set_expiry_date(int32_t value) {
 inline void InstrumentInfo::set_expiry_date(int32_t value) {
   _internal_set_expiry_date(value);
   // @@protoc_insertion_point(field_set:omm.proto.InstrumentInfo.expiry_date)
+}
+
+// double tick_size = 11;
+inline void InstrumentInfo::clear_tick_size() {
+  _impl_.tick_size_ = 0;
+}
+inline double InstrumentInfo::_internal_tick_size() const {
+  return _impl_.tick_size_;
+}
+inline double InstrumentInfo::tick_size() const {
+  // @@protoc_insertion_point(field_get:omm.proto.InstrumentInfo.tick_size)
+  return _internal_tick_size();
+}
+inline void InstrumentInfo::_internal_set_tick_size(double value) {
+  
+  _impl_.tick_size_ = value;
+}
+inline void InstrumentInfo::set_tick_size(double value) {
+  _internal_set_tick_size(value);
+  // @@protoc_insertion_point(field_set:omm.proto.InstrumentInfo.tick_size)
+}
+
+// double multiplier = 12;
+inline void InstrumentInfo::clear_multiplier() {
+  _impl_.multiplier_ = 0;
+}
+inline double InstrumentInfo::_internal_multiplier() const {
+  return _impl_.multiplier_;
+}
+inline double InstrumentInfo::multiplier() const {
+  // @@protoc_insertion_point(field_get:omm.proto.InstrumentInfo.multiplier)
+  return _internal_multiplier();
+}
+inline void InstrumentInfo::_internal_set_multiplier(double value) {
+  
+  _impl_.multiplier_ = value;
+}
+inline void InstrumentInfo::set_multiplier(double value) {
+  _internal_set_multiplier(value);
+  // @@protoc_insertion_point(field_set:omm.proto.InstrumentInfo.multiplier)
 }
 
 // -------------------------------------------------------------------
@@ -13920,6 +14820,100 @@ inline void MMParams::set_use_one_sided_at_limits(bool value) {
 
 // -------------------------------------------------------------------
 
+// ProductPricingParams
+
+// uint32 product_index = 1;
+inline void ProductPricingParams::clear_product_index() {
+  _impl_.product_index_ = 0u;
+}
+inline uint32_t ProductPricingParams::_internal_product_index() const {
+  return _impl_.product_index_;
+}
+inline uint32_t ProductPricingParams::product_index() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ProductPricingParams.product_index)
+  return _internal_product_index();
+}
+inline void ProductPricingParams::_internal_set_product_index(uint32_t value) {
+  
+  _impl_.product_index_ = value;
+}
+inline void ProductPricingParams::set_product_index(uint32_t value) {
+  _internal_set_product_index(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ProductPricingParams.product_index)
+}
+
+// string base_offset_type = 2;
+inline void ProductPricingParams::clear_base_offset_type() {
+  _impl_.base_offset_type_.ClearToEmpty();
+}
+inline const std::string& ProductPricingParams::base_offset_type() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ProductPricingParams.base_offset_type)
+  return _internal_base_offset_type();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void ProductPricingParams::set_base_offset_type(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.base_offset_type_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:omm.proto.ProductPricingParams.base_offset_type)
+}
+inline std::string* ProductPricingParams::mutable_base_offset_type() {
+  std::string* _s = _internal_mutable_base_offset_type();
+  // @@protoc_insertion_point(field_mutable:omm.proto.ProductPricingParams.base_offset_type)
+  return _s;
+}
+inline const std::string& ProductPricingParams::_internal_base_offset_type() const {
+  return _impl_.base_offset_type_.Get();
+}
+inline void ProductPricingParams::_internal_set_base_offset_type(const std::string& value) {
+  
+  _impl_.base_offset_type_.Set(value, GetArenaForAllocation());
+}
+inline std::string* ProductPricingParams::_internal_mutable_base_offset_type() {
+  
+  return _impl_.base_offset_type_.Mutable(GetArenaForAllocation());
+}
+inline std::string* ProductPricingParams::release_base_offset_type() {
+  // @@protoc_insertion_point(field_release:omm.proto.ProductPricingParams.base_offset_type)
+  return _impl_.base_offset_type_.Release();
+}
+inline void ProductPricingParams::set_allocated_base_offset_type(std::string* base_offset_type) {
+  if (base_offset_type != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.base_offset_type_.SetAllocated(base_offset_type, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.base_offset_type_.IsDefault()) {
+    _impl_.base_offset_type_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.ProductPricingParams.base_offset_type)
+}
+
+// double base_offset_value = 3;
+inline void ProductPricingParams::clear_base_offset_value() {
+  _impl_.base_offset_value_ = 0;
+}
+inline double ProductPricingParams::_internal_base_offset_value() const {
+  return _impl_.base_offset_value_;
+}
+inline double ProductPricingParams::base_offset_value() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ProductPricingParams.base_offset_value)
+  return _internal_base_offset_value();
+}
+inline void ProductPricingParams::_internal_set_base_offset_value(double value) {
+  
+  _impl_.base_offset_value_ = value;
+}
+inline void ProductPricingParams::set_base_offset_value(double value) {
+  _internal_set_base_offset_value(value);
+  // @@protoc_insertion_point(field_set:omm.proto.ProductPricingParams.base_offset_value)
+}
+
+// -------------------------------------------------------------------
+
 // ArbParams
 
 // optional double min_edge_ticks = 1;
@@ -14510,6 +15504,174 @@ inline void SetStrategyParamsResponse::set_allocated_message(std::string* messag
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   // @@protoc_insertion_point(field_set_allocated:omm.proto.SetStrategyParamsResponse.message)
+}
+
+// -------------------------------------------------------------------
+
+// SetProductPricingParamsRequest
+
+// .omm.proto.ProductPricingParams params = 1;
+inline bool SetProductPricingParamsRequest::_internal_has_params() const {
+  return this != internal_default_instance() && _impl_.params_ != nullptr;
+}
+inline bool SetProductPricingParamsRequest::has_params() const {
+  return _internal_has_params();
+}
+inline void SetProductPricingParamsRequest::clear_params() {
+  if (GetArenaForAllocation() == nullptr && _impl_.params_ != nullptr) {
+    delete _impl_.params_;
+  }
+  _impl_.params_ = nullptr;
+}
+inline const ::omm::proto::ProductPricingParams& SetProductPricingParamsRequest::_internal_params() const {
+  const ::omm::proto::ProductPricingParams* p = _impl_.params_;
+  return p != nullptr ? *p : reinterpret_cast<const ::omm::proto::ProductPricingParams&>(
+      ::omm::proto::_ProductPricingParams_default_instance_);
+}
+inline const ::omm::proto::ProductPricingParams& SetProductPricingParamsRequest::params() const {
+  // @@protoc_insertion_point(field_get:omm.proto.SetProductPricingParamsRequest.params)
+  return _internal_params();
+}
+inline void SetProductPricingParamsRequest::unsafe_arena_set_allocated_params(
+    ::omm::proto::ProductPricingParams* params) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.params_);
+  }
+  _impl_.params_ = params;
+  if (params) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:omm.proto.SetProductPricingParamsRequest.params)
+}
+inline ::omm::proto::ProductPricingParams* SetProductPricingParamsRequest::release_params() {
+  
+  ::omm::proto::ProductPricingParams* temp = _impl_.params_;
+  _impl_.params_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::omm::proto::ProductPricingParams* SetProductPricingParamsRequest::unsafe_arena_release_params() {
+  // @@protoc_insertion_point(field_release:omm.proto.SetProductPricingParamsRequest.params)
+  
+  ::omm::proto::ProductPricingParams* temp = _impl_.params_;
+  _impl_.params_ = nullptr;
+  return temp;
+}
+inline ::omm::proto::ProductPricingParams* SetProductPricingParamsRequest::_internal_mutable_params() {
+  
+  if (_impl_.params_ == nullptr) {
+    auto* p = CreateMaybeMessage<::omm::proto::ProductPricingParams>(GetArenaForAllocation());
+    _impl_.params_ = p;
+  }
+  return _impl_.params_;
+}
+inline ::omm::proto::ProductPricingParams* SetProductPricingParamsRequest::mutable_params() {
+  ::omm::proto::ProductPricingParams* _msg = _internal_mutable_params();
+  // @@protoc_insertion_point(field_mutable:omm.proto.SetProductPricingParamsRequest.params)
+  return _msg;
+}
+inline void SetProductPricingParamsRequest::set_allocated_params(::omm::proto::ProductPricingParams* params) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.params_;
+  }
+  if (params) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(params);
+    if (message_arena != submessage_arena) {
+      params = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, params, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.params_ = params;
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.SetProductPricingParamsRequest.params)
+}
+
+// -------------------------------------------------------------------
+
+// SetProductPricingParamsResponse
+
+// bool ok = 1;
+inline void SetProductPricingParamsResponse::clear_ok() {
+  _impl_.ok_ = false;
+}
+inline bool SetProductPricingParamsResponse::_internal_ok() const {
+  return _impl_.ok_;
+}
+inline bool SetProductPricingParamsResponse::ok() const {
+  // @@protoc_insertion_point(field_get:omm.proto.SetProductPricingParamsResponse.ok)
+  return _internal_ok();
+}
+inline void SetProductPricingParamsResponse::_internal_set_ok(bool value) {
+  
+  _impl_.ok_ = value;
+}
+inline void SetProductPricingParamsResponse::set_ok(bool value) {
+  _internal_set_ok(value);
+  // @@protoc_insertion_point(field_set:omm.proto.SetProductPricingParamsResponse.ok)
+}
+
+// string message = 2;
+inline void SetProductPricingParamsResponse::clear_message() {
+  _impl_.message_.ClearToEmpty();
+}
+inline const std::string& SetProductPricingParamsResponse::message() const {
+  // @@protoc_insertion_point(field_get:omm.proto.SetProductPricingParamsResponse.message)
+  return _internal_message();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void SetProductPricingParamsResponse::set_message(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.message_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:omm.proto.SetProductPricingParamsResponse.message)
+}
+inline std::string* SetProductPricingParamsResponse::mutable_message() {
+  std::string* _s = _internal_mutable_message();
+  // @@protoc_insertion_point(field_mutable:omm.proto.SetProductPricingParamsResponse.message)
+  return _s;
+}
+inline const std::string& SetProductPricingParamsResponse::_internal_message() const {
+  return _impl_.message_.Get();
+}
+inline void SetProductPricingParamsResponse::_internal_set_message(const std::string& value) {
+  
+  _impl_.message_.Set(value, GetArenaForAllocation());
+}
+inline std::string* SetProductPricingParamsResponse::_internal_mutable_message() {
+  
+  return _impl_.message_.Mutable(GetArenaForAllocation());
+}
+inline std::string* SetProductPricingParamsResponse::release_message() {
+  // @@protoc_insertion_point(field_release:omm.proto.SetProductPricingParamsResponse.message)
+  return _impl_.message_.Release();
+}
+inline void SetProductPricingParamsResponse::set_allocated_message(std::string* message) {
+  if (message != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.message_.SetAllocated(message, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.message_.IsDefault()) {
+    _impl_.message_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.SetProductPricingParamsResponse.message)
 }
 
 // -------------------------------------------------------------------
@@ -17737,6 +18899,46 @@ SnapshotResponse::book_portfolios() const {
   return _impl_.book_portfolios_;
 }
 
+// repeated .omm.proto.ProductPricingParams product_pricing_params = 16;
+inline int SnapshotResponse::_internal_product_pricing_params_size() const {
+  return _impl_.product_pricing_params_.size();
+}
+inline int SnapshotResponse::product_pricing_params_size() const {
+  return _internal_product_pricing_params_size();
+}
+inline void SnapshotResponse::clear_product_pricing_params() {
+  _impl_.product_pricing_params_.Clear();
+}
+inline ::omm::proto::ProductPricingParams* SnapshotResponse::mutable_product_pricing_params(int index) {
+  // @@protoc_insertion_point(field_mutable:omm.proto.SnapshotResponse.product_pricing_params)
+  return _impl_.product_pricing_params_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::ProductPricingParams >*
+SnapshotResponse::mutable_product_pricing_params() {
+  // @@protoc_insertion_point(field_mutable_list:omm.proto.SnapshotResponse.product_pricing_params)
+  return &_impl_.product_pricing_params_;
+}
+inline const ::omm::proto::ProductPricingParams& SnapshotResponse::_internal_product_pricing_params(int index) const {
+  return _impl_.product_pricing_params_.Get(index);
+}
+inline const ::omm::proto::ProductPricingParams& SnapshotResponse::product_pricing_params(int index) const {
+  // @@protoc_insertion_point(field_get:omm.proto.SnapshotResponse.product_pricing_params)
+  return _internal_product_pricing_params(index);
+}
+inline ::omm::proto::ProductPricingParams* SnapshotResponse::_internal_add_product_pricing_params() {
+  return _impl_.product_pricing_params_.Add();
+}
+inline ::omm::proto::ProductPricingParams* SnapshotResponse::add_product_pricing_params() {
+  ::omm::proto::ProductPricingParams* _add = _internal_add_product_pricing_params();
+  // @@protoc_insertion_point(field_add:omm.proto.SnapshotResponse.product_pricing_params)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::omm::proto::ProductPricingParams >&
+SnapshotResponse::product_pricing_params() const {
+  // @@protoc_insertion_point(field_list:omm.proto.SnapshotResponse.product_pricing_params)
+  return _impl_.product_pricing_params_;
+}
+
 // -------------------------------------------------------------------
 
 // StreamRequest
@@ -17764,6 +18966,12 @@ inline void StreamRequest::set_product_index(uint32_t value) {
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

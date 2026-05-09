@@ -83,17 +83,161 @@ CMakeFiles/engine_lib_test.dir/src/engine/trading_engine.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/engine_lib_test.dir/src/engine/trading_engine.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/d/workspace/optionMM/src/engine/trading_engine.cpp -o CMakeFiles/engine_lib_test.dir/src/engine/trading_engine.cpp.s
 
+CMakeFiles/engine_lib_test.dir/src/engine/engine_workers.cpp.o: CMakeFiles/engine_lib_test.dir/flags.make
+CMakeFiles/engine_lib_test.dir/src/engine/engine_workers.cpp.o: /mnt/d/workspace/optionMM/src/engine/engine_workers.cpp
+CMakeFiles/engine_lib_test.dir/src/engine/engine_workers.cpp.o: CMakeFiles/engine_lib_test.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/engine_lib_test.dir/src/engine/engine_workers.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/engine_lib_test.dir/src/engine/engine_workers.cpp.o -MF CMakeFiles/engine_lib_test.dir/src/engine/engine_workers.cpp.o.d -o CMakeFiles/engine_lib_test.dir/src/engine/engine_workers.cpp.o -c /mnt/d/workspace/optionMM/src/engine/engine_workers.cpp
+
+CMakeFiles/engine_lib_test.dir/src/engine/engine_workers.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/engine_lib_test.dir/src/engine/engine_workers.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/d/workspace/optionMM/src/engine/engine_workers.cpp > CMakeFiles/engine_lib_test.dir/src/engine/engine_workers.cpp.i
+
+CMakeFiles/engine_lib_test.dir/src/engine/engine_workers.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/engine_lib_test.dir/src/engine/engine_workers.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/d/workspace/optionMM/src/engine/engine_workers.cpp -o CMakeFiles/engine_lib_test.dir/src/engine/engine_workers.cpp.s
+
+CMakeFiles/engine_lib_test.dir/src/engine/pricer_worker.cpp.o: CMakeFiles/engine_lib_test.dir/flags.make
+CMakeFiles/engine_lib_test.dir/src/engine/pricer_worker.cpp.o: /mnt/d/workspace/optionMM/src/engine/pricer_worker.cpp
+CMakeFiles/engine_lib_test.dir/src/engine/pricer_worker.cpp.o: CMakeFiles/engine_lib_test.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/engine_lib_test.dir/src/engine/pricer_worker.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/engine_lib_test.dir/src/engine/pricer_worker.cpp.o -MF CMakeFiles/engine_lib_test.dir/src/engine/pricer_worker.cpp.o.d -o CMakeFiles/engine_lib_test.dir/src/engine/pricer_worker.cpp.o -c /mnt/d/workspace/optionMM/src/engine/pricer_worker.cpp
+
+CMakeFiles/engine_lib_test.dir/src/engine/pricer_worker.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/engine_lib_test.dir/src/engine/pricer_worker.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/d/workspace/optionMM/src/engine/pricer_worker.cpp > CMakeFiles/engine_lib_test.dir/src/engine/pricer_worker.cpp.i
+
+CMakeFiles/engine_lib_test.dir/src/engine/pricer_worker.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/engine_lib_test.dir/src/engine/pricer_worker.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/d/workspace/optionMM/src/engine/pricer_worker.cpp -o CMakeFiles/engine_lib_test.dir/src/engine/pricer_worker.cpp.s
+
+CMakeFiles/engine_lib_test.dir/src/engine/strategy_worker.cpp.o: CMakeFiles/engine_lib_test.dir/flags.make
+CMakeFiles/engine_lib_test.dir/src/engine/strategy_worker.cpp.o: /mnt/d/workspace/optionMM/src/engine/strategy_worker.cpp
+CMakeFiles/engine_lib_test.dir/src/engine/strategy_worker.cpp.o: CMakeFiles/engine_lib_test.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/engine_lib_test.dir/src/engine/strategy_worker.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/engine_lib_test.dir/src/engine/strategy_worker.cpp.o -MF CMakeFiles/engine_lib_test.dir/src/engine/strategy_worker.cpp.o.d -o CMakeFiles/engine_lib_test.dir/src/engine/strategy_worker.cpp.o -c /mnt/d/workspace/optionMM/src/engine/strategy_worker.cpp
+
+CMakeFiles/engine_lib_test.dir/src/engine/strategy_worker.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/engine_lib_test.dir/src/engine/strategy_worker.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/d/workspace/optionMM/src/engine/strategy_worker.cpp > CMakeFiles/engine_lib_test.dir/src/engine/strategy_worker.cpp.i
+
+CMakeFiles/engine_lib_test.dir/src/engine/strategy_worker.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/engine_lib_test.dir/src/engine/strategy_worker.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/d/workspace/optionMM/src/engine/strategy_worker.cpp -o CMakeFiles/engine_lib_test.dir/src/engine/strategy_worker.cpp.s
+
+CMakeFiles/engine_lib_test.dir/src/engine/arbitrage_worker.cpp.o: CMakeFiles/engine_lib_test.dir/flags.make
+CMakeFiles/engine_lib_test.dir/src/engine/arbitrage_worker.cpp.o: /mnt/d/workspace/optionMM/src/engine/arbitrage_worker.cpp
+CMakeFiles/engine_lib_test.dir/src/engine/arbitrage_worker.cpp.o: CMakeFiles/engine_lib_test.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/engine_lib_test.dir/src/engine/arbitrage_worker.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/engine_lib_test.dir/src/engine/arbitrage_worker.cpp.o -MF CMakeFiles/engine_lib_test.dir/src/engine/arbitrage_worker.cpp.o.d -o CMakeFiles/engine_lib_test.dir/src/engine/arbitrage_worker.cpp.o -c /mnt/d/workspace/optionMM/src/engine/arbitrage_worker.cpp
+
+CMakeFiles/engine_lib_test.dir/src/engine/arbitrage_worker.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/engine_lib_test.dir/src/engine/arbitrage_worker.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/d/workspace/optionMM/src/engine/arbitrage_worker.cpp > CMakeFiles/engine_lib_test.dir/src/engine/arbitrage_worker.cpp.i
+
+CMakeFiles/engine_lib_test.dir/src/engine/arbitrage_worker.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/engine_lib_test.dir/src/engine/arbitrage_worker.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/d/workspace/optionMM/src/engine/arbitrage_worker.cpp -o CMakeFiles/engine_lib_test.dir/src/engine/arbitrage_worker.cpp.s
+
+CMakeFiles/engine_lib_test.dir/src/engine/gateway_dispatcher_worker.cpp.o: CMakeFiles/engine_lib_test.dir/flags.make
+CMakeFiles/engine_lib_test.dir/src/engine/gateway_dispatcher_worker.cpp.o: /mnt/d/workspace/optionMM/src/engine/gateway_dispatcher_worker.cpp
+CMakeFiles/engine_lib_test.dir/src/engine/gateway_dispatcher_worker.cpp.o: CMakeFiles/engine_lib_test.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/engine_lib_test.dir/src/engine/gateway_dispatcher_worker.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/engine_lib_test.dir/src/engine/gateway_dispatcher_worker.cpp.o -MF CMakeFiles/engine_lib_test.dir/src/engine/gateway_dispatcher_worker.cpp.o.d -o CMakeFiles/engine_lib_test.dir/src/engine/gateway_dispatcher_worker.cpp.o -c /mnt/d/workspace/optionMM/src/engine/gateway_dispatcher_worker.cpp
+
+CMakeFiles/engine_lib_test.dir/src/engine/gateway_dispatcher_worker.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/engine_lib_test.dir/src/engine/gateway_dispatcher_worker.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/d/workspace/optionMM/src/engine/gateway_dispatcher_worker.cpp > CMakeFiles/engine_lib_test.dir/src/engine/gateway_dispatcher_worker.cpp.i
+
+CMakeFiles/engine_lib_test.dir/src/engine/gateway_dispatcher_worker.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/engine_lib_test.dir/src/engine/gateway_dispatcher_worker.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/d/workspace/optionMM/src/engine/gateway_dispatcher_worker.cpp -o CMakeFiles/engine_lib_test.dir/src/engine/gateway_dispatcher_worker.cpp.s
+
+CMakeFiles/engine_lib_test.dir/src/engine/monitor_publisher_worker.cpp.o: CMakeFiles/engine_lib_test.dir/flags.make
+CMakeFiles/engine_lib_test.dir/src/engine/monitor_publisher_worker.cpp.o: /mnt/d/workspace/optionMM/src/engine/monitor_publisher_worker.cpp
+CMakeFiles/engine_lib_test.dir/src/engine/monitor_publisher_worker.cpp.o: CMakeFiles/engine_lib_test.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/engine_lib_test.dir/src/engine/monitor_publisher_worker.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/engine_lib_test.dir/src/engine/monitor_publisher_worker.cpp.o -MF CMakeFiles/engine_lib_test.dir/src/engine/monitor_publisher_worker.cpp.o.d -o CMakeFiles/engine_lib_test.dir/src/engine/monitor_publisher_worker.cpp.o -c /mnt/d/workspace/optionMM/src/engine/monitor_publisher_worker.cpp
+
+CMakeFiles/engine_lib_test.dir/src/engine/monitor_publisher_worker.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/engine_lib_test.dir/src/engine/monitor_publisher_worker.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/d/workspace/optionMM/src/engine/monitor_publisher_worker.cpp > CMakeFiles/engine_lib_test.dir/src/engine/monitor_publisher_worker.cpp.i
+
+CMakeFiles/engine_lib_test.dir/src/engine/monitor_publisher_worker.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/engine_lib_test.dir/src/engine/monitor_publisher_worker.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/d/workspace/optionMM/src/engine/monitor_publisher_worker.cpp -o CMakeFiles/engine_lib_test.dir/src/engine/monitor_publisher_worker.cpp.s
+
+CMakeFiles/engine_lib_test.dir/src/engine/vol_fitter_worker.cpp.o: CMakeFiles/engine_lib_test.dir/flags.make
+CMakeFiles/engine_lib_test.dir/src/engine/vol_fitter_worker.cpp.o: /mnt/d/workspace/optionMM/src/engine/vol_fitter_worker.cpp
+CMakeFiles/engine_lib_test.dir/src/engine/vol_fitter_worker.cpp.o: CMakeFiles/engine_lib_test.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/engine_lib_test.dir/src/engine/vol_fitter_worker.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/engine_lib_test.dir/src/engine/vol_fitter_worker.cpp.o -MF CMakeFiles/engine_lib_test.dir/src/engine/vol_fitter_worker.cpp.o.d -o CMakeFiles/engine_lib_test.dir/src/engine/vol_fitter_worker.cpp.o -c /mnt/d/workspace/optionMM/src/engine/vol_fitter_worker.cpp
+
+CMakeFiles/engine_lib_test.dir/src/engine/vol_fitter_worker.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/engine_lib_test.dir/src/engine/vol_fitter_worker.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/d/workspace/optionMM/src/engine/vol_fitter_worker.cpp > CMakeFiles/engine_lib_test.dir/src/engine/vol_fitter_worker.cpp.i
+
+CMakeFiles/engine_lib_test.dir/src/engine/vol_fitter_worker.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/engine_lib_test.dir/src/engine/vol_fitter_worker.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/d/workspace/optionMM/src/engine/vol_fitter_worker.cpp -o CMakeFiles/engine_lib_test.dir/src/engine/vol_fitter_worker.cpp.s
+
+CMakeFiles/engine_lib_test.dir/src/engine/risk_monitor_worker.cpp.o: CMakeFiles/engine_lib_test.dir/flags.make
+CMakeFiles/engine_lib_test.dir/src/engine/risk_monitor_worker.cpp.o: /mnt/d/workspace/optionMM/src/engine/risk_monitor_worker.cpp
+CMakeFiles/engine_lib_test.dir/src/engine/risk_monitor_worker.cpp.o: CMakeFiles/engine_lib_test.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/engine_lib_test.dir/src/engine/risk_monitor_worker.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/engine_lib_test.dir/src/engine/risk_monitor_worker.cpp.o -MF CMakeFiles/engine_lib_test.dir/src/engine/risk_monitor_worker.cpp.o.d -o CMakeFiles/engine_lib_test.dir/src/engine/risk_monitor_worker.cpp.o -c /mnt/d/workspace/optionMM/src/engine/risk_monitor_worker.cpp
+
+CMakeFiles/engine_lib_test.dir/src/engine/risk_monitor_worker.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/engine_lib_test.dir/src/engine/risk_monitor_worker.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/d/workspace/optionMM/src/engine/risk_monitor_worker.cpp > CMakeFiles/engine_lib_test.dir/src/engine/risk_monitor_worker.cpp.i
+
+CMakeFiles/engine_lib_test.dir/src/engine/risk_monitor_worker.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/engine_lib_test.dir/src/engine/risk_monitor_worker.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/d/workspace/optionMM/src/engine/risk_monitor_worker.cpp -o CMakeFiles/engine_lib_test.dir/src/engine/risk_monitor_worker.cpp.s
+
+CMakeFiles/engine_lib_test.dir/src/engine/timer_worker.cpp.o: CMakeFiles/engine_lib_test.dir/flags.make
+CMakeFiles/engine_lib_test.dir/src/engine/timer_worker.cpp.o: /mnt/d/workspace/optionMM/src/engine/timer_worker.cpp
+CMakeFiles/engine_lib_test.dir/src/engine/timer_worker.cpp.o: CMakeFiles/engine_lib_test.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/engine_lib_test.dir/src/engine/timer_worker.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/engine_lib_test.dir/src/engine/timer_worker.cpp.o -MF CMakeFiles/engine_lib_test.dir/src/engine/timer_worker.cpp.o.d -o CMakeFiles/engine_lib_test.dir/src/engine/timer_worker.cpp.o -c /mnt/d/workspace/optionMM/src/engine/timer_worker.cpp
+
+CMakeFiles/engine_lib_test.dir/src/engine/timer_worker.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/engine_lib_test.dir/src/engine/timer_worker.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/d/workspace/optionMM/src/engine/timer_worker.cpp > CMakeFiles/engine_lib_test.dir/src/engine/timer_worker.cpp.i
+
+CMakeFiles/engine_lib_test.dir/src/engine/timer_worker.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/engine_lib_test.dir/src/engine/timer_worker.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/d/workspace/optionMM/src/engine/timer_worker.cpp -o CMakeFiles/engine_lib_test.dir/src/engine/timer_worker.cpp.s
+
 # Object files for target engine_lib_test
 engine_lib_test_OBJECTS = \
-"CMakeFiles/engine_lib_test.dir/src/engine/trading_engine.cpp.o"
+"CMakeFiles/engine_lib_test.dir/src/engine/trading_engine.cpp.o" \
+"CMakeFiles/engine_lib_test.dir/src/engine/engine_workers.cpp.o" \
+"CMakeFiles/engine_lib_test.dir/src/engine/pricer_worker.cpp.o" \
+"CMakeFiles/engine_lib_test.dir/src/engine/strategy_worker.cpp.o" \
+"CMakeFiles/engine_lib_test.dir/src/engine/arbitrage_worker.cpp.o" \
+"CMakeFiles/engine_lib_test.dir/src/engine/gateway_dispatcher_worker.cpp.o" \
+"CMakeFiles/engine_lib_test.dir/src/engine/monitor_publisher_worker.cpp.o" \
+"CMakeFiles/engine_lib_test.dir/src/engine/vol_fitter_worker.cpp.o" \
+"CMakeFiles/engine_lib_test.dir/src/engine/risk_monitor_worker.cpp.o" \
+"CMakeFiles/engine_lib_test.dir/src/engine/timer_worker.cpp.o"
 
 # External object files for target engine_lib_test
 engine_lib_test_EXTERNAL_OBJECTS =
 
 libengine_lib_test.a: CMakeFiles/engine_lib_test.dir/src/engine/trading_engine.cpp.o
+libengine_lib_test.a: CMakeFiles/engine_lib_test.dir/src/engine/engine_workers.cpp.o
+libengine_lib_test.a: CMakeFiles/engine_lib_test.dir/src/engine/pricer_worker.cpp.o
+libengine_lib_test.a: CMakeFiles/engine_lib_test.dir/src/engine/strategy_worker.cpp.o
+libengine_lib_test.a: CMakeFiles/engine_lib_test.dir/src/engine/arbitrage_worker.cpp.o
+libengine_lib_test.a: CMakeFiles/engine_lib_test.dir/src/engine/gateway_dispatcher_worker.cpp.o
+libengine_lib_test.a: CMakeFiles/engine_lib_test.dir/src/engine/monitor_publisher_worker.cpp.o
+libengine_lib_test.a: CMakeFiles/engine_lib_test.dir/src/engine/vol_fitter_worker.cpp.o
+libengine_lib_test.a: CMakeFiles/engine_lib_test.dir/src/engine/risk_monitor_worker.cpp.o
+libengine_lib_test.a: CMakeFiles/engine_lib_test.dir/src/engine/timer_worker.cpp.o
 libengine_lib_test.a: CMakeFiles/engine_lib_test.dir/build.make
 libengine_lib_test.a: CMakeFiles/engine_lib_test.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX static library libengine_lib_test.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Linking CXX static library libengine_lib_test.a"
 	$(CMAKE_COMMAND) -P CMakeFiles/engine_lib_test.dir/cmake_clean_target.cmake
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/engine_lib_test.dir/link.txt --verbose=$(VERBOSE)
 

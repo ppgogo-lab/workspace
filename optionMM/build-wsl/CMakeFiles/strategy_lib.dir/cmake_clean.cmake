@@ -1,4 +1,6 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/strategy_lib.dir/src/strategy/base_quoting_strategy.cpp.o"
+  "CMakeFiles/strategy_lib.dir/src/strategy/base_quoting_strategy.cpp.o.d"
   "CMakeFiles/strategy_lib.dir/src/strategy/mm_framework.cpp.o"
   "CMakeFiles/strategy_lib.dir/src/strategy/mm_framework.cpp.o.d"
   "CMakeFiles/strategy_lib.dir/src/strategy/option_mm_core.cpp.o"

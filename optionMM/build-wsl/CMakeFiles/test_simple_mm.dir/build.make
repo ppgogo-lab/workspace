@@ -95,9 +95,6 @@ test_simple_mm: CMakeFiles/test_simple_mm.dir/build.make
 test_simple_mm: libengine_lib_test.a
 test_simple_mm: /usr/lib/x86_64-linux-gnu/libgtest_main.a
 test_simple_mm: libpricing_lib.a
-test_simple_mm: /usr/lib/x86_64-linux-gnu/libceres.so.2.2.0
-test_simple_mm: /usr/lib/x86_64-linux-gnu/libglog.so.0.6.0
-test_simple_mm: /usr/lib/x86_64-linux-gnu/libgflags.so.2.2.2
 test_simple_mm: libstrategy_lib.a
 test_simple_mm: librisk_lib.a
 test_simple_mm: libsim_gateway_lib.a

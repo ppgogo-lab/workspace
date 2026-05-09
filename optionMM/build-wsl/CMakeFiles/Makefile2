@@ -87,6 +87,7 @@ all: CMakeFiles/test_instrument_lookup.dir/all
 all: CMakeFiles/test_latest_snapshot.dir/all
 all: CMakeFiles/test_fixed_hash_table.dir/all
 all: CMakeFiles/test_trading_calendar.dir/all
+all: CMakeFiles/test_config.dir/all
 all: CMakeFiles/test_simple_mm.dir/all
 all: CMakeFiles/test_option_mm_core.dir/all
 all: CMakeFiles/test_femas_simulator.dir/all
@@ -125,6 +126,7 @@ clean: CMakeFiles/test_instrument_lookup.dir/clean
 clean: CMakeFiles/test_latest_snapshot.dir/clean
 clean: CMakeFiles/test_fixed_hash_table.dir/clean
 clean: CMakeFiles/test_trading_calendar.dir/clean
+clean: CMakeFiles/test_config.dir/clean
 clean: CMakeFiles/test_simple_mm.dir/clean
 clean: CMakeFiles/test_option_mm_core.dir/clean
 clean: CMakeFiles/test_femas_simulator.dir/clean
@@ -141,7 +143,7 @@ clean: CMakeFiles/test_vol_calibration.dir/clean
 CMakeFiles/femas_simulator_lib.dir/all: CMakeFiles/logger_lib.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/femas_simulator_lib.dir/build.make CMakeFiles/femas_simulator_lib.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/femas_simulator_lib.dir/build.make CMakeFiles/femas_simulator_lib.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=20,21 "Built target femas_simulator_lib"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=35,36 "Built target femas_simulator_lib"
 .PHONY : CMakeFiles/femas_simulator_lib.dir/all
 
 # Build rule for subdir invocation for target.
@@ -164,11 +166,11 @@ CMakeFiles/femas_simulator_lib.dir/clean:
 # Target rules for target CMakeFiles/femas_api_lib.dir
 
 # All Build rule for target.
-CMakeFiles/femas_api_lib.dir/all: CMakeFiles/femas_simulator_lib.dir/all
 CMakeFiles/femas_api_lib.dir/all: CMakeFiles/logger_lib.dir/all
+CMakeFiles/femas_api_lib.dir/all: CMakeFiles/femas_simulator_lib.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/femas_api_lib.dir/build.make CMakeFiles/femas_api_lib.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/femas_api_lib.dir/build.make CMakeFiles/femas_api_lib.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=18,19 "Built target femas_api_lib"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=33,34 "Built target femas_api_lib"
 .PHONY : CMakeFiles/femas_api_lib.dir/all
 
 # Build rule for subdir invocation for target.
@@ -194,12 +196,12 @@ CMakeFiles/femas_api_lib.dir/clean:
 CMakeFiles/common_lib.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/common_lib.dir/build.make CMakeFiles/common_lib.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/common_lib.dir/build.make CMakeFiles/common_lib.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=1,2,3,4,5,6,7,8 "Built target common_lib"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=1,2,3,4,5,6,7 "Built target common_lib"
 .PHONY : CMakeFiles/common_lib.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/common_lib.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 8
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 7
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/common_lib.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 0
 .PHONY : CMakeFiles/common_lib.dir/rule
@@ -220,12 +222,12 @@ CMakeFiles/common_lib.dir/clean:
 CMakeFiles/pricing_lib.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pricing_lib.dir/build.make CMakeFiles/pricing_lib.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pricing_lib.dir/build.make CMakeFiles/pricing_lib.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=36,37,38,39,40,41,42,43,44 "Built target pricing_lib"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=50,51,52,53,54,55,56,57 "Built target pricing_lib"
 .PHONY : CMakeFiles/pricing_lib.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/pricing_lib.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 9
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 8
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/pricing_lib.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 0
 .PHONY : CMakeFiles/pricing_lib.dir/rule
@@ -246,7 +248,7 @@ CMakeFiles/pricing_lib.dir/clean:
 CMakeFiles/risk_lib.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/risk_lib.dir/build.make CMakeFiles/risk_lib.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/risk_lib.dir/build.make CMakeFiles/risk_lib.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=45,46,47 "Built target risk_lib"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=58,59,60 "Built target risk_lib"
 .PHONY : CMakeFiles/risk_lib.dir/all
 
 # Build rule for subdir invocation for target.
@@ -273,7 +275,7 @@ CMakeFiles/strategy_lib.dir/all: CMakeFiles/common_lib.dir/all
 CMakeFiles/strategy_lib.dir/all: CMakeFiles/risk_lib.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/strategy_lib.dir/build.make CMakeFiles/strategy_lib.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/strategy_lib.dir/build.make CMakeFiles/strategy_lib.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=50,51,52,53,54 "Built target strategy_lib"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=63,64,65,66,67,68 "Built target strategy_lib"
 .PHONY : CMakeFiles/strategy_lib.dir/all
 
 # Build rule for subdir invocation for target.
@@ -296,18 +298,18 @@ CMakeFiles/strategy_lib.dir/clean:
 # Target rules for target CMakeFiles/feed_lib.dir
 
 # All Build rule for target.
+CMakeFiles/feed_lib.dir/all: CMakeFiles/logger_lib.dir/all
 CMakeFiles/feed_lib.dir/all: CMakeFiles/femas_simulator_lib.dir/all
 CMakeFiles/feed_lib.dir/all: CMakeFiles/femas_api_lib.dir/all
 CMakeFiles/feed_lib.dir/all: CMakeFiles/common_lib.dir/all
-CMakeFiles/feed_lib.dir/all: CMakeFiles/logger_lib.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/feed_lib.dir/build.make CMakeFiles/feed_lib.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/feed_lib.dir/build.make CMakeFiles/feed_lib.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=13,14,15,16,17 "Built target feed_lib"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=29,30,31,32 "Built target feed_lib"
 .PHONY : CMakeFiles/feed_lib.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/feed_lib.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 19
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 17
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/feed_lib.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 0
 .PHONY : CMakeFiles/feed_lib.dir/rule
@@ -325,16 +327,16 @@ CMakeFiles/feed_lib.dir/clean:
 # Target rules for target CMakeFiles/sim_gateway_lib.dir
 
 # All Build rule for target.
-CMakeFiles/sim_gateway_lib.dir/all: CMakeFiles/common_lib.dir/all
 CMakeFiles/sim_gateway_lib.dir/all: CMakeFiles/logger_lib.dir/all
+CMakeFiles/sim_gateway_lib.dir/all: CMakeFiles/common_lib.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/sim_gateway_lib.dir/build.make CMakeFiles/sim_gateway_lib.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/sim_gateway_lib.dir/build.make CMakeFiles/sim_gateway_lib.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=48,49 "Built target sim_gateway_lib"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=61,62 "Built target sim_gateway_lib"
 .PHONY : CMakeFiles/sim_gateway_lib.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/sim_gateway_lib.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 12
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 11
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/sim_gateway_lib.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 0
 .PHONY : CMakeFiles/sim_gateway_lib.dir/rule
@@ -352,18 +354,18 @@ CMakeFiles/sim_gateway_lib.dir/clean:
 # Target rules for target CMakeFiles/gateway_lib.dir
 
 # All Build rule for target.
+CMakeFiles/gateway_lib.dir/all: CMakeFiles/logger_lib.dir/all
 CMakeFiles/gateway_lib.dir/all: CMakeFiles/femas_simulator_lib.dir/all
 CMakeFiles/gateway_lib.dir/all: CMakeFiles/femas_api_lib.dir/all
 CMakeFiles/gateway_lib.dir/all: CMakeFiles/common_lib.dir/all
-CMakeFiles/gateway_lib.dir/all: CMakeFiles/logger_lib.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gateway_lib.dir/build.make CMakeFiles/gateway_lib.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gateway_lib.dir/build.make CMakeFiles/gateway_lib.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=22,23,24 "Built target gateway_lib"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=37,38,39 "Built target gateway_lib"
 .PHONY : CMakeFiles/gateway_lib.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/gateway_lib.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 17
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 16
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/gateway_lib.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 0
 .PHONY : CMakeFiles/gateway_lib.dir/rule
@@ -384,7 +386,7 @@ CMakeFiles/gateway_lib.dir/clean:
 CMakeFiles/logger_lib.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/logger_lib.dir/build.make CMakeFiles/logger_lib.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/logger_lib.dir/build.make CMakeFiles/logger_lib.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=25,26 "Built target logger_lib"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=40,41 "Built target logger_lib"
 .PHONY : CMakeFiles/logger_lib.dir/all
 
 # Build rule for subdir invocation for target.
@@ -407,16 +409,16 @@ CMakeFiles/logger_lib.dir/clean:
 # Target rules for target CMakeFiles/persistence_lib.dir
 
 # All Build rule for target.
-CMakeFiles/persistence_lib.dir/all: CMakeFiles/common_lib.dir/all
 CMakeFiles/persistence_lib.dir/all: CMakeFiles/logger_lib.dir/all
+CMakeFiles/persistence_lib.dir/all: CMakeFiles/common_lib.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/persistence_lib.dir/build.make CMakeFiles/persistence_lib.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/persistence_lib.dir/build.make CMakeFiles/persistence_lib.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=34,35 "Built target persistence_lib"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=48,49 "Built target persistence_lib"
 .PHONY : CMakeFiles/persistence_lib.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/persistence_lib.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 12
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 11
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/persistence_lib.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 0
 .PHONY : CMakeFiles/persistence_lib.dir/rule
@@ -434,24 +436,24 @@ CMakeFiles/persistence_lib.dir/clean:
 # Target rules for target CMakeFiles/engine_lib.dir
 
 # All Build rule for target.
+CMakeFiles/engine_lib.dir/all: CMakeFiles/feed_lib.dir/all
+CMakeFiles/engine_lib.dir/all: CMakeFiles/gateway_lib.dir/all
+CMakeFiles/engine_lib.dir/all: CMakeFiles/logger_lib.dir/all
+CMakeFiles/engine_lib.dir/all: CMakeFiles/persistence_lib.dir/all
 CMakeFiles/engine_lib.dir/all: CMakeFiles/femas_simulator_lib.dir/all
 CMakeFiles/engine_lib.dir/all: CMakeFiles/femas_api_lib.dir/all
 CMakeFiles/engine_lib.dir/all: CMakeFiles/common_lib.dir/all
 CMakeFiles/engine_lib.dir/all: CMakeFiles/pricing_lib.dir/all
 CMakeFiles/engine_lib.dir/all: CMakeFiles/risk_lib.dir/all
 CMakeFiles/engine_lib.dir/all: CMakeFiles/strategy_lib.dir/all
-CMakeFiles/engine_lib.dir/all: CMakeFiles/feed_lib.dir/all
-CMakeFiles/engine_lib.dir/all: CMakeFiles/gateway_lib.dir/all
-CMakeFiles/engine_lib.dir/all: CMakeFiles/logger_lib.dir/all
-CMakeFiles/engine_lib.dir/all: CMakeFiles/persistence_lib.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib.dir/build.make CMakeFiles/engine_lib.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib.dir/build.make CMakeFiles/engine_lib.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=9,10 "Built target engine_lib"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=8,9,10,11,12,13,14,15,16,17 "Built target engine_lib"
 .PHONY : CMakeFiles/engine_lib.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/engine_lib.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 43
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 49
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/engine_lib.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 0
 .PHONY : CMakeFiles/engine_lib.dir/rule
@@ -469,21 +471,21 @@ CMakeFiles/engine_lib.dir/clean:
 # Target rules for target CMakeFiles/engine_lib_test.dir
 
 # All Build rule for target.
+CMakeFiles/engine_lib_test.dir/all: CMakeFiles/sim_gateway_lib.dir/all
+CMakeFiles/engine_lib_test.dir/all: CMakeFiles/logger_lib.dir/all
+CMakeFiles/engine_lib_test.dir/all: CMakeFiles/persistence_lib.dir/all
 CMakeFiles/engine_lib_test.dir/all: CMakeFiles/common_lib.dir/all
 CMakeFiles/engine_lib_test.dir/all: CMakeFiles/pricing_lib.dir/all
 CMakeFiles/engine_lib_test.dir/all: CMakeFiles/risk_lib.dir/all
 CMakeFiles/engine_lib_test.dir/all: CMakeFiles/strategy_lib.dir/all
-CMakeFiles/engine_lib_test.dir/all: CMakeFiles/sim_gateway_lib.dir/all
-CMakeFiles/engine_lib_test.dir/all: CMakeFiles/logger_lib.dir/all
-CMakeFiles/engine_lib_test.dir/all: CMakeFiles/persistence_lib.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib_test.dir/build.make CMakeFiles/engine_lib_test.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib_test.dir/build.make CMakeFiles/engine_lib_test.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=11,12 "Built target engine_lib_test"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=18,19,20,21,22,23,24,25,26,27,28 "Built target engine_lib_test"
 .PHONY : CMakeFiles/engine_lib_test.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/engine_lib_test.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 33
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 41
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/engine_lib_test.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 0
 .PHONY : CMakeFiles/engine_lib_test.dir/rule
@@ -501,25 +503,25 @@ CMakeFiles/engine_lib_test.dir/clean:
 # Target rules for target CMakeFiles/monitoring_lib.dir
 
 # All Build rule for target.
+CMakeFiles/monitoring_lib.dir/all: CMakeFiles/feed_lib.dir/all
+CMakeFiles/monitoring_lib.dir/all: CMakeFiles/gateway_lib.dir/all
+CMakeFiles/monitoring_lib.dir/all: CMakeFiles/logger_lib.dir/all
+CMakeFiles/monitoring_lib.dir/all: CMakeFiles/persistence_lib.dir/all
+CMakeFiles/monitoring_lib.dir/all: CMakeFiles/engine_lib.dir/all
 CMakeFiles/monitoring_lib.dir/all: CMakeFiles/femas_simulator_lib.dir/all
 CMakeFiles/monitoring_lib.dir/all: CMakeFiles/femas_api_lib.dir/all
 CMakeFiles/monitoring_lib.dir/all: CMakeFiles/common_lib.dir/all
 CMakeFiles/monitoring_lib.dir/all: CMakeFiles/pricing_lib.dir/all
 CMakeFiles/monitoring_lib.dir/all: CMakeFiles/risk_lib.dir/all
 CMakeFiles/monitoring_lib.dir/all: CMakeFiles/strategy_lib.dir/all
-CMakeFiles/monitoring_lib.dir/all: CMakeFiles/feed_lib.dir/all
-CMakeFiles/monitoring_lib.dir/all: CMakeFiles/gateway_lib.dir/all
-CMakeFiles/monitoring_lib.dir/all: CMakeFiles/logger_lib.dir/all
-CMakeFiles/monitoring_lib.dir/all: CMakeFiles/persistence_lib.dir/all
-CMakeFiles/monitoring_lib.dir/all: CMakeFiles/engine_lib.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/monitoring_lib.dir/build.make CMakeFiles/monitoring_lib.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/monitoring_lib.dir/build.make CMakeFiles/monitoring_lib.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=27,28,29,30,31 "Built target monitoring_lib"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=42,43,44,45 "Built target monitoring_lib"
 .PHONY : CMakeFiles/monitoring_lib.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/monitoring_lib.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 48
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 53
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/monitoring_lib.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 0
 .PHONY : CMakeFiles/monitoring_lib.dir/rule
@@ -537,26 +539,26 @@ CMakeFiles/monitoring_lib.dir/clean:
 # Target rules for target CMakeFiles/optionmm.dir
 
 # All Build rule for target.
-CMakeFiles/optionmm.dir/all: CMakeFiles/femas_simulator_lib.dir/all
-CMakeFiles/optionmm.dir/all: CMakeFiles/femas_api_lib.dir/all
-CMakeFiles/optionmm.dir/all: CMakeFiles/common_lib.dir/all
-CMakeFiles/optionmm.dir/all: CMakeFiles/pricing_lib.dir/all
-CMakeFiles/optionmm.dir/all: CMakeFiles/risk_lib.dir/all
-CMakeFiles/optionmm.dir/all: CMakeFiles/strategy_lib.dir/all
 CMakeFiles/optionmm.dir/all: CMakeFiles/feed_lib.dir/all
 CMakeFiles/optionmm.dir/all: CMakeFiles/gateway_lib.dir/all
 CMakeFiles/optionmm.dir/all: CMakeFiles/logger_lib.dir/all
 CMakeFiles/optionmm.dir/all: CMakeFiles/persistence_lib.dir/all
 CMakeFiles/optionmm.dir/all: CMakeFiles/engine_lib.dir/all
 CMakeFiles/optionmm.dir/all: CMakeFiles/monitoring_lib.dir/all
+CMakeFiles/optionmm.dir/all: CMakeFiles/femas_simulator_lib.dir/all
+CMakeFiles/optionmm.dir/all: CMakeFiles/femas_api_lib.dir/all
+CMakeFiles/optionmm.dir/all: CMakeFiles/common_lib.dir/all
+CMakeFiles/optionmm.dir/all: CMakeFiles/pricing_lib.dir/all
+CMakeFiles/optionmm.dir/all: CMakeFiles/risk_lib.dir/all
+CMakeFiles/optionmm.dir/all: CMakeFiles/strategy_lib.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/optionmm.dir/build.make CMakeFiles/optionmm.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/optionmm.dir/build.make CMakeFiles/optionmm.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=32,33 "Built target optionmm"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=46,47 "Built target optionmm"
 .PHONY : CMakeFiles/optionmm.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/optionmm.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 50
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 55
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/optionmm.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 0
 .PHONY : CMakeFiles/optionmm.dir/rule
@@ -577,7 +579,7 @@ CMakeFiles/optionmm.dir/clean:
 CMakeFiles/test_ring_buffer.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_ring_buffer.dir/build.make CMakeFiles/test_ring_buffer.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_ring_buffer.dir/build.make CMakeFiles/test_ring_buffer.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=77,78 "Built target test_ring_buffer"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=91,92 "Built target test_ring_buffer"
 .PHONY : CMakeFiles/test_ring_buffer.dir/all
 
 # Build rule for subdir invocation for target.
@@ -603,12 +605,12 @@ CMakeFiles/test_ring_buffer.dir/clean:
 CMakeFiles/test_black76.dir/all: CMakeFiles/pricing_lib.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_black76.dir/build.make CMakeFiles/test_black76.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_black76.dir/build.make CMakeFiles/test_black76.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=55,56 "Built target test_black76"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=69,70 "Built target test_black76"
 .PHONY : CMakeFiles/test_black76.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/test_black76.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 11
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 10
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_black76.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 0
 .PHONY : CMakeFiles/test_black76.dir/rule
@@ -629,12 +631,12 @@ CMakeFiles/test_black76.dir/clean:
 CMakeFiles/test_vol_surface.dir/all: CMakeFiles/pricing_lib.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_vol_surface.dir/build.make CMakeFiles/test_vol_surface.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_vol_surface.dir/build.make CMakeFiles/test_vol_surface.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=85,86 "Built target test_vol_surface"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=99,100 "Built target test_vol_surface"
 .PHONY : CMakeFiles/test_vol_surface.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/test_vol_surface.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 11
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 10
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_vol_surface.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 0
 .PHONY : CMakeFiles/test_vol_surface.dir/rule
@@ -655,7 +657,7 @@ CMakeFiles/test_vol_surface.dir/clean:
 CMakeFiles/test_pre_trade_risk.dir/all: CMakeFiles/risk_lib.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_pre_trade_risk.dir/build.make CMakeFiles/test_pre_trade_risk.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_pre_trade_risk.dir/build.make CMakeFiles/test_pre_trade_risk.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=75,76 "Built target test_pre_trade_risk"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=89,90 "Built target test_pre_trade_risk"
 .PHONY : CMakeFiles/test_pre_trade_risk.dir/all
 
 # Build rule for subdir invocation for target.
@@ -681,7 +683,7 @@ CMakeFiles/test_pre_trade_risk.dir/clean:
 CMakeFiles/test_monitoring_topic.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_monitoring_topic.dir/build.make CMakeFiles/test_monitoring_topic.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_monitoring_topic.dir/build.make CMakeFiles/test_monitoring_topic.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=69,70 "Built target test_monitoring_topic"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=84,85 "Built target test_monitoring_topic"
 .PHONY : CMakeFiles/test_monitoring_topic.dir/all
 
 # Build rule for subdir invocation for target.
@@ -707,7 +709,7 @@ CMakeFiles/test_monitoring_topic.dir/clean:
 CMakeFiles/test_instrument_lookup.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_instrument_lookup.dir/build.make CMakeFiles/test_instrument_lookup.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_instrument_lookup.dir/build.make CMakeFiles/test_instrument_lookup.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=63,64 "Built target test_instrument_lookup"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=78,79 "Built target test_instrument_lookup"
 .PHONY : CMakeFiles/test_instrument_lookup.dir/all
 
 # Build rule for subdir invocation for target.
@@ -733,7 +735,7 @@ CMakeFiles/test_instrument_lookup.dir/clean:
 CMakeFiles/test_latest_snapshot.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_latest_snapshot.dir/build.make CMakeFiles/test_latest_snapshot.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_latest_snapshot.dir/build.make CMakeFiles/test_latest_snapshot.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=67,68 "Built target test_latest_snapshot"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=82,83 "Built target test_latest_snapshot"
 .PHONY : CMakeFiles/test_latest_snapshot.dir/all
 
 # Build rule for subdir invocation for target.
@@ -759,7 +761,7 @@ CMakeFiles/test_latest_snapshot.dir/clean:
 CMakeFiles/test_fixed_hash_table.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_fixed_hash_table.dir/build.make CMakeFiles/test_fixed_hash_table.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_fixed_hash_table.dir/build.make CMakeFiles/test_fixed_hash_table.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=61,62 "Built target test_fixed_hash_table"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=76,77 "Built target test_fixed_hash_table"
 .PHONY : CMakeFiles/test_fixed_hash_table.dir/all
 
 # Build rule for subdir invocation for target.
@@ -785,12 +787,12 @@ CMakeFiles/test_fixed_hash_table.dir/clean:
 CMakeFiles/test_trading_calendar.dir/all: CMakeFiles/common_lib.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_trading_calendar.dir/build.make CMakeFiles/test_trading_calendar.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_trading_calendar.dir/build.make CMakeFiles/test_trading_calendar.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=81,82 "Built target test_trading_calendar"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=95,96 "Built target test_trading_calendar"
 .PHONY : CMakeFiles/test_trading_calendar.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/test_trading_calendar.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 10
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 9
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_trading_calendar.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 0
 .PHONY : CMakeFiles/test_trading_calendar.dir/rule
@@ -805,25 +807,51 @@ CMakeFiles/test_trading_calendar.dir/clean:
 .PHONY : CMakeFiles/test_trading_calendar.dir/clean
 
 #=============================================================================
+# Target rules for target CMakeFiles/test_config.dir
+
+# All Build rule for target.
+CMakeFiles/test_config.dir/all: CMakeFiles/common_lib.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_config.dir/build.make CMakeFiles/test_config.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_config.dir/build.make CMakeFiles/test_config.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=71 "Built target test_config"
+.PHONY : CMakeFiles/test_config.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/test_config.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 8
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_config.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 0
+.PHONY : CMakeFiles/test_config.dir/rule
+
+# Convenience name for target.
+test_config: CMakeFiles/test_config.dir/rule
+.PHONY : test_config
+
+# clean rule for target.
+CMakeFiles/test_config.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_config.dir/build.make CMakeFiles/test_config.dir/clean
+.PHONY : CMakeFiles/test_config.dir/clean
+
+#=============================================================================
 # Target rules for target CMakeFiles/test_simple_mm.dir
 
 # All Build rule for target.
-CMakeFiles/test_simple_mm.dir/all: CMakeFiles/common_lib.dir/all
-CMakeFiles/test_simple_mm.dir/all: CMakeFiles/pricing_lib.dir/all
-CMakeFiles/test_simple_mm.dir/all: CMakeFiles/risk_lib.dir/all
-CMakeFiles/test_simple_mm.dir/all: CMakeFiles/strategy_lib.dir/all
 CMakeFiles/test_simple_mm.dir/all: CMakeFiles/sim_gateway_lib.dir/all
 CMakeFiles/test_simple_mm.dir/all: CMakeFiles/logger_lib.dir/all
 CMakeFiles/test_simple_mm.dir/all: CMakeFiles/persistence_lib.dir/all
 CMakeFiles/test_simple_mm.dir/all: CMakeFiles/engine_lib_test.dir/all
+CMakeFiles/test_simple_mm.dir/all: CMakeFiles/common_lib.dir/all
+CMakeFiles/test_simple_mm.dir/all: CMakeFiles/pricing_lib.dir/all
+CMakeFiles/test_simple_mm.dir/all: CMakeFiles/risk_lib.dir/all
+CMakeFiles/test_simple_mm.dir/all: CMakeFiles/strategy_lib.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_simple_mm.dir/build.make CMakeFiles/test_simple_mm.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_simple_mm.dir/build.make CMakeFiles/test_simple_mm.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=79,80 "Built target test_simple_mm"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=93,94 "Built target test_simple_mm"
 .PHONY : CMakeFiles/test_simple_mm.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/test_simple_mm.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 35
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 43
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_simple_mm.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 0
 .PHONY : CMakeFiles/test_simple_mm.dir/rule
@@ -846,12 +874,12 @@ CMakeFiles/test_option_mm_core.dir/all: CMakeFiles/risk_lib.dir/all
 CMakeFiles/test_option_mm_core.dir/all: CMakeFiles/strategy_lib.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_option_mm_core.dir/build.make CMakeFiles/test_option_mm_core.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_option_mm_core.dir/build.make CMakeFiles/test_option_mm_core.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=71,72 "Built target test_option_mm_core"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=86 "Built target test_option_mm_core"
 .PHONY : CMakeFiles/test_option_mm_core.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/test_option_mm_core.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 18
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 17
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_option_mm_core.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 0
 .PHONY : CMakeFiles/test_option_mm_core.dir/rule
@@ -869,11 +897,11 @@ CMakeFiles/test_option_mm_core.dir/clean:
 # Target rules for target CMakeFiles/test_femas_simulator.dir
 
 # All Build rule for target.
-CMakeFiles/test_femas_simulator.dir/all: CMakeFiles/femas_simulator_lib.dir/all
 CMakeFiles/test_femas_simulator.dir/all: CMakeFiles/logger_lib.dir/all
+CMakeFiles/test_femas_simulator.dir/all: CMakeFiles/femas_simulator_lib.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_femas_simulator.dir/build.make CMakeFiles/test_femas_simulator.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_femas_simulator.dir/build.make CMakeFiles/test_femas_simulator.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=59,60 "Built target test_femas_simulator"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=74,75 "Built target test_femas_simulator"
 .PHONY : CMakeFiles/test_femas_simulator.dir/all
 
 # Build rule for subdir invocation for target.
@@ -901,7 +929,7 @@ CMakeFiles/test_pcp_arbitrage.dir/all: CMakeFiles/risk_lib.dir/all
 CMakeFiles/test_pcp_arbitrage.dir/all: CMakeFiles/strategy_lib.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_pcp_arbitrage.dir/build.make CMakeFiles/test_pcp_arbitrage.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_pcp_arbitrage.dir/build.make CMakeFiles/test_pcp_arbitrage.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=73,74 "Built target test_pcp_arbitrage"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=87,88 "Built target test_pcp_arbitrage"
 .PHONY : CMakeFiles/test_pcp_arbitrage.dir/all
 
 # Build rule for subdir invocation for target.
@@ -924,17 +952,17 @@ CMakeFiles/test_pcp_arbitrage.dir/clean:
 # Target rules for target CMakeFiles/test_data_repository.dir
 
 # All Build rule for target.
-CMakeFiles/test_data_repository.dir/all: CMakeFiles/common_lib.dir/all
 CMakeFiles/test_data_repository.dir/all: CMakeFiles/logger_lib.dir/all
 CMakeFiles/test_data_repository.dir/all: CMakeFiles/persistence_lib.dir/all
+CMakeFiles/test_data_repository.dir/all: CMakeFiles/common_lib.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_data_repository.dir/build.make CMakeFiles/test_data_repository.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_data_repository.dir/build.make CMakeFiles/test_data_repository.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=57,58 "Built target test_data_repository"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=72,73 "Built target test_data_repository"
 .PHONY : CMakeFiles/test_data_repository.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/test_data_repository.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 14
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 13
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_data_repository.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 0
 .PHONY : CMakeFiles/test_data_repository.dir/rule
@@ -952,22 +980,22 @@ CMakeFiles/test_data_repository.dir/clean:
 # Target rules for target CMakeFiles/test_latency.dir
 
 # All Build rule for target.
-CMakeFiles/test_latency.dir/all: CMakeFiles/common_lib.dir/all
-CMakeFiles/test_latency.dir/all: CMakeFiles/pricing_lib.dir/all
-CMakeFiles/test_latency.dir/all: CMakeFiles/risk_lib.dir/all
-CMakeFiles/test_latency.dir/all: CMakeFiles/strategy_lib.dir/all
 CMakeFiles/test_latency.dir/all: CMakeFiles/sim_gateway_lib.dir/all
 CMakeFiles/test_latency.dir/all: CMakeFiles/logger_lib.dir/all
 CMakeFiles/test_latency.dir/all: CMakeFiles/persistence_lib.dir/all
 CMakeFiles/test_latency.dir/all: CMakeFiles/engine_lib_test.dir/all
+CMakeFiles/test_latency.dir/all: CMakeFiles/common_lib.dir/all
+CMakeFiles/test_latency.dir/all: CMakeFiles/pricing_lib.dir/all
+CMakeFiles/test_latency.dir/all: CMakeFiles/risk_lib.dir/all
+CMakeFiles/test_latency.dir/all: CMakeFiles/strategy_lib.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_latency.dir/build.make CMakeFiles/test_latency.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_latency.dir/build.make CMakeFiles/test_latency.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=65,66 "Built target test_latency"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=80,81 "Built target test_latency"
 .PHONY : CMakeFiles/test_latency.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/test_latency.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 35
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 43
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_latency.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 0
 .PHONY : CMakeFiles/test_latency.dir/rule
@@ -988,12 +1016,12 @@ CMakeFiles/test_latency.dir/clean:
 CMakeFiles/test_vol_calibration.dir/all: CMakeFiles/pricing_lib.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_vol_calibration.dir/build.make CMakeFiles/test_vol_calibration.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_vol_calibration.dir/build.make CMakeFiles/test_vol_calibration.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=83,84 "Built target test_vol_calibration"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/d/workspace/optionMM/build-wsl/CMakeFiles --progress-num=97,98 "Built target test_vol_calibration"
 .PHONY : CMakeFiles/test_vol_calibration.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/test_vol_calibration.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 11
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 10
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_vol_calibration.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/workspace/optionMM/build-wsl/CMakeFiles 0
 .PHONY : CMakeFiles/test_vol_calibration.dir/rule

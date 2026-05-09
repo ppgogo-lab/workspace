@@ -229,22 +229,13 @@ CMakeFiles/gateway_lib.dir/src/gateway/femas_gateway.cpp.o: /mnt/d/workspace/opt
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
   /usr/include/x86_64-linux-gnu/bits/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/select-decl.h \
   /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/select2.h \
   /usr/include/x86_64-linux-gnu/bits/setjmp.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio2-decl.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio2.h \
   /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h \
   /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib.h \
-  /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
-  /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
   /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
   /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
   /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
@@ -282,8 +273,6 @@ CMakeFiles/gateway_lib.dir/src/gateway/femas_gateway.cpp.o: /mnt/d/workspace/opt
   /usr/include/x86_64-linux-gnu/bits/waitflags.h \
   /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
   /usr/include/x86_64-linux-gnu/bits/wchar.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar2-decl.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar2.h \
   /usr/include/x86_64-linux-gnu/bits/wordsize.h \
   /usr/include/x86_64-linux-gnu/c++/13/bits/atomic_word.h \
   /usr/include/x86_64-linux-gnu/c++/13/bits/c++allocator.h \
@@ -587,22 +576,13 @@ CMakeFiles/gateway_lib.dir/src/gateway/sim_gateway.cpp.o: /mnt/d/workspace/optio
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
   /usr/include/x86_64-linux-gnu/bits/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/select-decl.h \
   /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/select2.h \
   /usr/include/x86_64-linux-gnu/bits/setjmp.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio2-decl.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio2.h \
   /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h \
   /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib.h \
-  /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
-  /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
   /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
   /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
   /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
@@ -640,8 +620,6 @@ CMakeFiles/gateway_lib.dir/src/gateway/sim_gateway.cpp.o: /mnt/d/workspace/optio
   /usr/include/x86_64-linux-gnu/bits/waitflags.h \
   /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
   /usr/include/x86_64-linux-gnu/bits/wchar.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar2-decl.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar2.h \
   /usr/include/x86_64-linux-gnu/bits/wordsize.h \
   /usr/include/x86_64-linux-gnu/c++/13/bits/atomic_word.h \
   /usr/include/x86_64-linux-gnu/c++/13/bits/c++allocator.h \
@@ -840,6 +818,8 @@ CMakeFiles/gateway_lib.dir/src/gateway/sim_gateway.cpp.o: /mnt/d/workspace/optio
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/clzerointrin.h:
 
+/usr/lib/gcc/x86_64-linux-gnu/13/include/clwbintrin.h:
+
 /usr/lib/gcc/x86_64-linux-gnu/13/include/cldemoteintrin.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/bmiintrin.h:
@@ -879,6 +859,8 @@ CMakeFiles/gateway_lib.dir/src/gateway/sim_gateway.cpp.o: /mnt/d/workspace/optio
 /usr/lib/gcc/x86_64-linux-gnu/13/include/avx5124vnniwintrin.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/avx5124fmapsintrin.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/avx2intrin.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/amxtileintrin.h:
 
@@ -934,18 +916,6 @@ CMakeFiles/gateway_lib.dir/src/gateway/sim_gateway.cpp.o: /mnt/d/workspace/optio
 
 /usr/include/x86_64-linux-gnu/bits/types/time_t.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512fp16intrin.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/sigset_t.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/locale_t.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/clock_t.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h:
-
 /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h:
 
 /usr/include/c++/13/ext/atomicity.h:
@@ -956,13 +926,7 @@ CMakeFiles/gateway_lib.dir/src/gateway/sim_gateway.cpp.o: /mnt/d/workspace/optio
 
 /usr/include/c++/13/debug/assertions.h:
 
-/usr/include/x86_64-linux-gnu/bits/select-decl.h:
-
 /usr/include/c++/13/cstdio:
-
-/usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h:
-
-/usr/include/c++/13/bits/charconv.h:
 
 /usr/include/c++/13/bits/predefined_ops.h:
 
@@ -975,8 +939,6 @@ CMakeFiles/gateway_lib.dir/src/gateway/sim_gateway.cpp.o: /mnt/d/workspace/optio
 /usr/include/c++/13/cerrno:
 
 /usr/include/x86_64-linux-gnu/bits/stdint-least.h:
-
-/usr/include/x86_64-linux-gnu/bits/strings_fortified.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vbmi2intrin.h:
 
@@ -1013,6 +975,10 @@ CMakeFiles/gateway_lib.dir/src/gateway/sim_gateway.cpp.o: /mnt/d/workspace/optio
 /usr/include/c++/13/bits/stl_vector.h:
 
 /usr/include/c++/13/bits/stl_tempbuf.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/clockid_t.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h:
 
@@ -1058,8 +1024,6 @@ CMakeFiles/gateway_lib.dir/src/gateway/sim_gateway.cpp.o: /mnt/d/workspace/optio
 
 /usr/include/c++/13/cstdint:
 
-/usr/include/x86_64-linux-gnu/bits/wchar2-decl.h:
-
 /usr/include/c++/13/bits/erase_if.h:
 
 /usr/include/c++/13/bits/stringfwd.h:
@@ -1092,6 +1056,8 @@ CMakeFiles/gateway_lib.dir/src/gateway/sim_gateway.cpp.o: /mnt/d/workspace/optio
 
 /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h:
 
+/usr/include/c++/13/bits/ptr_traits.h:
+
 /usr/include/c++/13/bits/std_abs.h:
 
 /usr/include/c++/13/bits/parse_numbers.h:
@@ -1105,8 +1071,6 @@ CMakeFiles/gateway_lib.dir/src/gateway/sim_gateway.cpp.o: /mnt/d/workspace/optio
 /usr/include/c++/13/bits/atomic_lockfree_defines.h:
 
 /usr/include/x86_64-linux-gnu/asm/errno.h:
-
-/usr/include/x86_64-linux-gnu/bits/stdlib.h:
 
 /usr/include/c++/13/backward/auto_ptr.h:
 
@@ -1144,6 +1108,14 @@ CMakeFiles/gateway_lib.dir/src/gateway/sim_gateway.cpp.o: /mnt/d/workspace/optio
 
 /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h:
 
+/usr/lib/gcc/x86_64-linux-gnu/13/include/cetintrin.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vlintrin.h:
+
+/usr/include/c++/13/cmath:
+
+/mnt/d/workspace/optionMM/include/common/types.h:
+
 /usr/include/c++/13/bits/unique_lock.h:
 
 /usr/include/c++/13/mutex:
@@ -1167,8 +1139,6 @@ CMakeFiles/gateway_lib.dir/src/gateway/sim_gateway.cpp.o: /mnt/d/workspace/optio
 /usr/include/x86_64-linux-gnu/bits/long-double.h:
 
 /usr/include/c++/13/bits/algorithmfwd.h:
-
-/usr/include/x86_64-linux-gnu/bits/wchar2.h:
 
 /usr/include/x86_64-linux-gnu/bits/fp-logb.h:
 
@@ -1208,6 +1178,8 @@ CMakeFiles/gateway_lib.dir/src/gateway/sim_gateway.cpp.o: /mnt/d/workspace/optio
 
 /usr/include/c++/13/bits/char_traits.h:
 
+/usr/include/x86_64-linux-gnu/bits/types/clock_t.h:
+
 /usr/include/c++/13/bits/cxxabi_init_exception.h:
 
 /usr/include/c++/13/typeinfo:
@@ -1235,6 +1207,10 @@ CMakeFiles/gateway_lib.dir/src/gateway/sim_gateway.cpp.o: /mnt/d/workspace/optio
 /mnt/d/workspace/optionMM/third_party/femas/USTPFtdcTraderApi.h:
 
 /mnt/d/workspace/optionMM/third_party/femas/USTPFtdcMduserApi.h:
+
+/usr/include/c++/13/bits/charconv.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512erintrin.h:
 
@@ -1325,6 +1301,10 @@ CMakeFiles/gateway_lib.dir/src/gateway/sim_gateway.cpp.o: /mnt/d/workspace/optio
 /usr/include/c++/13/ext/numeric_traits.h:
 
 /usr/include/spdlog/details/registry.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512fp16intrin.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/sigset_t.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512ifmaintrin.h:
 
@@ -1478,8 +1458,6 @@ CMakeFiles/gateway_lib.dir/src/gateway/sim_gateway.cpp.o: /mnt/d/workspace/optio
 
 /usr/include/string.h:
 
-/usr/include/x86_64-linux-gnu/bits/stdio.h:
-
 /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h:
 
 /usr/include/x86_64-linux-gnu/bits/cpu-set.h:
@@ -1508,16 +1486,6 @@ CMakeFiles/gateway_lib.dir/src/gateway/sim_gateway.cpp.o: /mnt/d/workspace/optio
 
 /usr/include/x86_64-linux-gnu/bits/sched.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/cetintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vlintrin.h:
-
-/usr/include/c++/13/cmath:
-
-/mnt/d/workspace/optionMM/include/common/types.h:
-
-/usr/include/x86_64-linux-gnu/bits/select2.h:
-
 /usr/include/time.h:
 
 /usr/include/x86_64-linux-gnu/bits/setjmp.h:
@@ -1530,25 +1498,7 @@ CMakeFiles/gateway_lib.dir/src/gateway/sim_gateway.cpp.o: /mnt/d/workspace/optio
 
 /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h:
 
-/usr/include/c++/13/bits/ptr_traits.h:
-
-/usr/include/x86_64-linux-gnu/bits/stdio2-decl.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/clwbintrin.h:
-
-/usr/include/x86_64-linux-gnu/bits/stdio2.h:
-
 /usr/include/x86_64-linux-gnu/bits/types/FILE.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/clockid_t.h:
-
-/usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx2intrin.h:
-
-/usr/include/x86_64-linux-gnu/bits/string_fortified.h:
 
 /usr/include/x86_64-linux-gnu/bits/select.h:
 
@@ -1571,3 +1521,9 @@ CMakeFiles/gateway_lib.dir/src/gateway/sim_gateway.cpp.o: /mnt/d/workspace/optio
 /usr/include/x86_64-linux-gnu/bits/types/__FILE.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/locale_t.h:

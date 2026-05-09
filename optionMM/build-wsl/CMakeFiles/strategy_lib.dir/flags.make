@@ -6,5 +6,5 @@ CXX_DEFINES =
 
 CXX_INCLUDES = -I/mnt/d/workspace/optionMM/include -I/mnt/d/workspace/optionMM
 
-CXX_FLAGS = -O3 -DNDEBUG -Wall -Wextra -Wpedantic -fno-rtti -std=c++17
+CXX_FLAGS = -O0 -g3 -fsanitize=address,undefined -Wall -Wextra -Wpedantic -fno-rtti -std=c++17
 

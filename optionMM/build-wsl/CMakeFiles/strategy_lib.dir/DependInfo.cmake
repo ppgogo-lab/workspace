@@ -8,6 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
+  "/mnt/d/workspace/optionMM/src/strategy/base_quoting_strategy.cpp" "CMakeFiles/strategy_lib.dir/src/strategy/base_quoting_strategy.cpp.o" "gcc" "CMakeFiles/strategy_lib.dir/src/strategy/base_quoting_strategy.cpp.o.d"
   "/mnt/d/workspace/optionMM/src/strategy/mm_framework.cpp" "CMakeFiles/strategy_lib.dir/src/strategy/mm_framework.cpp.o" "gcc" "CMakeFiles/strategy_lib.dir/src/strategy/mm_framework.cpp.o.d"
   "/mnt/d/workspace/optionMM/src/strategy/option_mm_core.cpp" "CMakeFiles/strategy_lib.dir/src/strategy/option_mm_core.cpp.o" "gcc" "CMakeFiles/strategy_lib.dir/src/strategy/option_mm_core.cpp.o.d"
   "/mnt/d/workspace/optionMM/src/strategy/pcp_arbitrage.cpp" "CMakeFiles/strategy_lib.dir/src/strategy/pcp_arbitrage.cpp.o" "gcc" "CMakeFiles/strategy_lib.dir/src/strategy/pcp_arbitrage.cpp.o.d"

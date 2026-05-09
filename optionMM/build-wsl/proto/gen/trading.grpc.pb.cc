@@ -35,6 +35,7 @@ static const char* TradingMonitor_method_names[] = {
   "/omm.proto.TradingMonitor/StreamRiskAlerts",
   "/omm.proto.TradingMonitor/StreamVolSurface",
   "/omm.proto.TradingMonitor/SetStrategyParams",
+  "/omm.proto.TradingMonitor/SetProductPricingParams",
   "/omm.proto.TradingMonitor/StartStrategy",
   "/omm.proto.TradingMonitor/StopStrategy",
   "/omm.proto.TradingMonitor/SetArbStrategyParams",
@@ -66,16 +67,17 @@ TradingMonitor::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& cha
   , rpcmethod_StreamRiskAlerts_(TradingMonitor_method_names[9], options.suffix_for_stats(),::grpc::internal::RpcMethod::SERVER_STREAMING, channel)
   , rpcmethod_StreamVolSurface_(TradingMonitor_method_names[10], options.suffix_for_stats(),::grpc::internal::RpcMethod::SERVER_STREAMING, channel)
   , rpcmethod_SetStrategyParams_(TradingMonitor_method_names[11], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_StartStrategy_(TradingMonitor_method_names[12], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_StopStrategy_(TradingMonitor_method_names[13], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_SetArbStrategyParams_(TradingMonitor_method_names[14], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_StartArbStrategy_(TradingMonitor_method_names[15], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_StopArbStrategy_(TradingMonitor_method_names[16], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_SetRiskThreshold_(TradingMonitor_method_names[17], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_SendManualOrder_(TradingMonitor_method_names[18], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_CancelOrder_(TradingMonitor_method_names[19], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_CancelQuote_(TradingMonitor_method_names[20], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_GetSnapshot_(TradingMonitor_method_names[21], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_SetProductPricingParams_(TradingMonitor_method_names[12], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_StartStrategy_(TradingMonitor_method_names[13], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_StopStrategy_(TradingMonitor_method_names[14], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_SetArbStrategyParams_(TradingMonitor_method_names[15], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_StartArbStrategy_(TradingMonitor_method_names[16], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_StopArbStrategy_(TradingMonitor_method_names[17], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_SetRiskThreshold_(TradingMonitor_method_names[18], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_SendManualOrder_(TradingMonitor_method_names[19], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_CancelOrder_(TradingMonitor_method_names[20], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_CancelQuote_(TradingMonitor_method_names[21], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_GetSnapshot_(TradingMonitor_method_names[22], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
 
 ::grpc::Status TradingMonitor::Stub::Login(::grpc::ClientContext* context, const ::omm::proto::LoginRequest& request, ::omm::proto::LoginResponse* response) {
@@ -294,6 +296,29 @@ void TradingMonitor::Stub::async::SetStrategyParams(::grpc::ClientContext* conte
 ::grpc::ClientAsyncResponseReader< ::omm::proto::SetStrategyParamsResponse>* TradingMonitor::Stub::AsyncSetStrategyParamsRaw(::grpc::ClientContext* context, const ::omm::proto::SetStrategyParamsRequest& request, ::grpc::CompletionQueue* cq) {
   auto* result =
     this->PrepareAsyncSetStrategyParamsRaw(context, request, cq);
+  result->StartCall();
+  return result;
+}
+
+::grpc::Status TradingMonitor::Stub::SetProductPricingParams(::grpc::ClientContext* context, const ::omm::proto::SetProductPricingParamsRequest& request, ::omm::proto::SetProductPricingParamsResponse* response) {
+  return ::grpc::internal::BlockingUnaryCall< ::omm::proto::SetProductPricingParamsRequest, ::omm::proto::SetProductPricingParamsResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_SetProductPricingParams_, context, request, response);
+}
+
+void TradingMonitor::Stub::async::SetProductPricingParams(::grpc::ClientContext* context, const ::omm::proto::SetProductPricingParamsRequest* request, ::omm::proto::SetProductPricingParamsResponse* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::omm::proto::SetProductPricingParamsRequest, ::omm::proto::SetProductPricingParamsResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SetProductPricingParams_, context, request, response, std::move(f));
+}
+
+void TradingMonitor::Stub::async::SetProductPricingParams(::grpc::ClientContext* context, const ::omm::proto::SetProductPricingParamsRequest* request, ::omm::proto::SetProductPricingParamsResponse* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SetProductPricingParams_, context, request, response, reactor);
+}
+
+::grpc::ClientAsyncResponseReader< ::omm::proto::SetProductPricingParamsResponse>* TradingMonitor::Stub::PrepareAsyncSetProductPricingParamsRaw(::grpc::ClientContext* context, const ::omm::proto::SetProductPricingParamsRequest& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::omm::proto::SetProductPricingParamsResponse, ::omm::proto::SetProductPricingParamsRequest, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_SetProductPricingParams_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::omm::proto::SetProductPricingParamsResponse>* TradingMonitor::Stub::AsyncSetProductPricingParamsRaw(::grpc::ClientContext* context, const ::omm::proto::SetProductPricingParamsRequest& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncSetProductPricingParamsRaw(context, request, cq);
   result->StartCall();
   return result;
 }
@@ -652,12 +677,12 @@ TradingMonitor::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       TradingMonitor_method_names[12],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< TradingMonitor::Service, ::omm::proto::StartStopRequest, ::omm::proto::StartStopResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+      new ::grpc::internal::RpcMethodHandler< TradingMonitor::Service, ::omm::proto::SetProductPricingParamsRequest, ::omm::proto::SetProductPricingParamsResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](TradingMonitor::Service* service,
              ::grpc::ServerContext* ctx,
-             const ::omm::proto::StartStopRequest* req,
-             ::omm::proto::StartStopResponse* resp) {
-               return service->StartStrategy(ctx, req, resp);
+             const ::omm::proto::SetProductPricingParamsRequest* req,
+             ::omm::proto::SetProductPricingParamsResponse* resp) {
+               return service->SetProductPricingParams(ctx, req, resp);
              }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       TradingMonitor_method_names[13],
@@ -667,10 +692,20 @@ TradingMonitor::Service::Service() {
              ::grpc::ServerContext* ctx,
              const ::omm::proto::StartStopRequest* req,
              ::omm::proto::StartStopResponse* resp) {
-               return service->StopStrategy(ctx, req, resp);
+               return service->StartStrategy(ctx, req, resp);
              }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       TradingMonitor_method_names[14],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< TradingMonitor::Service, ::omm::proto::StartStopRequest, ::omm::proto::StartStopResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](TradingMonitor::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::omm::proto::StartStopRequest* req,
+             ::omm::proto::StartStopResponse* resp) {
+               return service->StopStrategy(ctx, req, resp);
+             }, this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      TradingMonitor_method_names[15],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< TradingMonitor::Service, ::omm::proto::SetArbStrategyParamsRequest, ::omm::proto::SetArbStrategyParamsResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](TradingMonitor::Service* service,
@@ -680,7 +715,7 @@ TradingMonitor::Service::Service() {
                return service->SetArbStrategyParams(ctx, req, resp);
              }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
-      TradingMonitor_method_names[15],
+      TradingMonitor_method_names[16],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< TradingMonitor::Service, ::omm::proto::ArbStartStopRequest, ::omm::proto::ArbStartStopResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](TradingMonitor::Service* service,
@@ -690,7 +725,7 @@ TradingMonitor::Service::Service() {
                return service->StartArbStrategy(ctx, req, resp);
              }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
-      TradingMonitor_method_names[16],
+      TradingMonitor_method_names[17],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< TradingMonitor::Service, ::omm::proto::ArbStartStopRequest, ::omm::proto::ArbStartStopResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](TradingMonitor::Service* service,
@@ -700,7 +735,7 @@ TradingMonitor::Service::Service() {
                return service->StopArbStrategy(ctx, req, resp);
              }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
-      TradingMonitor_method_names[17],
+      TradingMonitor_method_names[18],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< TradingMonitor::Service, ::omm::proto::SetRiskThresholdRequest, ::omm::proto::SetRiskThresholdResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](TradingMonitor::Service* service,
@@ -710,7 +745,7 @@ TradingMonitor::Service::Service() {
                return service->SetRiskThreshold(ctx, req, resp);
              }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
-      TradingMonitor_method_names[18],
+      TradingMonitor_method_names[19],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< TradingMonitor::Service, ::omm::proto::ManualOrderRequest, ::omm::proto::ManualOrderResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](TradingMonitor::Service* service,
@@ -720,7 +755,7 @@ TradingMonitor::Service::Service() {
                return service->SendManualOrder(ctx, req, resp);
              }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
-      TradingMonitor_method_names[19],
+      TradingMonitor_method_names[20],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< TradingMonitor::Service, ::omm::proto::CancelOrderRequest, ::omm::proto::CancelOrderResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](TradingMonitor::Service* service,
@@ -730,7 +765,7 @@ TradingMonitor::Service::Service() {
                return service->CancelOrder(ctx, req, resp);
              }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
-      TradingMonitor_method_names[20],
+      TradingMonitor_method_names[21],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< TradingMonitor::Service, ::omm::proto::CancelQuoteRequest, ::omm::proto::CancelQuoteResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](TradingMonitor::Service* service,
@@ -740,7 +775,7 @@ TradingMonitor::Service::Service() {
                return service->CancelQuote(ctx, req, resp);
              }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
-      TradingMonitor_method_names[21],
+      TradingMonitor_method_names[22],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< TradingMonitor::Service, ::omm::proto::SnapshotRequest, ::omm::proto::SnapshotResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](TradingMonitor::Service* service,
@@ -832,6 +867,13 @@ TradingMonitor::Service::~Service() {
 }
 
 ::grpc::Status TradingMonitor::Service::SetStrategyParams(::grpc::ServerContext* context, const ::omm::proto::SetStrategyParamsRequest* request, ::omm::proto::SetStrategyParamsResponse* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status TradingMonitor::Service::SetProductPricingParams(::grpc::ServerContext* context, const ::omm::proto::SetProductPricingParamsRequest* request, ::omm::proto::SetProductPricingParamsResponse* response) {
   (void) context;
   (void) request;
   (void) response;

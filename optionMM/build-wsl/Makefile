@@ -439,6 +439,19 @@ test_trading_calendar/fast:
 .PHONY : test_trading_calendar/fast
 
 #=============================================================================
+# Target rules for targets named test_config
+
+# Build rule for target.
+test_config: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_config
+.PHONY : test_config
+
+# fast build rule for target.
+test_config/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_config.dir/build.make CMakeFiles/test_config.dir/build
+.PHONY : test_config/fast
+
+#=============================================================================
 # Target rules for targets named test_simple_mm
 
 # Build rule for target.
@@ -721,6 +734,222 @@ src/common/trading_calendar.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/common_lib.dir/build.make CMakeFiles/common_lib.dir/src/common/trading_calendar.cpp.s
 .PHONY : src/common/trading_calendar.cpp.s
 
+src/engine/arbitrage_worker.o: src/engine/arbitrage_worker.cpp.o
+.PHONY : src/engine/arbitrage_worker.o
+
+# target to build an object file
+src/engine/arbitrage_worker.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib.dir/build.make CMakeFiles/engine_lib.dir/src/engine/arbitrage_worker.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib_test.dir/build.make CMakeFiles/engine_lib_test.dir/src/engine/arbitrage_worker.cpp.o
+.PHONY : src/engine/arbitrage_worker.cpp.o
+
+src/engine/arbitrage_worker.i: src/engine/arbitrage_worker.cpp.i
+.PHONY : src/engine/arbitrage_worker.i
+
+# target to preprocess a source file
+src/engine/arbitrage_worker.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib.dir/build.make CMakeFiles/engine_lib.dir/src/engine/arbitrage_worker.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib_test.dir/build.make CMakeFiles/engine_lib_test.dir/src/engine/arbitrage_worker.cpp.i
+.PHONY : src/engine/arbitrage_worker.cpp.i
+
+src/engine/arbitrage_worker.s: src/engine/arbitrage_worker.cpp.s
+.PHONY : src/engine/arbitrage_worker.s
+
+# target to generate assembly for a file
+src/engine/arbitrage_worker.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib.dir/build.make CMakeFiles/engine_lib.dir/src/engine/arbitrage_worker.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib_test.dir/build.make CMakeFiles/engine_lib_test.dir/src/engine/arbitrage_worker.cpp.s
+.PHONY : src/engine/arbitrage_worker.cpp.s
+
+src/engine/engine_workers.o: src/engine/engine_workers.cpp.o
+.PHONY : src/engine/engine_workers.o
+
+# target to build an object file
+src/engine/engine_workers.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib.dir/build.make CMakeFiles/engine_lib.dir/src/engine/engine_workers.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib_test.dir/build.make CMakeFiles/engine_lib_test.dir/src/engine/engine_workers.cpp.o
+.PHONY : src/engine/engine_workers.cpp.o
+
+src/engine/engine_workers.i: src/engine/engine_workers.cpp.i
+.PHONY : src/engine/engine_workers.i
+
+# target to preprocess a source file
+src/engine/engine_workers.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib.dir/build.make CMakeFiles/engine_lib.dir/src/engine/engine_workers.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib_test.dir/build.make CMakeFiles/engine_lib_test.dir/src/engine/engine_workers.cpp.i
+.PHONY : src/engine/engine_workers.cpp.i
+
+src/engine/engine_workers.s: src/engine/engine_workers.cpp.s
+.PHONY : src/engine/engine_workers.s
+
+# target to generate assembly for a file
+src/engine/engine_workers.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib.dir/build.make CMakeFiles/engine_lib.dir/src/engine/engine_workers.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib_test.dir/build.make CMakeFiles/engine_lib_test.dir/src/engine/engine_workers.cpp.s
+.PHONY : src/engine/engine_workers.cpp.s
+
+src/engine/gateway_dispatcher_worker.o: src/engine/gateway_dispatcher_worker.cpp.o
+.PHONY : src/engine/gateway_dispatcher_worker.o
+
+# target to build an object file
+src/engine/gateway_dispatcher_worker.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib.dir/build.make CMakeFiles/engine_lib.dir/src/engine/gateway_dispatcher_worker.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib_test.dir/build.make CMakeFiles/engine_lib_test.dir/src/engine/gateway_dispatcher_worker.cpp.o
+.PHONY : src/engine/gateway_dispatcher_worker.cpp.o
+
+src/engine/gateway_dispatcher_worker.i: src/engine/gateway_dispatcher_worker.cpp.i
+.PHONY : src/engine/gateway_dispatcher_worker.i
+
+# target to preprocess a source file
+src/engine/gateway_dispatcher_worker.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib.dir/build.make CMakeFiles/engine_lib.dir/src/engine/gateway_dispatcher_worker.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib_test.dir/build.make CMakeFiles/engine_lib_test.dir/src/engine/gateway_dispatcher_worker.cpp.i
+.PHONY : src/engine/gateway_dispatcher_worker.cpp.i
+
+src/engine/gateway_dispatcher_worker.s: src/engine/gateway_dispatcher_worker.cpp.s
+.PHONY : src/engine/gateway_dispatcher_worker.s
+
+# target to generate assembly for a file
+src/engine/gateway_dispatcher_worker.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib.dir/build.make CMakeFiles/engine_lib.dir/src/engine/gateway_dispatcher_worker.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib_test.dir/build.make CMakeFiles/engine_lib_test.dir/src/engine/gateway_dispatcher_worker.cpp.s
+.PHONY : src/engine/gateway_dispatcher_worker.cpp.s
+
+src/engine/monitor_publisher_worker.o: src/engine/monitor_publisher_worker.cpp.o
+.PHONY : src/engine/monitor_publisher_worker.o
+
+# target to build an object file
+src/engine/monitor_publisher_worker.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib.dir/build.make CMakeFiles/engine_lib.dir/src/engine/monitor_publisher_worker.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib_test.dir/build.make CMakeFiles/engine_lib_test.dir/src/engine/monitor_publisher_worker.cpp.o
+.PHONY : src/engine/monitor_publisher_worker.cpp.o
+
+src/engine/monitor_publisher_worker.i: src/engine/monitor_publisher_worker.cpp.i
+.PHONY : src/engine/monitor_publisher_worker.i
+
+# target to preprocess a source file
+src/engine/monitor_publisher_worker.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib.dir/build.make CMakeFiles/engine_lib.dir/src/engine/monitor_publisher_worker.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib_test.dir/build.make CMakeFiles/engine_lib_test.dir/src/engine/monitor_publisher_worker.cpp.i
+.PHONY : src/engine/monitor_publisher_worker.cpp.i
+
+src/engine/monitor_publisher_worker.s: src/engine/monitor_publisher_worker.cpp.s
+.PHONY : src/engine/monitor_publisher_worker.s
+
+# target to generate assembly for a file
+src/engine/monitor_publisher_worker.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib.dir/build.make CMakeFiles/engine_lib.dir/src/engine/monitor_publisher_worker.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib_test.dir/build.make CMakeFiles/engine_lib_test.dir/src/engine/monitor_publisher_worker.cpp.s
+.PHONY : src/engine/monitor_publisher_worker.cpp.s
+
+src/engine/pricer_worker.o: src/engine/pricer_worker.cpp.o
+.PHONY : src/engine/pricer_worker.o
+
+# target to build an object file
+src/engine/pricer_worker.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib.dir/build.make CMakeFiles/engine_lib.dir/src/engine/pricer_worker.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib_test.dir/build.make CMakeFiles/engine_lib_test.dir/src/engine/pricer_worker.cpp.o
+.PHONY : src/engine/pricer_worker.cpp.o
+
+src/engine/pricer_worker.i: src/engine/pricer_worker.cpp.i
+.PHONY : src/engine/pricer_worker.i
+
+# target to preprocess a source file
+src/engine/pricer_worker.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib.dir/build.make CMakeFiles/engine_lib.dir/src/engine/pricer_worker.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib_test.dir/build.make CMakeFiles/engine_lib_test.dir/src/engine/pricer_worker.cpp.i
+.PHONY : src/engine/pricer_worker.cpp.i
+
+src/engine/pricer_worker.s: src/engine/pricer_worker.cpp.s
+.PHONY : src/engine/pricer_worker.s
+
+# target to generate assembly for a file
+src/engine/pricer_worker.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib.dir/build.make CMakeFiles/engine_lib.dir/src/engine/pricer_worker.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib_test.dir/build.make CMakeFiles/engine_lib_test.dir/src/engine/pricer_worker.cpp.s
+.PHONY : src/engine/pricer_worker.cpp.s
+
+src/engine/risk_monitor_worker.o: src/engine/risk_monitor_worker.cpp.o
+.PHONY : src/engine/risk_monitor_worker.o
+
+# target to build an object file
+src/engine/risk_monitor_worker.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib.dir/build.make CMakeFiles/engine_lib.dir/src/engine/risk_monitor_worker.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib_test.dir/build.make CMakeFiles/engine_lib_test.dir/src/engine/risk_monitor_worker.cpp.o
+.PHONY : src/engine/risk_monitor_worker.cpp.o
+
+src/engine/risk_monitor_worker.i: src/engine/risk_monitor_worker.cpp.i
+.PHONY : src/engine/risk_monitor_worker.i
+
+# target to preprocess a source file
+src/engine/risk_monitor_worker.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib.dir/build.make CMakeFiles/engine_lib.dir/src/engine/risk_monitor_worker.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib_test.dir/build.make CMakeFiles/engine_lib_test.dir/src/engine/risk_monitor_worker.cpp.i
+.PHONY : src/engine/risk_monitor_worker.cpp.i
+
+src/engine/risk_monitor_worker.s: src/engine/risk_monitor_worker.cpp.s
+.PHONY : src/engine/risk_monitor_worker.s
+
+# target to generate assembly for a file
+src/engine/risk_monitor_worker.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib.dir/build.make CMakeFiles/engine_lib.dir/src/engine/risk_monitor_worker.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib_test.dir/build.make CMakeFiles/engine_lib_test.dir/src/engine/risk_monitor_worker.cpp.s
+.PHONY : src/engine/risk_monitor_worker.cpp.s
+
+src/engine/strategy_worker.o: src/engine/strategy_worker.cpp.o
+.PHONY : src/engine/strategy_worker.o
+
+# target to build an object file
+src/engine/strategy_worker.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib.dir/build.make CMakeFiles/engine_lib.dir/src/engine/strategy_worker.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib_test.dir/build.make CMakeFiles/engine_lib_test.dir/src/engine/strategy_worker.cpp.o
+.PHONY : src/engine/strategy_worker.cpp.o
+
+src/engine/strategy_worker.i: src/engine/strategy_worker.cpp.i
+.PHONY : src/engine/strategy_worker.i
+
+# target to preprocess a source file
+src/engine/strategy_worker.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib.dir/build.make CMakeFiles/engine_lib.dir/src/engine/strategy_worker.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib_test.dir/build.make CMakeFiles/engine_lib_test.dir/src/engine/strategy_worker.cpp.i
+.PHONY : src/engine/strategy_worker.cpp.i
+
+src/engine/strategy_worker.s: src/engine/strategy_worker.cpp.s
+.PHONY : src/engine/strategy_worker.s
+
+# target to generate assembly for a file
+src/engine/strategy_worker.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib.dir/build.make CMakeFiles/engine_lib.dir/src/engine/strategy_worker.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib_test.dir/build.make CMakeFiles/engine_lib_test.dir/src/engine/strategy_worker.cpp.s
+.PHONY : src/engine/strategy_worker.cpp.s
+
+src/engine/timer_worker.o: src/engine/timer_worker.cpp.o
+.PHONY : src/engine/timer_worker.o
+
+# target to build an object file
+src/engine/timer_worker.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib.dir/build.make CMakeFiles/engine_lib.dir/src/engine/timer_worker.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib_test.dir/build.make CMakeFiles/engine_lib_test.dir/src/engine/timer_worker.cpp.o
+.PHONY : src/engine/timer_worker.cpp.o
+
+src/engine/timer_worker.i: src/engine/timer_worker.cpp.i
+.PHONY : src/engine/timer_worker.i
+
+# target to preprocess a source file
+src/engine/timer_worker.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib.dir/build.make CMakeFiles/engine_lib.dir/src/engine/timer_worker.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib_test.dir/build.make CMakeFiles/engine_lib_test.dir/src/engine/timer_worker.cpp.i
+.PHONY : src/engine/timer_worker.cpp.i
+
+src/engine/timer_worker.s: src/engine/timer_worker.cpp.s
+.PHONY : src/engine/timer_worker.s
+
+# target to generate assembly for a file
+src/engine/timer_worker.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib.dir/build.make CMakeFiles/engine_lib.dir/src/engine/timer_worker.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib_test.dir/build.make CMakeFiles/engine_lib_test.dir/src/engine/timer_worker.cpp.s
+.PHONY : src/engine/timer_worker.cpp.s
+
 src/engine/trading_engine.o: src/engine/trading_engine.cpp.o
 .PHONY : src/engine/trading_engine.o
 
@@ -747,6 +976,33 @@ src/engine/trading_engine.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib.dir/build.make CMakeFiles/engine_lib.dir/src/engine/trading_engine.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib_test.dir/build.make CMakeFiles/engine_lib_test.dir/src/engine/trading_engine.cpp.s
 .PHONY : src/engine/trading_engine.cpp.s
+
+src/engine/vol_fitter_worker.o: src/engine/vol_fitter_worker.cpp.o
+.PHONY : src/engine/vol_fitter_worker.o
+
+# target to build an object file
+src/engine/vol_fitter_worker.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib.dir/build.make CMakeFiles/engine_lib.dir/src/engine/vol_fitter_worker.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib_test.dir/build.make CMakeFiles/engine_lib_test.dir/src/engine/vol_fitter_worker.cpp.o
+.PHONY : src/engine/vol_fitter_worker.cpp.o
+
+src/engine/vol_fitter_worker.i: src/engine/vol_fitter_worker.cpp.i
+.PHONY : src/engine/vol_fitter_worker.i
+
+# target to preprocess a source file
+src/engine/vol_fitter_worker.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib.dir/build.make CMakeFiles/engine_lib.dir/src/engine/vol_fitter_worker.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib_test.dir/build.make CMakeFiles/engine_lib_test.dir/src/engine/vol_fitter_worker.cpp.i
+.PHONY : src/engine/vol_fitter_worker.cpp.i
+
+src/engine/vol_fitter_worker.s: src/engine/vol_fitter_worker.cpp.s
+.PHONY : src/engine/vol_fitter_worker.s
+
+# target to generate assembly for a file
+src/engine/vol_fitter_worker.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib.dir/build.make CMakeFiles/engine_lib.dir/src/engine/vol_fitter_worker.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/engine_lib_test.dir/build.make CMakeFiles/engine_lib_test.dir/src/engine/vol_fitter_worker.cpp.s
+.PHONY : src/engine/vol_fitter_worker.cpp.s
 
 src/feed/femas_feed.o: src/feed/femas_feed.cpp.o
 .PHONY : src/feed/femas_feed.o
@@ -1303,6 +1559,30 @@ src/sim/sim_instruments.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/common_lib.dir/build.make CMakeFiles/common_lib.dir/src/sim/sim_instruments.cpp.s
 .PHONY : src/sim/sim_instruments.cpp.s
 
+src/strategy/base_quoting_strategy.o: src/strategy/base_quoting_strategy.cpp.o
+.PHONY : src/strategy/base_quoting_strategy.o
+
+# target to build an object file
+src/strategy/base_quoting_strategy.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/strategy_lib.dir/build.make CMakeFiles/strategy_lib.dir/src/strategy/base_quoting_strategy.cpp.o
+.PHONY : src/strategy/base_quoting_strategy.cpp.o
+
+src/strategy/base_quoting_strategy.i: src/strategy/base_quoting_strategy.cpp.i
+.PHONY : src/strategy/base_quoting_strategy.i
+
+# target to preprocess a source file
+src/strategy/base_quoting_strategy.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/strategy_lib.dir/build.make CMakeFiles/strategy_lib.dir/src/strategy/base_quoting_strategy.cpp.i
+.PHONY : src/strategy/base_quoting_strategy.cpp.i
+
+src/strategy/base_quoting_strategy.s: src/strategy/base_quoting_strategy.cpp.s
+.PHONY : src/strategy/base_quoting_strategy.s
+
+# target to generate assembly for a file
+src/strategy/base_quoting_strategy.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/strategy_lib.dir/build.make CMakeFiles/strategy_lib.dir/src/strategy/base_quoting_strategy.cpp.s
+.PHONY : src/strategy/base_quoting_strategy.cpp.s
+
 src/strategy/mm_framework.o: src/strategy/mm_framework.cpp.o
 .PHONY : src/strategy/mm_framework.o
 
@@ -1422,6 +1702,30 @@ tests/test_black76.s: tests/test_black76.cpp.s
 tests/test_black76.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_black76.dir/build.make CMakeFiles/test_black76.dir/tests/test_black76.cpp.s
 .PHONY : tests/test_black76.cpp.s
+
+tests/test_config.o: tests/test_config.cpp.o
+.PHONY : tests/test_config.o
+
+# target to build an object file
+tests/test_config.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_config.dir/build.make CMakeFiles/test_config.dir/tests/test_config.cpp.o
+.PHONY : tests/test_config.cpp.o
+
+tests/test_config.i: tests/test_config.cpp.i
+.PHONY : tests/test_config.i
+
+# target to preprocess a source file
+tests/test_config.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_config.dir/build.make CMakeFiles/test_config.dir/tests/test_config.cpp.i
+.PHONY : tests/test_config.cpp.i
+
+tests/test_config.s: tests/test_config.cpp.s
+.PHONY : tests/test_config.s
+
+# target to generate assembly for a file
+tests/test_config.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_config.dir/build.make CMakeFiles/test_config.dir/tests/test_config.cpp.s
+.PHONY : tests/test_config.cpp.s
 
 tests/test_data_repository.o: tests/test_data_repository.cpp.o
 .PHONY : tests/test_data_repository.o
@@ -1808,6 +2112,7 @@ help:
 	@echo "... sim_gateway_lib"
 	@echo "... strategy_lib"
 	@echo "... test_black76"
+	@echo "... test_config"
 	@echo "... test_data_repository"
 	@echo "... test_femas_simulator"
 	@echo "... test_fixed_hash_table"
@@ -1847,9 +2152,36 @@ help:
 	@echo "... src/common/trading_calendar.o"
 	@echo "... src/common/trading_calendar.i"
 	@echo "... src/common/trading_calendar.s"
+	@echo "... src/engine/arbitrage_worker.o"
+	@echo "... src/engine/arbitrage_worker.i"
+	@echo "... src/engine/arbitrage_worker.s"
+	@echo "... src/engine/engine_workers.o"
+	@echo "... src/engine/engine_workers.i"
+	@echo "... src/engine/engine_workers.s"
+	@echo "... src/engine/gateway_dispatcher_worker.o"
+	@echo "... src/engine/gateway_dispatcher_worker.i"
+	@echo "... src/engine/gateway_dispatcher_worker.s"
+	@echo "... src/engine/monitor_publisher_worker.o"
+	@echo "... src/engine/monitor_publisher_worker.i"
+	@echo "... src/engine/monitor_publisher_worker.s"
+	@echo "... src/engine/pricer_worker.o"
+	@echo "... src/engine/pricer_worker.i"
+	@echo "... src/engine/pricer_worker.s"
+	@echo "... src/engine/risk_monitor_worker.o"
+	@echo "... src/engine/risk_monitor_worker.i"
+	@echo "... src/engine/risk_monitor_worker.s"
+	@echo "... src/engine/strategy_worker.o"
+	@echo "... src/engine/strategy_worker.i"
+	@echo "... src/engine/strategy_worker.s"
+	@echo "... src/engine/timer_worker.o"
+	@echo "... src/engine/timer_worker.i"
+	@echo "... src/engine/timer_worker.s"
 	@echo "... src/engine/trading_engine.o"
 	@echo "... src/engine/trading_engine.i"
 	@echo "... src/engine/trading_engine.s"
+	@echo "... src/engine/vol_fitter_worker.o"
+	@echo "... src/engine/vol_fitter_worker.i"
+	@echo "... src/engine/vol_fitter_worker.s"
 	@echo "... src/feed/femas_feed.o"
 	@echo "... src/feed/femas_feed.i"
 	@echo "... src/feed/femas_feed.s"
@@ -1919,6 +2251,9 @@ help:
 	@echo "... src/sim/sim_instruments.o"
 	@echo "... src/sim/sim_instruments.i"
 	@echo "... src/sim/sim_instruments.s"
+	@echo "... src/strategy/base_quoting_strategy.o"
+	@echo "... src/strategy/base_quoting_strategy.i"
+	@echo "... src/strategy/base_quoting_strategy.s"
 	@echo "... src/strategy/mm_framework.o"
 	@echo "... src/strategy/mm_framework.i"
 	@echo "... src/strategy/mm_framework.s"
@@ -1934,6 +2269,9 @@ help:
 	@echo "... tests/test_black76.o"
 	@echo "... tests/test_black76.i"
 	@echo "... tests/test_black76.s"
+	@echo "... tests/test_config.o"
+	@echo "... tests/test_config.i"
+	@echo "... tests/test_config.s"
 	@echo "... tests/test_data_repository.o"
 	@echo "... tests/test_data_repository.i"
 	@echo "... tests/test_data_repository.s"

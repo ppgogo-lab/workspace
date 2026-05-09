@@ -22,6 +22,7 @@
 /mnt/d/workspace/optionMM/build-wsl/CMakeFiles/test_latest_snapshot.dir
 /mnt/d/workspace/optionMM/build-wsl/CMakeFiles/test_fixed_hash_table.dir
 /mnt/d/workspace/optionMM/build-wsl/CMakeFiles/test_trading_calendar.dir
+/mnt/d/workspace/optionMM/build-wsl/CMakeFiles/test_config.dir
 /mnt/d/workspace/optionMM/build-wsl/CMakeFiles/test_simple_mm.dir
 /mnt/d/workspace/optionMM/build-wsl/CMakeFiles/test_option_mm_core.dir
 /mnt/d/workspace/optionMM/build-wsl/CMakeFiles/test_femas_simulator.dir
