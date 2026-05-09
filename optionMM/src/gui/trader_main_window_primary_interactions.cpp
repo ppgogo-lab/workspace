@@ -59,25 +59,6 @@ void TraderMainWindow::connect_primary_interactions() {
         const QVariant data = instrument_selector_->currentData();
         if (data.isValid()) impl_->selected_instrument_id = data.toUInt();
     });
-    connect(vol_dock_, &QDockWidget::topLevelChanged, this, [this](bool floating) {
-        if (!floating || vol_dock_ == nullptr) return;
-        QTimer::singleShot(0, this, [this] {
-            if (vol_dock_ == nullptr || !vol_dock_->isFloating()) return;
-            ensure_vol_window();
-            if (vol_window_ == nullptr) return;
-
-            const QRect floating_geometry = vol_dock_->frameGeometry();
-            {
-                QSignalBlocker blocker(vol_dock_);
-                vol_dock_->setFloating(false);
-            }
-            vol_dock_->hide();
-            vol_window_->setGeometry(floating_geometry);
-            vol_window_->show();
-            vol_window_->raise();
-            vol_window_->activateWindow();
-        });
-    });
     connect(t_table_, &QTableWidget::cellClicked, this, [this](int row, int col) {
         auto* item = t_table_->item(row, col);
         if (item == nullptr || !item->data(Qt::UserRole).isValid()) {

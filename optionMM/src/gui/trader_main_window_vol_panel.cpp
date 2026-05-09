@@ -19,7 +19,7 @@ QDockWidget* TraderMainWindow::build_vol_curves_panel() {
     vol_layout->addWidget(vol_widget_);
     vol_dock_->setWidget(vol_panel);
     addDockWidget(Qt::RightDockWidgetArea, vol_dock_);
-    ensure_vol_window();
+    prepare_floating_panel(vol_dock_, 900, 620);
     return vol_dock_;
 }
 

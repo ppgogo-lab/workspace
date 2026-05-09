@@ -1694,9 +1694,6 @@ void TraderMainWindow::refresh_ui() {
     if (vol_window_ != nullptr && vol_window_->isVisible() && vol_window_widget_ != nullptr) {
         vol_window_widget_->update();
     }
-    if (vol_window_ != nullptr && !vol_window_->isVisible() && vol_dock_ != nullptr && !vol_dock_->isVisible()) {
-        vol_dock_->show();
-    }
 }
 
 

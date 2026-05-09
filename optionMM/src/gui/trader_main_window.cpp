@@ -23,6 +23,7 @@
 #include <QGroupBox>
 #include <QHeaderView>
 #include <QHBoxLayout>
+#include <QItemSelectionModel>
 #include <QLabel>
 #include <QLineEdit>
 #include <QMenuBar>
@@ -64,7 +65,7 @@
 
 namespace omm::gui {
 
-constexpr int kWorkspaceStateVersion = 1;
+constexpr int kWorkspaceStateVersion = 2;
 
 uint64_t make_arb_key(uint32_t product_index,
                       omm::proto::ArbitrageStrategyType strategy_type);
@@ -1519,14 +1520,32 @@ void TraderMainWindow::perform_logout() {
 
 void TraderMainWindow::build_ui() {
     build_main_workspace_panel();
-    auto* vol_dock = build_vol_curves_panel();
-    auto* controls_dock = build_trader_controls_panel();
-    auto* arb_monitor_dock = build_arbitrage_panel();
+    vol_dock_ = build_vol_curves_panel();
+    parameters_dock_ = build_parameters_panel();
+    ticket_dock_ = build_ticket_panel();
+    arbitrage_dock_ = build_arbitrage_panel();
+    pms_dock_ = build_positions_panel();
     connect_primary_interactions();
-    auto* positions_dock = build_positions_panel();
     connect_panel_interactions();
-    resizeDocks({positions_dock, controls_dock, vol_dock}, {350, 430, 520}, Qt::Horizontal);
-    resizeDocks({arb_monitor_dock}, {280}, Qt::Vertical);
+}
+
+void TraderMainWindow::prepare_floating_panel(QDockWidget* panel, int width, int height) {
+    if (panel == nullptr) return;
+    panel->setAllowedAreas(Qt::NoDockWidgetArea);
+    panel->setFloating(true);
+    panel->resize(width, height);
+    panel->hide();
+}
+
+void TraderMainWindow::show_floating_panel(QDockWidget* panel) {
+    if (panel == nullptr) return;
+    panel->setFloating(true);
+    if (panel->width() < 320 || panel->height() < 240) {
+        panel->resize(640, 520);
+    }
+    panel->show();
+    panel->raise();
+    panel->activateWindow();
 }
 
 QWidget* TraderMainWindow::create_vol_curve_grid_widget(QWidget* parent) {
@@ -1620,46 +1639,18 @@ void TraderMainWindow::ensure_vol_window() {
 void TraderMainWindow::restore_ui_state() {
     QSettings settings;
     const QByteArray geometry = settings.value("main/geometry").toByteArray();
-    const QByteArray state = settings.value("main/state").toByteArray();
     if (!geometry.isEmpty()) restoreGeometry(geometry);
-    if (!state.isEmpty()) restoreState(state, kWorkspaceStateVersion);
     impl_->selected_product_index = settings.value("selection/product", 0u).toUInt();
     impl_->selected_instrument_id = settings.value("selection/instrument", 0u).toUInt();
-
-    ensure_vol_window();
-    const QByteArray vol_geometry = settings.value("vol/geometry").toByteArray();
-    if (!vol_geometry.isEmpty()) vol_window_->restoreGeometry(vol_geometry);
-    const bool have_saved_secondary_visibility = settings.contains("vol/window_visible");
-    const bool vol_window_visible = settings.value("vol/window_visible", false).toBool();
-    if (vol_window_visible) {
-        vol_dock_->hide();
-        vol_window_->show();
-    } else if (!settings.value("workspace/dual_screen_seeded", false).toBool()
-               && QApplication::screens().size() > 1) {
-        const QList<QScreen*> screens = QApplication::screens();
-        if (geometry.isEmpty()) {
-            setGeometry(screens[0]->availableGeometry().adjusted(16, 16, -16, -16));
-        }
-        if (!have_saved_secondary_visibility) {
-            vol_window_->setGeometry(screens[1]->availableGeometry().adjusted(16, 16, -16, -16));
-            vol_dock_->hide();
-            vol_window_->show();
-        }
-        settings.setValue("workspace/dual_screen_seeded", true);
-    }
     impl_->ui_state_restored = true;
 }
 
 void TraderMainWindow::save_ui_state() const {
     QSettings settings;
     settings.setValue("main/geometry", saveGeometry());
-    settings.setValue("main/state", saveState(kWorkspaceStateVersion));
+    settings.setValue("main/state_version", kWorkspaceStateVersion);
     settings.setValue("selection/product", impl_->selected_product_index);
     settings.setValue("selection/instrument", impl_->selected_instrument_id);
-    if (vol_window_ != nullptr) {
-        settings.setValue("vol/geometry", vol_window_->saveGeometry());
-        settings.setValue("vol/window_visible", vol_window_->isVisible());
-    }
 }
 
 void TraderMainWindow::load_strategy_params_into_editors(const omm::proto::MMParams& params) {
@@ -1894,30 +1885,63 @@ void TraderMainWindow::show_instrument_panel() {
     dialog.exec();
 }
 
+namespace {
+std::vector<int> selected_table_rows(QTableView* table) {
+    std::vector<int> rows;
+    if (table == nullptr || table->selectionModel() == nullptr) return rows;
+
+    const QModelIndexList selected = table->selectionModel()->selectedRows();
+    rows.reserve(selected.size());
+    for (const QModelIndex& index : selected) {
+        if (index.isValid()) rows.push_back(index.row());
+    }
+    if (rows.empty() && table->currentIndex().isValid()) {
+        rows.push_back(table->currentIndex().row());
+    }
+    std::sort(rows.begin(), rows.end());
+    rows.erase(std::unique(rows.begin(), rows.end()), rows.end());
+    return rows;
+}
+}
+
 void TraderMainWindow::cancel_selected_order() {
-    const QModelIndex index = orders_table_ != nullptr ? orders_table_->currentIndex() : QModelIndex{};
-    if (!index.isValid() || impl_->order_blotter_model == nullptr) {
-        impl_->last_operator_status_text = "Select an order row before sending cancel";
-        execution_status_label_->setText("Select an order row before sending cancel.");
+    const std::vector<int> selected_rows = selected_table_rows(orders_table_);
+    if (selected_rows.empty() || impl_->order_blotter_model == nullptr) {
+        impl_->last_operator_status_text = "Select one or more order rows before sending cancel";
+        execution_status_label_->setText("Select one or more order rows before sending cancel.");
         return;
     }
 
-    const auto* row = impl_->order_blotter_model->row(index.row());
-    if (row == nullptr || row->order.client_order_id() == 0) {
-        impl_->last_operator_status_text = "Selected row has no cancelable order id";
-        execution_status_label_->setText("Selected row has no cancelable order id.");
+    std::vector<std::pair<uint64_t, uint32_t>> cancelable_orders;
+    cancelable_orders.reserve(selected_rows.size());
+    std::set<uint64_t> seen_order_ids;
+    for (int row_index : selected_rows) {
+        const auto* row = impl_->order_blotter_model->row(row_index);
+        if (row == nullptr || row->order.client_order_id() == 0) continue;
+        const uint64_t order_id = row->order.client_order_id();
+        if (!seen_order_ids.insert(order_id).second) continue;
+        cancelable_orders.emplace_back(order_id, row->order.instrument_id());
+    }
+
+    if (cancelable_orders.empty()) {
+        impl_->last_operator_status_text = "Selected order rows have no cancelable order ids";
+        execution_status_label_->setText("Selected order rows have no cancelable order ids.");
         return;
     }
 
-    const uint64_t order_id = row->order.client_order_id();
-    const uint32_t instrument_id = row->order.instrument_id();
-    const bool ok = impl_->client->cancel_order(order_id, instrument_id);
+    int sent = 0;
+    for (const auto& [order_id, instrument_id] : cancelable_orders) {
+        if (impl_->client->cancel_order(order_id, instrument_id)) ++sent;
+    }
     execution_status_label_->setText(
-        ok ? QString("Cancel sent for order %1").arg(order_id)
-           : QString("Cancel failed for order %1").arg(order_id));
-    impl_->last_operator_status_text = ok
-        ? QString("Cancel sent for order %1 at %2").arg(order_id).arg(current_time_text())
-        : QString("Cancel failed for order %1 at %2").arg(order_id).arg(current_time_text());
+        QString("Cancel sent for %1 / %2 selected orders")
+            .arg(sent)
+            .arg(cancelable_orders.size()));
+    impl_->last_operator_status_text = QString(
+        "Cancel sent for %1 / %2 selected orders at %3")
+            .arg(sent)
+            .arg(cancelable_orders.size())
+            .arg(current_time_text());
 }
 
 void TraderMainWindow::cancel_selected_product_orders() {
@@ -1961,39 +1985,45 @@ void TraderMainWindow::cancel_selected_product_orders() {
 }
 
 void TraderMainWindow::cancel_selected_quote() {
-    const QModelIndex index = quotes_table_ != nullptr ? quotes_table_->currentIndex() : QModelIndex{};
-    if (!index.isValid() || impl_->quote_blotter_model == nullptr) {
-        impl_->last_operator_status_text = "Select a quote row before sending quote cancel";
-        execution_status_label_->setText("Select a quote row before sending quote cancel.");
+    const std::vector<int> selected_rows = selected_table_rows(quotes_table_);
+    if (selected_rows.empty() || impl_->quote_blotter_model == nullptr) {
+        impl_->last_operator_status_text = "Select one or more quote rows before sending quote cancel";
+        execution_status_label_->setText("Select one or more quote rows before sending quote cancel.");
         return;
     }
 
-    const auto* row = impl_->quote_blotter_model->row(index.row());
-    if (row == nullptr || row->quote.instrument_id() == 0) {
-        impl_->last_operator_status_text = "Selected quote row has no instrument id";
-        execution_status_label_->setText("Selected quote row has no instrument id.");
+    std::set<uint32_t> selected_instrument_ids;
+    for (int row_index : selected_rows) {
+        const auto* row = impl_->quote_blotter_model->row(row_index);
+        if (row == nullptr || row->quote.instrument_id() == 0) continue;
+        selected_instrument_ids.insert(row->quote.instrument_id());
+    }
+
+    if (selected_instrument_ids.empty()) {
+        impl_->last_operator_status_text = "Selected quote rows have no instrument ids";
+        execution_status_label_->setText("Selected quote rows have no instrument ids.");
         return;
     }
 
-    const uint32_t instrument_id = row->quote.instrument_id();
-    const QString instrument_label = row->instrument;
-
-    uint64_t latest_quote_id = 0;
-    bool quote_working = false;
+    std::vector<std::pair<uint64_t, uint32_t>> working_quotes;
     {
         std::lock_guard<std::mutex> lock(impl_->state.mutex);
+        std::unordered_map<uint32_t, uint64_t> latest_quote_by_instrument;
         for (const auto& quote : impl_->state.quotes) {
-            if (quote.instrument_id() != instrument_id) continue;
-            latest_quote_id = quote.client_quote_id();
-            break;
+            const uint32_t instrument_id = quote.instrument_id();
+            if (selected_instrument_ids.find(instrument_id) == selected_instrument_ids.end()) continue;
+            if (latest_quote_by_instrument.find(instrument_id) != latest_quote_by_instrument.end()) continue;
+            latest_quote_by_instrument.emplace(instrument_id, quote.client_quote_id());
         }
-        if (auto state_it = impl_->state.instrument_states.find(instrument_id);
-            state_it != impl_->state.instrument_states.end()) {
+
+        for (const auto& [instrument_id, quote_id] : latest_quote_by_instrument) {
+            auto state_it = impl_->state.instrument_states.find(instrument_id);
+            if (state_it == impl_->state.instrument_states.end()) continue;
             switch (state_it->second.quote_state()) {
             case omm::proto::MM_QUOTE_LIVE:
             case omm::proto::MM_QUOTE_ACK_PENDING:
             case omm::proto::MM_QUOTE_CANCEL_PENDING:
-                quote_working = true;
+                working_quotes.emplace_back(quote_id, instrument_id);
                 break;
             case omm::proto::MM_QUOTE_IDLE:
             case omm::proto::MM_QUOTE_CANCEL_FAILED:
@@ -2004,19 +2034,25 @@ void TraderMainWindow::cancel_selected_quote() {
         }
     }
 
-    if (latest_quote_id == 0 || !quote_working) {
-        impl_->last_operator_status_text = "No working quote found for the selected quote row";
-        execution_status_label_->setText("No working quote found for the selected quote row.");
+    if (working_quotes.empty()) {
+        impl_->last_operator_status_text = "No working quotes found for selected quote rows";
+        execution_status_label_->setText("No working quotes found for selected quote rows.");
         return;
     }
 
-    const bool ok = impl_->client->cancel_quote(latest_quote_id, instrument_id);
+    int sent = 0;
+    for (const auto& [quote_id, instrument_id] : working_quotes) {
+        if (impl_->client->cancel_quote(quote_id, instrument_id)) ++sent;
+    }
     execution_status_label_->setText(
-        ok ? QString("Cancel sent for quote %1 on %2").arg(latest_quote_id).arg(instrument_label)
-           : QString("Cancel failed for quote %1 on %2").arg(latest_quote_id).arg(instrument_label));
-    impl_->last_operator_status_text = ok
-        ? QString("Cancel sent for quote %1 at %2").arg(latest_quote_id).arg(current_time_text())
-        : QString("Cancel failed for quote %1 at %2").arg(latest_quote_id).arg(current_time_text());
+        QString("Cancel sent for %1 / %2 selected quotes")
+            .arg(sent)
+            .arg(working_quotes.size()));
+    impl_->last_operator_status_text = QString(
+        "Cancel sent for %1 / %2 selected quotes at %3")
+            .arg(sent)
+            .arg(working_quotes.size())
+            .arg(current_time_text());
 }
 
 void TraderMainWindow::cancel_selected_product_quotes() {

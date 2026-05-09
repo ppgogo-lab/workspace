@@ -17,53 +17,18 @@
 
 namespace omm::gui {
 
-QDockWidget* TraderMainWindow::build_trader_controls_panel() {
-    auto* controls_dock = new QDockWidget("Trader Controls", this);
-    controls_dock->setObjectName("traderControlsDock");
-    controls_dock->setFeatures(QDockWidget::DockWidgetMovable |
-                               QDockWidget::DockWidgetFloatable |
-                               QDockWidget::DockWidgetClosable);
-    auto* controls_panel = new QWidget();
-    controls_panel->setMinimumWidth(410);
-    auto* controls_layout = new QVBoxLayout(controls_panel);
-    controls_layout->setContentsMargins(8, 8, 8, 8);
-    controls_layout->setSpacing(8);
+QDockWidget* TraderMainWindow::build_ticket_panel() {
+    auto* ticket_dock = new QDockWidget("Ticket", this);
+    ticket_dock->setObjectName("ticketDock");
+    ticket_dock->setFeatures(QDockWidget::DockWidgetMovable |
+                             QDockWidget::DockWidgetFloatable |
+                             QDockWidget::DockWidgetClosable);
 
-    auto configure_double = [](QDoubleSpinBox* box,
-                               int decimals,
-                               double min_value,
-                               double max_value,
-                               double step) {
-        box->setDecimals(decimals);
-        box->setRange(min_value, max_value);
-        box->setSingleStep(step);
-    };
-    auto configure_int = [](QSpinBox* box, int min_value, int max_value) {
-        box->setRange(min_value, max_value);
-    };
-
-    auto* selection_box = new QGroupBox("Selected Product Status");
-    auto* selection_layout = new QVBoxLayout(selection_box);
-    selection_layout->setContentsMargins(8, 8, 8, 8);
-    selection_layout->setSpacing(6);
-    strategy_status_label_ = new QLabel("Selected product strategy state will follow the live snapshot.");
-    strategy_status_label_->setWordWrap(true);
-    strategy_status_label_->setStyleSheet(
-        "padding:4px 8px; border-radius:8px; background:#f3f0e7; color:#4a4032;");
-    selection_layout->addWidget(strategy_status_label_);
-    product_gate_label_ = new QLabel("Product gate follows live MM state.");
-    product_gate_label_->setWordWrap(true);
-    product_gate_label_->setStyleSheet(
-        "padding:4px 8px; border-radius:8px; background:#ececec; color:#353535; font-weight:700;");
-    selection_layout->addWidget(product_gate_label_);
-    auto* params_state_row = new QHBoxLayout();
-    params_state_row->addWidget(new QLabel("Param Editor"));
-    params_state_label_ = new QLabel("No live params");
-    params_state_label_->setAlignment(Qt::AlignCenter);
-    style_pill(params_state_label_, QColor("#ececec"));
-    params_state_row->addWidget(params_state_label_, 1);
-    selection_layout->addLayout(params_state_row);
-    controls_layout->addWidget(selection_box);
+    auto* ticket_panel = new QWidget();
+    ticket_panel->setMinimumWidth(380);
+    auto* ticket_layout = new QVBoxLayout(ticket_panel);
+    ticket_layout->setContentsMargins(8, 8, 8, 8);
+    ticket_layout->setSpacing(8);
 
     auto* order_box = new QGroupBox("Manual Order Ticket");
     auto* order_layout = new QGridLayout(order_box);
@@ -91,52 +56,54 @@ QDockWidget* TraderMainWindow::build_trader_controls_panel() {
     sell_button_ = new QPushButton("Send Sell");
     order_layout->addWidget(buy_button_, 5, 0, 1, 3);
     order_layout->addWidget(sell_button_, 6, 0, 1, 3);
-    auto* execution_box = new QGroupBox("Execution / Cancel");
-    auto* execution_layout = new QGridLayout(execution_box);
-    cancel_selected_order_button_ = new QPushButton("Cancel Selected");
-    cancel_product_orders_button_ = new QPushButton("Cancel Product Working");
-    cancel_selected_quote_button_ = new QPushButton("Cancel Selected Quote");
-    cancel_product_quotes_button_ = new QPushButton("Cancel Product Quotes");
-    execution_layout->addWidget(cancel_selected_order_button_, 0, 0, 1, 2);
-    execution_layout->addWidget(cancel_product_orders_button_, 1, 0, 1, 2);
-    execution_layout->addWidget(cancel_selected_quote_button_, 2, 0, 1, 2);
-    execution_layout->addWidget(cancel_product_quotes_button_, 3, 0, 1, 2);
-    execution_status_label_ = new QLabel(
-        "Select an order or quote row to cancel, or use product-wide order / quote sweeps.");
-    execution_status_label_->setWordWrap(true);
-    execution_status_label_->setStyleSheet(
-        "padding:4px 8px; border-radius:8px; background:#f3f0e7; color:#4a4032;");
-    execution_layout->addWidget(execution_status_label_, 4, 0, 1, 2);
+    ticket_layout->addWidget(order_box);
 
-    auto* strategy_box = new QGroupBox("Strategy Control");
-    auto* strategy_layout = new QGridLayout(strategy_box);
-    start_button_ = new QPushButton("Start MM");
-    stop_button_ = new QPushButton("Stop MM");
-    strategy_layout->addWidget(start_button_, 0, 0);
-    strategy_layout->addWidget(stop_button_, 0, 1);
-    auto* strategy_note = new QLabel(
-        "MM start / stop only affects the selected product. Arbitrage runs independently below.");
-    strategy_note->setWordWrap(true);
-    strategy_note->setStyleSheet(
-        "padding:4px 8px; border-radius:8px; background:#f3f0e7; color:#4a4032;");
-    strategy_layout->addWidget(strategy_note, 1, 0, 1, 2);
-    strategy_layout->addWidget(new QLabel("Arb Strategy"), 2, 0);
-    arb_strategy_selector_ = new QComboBox();
-    strategy_layout->addWidget(arb_strategy_selector_, 2, 1);
-    arb_start_button_ = new QPushButton("Start Arb");
-    arb_stop_button_ = new QPushButton("Stop Arb");
-    strategy_layout->addWidget(arb_start_button_, 3, 0);
-    strategy_layout->addWidget(arb_stop_button_, 3, 1);
-    arb_status_label_ = new QLabel("No arbitrage strategy selected.");
-    arb_status_label_->setWordWrap(true);
-    arb_status_label_->setStyleSheet(
-        "padding:4px 8px; border-radius:8px; background:#ececec; color:#353535; font-weight:700;");
-    strategy_layout->addWidget(arb_status_label_, 4, 0, 1, 2);
-    arb_details_label_ = new QLabel("Arbitrage state follows the live snapshot.");
-    arb_details_label_->setWordWrap(true);
-    arb_details_label_->setStyleSheet(
-        "padding:4px 8px; border-radius:8px; background:#f3f0e7; color:#4a4032;");
-    strategy_layout->addWidget(arb_details_label_, 5, 0, 1, 2);
+    ticket_layout->addStretch(1);
+
+    ticket_dock->setWidget(ticket_panel);
+    addDockWidget(Qt::RightDockWidgetArea, ticket_dock);
+    prepare_floating_panel(ticket_dock, 430, 520);
+    return ticket_dock;
+}
+
+QDockWidget* TraderMainWindow::build_parameters_panel() {
+    auto* parameters_dock = new QDockWidget("Parameters", this);
+    parameters_dock->setObjectName("parametersDock");
+    parameters_dock->setFeatures(QDockWidget::DockWidgetMovable |
+                                 QDockWidget::DockWidgetFloatable |
+                                 QDockWidget::DockWidgetClosable);
+
+    auto* parameters_panel = new QWidget();
+    parameters_panel->setMinimumWidth(430);
+    auto* parameters_layout = new QVBoxLayout(parameters_panel);
+    parameters_layout->setContentsMargins(8, 8, 8, 8);
+    parameters_layout->setSpacing(8);
+
+    auto configure_double = [](QDoubleSpinBox* box,
+                               int decimals,
+                               double min_value,
+                               double max_value,
+                               double step) {
+        box->setDecimals(decimals);
+        box->setRange(min_value, max_value);
+        box->setSingleStep(step);
+    };
+    auto configure_int = [](QSpinBox* box, int min_value, int max_value) {
+        box->setRange(min_value, max_value);
+    };
+
+    auto* selection_box = new QGroupBox("Parameter Editor Status");
+    auto* selection_layout = new QVBoxLayout(selection_box);
+    selection_layout->setContentsMargins(8, 8, 8, 8);
+    selection_layout->setSpacing(6);
+    auto* params_state_row = new QHBoxLayout();
+    params_state_row->addWidget(new QLabel("Param Editor"));
+    params_state_label_ = new QLabel("No live params");
+    params_state_label_->setAlignment(Qt::AlignCenter);
+    style_pill(params_state_label_, QColor("#ececec"));
+    params_state_row->addWidget(params_state_label_, 1);
+    selection_layout->addLayout(params_state_row);
+    parameters_layout->addWidget(selection_box);
 
     auto* params_box = new QWidget();
     auto* params_root_layout = new QVBoxLayout(params_box);
@@ -275,32 +242,15 @@ QDockWidget* TraderMainWindow::build_trader_controls_panel() {
         "padding:4px 8px; border-radius:8px; background:#f3f0e7; color:#4a4032;");
     risk_layout->addWidget(risk_action_label_, 5, 0, 1, 2);
 
-    auto* control_tabs = new QTabWidget();
-    control_tabs->setDocumentMode(true);
-
-    auto* ticket_tab = new QWidget();
-    auto* ticket_layout = new QVBoxLayout(ticket_tab);
-    ticket_layout->setContentsMargins(0, 0, 0, 0);
-    ticket_layout->setSpacing(8);
-    ticket_layout->addWidget(order_box);
-    ticket_layout->addWidget(execution_box);
-    ticket_layout->addStretch(1);
-    control_tabs->addTab(ticket_tab, "Ticket");
-
-    auto* strategy_tab = new QWidget();
-    auto* strategy_tab_layout = new QVBoxLayout(strategy_tab);
-    strategy_tab_layout->setContentsMargins(0, 0, 0, 0);
-    strategy_tab_layout->setSpacing(8);
-    strategy_tab_layout->addWidget(strategy_box);
-    strategy_tab_layout->addStretch(1);
-    control_tabs->addTab(strategy_tab, "Strategy");
+    auto* parameters_tabs = new QTabWidget();
+    parameters_tabs->setDocumentMode(true);
 
     auto* params_tab = new QWidget();
     auto* params_tab_layout = new QVBoxLayout(params_tab);
     params_tab_layout->setContentsMargins(0, 0, 0, 0);
     params_tab_layout->setSpacing(8);
     params_tab_layout->addWidget(params_box);
-    control_tabs->addTab(params_tab, "MM Params");
+    parameters_tabs->addTab(params_tab, "MM Params");
 
     auto* risk_tab = new QWidget();
     auto* risk_tab_layout = new QVBoxLayout(risk_tab);
@@ -308,12 +258,13 @@ QDockWidget* TraderMainWindow::build_trader_controls_panel() {
     risk_tab_layout->setSpacing(8);
     risk_tab_layout->addWidget(risk_box);
     risk_tab_layout->addStretch(1);
-    control_tabs->addTab(risk_tab, "Risk");
+    parameters_tabs->addTab(risk_tab, "Risk");
 
-    controls_layout->addWidget(control_tabs, 1);
-    controls_dock->setWidget(controls_panel);
-    addDockWidget(Qt::RightDockWidgetArea, controls_dock);
-    return controls_dock;
+    parameters_layout->addWidget(parameters_tabs, 1);
+    parameters_dock->setWidget(parameters_panel);
+    addDockWidget(Qt::RightDockWidgetArea, parameters_dock);
+    prepare_floating_panel(parameters_dock, 560, 720);
+    return parameters_dock;
 }
 
 } // namespace omm::gui

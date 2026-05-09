@@ -8,8 +8,10 @@
 #include <QComboBox>
 #include <QGridLayout>
 #include <QHeaderView>
+#include <QHBoxLayout>
 #include <QLabel>
 #include <QMenuBar>
+#include <QPushButton>
 #include <QSplitter>
 #include <QTabWidget>
 #include <QTableView>
@@ -28,6 +30,20 @@ void TraderMainWindow::build_main_workspace_panel() {
     auto* settings_menu = menuBar()->addMenu("Settings");
     instrument_action_ = settings_menu->addAction("Instrument...");
     connect(instrument_action_, &QAction::triggered, this, [this] { show_instrument_panel(); });
+
+    auto* tools_menu = menuBar()->addMenu("Tools");
+    pms_action_ = tools_menu->addAction("PMS");
+    connect(pms_action_, &QAction::triggered, this, [this] { show_floating_panel(pms_dock_); });
+    vol_action_ = tools_menu->addAction("Vol");
+    connect(vol_action_, &QAction::triggered, this, [this] { show_floating_panel(vol_dock_); });
+
+    auto* trade_menu = menuBar()->addMenu("Trade");
+    parameters_action_ = trade_menu->addAction("Parameters");
+    connect(parameters_action_, &QAction::triggered, this, [this] { show_floating_panel(parameters_dock_); });
+    ticket_action_ = trade_menu->addAction("Ticket");
+    connect(ticket_action_, &QAction::triggered, this, [this] { show_floating_panel(ticket_dock_); });
+    arbitrage_action_ = trade_menu->addAction("Arbitrage");
+    connect(arbitrage_action_, &QAction::triggered, this, [this] { show_floating_panel(arbitrage_dock_); });
 
     auto* central = new QWidget();
     auto* layout = new QVBoxLayout(central);
@@ -82,6 +98,13 @@ void TraderMainWindow::build_main_workspace_panel() {
         "padding:4px 10px; border-radius:10px; background:#f3f0e7; color:#4a4032; font-weight:700;");
     header_layout->addWidget(alert_banner_label_, 2, 2, 1, 4);
 
+    start_button_ = new QPushButton("Start MM");
+    stop_button_ = new QPushButton("Stop MM");
+    start_button_->setMinimumWidth(96);
+    stop_button_->setMinimumWidth(96);
+    header_layout->addWidget(start_button_, 2, 6);
+    header_layout->addWidget(stop_button_, 2, 7);
+
     delta_label_ = new QLabel("Delta --");
     gamma_label_ = new QLabel("Gamma --");
     vega_label_ = new QLabel("Vega --");
@@ -94,6 +117,16 @@ void TraderMainWindow::build_main_workspace_panel() {
     header_layout->addWidget(delta_label_, 3, 0);
     header_layout->addWidget(gamma_label_, 3, 1);
     header_layout->addWidget(vega_label_, 3, 2);
+    product_gate_label_ = new QLabel("Product gate follows live MM state.");
+    product_gate_label_->setWordWrap(true);
+    product_gate_label_->setStyleSheet(
+        "padding:4px 8px; border-radius:8px; background:#ececec; color:#353535; font-weight:700;");
+    header_layout->addWidget(product_gate_label_, 3, 3, 1, 2);
+    strategy_status_label_ = new QLabel("Selected product strategy state will follow the live snapshot.");
+    strategy_status_label_->setWordWrap(true);
+    strategy_status_label_->setStyleSheet(
+        "padding:4px 8px; border-radius:8px; background:#f3f0e7; color:#4a4032;");
+    header_layout->addWidget(strategy_status_label_, 3, 5, 1, 3);
     layout->addWidget(header_panel);
 
     auto* desk_splitter = new QSplitter(Qt::Vertical, central);
@@ -129,10 +162,10 @@ void TraderMainWindow::build_main_workspace_panel() {
     quote_layout->addWidget(t_table_, 1);
     desk_splitter->addWidget(quote_panel);
 
-    auto configure_blotter_view = [](QTableView* table) {
+    auto configure_blotter_view = [](QTableView* table, QAbstractItemView::SelectionMode mode) {
         table->setAlternatingRowColors(true);
         table->setSelectionBehavior(QAbstractItemView::SelectRows);
-        table->setSelectionMode(QAbstractItemView::SingleSelection);
+        table->setSelectionMode(mode);
         table->setEditTriggers(QAbstractItemView::NoEditTriggers);
         table->setSortingEnabled(false);
         table->setWordWrap(false);
@@ -151,9 +184,9 @@ void TraderMainWindow::build_main_workspace_panel() {
     orders_table_->setModel(impl_->order_blotter_model);
     quotes_table_->setModel(impl_->quote_blotter_model);
     trades_table_->setModel(impl_->trade_blotter_model);
-    configure_blotter_view(orders_table_);
-    configure_blotter_view(quotes_table_);
-    configure_blotter_view(trades_table_);
+    configure_blotter_view(orders_table_, QAbstractItemView::ExtendedSelection);
+    configure_blotter_view(quotes_table_, QAbstractItemView::ExtendedSelection);
+    configure_blotter_view(trades_table_, QAbstractItemView::SingleSelection);
     alerts_table_ = make_table({"Ts", "Type", "Message"});
     alerts_table_->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     alerts_table_->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
@@ -173,18 +206,79 @@ void TraderMainWindow::build_main_workspace_panel() {
     blotter_hint->setStyleSheet("color:#6b5a3f; padding-left:2px;");
     blotter_layout->addWidget(blotter_hint);
 
-    auto* blotter_tabs = new QTabWidget();
-    blotter_tabs->setDocumentMode(true);
-    blotter_tabs->addTab(orders_table_, "Orders");
-    blotter_tabs->addTab(quotes_table_, "Quotes");
-    blotter_tabs->addTab(trades_table_, "Trades");
-    blotter_tabs->addTab(alerts_table_, "Risk Alerts");
-    blotter_layout->addWidget(blotter_tabs, 1);
+    order_cancel_panel_ = new QWidget();
+    auto* order_cancel_layout = new QHBoxLayout(order_cancel_panel_);
+    order_cancel_layout->setContentsMargins(0, 0, 0, 0);
+    order_cancel_layout->setSpacing(6);
+    auto* order_cancel_label = new QLabel("Orders");
+    order_cancel_label->setStyleSheet("font-weight:700; color:#5d4f36;");
+    cancel_selected_order_button_ = new QPushButton("Cancel selected order(s)");
+    cancel_product_orders_button_ = new QPushButton("Cancel all product orders");
+    order_cancel_layout->addWidget(order_cancel_label);
+    order_cancel_layout->addWidget(cancel_selected_order_button_);
+    order_cancel_layout->addWidget(cancel_product_orders_button_);
+    order_cancel_layout->addStretch(1);
+    blotter_layout->addWidget(order_cancel_panel_);
+
+    quote_cancel_panel_ = new QWidget();
+    auto* quote_cancel_layout = new QHBoxLayout(quote_cancel_panel_);
+    quote_cancel_layout->setContentsMargins(0, 0, 0, 0);
+    quote_cancel_layout->setSpacing(6);
+    auto* quote_cancel_label = new QLabel("Quotes");
+    quote_cancel_label->setStyleSheet("font-weight:700; color:#5d4f36;");
+    cancel_selected_quote_button_ = new QPushButton("Cancel selected quote(s)");
+    cancel_product_quotes_button_ = new QPushButton("Cancel all product quotes");
+    quote_cancel_layout->addWidget(quote_cancel_label);
+    quote_cancel_layout->addWidget(cancel_selected_quote_button_);
+    quote_cancel_layout->addWidget(cancel_product_quotes_button_);
+    quote_cancel_layout->addStretch(1);
+    blotter_layout->addWidget(quote_cancel_panel_);
+
+    execution_status_label_ = new QLabel(
+        "Select one or more order rows, or cancel all working orders for the selected product.");
+    execution_status_label_->setWordWrap(true);
+    execution_status_label_->setStyleSheet(
+        "padding:4px 8px; border-radius:8px; background:#f3f0e7; color:#4a4032;");
+    blotter_layout->addWidget(execution_status_label_);
+
+    blotter_tabs_ = new QTabWidget();
+    blotter_tabs_->setDocumentMode(true);
+    blotter_tabs_->addTab(orders_table_, "Orders");
+    blotter_tabs_->addTab(quotes_table_, "Quotes");
+    blotter_tabs_->addTab(trades_table_, "Trades");
+    blotter_tabs_->addTab(alerts_table_, "Risk Alerts");
+    connect(blotter_tabs_, &QTabWidget::currentChanged, this, [this](int tab_index) {
+        update_blotter_cancel_controls(tab_index);
+    });
+    update_blotter_cancel_controls(blotter_tabs_->currentIndex());
+    blotter_layout->addWidget(blotter_tabs_, 1);
     desk_splitter->addWidget(blotter_panel);
     desk_splitter->setStretchFactor(0, 5);
     desk_splitter->setStretchFactor(1, 2);
     layout->addWidget(desk_splitter, 1);
     setCentralWidget(central);
+}
+
+void TraderMainWindow::update_blotter_cancel_controls(int tab_index) {
+    const QString tab_name = blotter_tabs_ != nullptr && tab_index >= 0
+        ? blotter_tabs_->tabText(tab_index)
+        : QString{};
+    const bool orders_active = tab_name == "Orders";
+    const bool quotes_active = tab_name == "Quotes";
+
+    if (order_cancel_panel_ != nullptr) order_cancel_panel_->setVisible(orders_active);
+    if (quote_cancel_panel_ != nullptr) quote_cancel_panel_->setVisible(quotes_active);
+
+    if (execution_status_label_ == nullptr) return;
+    if (orders_active) {
+        execution_status_label_->setText(
+            "Select one or more order rows, or cancel all working orders for the selected product.");
+    } else if (quotes_active) {
+        execution_status_label_->setText(
+            "Select one or more quote rows, or cancel all working quotes for the selected product.");
+    } else {
+        execution_status_label_->setText("No cancel actions for this blotter tab.");
+    }
 }
 
 } // namespace omm::gui

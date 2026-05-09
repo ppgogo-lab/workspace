@@ -78,6 +78,7 @@ QDockWidget* TraderMainWindow::build_positions_panel() {
     positions_panel->setMinimumWidth(320);
     positions_dock->setWidget(positions_panel);
     addDockWidget(Qt::LeftDockWidgetArea, positions_dock);
+    prepare_floating_panel(positions_dock, 780, 680);
     return positions_dock;
 }
 
