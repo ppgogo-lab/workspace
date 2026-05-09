@@ -53,6 +53,8 @@ void BaseQuotingStrategy::request_cancel(uint16_t instrument_id,
     InstrumentState& state = instrument_state_[instrument_id];
     if (!state.active) return;
 
+    if (manage_quote_lifecycle(instrument_id, now_ns)) return;
+
     send_cancel_internal(instrument_id, now_ns);
 }
 
@@ -79,9 +81,27 @@ OrderId BaseQuotingStrategy::submit_order(const Order& order) noexcept {
 }
 
 void BaseQuotingStrategy::cancel_order(OrderId id) noexcept {
-    // Order cancellation is not yet implemented in this base class.
-    // Subclasses can implement custom cancel logic if needed.
-    (void)id;
+    if (!order_buf_ || id == 0) return;
+
+    OrderLifecycleTracker* tracker = find_order_tracker(id);
+    if (!tracker || !OrderLifecycleController::is_live(*tracker)) {
+        return;
+    }
+
+    Order cancel{};
+    cancel.client_order_id = id;
+    cancel.instrument_id = tracker->instrument_id;
+    cancel.product_index = product_idx_;
+    cancel.side = tracker->side;
+    cancel.price = tracker->price;
+    cancel.volume = tracker->remaining_volume;
+    cancel.send_ts = get_monotonic_ns();
+    cancel.is_hedge = tracker->is_hedge;
+    cancel.is_cancel = true;
+
+    if (order_buf_->try_push(cancel)) {
+        OrderLifecycleController::note_cancel_submitted(*tracker);
+    }
 }
 
 // ─── State Access ─────────────────────────────────────────────────────────────
@@ -153,12 +173,7 @@ void BaseQuotingStrategy::on_quote_ack(const Quote& quote) noexcept {
         return;
     }
 
-    // If lifecycle controller requests a requote, trigger subclass signal handler
-    // This is typically needed after a replace ack when a new signal arrived
-    // during the replace operation.
-    if (request_requote) {
-        // Subclass can trigger requote in next on_signal_impl call
-    }
+    on_quote_lifecycle_update(quote.instrument_id, now_ns, request_requote);
 }
 
 void BaseQuotingStrategy::on_quote_cancel(const Quote& quote) noexcept {
@@ -167,9 +182,11 @@ void BaseQuotingStrategy::on_quote_cancel(const Quote& quote) noexcept {
     if (!state.active) return;
 
     bool request_requote = false;
-    (void)QuoteLifecycleController::on_quote_cancel(state.quote_lifecycle,
-                                                    quote,
-                                                    &request_requote);
+    if (QuoteLifecycleController::on_quote_cancel(state.quote_lifecycle,
+                                                  quote,
+                                                  &request_requote)) {
+        on_quote_lifecycle_update(quote.instrument_id, get_monotonic_ns(), request_requote);
+    }
 }
 
 void BaseQuotingStrategy::on_quote_reject(const Quote& quote) noexcept {
@@ -178,9 +195,11 @@ void BaseQuotingStrategy::on_quote_reject(const Quote& quote) noexcept {
     if (!state.active) return;
 
     bool request_requote = false;
-    (void)QuoteLifecycleController::on_quote_reject(state.quote_lifecycle,
-                                                    quote,
-                                                    &request_requote);
+    if (QuoteLifecycleController::on_quote_reject(state.quote_lifecycle,
+                                                  quote,
+                                                  &request_requote)) {
+        on_quote_lifecycle_update(quote.instrument_id, get_monotonic_ns(), request_requote);
+    }
 }
 
 void BaseQuotingStrategy::on_order_ack(const Order& order) noexcept {
@@ -243,9 +262,10 @@ bool BaseQuotingStrategy::manage_quote_lifecycle(uint16_t instrument_id,
     }
 
     if (work.publish_cancel_failed_alert) {
-        // Alert publishing is strategy-specific (requires alert_topic_)
-        // Subclasses can override this behavior if needed
+        on_quote_cancel_give_up(instrument_id, state.quote_lifecycle, now_ns);
     }
+
+    on_quote_lifecycle_update(instrument_id, now_ns, false);
 
     return true;
 }

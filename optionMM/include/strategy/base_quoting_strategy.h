@@ -84,9 +84,26 @@ protected:
     // Subclass implements periodic tasks like hedging and session management.
     virtual void on_timer_impl(const TimerEvent& event) noexcept = 0;
 
+    virtual void on_quote_lifecycle_update(uint16_t instrument_id,
+                                           int64_t now_ns,
+                                           bool reevaluate) noexcept {
+        (void)instrument_id;
+        (void)now_ns;
+        (void)reevaluate;
+    }
+
+    virtual void on_quote_cancel_give_up(uint16_t instrument_id,
+                                         const QuoteLifecycleState& state,
+                                         int64_t now_ns) noexcept {
+        (void)instrument_id;
+        (void)state;
+        (void)now_ns;
+    }
+
     // ─── IMarketMaker Implementation (Final) ──────────────────────────────────
     // These methods are final to ensure consistent lifecycle management.
     // Subclasses cannot override; use the _impl hooks instead.
+public:
     void on_signal(const PricingSignal& signal) noexcept final;
     void on_fill(const Trade& trade) noexcept final;
     void on_quote_ack(const Quote& quote) noexcept final;
@@ -99,6 +116,7 @@ protected:
 
     // ─── Per-Instrument State ─────────────────────────────────────────────────
     // Stores quote lifecycle state and position for each instrument.
+protected:
     struct InstrumentState {
         bool active{false};
         uint16_t instrument_id{INVALID_INSTRUMENT_ID};

@@ -252,7 +252,8 @@ struct alignas(64) Order {
     Timestamp  ack_ts{0};
     bool       is_manual{false};
     bool       is_hedge{false};
-    uint8_t    _pad2[6];
+    bool       is_cancel{false};
+    uint8_t    _pad2[5];
 };
 
 // ─── Quote (two-sided order) ──────────────────────────────────────────────────

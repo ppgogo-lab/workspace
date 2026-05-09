@@ -77,6 +77,14 @@ public:
         tracker.ack_ts = now_ns;
     }
 
+    static void note_cancel_submitted(OrderLifecycleTracker& tracker) noexcept {
+        if (tracker.status != OrderLifecycleState::Pending
+            && tracker.status != OrderLifecycleState::Live) {
+            return;
+        }
+        tracker.status = OrderLifecycleState::CancelPending;
+    }
+
     // Handle partial or full fill. Updates filled/remaining volumes.
     // Transitions to Filled when remaining_volume reaches zero.
     static void on_fill(OrderLifecycleTracker& tracker,

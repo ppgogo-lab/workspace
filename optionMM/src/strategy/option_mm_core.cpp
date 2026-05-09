@@ -314,6 +314,26 @@ void OptionMMCoreStrategy::on_timer_impl(const TimerEvent& event) noexcept {
     }
 }
 
+void OptionMMCoreStrategy::on_quote_lifecycle_update(uint16_t instrument_id,
+                                                     int64_t now_ns,
+                                                     bool reevaluate) noexcept {
+    if (instrument_id >= MAX_INSTRUMENTS) return;
+    OptionState& state = option_state_[instrument_id];
+    if (!state.active) return;
+
+    update_monitor_state(state);
+    if (reevaluate) {
+        maybe_quote(instrument_id, now_ns);
+    }
+}
+
+void OptionMMCoreStrategy::on_quote_cancel_give_up(
+        uint16_t instrument_id,
+        const QuoteLifecycleState& quote_lifecycle,
+        int64_t now_ns) noexcept {
+    publish_cancel_failed_alert(instrument_id, quote_lifecycle, now_ns);
+}
+
 void OptionMMCoreStrategy::reevaluate_all(int64_t now_ns) noexcept {
     runtime_full_book_reevaluations_.fetch_add(1, std::memory_order_relaxed);
     if (product_exposure_breached() || product_temporarily_suppressed(now_ns)) {
@@ -541,22 +561,23 @@ OptionMMCoreStrategy::build_decision(OptionState& state, int64_t now_ns) const n
 // These methods are now implemented in BaseQuotingStrategy.
 // The base class handles all quote lifecycle management.
 
-void OptionMMCoreStrategy::publish_cancel_failed_alert(const OptionState& state, int64_t now_ns) noexcept {
+void OptionMMCoreStrategy::publish_cancel_failed_alert(
+        uint16_t instrument_id,
+        const QuoteLifecycleState& quote_lifecycle,
+        int64_t now_ns) noexcept {
     if (!alert_topic_) return;
-    const QuoteLifecycleState* quote_lifecycle = get_quote_state(state.instrument_id);
-    if (quote_lifecycle == nullptr) return;
 
     SystemAlert alert{};
     alert.ts_ns = now_ns;
-    alert.instrument_id = state.instrument_id;
+    alert.instrument_id = instrument_id;
     alert.product_index = product_idx_;
     alert.type = SystemAlertType::QuoteCancelGiveUp;
     std::snprintf(alert.message,
                   sizeof(alert.message),
                   "quote cancel failed after %u attempts for instrument %u quote %llu",
-                  static_cast<unsigned>(quote_lifecycle->cancel_attempts),
-                  static_cast<unsigned>(state.instrument_id),
-                  static_cast<unsigned long long>(quote_lifecycle->cancel_target_quote_id));
+                  static_cast<unsigned>(quote_lifecycle.cancel_attempts),
+                  static_cast<unsigned>(instrument_id),
+                  static_cast<unsigned long long>(quote_lifecycle.cancel_target_quote_id));
     alert_topic_->publish(alert);
 }
 

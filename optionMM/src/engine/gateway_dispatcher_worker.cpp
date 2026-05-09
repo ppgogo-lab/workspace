@@ -188,6 +188,13 @@ void TradingEngine::gateway_dispatcher_loop() noexcept {
                 if (strategy_dispatch_suspended_.load(std::memory_order_acquire) && !order.is_manual) {
                     continue;
                 }
+                if (order.is_cancel) {
+                    (void)gateway_->cancel_order(order.client_order_id, order.instrument_id);
+                    if (((drained + 1) % kDispatcherCallbackInterleaveBurstCap) == 0) {
+                        drain_callbacks(kDispatcherCallbackInterleaveBurstCap);
+                    }
+                    continue;
+                }
                 if (!order.is_manual) {
                     order.book_id = mm_book_ids_[i];
                 }

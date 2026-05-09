@@ -44,6 +44,12 @@ protected:
     void on_signal_impl(const PricingSignal& signal) noexcept override;
     void on_fill_impl(const Trade& trade) noexcept override;
     void on_timer_impl(const TimerEvent& event) noexcept override;
+    void on_quote_lifecycle_update(uint16_t instrument_id,
+                                   int64_t now_ns,
+                                   bool reevaluate) noexcept override;
+    void on_quote_cancel_give_up(uint16_t instrument_id,
+                                 const QuoteLifecycleState& state,
+                                 int64_t now_ns) noexcept override;
 
 private:
     // Reasons why the strategy is not willing to quote this instrument right now.
@@ -139,7 +145,9 @@ private:
     void maybe_quote(uint16_t instrument_id, int64_t now_ns) noexcept;
     QuoteDecision build_decision(OptionState& state, int64_t now_ns) const noexcept;
     // REMOVED: send_quote, send_cancel, manage_quote_lifecycle - now in BaseQuotingStrategy
-    void publish_cancel_failed_alert(const OptionState& state, int64_t now_ns) noexcept;
+    void publish_cancel_failed_alert(uint16_t instrument_id,
+                                     const QuoteLifecycleState& quote_lifecycle,
+                                     int64_t now_ns) noexcept;
 
     // Product exposure and hedging helpers.
     void maybe_trigger_hedge(int64_t now_ns) noexcept;

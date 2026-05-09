@@ -4,6 +4,7 @@
 #include "strategy/mm_params.h"
 #include "risk/pre_trade_risk.h"
 #include "common/ring_buffer.h"
+#include "common/trading_calendar.h"
 #include "common/types.h"
 #include "gateway/sim_gateway.h"
 #include "engine/trading_engine.h"
@@ -12,6 +13,7 @@
 #include <cmath>
 #include <thread>
 #include <chrono>
+#include <ctime>
 
 using namespace omm;
 
@@ -21,6 +23,7 @@ static Instrument make_option(uint16_t id, uint16_t underlying_id,
                                uint8_t product_idx,
                                double strike, OptionType otype,
                                double tick_size = 0.01) {
+    const int32_t today = yyyymmdd_from_time(std::time(nullptr));
     Instrument instr{};
     instr.instrument_id   = id;
     instr.underlying_id   = underlying_id;
@@ -32,7 +35,7 @@ static Instrument make_option(uint16_t id, uint16_t underlying_id,
     instr.multiplier      = 1.0;
     instr.exchange        = Exchange::SHFE;
     instr.exchange_id     = ExchangeId("SHFE");
-    instr.expiry_date     = 20260428;
+    instr.expiry_date     = add_days_yyyymmdd(today, 5);
     // expiry ~3 months from now (in ns)
     instr.expiry_epoch_ns = get_monotonic_ns()
                           + static_cast<int64_t>(0.25 * 365.0 * 24.0 * 3600.0 * 1e9);
@@ -42,6 +45,7 @@ static Instrument make_option(uint16_t id, uint16_t underlying_id,
 static Instrument make_future(uint16_t id, uint8_t product_idx,
                               const char* code,
                               double tick_size = 0.01) {
+    const int32_t today = yyyymmdd_from_time(std::time(nullptr));
     Instrument instr{};
     instr.instrument_id = id;
     instr.product_index = product_idx;
@@ -50,7 +54,7 @@ static Instrument make_future(uint16_t id, uint8_t product_idx,
     instr.multiplier    = 1.0;
     instr.exchange      = Exchange::SHFE;
     instr.exchange_id   = ExchangeId("SHFE");
-    instr.expiry_date   = 20260428;
+    instr.expiry_date   = add_days_yyyymmdd(today, 5);
     std::strncpy(instr.code.data, code, sizeof(instr.code.data) - 1);
     return instr;
 }
@@ -58,13 +62,12 @@ static Instrument make_future(uint16_t id, uint8_t product_idx,
 static void add_test_calendar(SystemConfig& cfg) {
     cfg.exchange_calendar_count = 1;
     cfg.exchange_calendars[0].exchange_id = ExchangeId("SHFE");
-    const int32_t dates[] = {20260423, 20260424, 20260425, 20260426, 20260427, 20260428};
-    const bool trading[] = {true, true, false, false, true, true};
-    for (int i = 0; i < 6; ++i) {
-        cfg.exchange_calendars[0].days[i].date = dates[i];
-        cfg.exchange_calendars[0].days[i].is_trading_day = trading[i];
+    const int32_t today = yyyymmdd_from_time(std::time(nullptr));
+    for (int i = 0; i < 7; ++i) {
+        cfg.exchange_calendars[0].days[i].date = add_days_yyyymmdd(today, i - 1);
+        cfg.exchange_calendars[0].days[i].is_trading_day = true;
     }
-    cfg.exchange_calendars[0].day_count = 6;
+    cfg.exchange_calendars[0].day_count = 7;
 
     cfg.exchange_trading_time_count = 1;
     cfg.exchange_trading_times[0].exchange_id = ExchangeId("SHFE");
@@ -457,8 +460,8 @@ TEST(TradingEngineIntegration, TickToQuote) {
 
     auto gw = std::make_unique<SimGateway>();
     // Add one option instrument — strike at-the-money relative to last_price
-    Instrument fut = make_future(1, 0, "cu2501", 0.01);
-    Instrument opt = make_option(0, 1, 0, 5.0, OptionType::Call, 0.01);
+    Instrument fut = make_future(0, 0, "cu2501", 0.01);
+    Instrument opt = make_option(1, 0, 0, 5.0, OptionType::Call, 0.01);
     std::memcpy(opt.underlying_code.data, "cu2501", 7);
     gw->add_instrument(fut);
     gw->add_instrument(opt);
@@ -510,8 +513,8 @@ TEST(TradingEngineIntegration, DeferredMonitoringStillStreamsQuotes) {
     add_test_calendar(cfg);
 
     auto gw = std::make_unique<SimGateway>();
-    Instrument fut = make_future(1, 0, "cu2501", 0.01);
-    Instrument opt = make_option(0, 1, 0, 5.0, OptionType::Call, 0.01);
+    Instrument fut = make_future(0, 0, "cu2501", 0.01);
+    Instrument opt = make_option(1, 0, 0, 5.0, OptionType::Call, 0.01);
     std::memcpy(opt.underlying_code.data, "cu2501", 7);
     gw->add_instrument(fut);
     gw->add_instrument(opt);
