@@ -296,18 +296,16 @@ void populate_quote_update(const Quote& quote,
 void populate_tick(const TopOfBookTick& tick, omm::proto::Tick* msg) {
     msg->set_instrument_id(tick.instrument_id);
     msg->set_last_price(tick.last_price);
-    msg->set_bid_price(tick.bid_price[0]);
-    msg->set_ask_price(tick.ask_price[0]);
-    msg->set_bid_volume(tick.bid_volume[0]);
-    msg->set_ask_volume(tick.ask_volume[0]);
+    msg->set_bid_price(tick.bid_price);
+    msg->set_ask_price(tick.ask_price);
+    msg->set_bid_volume(tick.bid_volume);
+    msg->set_ask_volume(tick.ask_volume);
     msg->set_exchange_ts_ns(tick.exchange_ts_ns);
     msg->set_recv_ts_ns(tick.recv_ts_ns);
-    for (int i = 0; i < 5; ++i) {
-        msg->add_bid_prices(tick.bid_price[i]);
-        msg->add_ask_prices(tick.ask_price[i]);
-        msg->add_bid_volumes(tick.bid_volume[i]);
-        msg->add_ask_volumes(tick.ask_volume[i]);
-    }
+    msg->add_bid_prices(tick.bid_price);
+    msg->add_ask_prices(tick.ask_price);
+    msg->add_bid_volumes(tick.bid_volume);
+    msg->add_ask_volumes(tick.ask_volume);
 }
 
 omm::proto::RiskAlert::AlertType alert_type_to_proto(SystemAlertType type) noexcept {

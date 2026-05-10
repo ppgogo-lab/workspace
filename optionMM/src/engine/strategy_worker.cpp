@@ -119,14 +119,13 @@ void TradingEngine::strategy_loop(int idx) noexcept {
             if (batch_size == 0) break;  // No more signals available
             did_work = true;
             signal_budget -= batch_size;
-            // Process all signals in the batch
             for (int i = 0; i < batch_size; ++i) {
                 const PricingSignal& sig = sig_batch[i];
                 if (sig.instrument_id < MAX_INSTRUMENTS) {
                     last_strategy_signal_ts_[sig.instrument_id] = get_monotonic_ns();  // Plain store (single writer)
                 }
-                strategies_[idx]->on_signal(sig);
             }
+            strategies_[idx]->on_signals(sig_batch, batch_size);
         }
         const int coalesced_signals =
             drain_coalesced_signals(idx, coalesced_signal_seen_versions, signal_budget);

@@ -19,10 +19,10 @@ TopOfBookTick make_consistent_tick(uint64_t seq) {
     tick.exchange_ts_ns = static_cast<int64_t>(seq);
     tick.instrument_id = static_cast<uint16_t>(seq & 0x3FFu);
     tick.last_price = static_cast<double>(seq);
-    tick.bid_price[0] = static_cast<double>(seq + 1);
-    tick.ask_price[0] = static_cast<double>(seq + 2);
-    tick.bid_volume[0] = static_cast<int32_t>(seq & 0x7FFFu);
-    tick.ask_volume[0] = static_cast<int32_t>((seq + 3) & 0x7FFFu);
+    tick.bid_price = static_cast<double>(seq + 1);
+    tick.ask_price = static_cast<double>(seq + 2);
+    tick.bid_volume = static_cast<int32_t>(seq & 0x7FFFu);
+    tick.ask_volume = static_cast<int32_t>((seq + 3) & 0x7FFFu);
     tick.sequence_no = seq;
     return tick;
 }
@@ -33,10 +33,10 @@ bool tick_is_consistent(const TopOfBookTick& tick) {
         && tick.exchange_ts_ns == static_cast<int64_t>(seq)
         && tick.instrument_id == static_cast<uint16_t>(seq & 0x3FFu)
         && tick.last_price == static_cast<double>(seq)
-        && tick.bid_price[0] == static_cast<double>(seq + 1)
-        && tick.ask_price[0] == static_cast<double>(seq + 2)
-        && tick.bid_volume[0] == static_cast<int32_t>(seq & 0x7FFFu)
-        && tick.ask_volume[0] == static_cast<int32_t>((seq + 3) & 0x7FFFu);
+        && tick.bid_price == static_cast<double>(seq + 1)
+        && tick.ask_price == static_cast<double>(seq + 2)
+        && tick.bid_volume == static_cast<int32_t>(seq & 0x7FFFu)
+        && tick.ask_volume == static_cast<int32_t>((seq + 3) & 0x7FFFu);
 }
 
 } // namespace

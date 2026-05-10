@@ -56,10 +56,10 @@ TopOfBookTick make_tick(uint16_t instrument_id,
     tick.instrument_id = instrument_id;
     tick.recv_ts_ns = get_monotonic_ns();
     tick.exchange_ts_ns = tick.recv_ts_ns;
-    tick.bid_price[0] = bid;
-    tick.ask_price[0] = ask;
-    tick.bid_volume[0] = bid_volume;
-    tick.ask_volume[0] = ask_volume;
+    tick.bid_price = bid;
+    tick.ask_price = ask;
+    tick.bid_volume = bid_volume;
+    tick.ask_volume = ask_volume;
     tick.last_price = 0.5 * (bid + ask);
     return tick;
 }

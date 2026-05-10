@@ -57,6 +57,14 @@ public:
     // Called when the pricer thread delivers a new pricing signal for this product.
     virtual void on_signal(const PricingSignal& signal) noexcept = 0;
 
+    // Called when the strategy thread drains a batch of pricing signals.
+    virtual void on_signals(const PricingSignal* signals, int count) noexcept {
+        if (signals == nullptr || count <= 0) return;
+        for (int i = 0; i < count; ++i) {
+            on_signal(signals[i]);
+        }
+    }
+
     // Called when a fill report arrives for an order sent by this strategy.
     virtual void on_fill(const Trade& trade) noexcept = 0;
 

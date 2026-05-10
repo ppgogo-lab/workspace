@@ -126,6 +126,17 @@ void BaseQuotingStrategy::on_signal(const PricingSignal& signal) noexcept {
     on_signal_impl(signal);
 }
 
+void BaseQuotingStrategy::on_signals(const PricingSignal* signals, int count) noexcept {
+    on_signals_impl(signals, count);
+}
+
+void BaseQuotingStrategy::on_signals_impl(const PricingSignal* signals, int count) noexcept {
+    if (signals == nullptr || count <= 0) return;
+    for (int i = 0; i < count; ++i) {
+        on_signal_impl(signals[i]);
+    }
+}
+
 void BaseQuotingStrategy::on_fill(const Trade& trade) noexcept {
     // Update quote lifecycle if this fill is for a quote
     if (trade.client_order_id != 0 && trade.instrument_id < MAX_INSTRUMENTS) {

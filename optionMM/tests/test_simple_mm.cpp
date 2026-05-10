@@ -190,7 +190,7 @@ TEST_F(SimpleMmTest, SpreadCorrect) {
 
     Quote q{};
     ASSERT_TRUE(quote_buf.try_pop(q));
-    // bid_spread=2, ask_spread=2 â†’ half-spread each side â†’ total spread = 2
+    // bid_spread=2, ask_spread=2 â†?half-spread each side â†?total spread = 2
     EXPECT_NEAR(q.ask_price - q.bid_price, 2.0, 0.6);
 }
 
@@ -221,7 +221,7 @@ TEST_F(SimpleMmTest, ZeroTheoNoQuote) {
 }
 
 TEST_F(SimpleMmTest, InventoryLeanLongLimit) {
-    // Simulate being at max long position â†’ should stop buying (bid_vol = 0)
+    // Simulate being at max long position â†?should stop buying (bid_vol = 0)
     // on_fill to build up position
     for (int i = 0; i < 100; ++i) {
         Trade t{};
@@ -254,7 +254,7 @@ TEST_F(SimpleMmTest, ParamUpdatePropagates) {
 
     Quote q{};
     ASSERT_TRUE(quote_buf.try_pop(q));
-    // bid ~= 20 - 2.5 = 17.5, ask ~= 20 + 2.5 = 22.5 â†’ total spread = 5
+    // bid ~= 20 - 2.5 = 17.5, ask ~= 20 + 2.5 = 22.5 â†?total spread = 5
     EXPECT_LT(q.bid_price, 20.0);
     EXPECT_GT(q.ask_price, 20.0);
     double spread = q.ask_price - q.bid_price;
@@ -294,7 +294,7 @@ TEST(SimGateway, ConnectAndSendOrder) {
     o.instrument_id   = 0;
     o.product_index   = 0;
     o.side            = Side::Buy;
-    o.order_type      = OrderType::Limit;
+    o.price_type      = OrderPriceType::Limit;
     o.price           = 5.0;
     o.volume          = 10;
 
@@ -316,7 +316,7 @@ TEST(SimGateway, SendQuoteGetAck) {
     SimGateway gw;
     GatewayConfig cfg{};
     gw.connect(cfg);
-    gw.set_last_price(0, 102.0);  // market above ask â†’ ask side fills
+    gw.set_last_price(0, 102.0);  // market above ask â†?ask side fills
 
     Quote q{};
     q.client_quote_id = 1;
@@ -331,7 +331,7 @@ TEST(SimGateway, SendQuoteGetAck) {
     GatewayEvent ev{};
     ASSERT_TRUE(wait_for_gateway_event(gw, &ev));
     EXPECT_EQ(ev.type, GatewayEventType::QuoteAck);
-    // last_price=102 >= ask=101 â†’ ask side fills (someone bought from us)
+    // last_price=102 >= ask=101 â†?ask side fills (someone bought from us)
     ASSERT_TRUE(wait_for_gateway_event(gw, &ev));
     EXPECT_EQ(ev.type, GatewayEventType::QuoteFill);
     EXPECT_EQ(ev.trade.side, Side::Sell);
@@ -351,7 +351,7 @@ TEST(SimGateway, CancelOrderGetAck) {
     o.instrument_id   = 0;
     o.product_index   = 0;
     o.side            = Side::Buy;
-    o.order_type      = OrderType::Limit;
+    o.price_type      = OrderPriceType::Limit;
     o.price           = 10.0;
     o.volume          = 10;
     ASSERT_TRUE(gw.send_order(o));
@@ -391,7 +391,7 @@ TEST(SimGateway, PartialFillWithLatency) {
     o.instrument_id   = 0;
     o.product_index   = 0;
     o.side            = Side::Buy;
-    o.order_type      = OrderType::Limit;
+    o.price_type      = OrderPriceType::Limit;
     o.price           = 5.0;
     o.volume          = 7;
     ASSERT_TRUE(gw.send_order(o));
@@ -430,7 +430,7 @@ TEST(SimGateway, RejectsOrdersWhenConfigured) {
     o.instrument_id   = 0;
     o.product_index   = 0;
     o.side            = Side::Buy;
-    o.order_type      = OrderType::Limit;
+    o.price_type      = OrderPriceType::Limit;
     o.price           = 5.0;
     o.volume          = 10;
     ASSERT_TRUE(gw.send_order(o));
@@ -459,7 +459,7 @@ TEST(TradingEngineIntegration, TickToQuote) {
     add_test_calendar(cfg);
 
     auto gw = std::make_unique<SimGateway>();
-    // Add one option instrument â€” strike at-the-money relative to last_price
+    // Add one option instrument â€?strike at-the-money relative to last_price
     Instrument fut = make_future(0, 0, "cu2501", 0.01);
     Instrument opt = make_option(1, 0, 0, 5.0, OptionType::Call, 0.01);
     std::memcpy(opt.underlying_code.data, "cu2501", 7);
@@ -476,8 +476,8 @@ TEST(TradingEngineIntegration, TickToQuote) {
     TopOfBookTick tick{};
     tick.instrument_id  = 0;
     tick.last_price     = 5.0;
-    tick.bid_price[0]   = 4.99;
-    tick.ask_price[0]   = 5.01;
+    tick.bid_price   = 4.99;
+    tick.ask_price   = 5.01;
     tick.recv_ts_ns     = get_monotonic_ns();
     tick.exchange_ts_ns = tick.recv_ts_ns;
     (void)engine->tick_buf().try_push(tick);
@@ -528,8 +528,8 @@ TEST(TradingEngineIntegration, DeferredMonitoringStillStreamsQuotes) {
     TopOfBookTick tick{};
     tick.instrument_id  = 0;
     tick.last_price     = 5.0;
-    tick.bid_price[0]   = 4.99;
-    tick.ask_price[0]   = 5.01;
+    tick.bid_price   = 4.99;
+    tick.ask_price   = 5.01;
     tick.recv_ts_ns     = get_monotonic_ns();
     tick.exchange_ts_ns = tick.recv_ts_ns;
     (void)engine->tick_buf().try_push(tick);
@@ -579,8 +579,8 @@ TEST(TradingEngineIntegration, DeferredMonitoringStillStreamsTicks) {
     TopOfBookTick tick{};
     tick.instrument_id  = 1;
     tick.last_price     = 5.0;
-    tick.bid_price[0]   = 4.99;
-    tick.ask_price[0]   = 5.01;
+    tick.bid_price   = 4.99;
+    tick.ask_price   = 5.01;
     tick.recv_ts_ns     = get_monotonic_ns();
     tick.exchange_ts_ns = tick.recv_ts_ns;
     (void)engine->tick_buf().try_push(tick);
@@ -645,8 +645,8 @@ TEST(TradingEngineIntegration, PricingSignalSuppressionSkipsSubThresholdUpdates)
     TopOfBookTick option_tick{};
     option_tick.instrument_id = 1;
     option_tick.last_price = 5.0;
-    option_tick.bid_price[0] = 4.99;
-    option_tick.ask_price[0] = 5.01;
+    option_tick.bid_price = 4.99;
+    option_tick.ask_price = 5.01;
     option_tick.recv_ts_ns = get_monotonic_ns();
     option_tick.exchange_ts_ns = option_tick.recv_ts_ns;
     ASSERT_TRUE(engine->tick_buf().try_push(option_tick));
@@ -654,8 +654,8 @@ TEST(TradingEngineIntegration, PricingSignalSuppressionSkipsSubThresholdUpdates)
     TopOfBookTick first_future_tick{};
     first_future_tick.instrument_id = 0;
     first_future_tick.last_price = 5.0;
-    first_future_tick.bid_price[0] = 4.99;
-    first_future_tick.ask_price[0] = 5.01;
+    first_future_tick.bid_price = 4.99;
+    first_future_tick.ask_price = 5.01;
     first_future_tick.recv_ts_ns = get_monotonic_ns();
     first_future_tick.exchange_ts_ns = first_future_tick.recv_ts_ns;
     first_future_tick.sequence_no = 1;
@@ -679,8 +679,8 @@ TEST(TradingEngineIntegration, PricingSignalSuppressionSkipsSubThresholdUpdates)
         TopOfBookTick small_future_tick{};
         small_future_tick.instrument_id = 0;
         small_future_tick.last_price = 5.0001 + static_cast<double>(i) * 0.00005;
-        small_future_tick.bid_price[0] = small_future_tick.last_price - 0.01;
-        small_future_tick.ask_price[0] = small_future_tick.last_price + 0.01;
+        small_future_tick.bid_price = small_future_tick.last_price - 0.01;
+        small_future_tick.ask_price = small_future_tick.last_price + 0.01;
         small_future_tick.recv_ts_ns = get_monotonic_ns();
         small_future_tick.exchange_ts_ns = small_future_tick.recv_ts_ns;
         small_future_tick.sequence_no = static_cast<uint64_t>(i + 2);
@@ -747,10 +747,10 @@ TEST(TradingEngineIntegration, PricingSignalOverflowUsesBackpressureMitigation) 
         TopOfBookTick tick{};
         tick.instrument_id  = 0;
         tick.last_price     = 75000.0 + burst * 5.0;
-        tick.bid_price[0]   = tick.last_price - 1.0;
-        tick.ask_price[0]   = tick.last_price + 1.0;
-        tick.bid_volume[0]  = 100;
-        tick.ask_volume[0]  = 100;
+        tick.bid_price   = tick.last_price - 1.0;
+        tick.ask_price   = tick.last_price + 1.0;
+        tick.bid_volume  = 100;
+        tick.ask_volume  = 100;
         tick.recv_ts_ns     = get_monotonic_ns();
         tick.exchange_ts_ns = tick.recv_ts_ns;
         tick.sequence_no    = static_cast<uint64_t>(burst + 1);

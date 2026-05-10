@@ -40,13 +40,10 @@ void fill_top_of_book(TopOfBookTick& tick,
                       Volume top_size,
                       double tick_size) noexcept {
     const double min_step = std::max(tick_size, spread * 0.5);
-    for (int level = 0; level < 5; ++level) {
-        const double offset = min_step + static_cast<double>(level) * tick_size;
-        tick.bid_price[level] = round_to_tick(std::max(tick_size, mid_price - offset), tick_size);
-        tick.ask_price[level] = round_to_tick(mid_price + offset, tick_size);
-        tick.bid_volume[level] = std::max<Volume>(1, top_size - level);
-        tick.ask_volume[level] = std::max<Volume>(1, top_size - level);
-    }
+    tick.bid_price = round_to_tick(std::max(tick_size, mid_price - min_step), tick_size);
+    tick.ask_price = round_to_tick(mid_price + min_step, tick_size);
+    tick.bid_volume = std::max<Volume>(1, top_size);
+    tick.ask_volume = std::max<Volume>(1, top_size);
 }
 
 } // namespace

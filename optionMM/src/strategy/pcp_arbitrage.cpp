@@ -12,7 +12,7 @@ namespace {
 //   buy  -> lift best ask
 //   sell -> hit best bid
 [[nodiscard]] double bid_price_for_side(const TopOfBookTick& tick, Side side) noexcept {
-    return side == Side::Buy ? tick.ask_price[0] : tick.bid_price[0];
+    return side == Side::Buy ? tick.ask_price : tick.bid_price;
 }
 
 [[nodiscard]] int side_sign(Side side) noexcept {
@@ -180,11 +180,11 @@ double PCPArbitrageStrategy::discount_factor(const Pair& pair, Timestamp now_ns)
 bool PCPArbitrageStrategy::market_valid(const TopOfBookTick& tick, Timestamp now_ns) const noexcept {
     return tick.recv_ts_ns > 0
         && now_ns - tick.recv_ts_ns <= kMarketStaleNs
-        && tick.bid_price[0] > 0.0
-        && tick.ask_price[0] > 0.0
-        && tick.ask_price[0] >= tick.bid_price[0]
-        && tick.bid_volume[0] > 0
-        && tick.ask_volume[0] > 0;
+        && tick.bid_price > 0.0
+        && tick.ask_price > 0.0
+        && tick.ask_price >= tick.bid_price
+        && tick.bid_volume > 0
+        && tick.ask_volume > 0;
 }
 
 Volume PCPArbitrageStrategy::executable_volume(const Pair& pair,
@@ -205,16 +205,16 @@ Volume PCPArbitrageStrategy::executable_volume(const Pair& pair,
         // Buy call at ask, sell put at bid, sell future at bid. Size is bounded
         // by the tightest displayed size across the three aggressive legs.
         return std::max<Volume>(0, std::min({max_order_volume,
-                                             call_tick.ask_volume[0],
-                                             put_tick.bid_volume[0],
-                                             future_tick.bid_volume[0]}));
+                                             call_tick.ask_volume,
+                                             put_tick.bid_volume,
+                                             future_tick.bid_volume}));
     }
     if (dir == Direction::ShortSyntheticLongFuture) {
         // Sell call at bid, buy put at ask, buy future at ask.
         return std::max<Volume>(0, std::min({max_order_volume,
-                                             call_tick.bid_volume[0],
-                                             put_tick.ask_volume[0],
-                                             future_tick.ask_volume[0]}));
+                                             call_tick.bid_volume,
+                                             put_tick.ask_volume,
+                                             future_tick.ask_volume}));
     }
     return 0;
 }
@@ -283,8 +283,8 @@ bool PCPArbitrageStrategy::scan_best_opportunity(Timestamp now_ns,
         // The result is normalized by futures tick size so the configured edge
         // threshold is expressed in ticks rather than currency units.
         const double long_synth_edge =
-            (discount * (future_tick.bid_price[0] - pair.strike)
-             - (call_tick.ask_price[0] - put_tick.bid_price[0])) / future_tick_size;
+            (discount * (future_tick.bid_price - pair.strike)
+             - (call_tick.ask_price - put_tick.bid_price)) / future_tick_size;
         const Volume long_synth_volume =
             executable_volume(pair, Direction::LongSyntheticShortFuture, cfg.max_order_volume);
         if (long_synth_volume > 0 && long_synth_edge > *best_edge_ticks) {
@@ -296,8 +296,8 @@ bool PCPArbitrageStrategy::scan_best_opportunity(Timestamp now_ns,
         }
 
         const double short_synth_edge =
-            ((call_tick.bid_price[0] - put_tick.ask_price[0])
-             - discount * (future_tick.ask_price[0] - pair.strike)) / future_tick_size;
+            ((call_tick.bid_price - put_tick.ask_price)
+             - discount * (future_tick.ask_price - pair.strike)) / future_tick_size;
         const Volume short_synth_volume =
             executable_volume(pair, Direction::ShortSyntheticLongFuture, cfg.max_order_volume);
         if (short_synth_volume > 0 && short_synth_edge > *best_edge_ticks) {
@@ -381,26 +381,26 @@ void PCPArbitrageStrategy::publish_pair_monitor_states(Timestamp now_ns,
         row.market_valid = valid_call && valid_put && valid_future;
 
         row.discount_factor = discount_factor(pair, now_ns);
-        row.future_bid = future_tick.bid_price[0];
-        row.future_ask = future_tick.ask_price[0];
+        row.future_bid = future_tick.bid_price;
+        row.future_ask = future_tick.ask_price;
 
         if (row.discount_factor > 1e-12
-            && call_tick.bid_price[0] > 0.0 && call_tick.ask_price[0] > 0.0
-            && put_tick.bid_price[0] > 0.0 && put_tick.ask_price[0] > 0.0) {
+            && call_tick.bid_price > 0.0 && call_tick.ask_price > 0.0
+            && put_tick.bid_price > 0.0 && put_tick.ask_price > 0.0) {
             row.synthetic_bid = pair.strike
-                + (call_tick.bid_price[0] - put_tick.ask_price[0]) / row.discount_factor;
+                + (call_tick.bid_price - put_tick.ask_price) / row.discount_factor;
             row.synthetic_ask = pair.strike
-                + (call_tick.ask_price[0] - put_tick.bid_price[0]) / row.discount_factor;
+                + (call_tick.ask_price - put_tick.bid_price) / row.discount_factor;
         }
 
         const double future_tick_size =
             instruments_[pair.future_id].tick_size > 0.0 ? instruments_[pair.future_id].tick_size : 1.0;
         row.long_synth_edge_ticks =
-            (row.discount_factor * (future_tick.bid_price[0] - pair.strike)
-             - (call_tick.ask_price[0] - put_tick.bid_price[0])) / future_tick_size;
+            (row.discount_factor * (future_tick.bid_price - pair.strike)
+             - (call_tick.ask_price - put_tick.bid_price)) / future_tick_size;
         row.short_synth_edge_ticks =
-            ((call_tick.bid_price[0] - put_tick.ask_price[0])
-             - row.discount_factor * (future_tick.ask_price[0] - pair.strike)) / future_tick_size;
+            ((call_tick.bid_price - put_tick.ask_price)
+             - row.discount_factor * (future_tick.ask_price - pair.strike)) / future_tick_size;
 
         const Volume long_volume =
             executable_volume(pair, Direction::LongSyntheticShortFuture,
@@ -543,15 +543,15 @@ void PCPArbitrageStrategy::start_attempt(const Pair& pair,
     if (dir == Direction::LongSyntheticShortFuture) {
         // Synthetic long future = +Call - Put. We hedge that by shorting the
         // listed future when the synthetic is cheap.
-        (void)enqueue_order(pair.call_id, Side::Buy, call_tick.ask_price[0], volume, false, edge_ticks, pair, now_ns);
-        (void)enqueue_order(pair.put_id, Side::Sell, put_tick.bid_price[0], volume, false, edge_ticks, pair, now_ns);
-        (void)enqueue_order(pair.future_id, Side::Sell, future_tick.bid_price[0], volume, false, edge_ticks, pair, now_ns);
+        (void)enqueue_order(pair.call_id, Side::Buy, call_tick.ask_price, volume, false, edge_ticks, pair, now_ns);
+        (void)enqueue_order(pair.put_id, Side::Sell, put_tick.bid_price, volume, false, edge_ticks, pair, now_ns);
+        (void)enqueue_order(pair.future_id, Side::Sell, future_tick.bid_price, volume, false, edge_ticks, pair, now_ns);
     } else if (dir == Direction::ShortSyntheticLongFuture) {
         // Synthetic short future = -Call + Put. We hedge that by buying the
         // listed future when the synthetic is rich.
-        (void)enqueue_order(pair.call_id, Side::Sell, call_tick.bid_price[0], volume, false, edge_ticks, pair, now_ns);
-        (void)enqueue_order(pair.put_id, Side::Buy, put_tick.ask_price[0], volume, false, edge_ticks, pair, now_ns);
-        (void)enqueue_order(pair.future_id, Side::Buy, future_tick.ask_price[0], volume, false, edge_ticks, pair, now_ns);
+        (void)enqueue_order(pair.call_id, Side::Sell, call_tick.bid_price, volume, false, edge_ticks, pair, now_ns);
+        (void)enqueue_order(pair.put_id, Side::Buy, put_tick.ask_price, volume, false, edge_ticks, pair, now_ns);
+        (void)enqueue_order(pair.future_id, Side::Buy, future_tick.ask_price, volume, false, edge_ticks, pair, now_ns);
     }
 
     if (live_order_count() == 0) {

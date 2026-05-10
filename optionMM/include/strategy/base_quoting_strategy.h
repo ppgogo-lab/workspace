@@ -76,6 +76,10 @@ protected:
     // and calls request_quote() or request_cancel() as needed.
     virtual void on_signal_impl(const PricingSignal& signal) noexcept = 0;
 
+    // Called when a pricing signal batch arrives. Subclasses can override to
+    // amortize shared state capture across the batch.
+    virtual void on_signals_impl(const PricingSignal* signals, int count) noexcept;
+
     // Called when a fill report arrives. Subclass updates positions and risk
     // metrics. Base class has already updated quote/order lifecycle state.
     virtual void on_fill_impl(const Trade& trade) noexcept = 0;
@@ -105,6 +109,7 @@ protected:
     // Subclasses cannot override; use the _impl hooks instead.
 public:
     void on_signal(const PricingSignal& signal) noexcept final;
+    void on_signals(const PricingSignal* signals, int count) noexcept final;
     void on_fill(const Trade& trade) noexcept final;
     void on_quote_ack(const Quote& quote) noexcept final;
     void on_quote_cancel(const Quote& quote) noexcept final;

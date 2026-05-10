@@ -160,7 +160,7 @@ void TradingEngine::vol_fitter_loop() noexcept {
                 if (F < 1e-10) continue;
 
                 // Mid-price from best bid/ask
-                double bid = t.bid_price[0], ask = t.ask_price[0];
+                double bid = t.bid_price, ask = t.ask_price;
                 if (bid <= 0.0 || ask <= 0.0 || ask < bid) continue;
                 double mid = 0.5 * (bid + ask);
 

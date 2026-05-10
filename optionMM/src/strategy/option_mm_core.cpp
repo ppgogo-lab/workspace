@@ -14,19 +14,19 @@ double clamp01(double value) noexcept {
 }
 
 double microprice_from_market(const TopOfBookTick& md) noexcept {
-    if (md.bid_price[0] <= 0.0 || md.ask_price[0] <= md.bid_price[0]) {
+    if (md.bid_price <= 0.0 || md.ask_price <= md.bid_price) {
         return 0.0;
     }
 
-    const int64_t bid_vol = std::max<int64_t>(0, md.bid_volume[0]);
-    const int64_t ask_vol = std::max<int64_t>(0, md.ask_volume[0]);
+    const int64_t bid_vol = std::max<int64_t>(0, md.bid_volume);
+    const int64_t ask_vol = std::max<int64_t>(0, md.ask_volume);
     const int64_t total_vol = bid_vol + ask_vol;
     if (total_vol <= 0) {
-        return 0.5 * (md.bid_price[0] + md.ask_price[0]);
+        return 0.5 * (md.bid_price + md.ask_price);
     }
 
-    return (md.ask_price[0] * static_cast<double>(bid_vol)
-          + md.bid_price[0] * static_cast<double>(ask_vol))
+    return (md.ask_price * static_cast<double>(bid_vol)
+          + md.bid_price * static_cast<double>(ask_vol))
          / static_cast<double>(total_vol);
 }
 
@@ -436,8 +436,8 @@ OptionMMCoreStrategy::build_decision(OptionState& state, int64_t now_ns) const n
         return decision;
     }
     const bool has_market = md.recv_ts_ns > 0
-        && md.bid_price[0] > 0.0
-        && md.ask_price[0] > md.bid_price[0];
+        && md.bid_price > 0.0
+        && md.ask_price > md.bid_price;
     if (!has_market || now_ns - md.recv_ts_ns > STALE_NS) {
         decision.cancel_only = cancel_tracked_quote;
         decision.suppress_flags |= SuppressInvalidMarket;
@@ -472,7 +472,7 @@ OptionMMCoreStrategy::build_decision(OptionState& state, int64_t now_ns) const n
     half_spread_ticks = std::max(half_spread_ticks, theo_width_ticks);
     half_spread_ticks = std::min(half_spread_ticks, max_half_spread_ticks);
 
-    const double market_width_ticks = (md.ask_price[0] - md.bid_price[0]) / tick;
+    const double market_width_ticks = (md.ask_price - md.bid_price) / tick;
     const double widen_threshold =
         params_->market_width_widen_threshold_ticks.load(std::memory_order_relaxed);
     if (market_width_ticks > widen_threshold) {
@@ -530,8 +530,8 @@ OptionMMCoreStrategy::build_decision(OptionState& state, int64_t now_ns) const n
     double bid = round_down_to_tick(center - half_spread_ticks * tick, tick);
     double ask = round_up_to_tick(center + half_spread_ticks * tick, tick);
 
-    const double max_passive_bid = round_down_to_tick(std::max(0.0, md.ask_price[0] - tick), tick);
-    const double min_passive_ask = round_up_to_tick(md.bid_price[0] + tick, tick);
+    const double max_passive_bid = round_down_to_tick(std::max(0.0, md.ask_price - tick), tick);
+    const double min_passive_ask = round_up_to_tick(md.bid_price + tick, tick);
     const double max_theo_bid = round_down_to_tick(theo_bid, tick);
     const double min_theo_ask = round_up_to_tick(theo_ask, tick);
     if (bid_vol > 0) bid = std::min(bid, max_passive_bid);
@@ -606,8 +606,8 @@ void OptionMMCoreStrategy::maybe_trigger_hedge(int64_t now_ns) noexcept {
     }
     if (underlying_md.recv_ts_ns == 0
         || now_ns - underlying_md.recv_ts_ns > STALE_NS
-        || underlying_md.bid_price[0] <= 0.0
-        || underlying_md.ask_price[0] <= underlying_md.bid_price[0]) {
+        || underlying_md.bid_price <= 0.0
+        || underlying_md.ask_price <= underlying_md.bid_price) {
         return;
     }
 
@@ -619,7 +619,7 @@ void OptionMMCoreStrategy::maybe_trigger_hedge(int64_t now_ns) noexcept {
     hedge.offset = OffsetFlag::Open;
     hedge.price_type = OrderPriceType::Limit;
     hedge.order_type = OrderType::FAK;
-    hedge.price = (hedge.side == Side::Buy) ? underlying_md.ask_price[0] : underlying_md.bid_price[0];
+    hedge.price = (hedge.side == Side::Buy) ? underlying_md.ask_price : underlying_md.bid_price;
     hedge.volume = std::max<Volume>(
         1,
         std::min<Volume>(

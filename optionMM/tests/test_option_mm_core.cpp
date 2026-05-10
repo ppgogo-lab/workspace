@@ -130,27 +130,27 @@ protected:
         TopOfBookTick future{};
         future.instrument_id = 0;
         future.recv_ts_ns = get_monotonic_ns();
-        future.bid_price[0] = 99.0;
-        future.ask_price[0] = 101.0;
+        future.bid_price = 99.0;
+        future.ask_price = 101.0;
         future.last_price = 100.0;
         tick_snapshot.publish(0, future);
 
         TopOfBookTick call{};
         call.instrument_id = 1;
         call.recv_ts_ns = get_monotonic_ns();
-        call.bid_price[0] = 9.5;
-        call.ask_price[0] = 10.5;
-        call.bid_volume[0] = 10;
-        call.ask_volume[0] = 10;
+        call.bid_price = 9.5;
+        call.ask_price = 10.5;
+        call.bid_volume = 10;
+        call.ask_volume = 10;
         tick_snapshot.publish(1, call);
 
         TopOfBookTick put{};
         put.instrument_id = 2;
         put.recv_ts_ns = get_monotonic_ns();
-        put.bid_price[0] = 7.5;
-        put.ask_price[0] = 8.5;
-        put.bid_volume[0] = 12;
-        put.ask_volume[0] = 12;
+        put.bid_price = 7.5;
+        put.ask_price = 8.5;
+        put.bid_volume = 12;
+        put.ask_volume = 12;
         tick_snapshot.publish(2, put);
 
         strat.init(PROD, &quote_buf, &order_buf, &pre_risk, &params,
@@ -353,10 +353,10 @@ TEST_F(OptionMmCoreTest, DoesNotQuoteThroughTheoWhenFollowingMarketHigher) {
     TopOfBookTick tick{};
     ASSERT_TRUE(tick_snapshot.read(1, &tick));
     tick.recv_ts_ns = get_monotonic_ns();
-    tick.bid_price[0] = 11.0;
-    tick.ask_price[0] = 12.0;
-    tick.bid_volume[0] = 12;
-    tick.ask_volume[0] = 8;
+    tick.bid_price = 11.0;
+    tick.ask_price = 12.0;
+    tick.bid_volume = 12;
+    tick.ask_volume = 8;
     tick_snapshot.publish(1, tick);
 
     strat.on_signal(make_signal(1, 9.8, 10.2));
@@ -372,10 +372,10 @@ TEST_F(OptionMmCoreTest, DoesNotQuoteThroughTheoWhenFollowingMarketLower) {
     TopOfBookTick tick{};
     ASSERT_TRUE(tick_snapshot.read(1, &tick));
     tick.recv_ts_ns = get_monotonic_ns();
-    tick.bid_price[0] = 8.0;
-    tick.ask_price[0] = 9.0;
-    tick.bid_volume[0] = 8;
-    tick.ask_volume[0] = 12;
+    tick.bid_price = 8.0;
+    tick.ask_price = 9.0;
+    tick.bid_volume = 8;
+    tick.ask_volume = 12;
     tick_snapshot.publish(1, tick);
 
     strat.on_signal(make_signal(1, 9.8, 10.2));

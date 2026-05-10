@@ -135,6 +135,21 @@ static_assert(sizeof(Instrument) <= 192);
 struct alignas(64) TopOfBookTick {
     int64_t  recv_ts_ns;
     int64_t  exchange_ts_ns;
+    uint64_t sequence_no;
+    double   last_price;
+    double   bid_price;
+    double   ask_price;
+    int32_t  bid_volume;
+    int32_t  ask_volume;
+    uint16_t instrument_id;
+    uint8_t  _pad0[6];
+};
+static_assert(sizeof(TopOfBookTick) == 64);
+static_assert(alignof(TopOfBookTick) == 64);
+
+struct alignas(64) DepthTopOfBookTick {
+    int64_t  recv_ts_ns;
+    int64_t  exchange_ts_ns;
     uint16_t instrument_id;
     uint8_t  _pad0[6];
     double   last_price;
@@ -144,8 +159,8 @@ struct alignas(64) TopOfBookTick {
     int32_t  ask_volume[5];
     uint64_t sequence_no;
 };
-static_assert(sizeof(TopOfBookTick) == 192);
-static_assert(alignof(TopOfBookTick) == 64);
+static_assert(sizeof(DepthTopOfBookTick) == 192);
+static_assert(alignof(DepthTopOfBookTick) == 64);
 
 struct alignas(64) MarketTick {
     int64_t  recv_ts_ns;                // hardware or software receive timestamp
@@ -171,6 +186,20 @@ static_assert(alignof(MarketTick) == 64);
 
 [[nodiscard]] inline TopOfBookTick to_top_of_book_tick(const MarketTick& src) noexcept {
     TopOfBookTick dst{};
+    dst.recv_ts_ns = src.recv_ts_ns;
+    dst.exchange_ts_ns = src.exchange_ts_ns;
+    dst.instrument_id = src.instrument_id;
+    dst.last_price = src.last_price;
+    dst.bid_price = src.bid_price[0];
+    dst.ask_price = src.ask_price[0];
+    dst.bid_volume = src.bid_volume[0];
+    dst.ask_volume = src.ask_volume[0];
+    dst.sequence_no = src.sequence_no;
+    return dst;
+}
+
+[[nodiscard]] inline DepthTopOfBookTick to_depth_top_of_book_tick(const MarketTick& src) noexcept {
+    DepthTopOfBookTick dst{};
     dst.recv_ts_ns = src.recv_ts_ns;
     dst.exchange_ts_ns = src.exchange_ts_ns;
     dst.instrument_id = src.instrument_id;

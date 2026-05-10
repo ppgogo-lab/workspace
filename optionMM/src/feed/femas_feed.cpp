@@ -93,17 +93,10 @@ void FEMASFeedHandler::push_tick(const CUstpFtdcDepthMarketDataField& md) noexce
     tick.sequence_no    = static_cast<uint64_t>(
         current_sequence_no_.load(std::memory_order_relaxed));
 
-    tick.bid_price[0] = md.BidPrice1; tick.bid_volume[0] = md.BidVolume1;
-    tick.bid_price[1] = md.BidPrice2; tick.bid_volume[1] = md.BidVolume2;
-    tick.bid_price[2] = md.BidPrice3; tick.bid_volume[2] = md.BidVolume3;
-    tick.bid_price[3] = md.BidPrice4; tick.bid_volume[3] = md.BidVolume4;
-    tick.bid_price[4] = md.BidPrice5; tick.bid_volume[4] = md.BidVolume5;
-
-    tick.ask_price[0] = md.AskPrice1; tick.ask_volume[0] = md.AskVolume1;
-    tick.ask_price[1] = md.AskPrice2; tick.ask_volume[1] = md.AskVolume2;
-    tick.ask_price[2] = md.AskPrice3; tick.ask_volume[2] = md.AskVolume3;
-    tick.ask_price[3] = md.AskPrice4; tick.ask_volume[3] = md.AskVolume4;
-    tick.ask_price[4] = md.AskPrice5; tick.ask_volume[4] = md.AskVolume5;
+    tick.bid_price = md.BidPrice1;
+    tick.bid_volume = md.BidVolume1;
+    tick.ask_price = md.AskPrice1;
+    tick.ask_volume = md.AskVolume1;
 
     if (!tick_buf_->try_push(tick)) {
         dropped_count_.fetch_add(1, std::memory_order_relaxed);

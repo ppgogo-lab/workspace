@@ -263,8 +263,8 @@ void TradingEngine::pricer_loop() noexcept {
         const uint8_t prod = static_cast<uint8_t>(selected_prod);
         const TopOfBookTick& future_tick = pending_future_tick[prod];
         const double F_mid_raw = future_tick.last_price;
-        const double F_bid_raw = future_tick.bid_price[0] > 0.0 ? future_tick.bid_price[0] : F_mid_raw;
-        const double F_ask_raw = future_tick.ask_price[0] > F_bid_raw ? future_tick.ask_price[0] : F_mid_raw;
+        const double F_bid_raw = future_tick.bid_price > 0.0 ? future_tick.bid_price : F_mid_raw;
+        const double F_ask_raw = future_tick.ask_price > F_bid_raw ? future_tick.ask_price : F_mid_raw;
         const uint16_t n = option_count_[prod];
         if (n == 0 || F_mid_raw < 1e-10) {
             pending_product[prod] = false;
@@ -414,8 +414,8 @@ void TradingEngine::pricer_loop() noexcept {
             sig.std_delta = static_cast<float>(mid_res.std_delta);
             sig.delta = static_cast<float>(mid_res.delta);
             sig.vega = static_cast<float>(mid_res.vega);
-            sig.underlying_ref_bid = static_cast<float>(future_tick.bid_price[0]);
-            sig.underlying_ref_ask = static_cast<float>(future_tick.ask_price[0]);
+            sig.underlying_ref_bid = static_cast<float>(future_tick.bid_price);
+            sig.underlying_ref_ask = static_cast<float>(future_tick.ask_price);
 
             if (publish_full_hot_greeks) {
                 publish_hot_greek(opt_id, bi, mid_res);
