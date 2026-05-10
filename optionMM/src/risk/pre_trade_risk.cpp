@@ -3,23 +3,47 @@
 
 namespace omm {
 
+/**
+ * @brief Implements Reset.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void PreTradeRisk::reset() noexcept {
     for (auto& s : slots_) s = OpenOrderEntry{};
     open_count_ = 0;
 }
 
+/**
+ * @brief Implements Find slot.
+ * @param id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 int PreTradeRisk::find_slot(OrderId id) const noexcept {
     for (int i = 0; i < MAX_OPEN_ORDERS; ++i)
         if (slots_[i].used && slots_[i].id == id) return i;
     return -1;
 }
 
+/**
+ * @brief Implements Alloc slot.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 int PreTradeRisk::alloc_slot() noexcept {
     for (int i = 0; i < MAX_OPEN_ORDERS; ++i)
         if (!slots_[i].used) return i;
     return -1;
 }
 
+/**
+ * @brief Implements Would self trade.
+ * @param instrument_id Parameter supplied by the caller.
+ * @param side Parameter supplied by the caller.
+ * @param price Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool PreTradeRisk::would_self_trade(uint16_t instrument_id,
                                      Side side, double price) const noexcept {
     // A new BUY crosses if there is a resting own SELL at price <= new buy price
@@ -34,6 +58,12 @@ bool PreTradeRisk::would_self_trade(uint16_t instrument_id,
 }
 
 PreTradeRisk::RejectReason
+/**
+ * @brief Implements Check order.
+ * @param order Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 PreTradeRisk::check_order(const Order& order) noexcept {
     // 1. Max volume per order
     if (order.volume > cfg_.max_volume_per_order)
@@ -51,6 +81,12 @@ PreTradeRisk::check_order(const Order& order) noexcept {
 }
 
 PreTradeRisk::RejectReason
+/**
+ * @brief Implements Check quote.
+ * @param quote Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 PreTradeRisk::check_quote(const Quote& quote) noexcept {
     if (quote.bid_volume > cfg_.max_volume_per_order ||
         quote.ask_volume > cfg_.max_volume_per_order)
@@ -59,6 +95,12 @@ PreTradeRisk::check_quote(const Quote& quote) noexcept {
     return RejectReason::OK;
 }
 
+/**
+ * @brief Implements On order ack.
+ * @param order Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void PreTradeRisk::on_order_ack(const Order& order) noexcept {
     int slot = alloc_slot();
     if (slot < 0) return;  // no space — should not happen if check passed
@@ -71,6 +113,14 @@ void PreTradeRisk::on_order_ack(const Order& order) noexcept {
     ++open_count_;
 }
 
+/**
+ * @brief Implements On order fill.
+ * @param id Parameter supplied by the caller.
+ * @param filled_qty Parameter supplied by the caller.
+ * @param fully_filled Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void PreTradeRisk::on_order_fill(OrderId id, Volume filled_qty,
                                   bool fully_filled) noexcept {
     int slot = find_slot(id);
@@ -82,6 +132,12 @@ void PreTradeRisk::on_order_fill(OrderId id, Volume filled_qty,
     }
 }
 
+/**
+ * @brief Implements On order cancel.
+ * @param id Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void PreTradeRisk::on_order_cancel(OrderId id) noexcept {
     int slot = find_slot(id);
     if (slot < 0) return;

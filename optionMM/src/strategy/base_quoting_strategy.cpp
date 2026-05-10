@@ -7,6 +7,17 @@ namespace omm {
 
 // ─── Lifecycle Management Helpers ─────────────────────────────────────────────
 
+/**
+ * @brief Implements Request quote.
+ * @param instrument_id Parameter supplied by the caller.
+ * @param bid Parameter supplied by the caller.
+ * @param ask Parameter supplied by the caller.
+ * @param bid_vol Parameter supplied by the caller.
+ * @param ask_vol Parameter supplied by the caller.
+ * @param now_ns Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void BaseQuotingStrategy::request_quote(uint16_t instrument_id,
                                         double bid, double ask,
                                         Volume bid_vol, Volume ask_vol,
@@ -47,6 +58,13 @@ void BaseQuotingStrategy::request_quote(uint16_t instrument_id,
     send_quote_internal(instrument_id, bid, ask, bid_vol, ask_vol, now_ns);
 }
 
+/**
+ * @brief Implements Request cancel.
+ * @param instrument_id Parameter supplied by the caller.
+ * @param now_ns Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void BaseQuotingStrategy::request_cancel(uint16_t instrument_id,
                                          int64_t now_ns) noexcept {
     if (instrument_id >= MAX_INSTRUMENTS) return;
@@ -58,6 +76,12 @@ void BaseQuotingStrategy::request_cancel(uint16_t instrument_id,
     send_cancel_internal(instrument_id, now_ns);
 }
 
+/**
+ * @brief Implements Submit order.
+ * @param order Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 OrderId BaseQuotingStrategy::submit_order(const Order& order) noexcept {
     if (!order_buf_) return 0;
 
@@ -80,6 +104,12 @@ OrderId BaseQuotingStrategy::submit_order(const Order& order) noexcept {
     return order.client_order_id;
 }
 
+/**
+ * @brief Implements Cancel order.
+ * @param id Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void BaseQuotingStrategy::cancel_order(OrderId id) noexcept {
     if (!order_buf_ || id == 0) return;
 
@@ -106,6 +136,12 @@ void BaseQuotingStrategy::cancel_order(OrderId id) noexcept {
 
 // ─── State Access ─────────────────────────────────────────────────────────────
 
+/**
+ * @brief Implements Get quote state.
+ * @param instrument_id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 const QuoteLifecycleState* BaseQuotingStrategy::get_quote_state(
     uint16_t instrument_id) const noexcept {
     if (instrument_id >= MAX_INSTRUMENTS) return nullptr;
@@ -114,6 +150,12 @@ const QuoteLifecycleState* BaseQuotingStrategy::get_quote_state(
     return &state.quote_lifecycle;
 }
 
+/**
+ * @brief Implements Get order tracker.
+ * @param id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 const OrderLifecycleTracker* BaseQuotingStrategy::get_order_tracker(
     OrderId id) const noexcept {
     return const_cast<BaseQuotingStrategy*>(this)->find_order_tracker(id);
@@ -121,15 +163,35 @@ const OrderLifecycleTracker* BaseQuotingStrategy::get_order_tracker(
 
 // ─── IMarketMaker Implementation ──────────────────────────────────────────────
 
+/**
+ * @brief Implements On signal.
+ * @param signal Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void BaseQuotingStrategy::on_signal(const PricingSignal& signal) noexcept {
     // Route to subclass implementation
     on_signal_impl(signal);
 }
 
+/**
+ * @brief Implements On signals.
+ * @param signals Parameter supplied by the caller.
+ * @param count Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void BaseQuotingStrategy::on_signals(const PricingSignal* signals, int count) noexcept {
     on_signals_impl(signals, count);
 }
 
+/**
+ * @brief Implements On signals impl.
+ * @param signals Parameter supplied by the caller.
+ * @param count Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void BaseQuotingStrategy::on_signals_impl(const PricingSignal* signals, int count) noexcept {
     if (signals == nullptr || count <= 0) return;
     for (int i = 0; i < count; ++i) {
@@ -137,6 +199,12 @@ void BaseQuotingStrategy::on_signals_impl(const PricingSignal* signals, int coun
     }
 }
 
+/**
+ * @brief Implements On fill.
+ * @param trade Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void BaseQuotingStrategy::on_fill(const Trade& trade) noexcept {
     // Update quote lifecycle if this fill is for a quote
     if (trade.client_order_id != 0 && trade.instrument_id < MAX_INSTRUMENTS) {
@@ -170,6 +238,12 @@ void BaseQuotingStrategy::on_fill(const Trade& trade) noexcept {
     on_fill_impl(trade);
 }
 
+/**
+ * @brief Implements On quote ack.
+ * @param quote Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void BaseQuotingStrategy::on_quote_ack(const Quote& quote) noexcept {
     if (quote.instrument_id >= MAX_INSTRUMENTS) return;
     InstrumentState& state = instrument_state_[quote.instrument_id];
@@ -187,6 +261,12 @@ void BaseQuotingStrategy::on_quote_ack(const Quote& quote) noexcept {
     on_quote_lifecycle_update(quote.instrument_id, now_ns, request_requote);
 }
 
+/**
+ * @brief Implements On quote cancel.
+ * @param quote Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void BaseQuotingStrategy::on_quote_cancel(const Quote& quote) noexcept {
     if (quote.instrument_id >= MAX_INSTRUMENTS) return;
     InstrumentState& state = instrument_state_[quote.instrument_id];
@@ -200,6 +280,12 @@ void BaseQuotingStrategy::on_quote_cancel(const Quote& quote) noexcept {
     }
 }
 
+/**
+ * @brief Implements On quote reject.
+ * @param quote Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void BaseQuotingStrategy::on_quote_reject(const Quote& quote) noexcept {
     if (quote.instrument_id >= MAX_INSTRUMENTS) return;
     InstrumentState& state = instrument_state_[quote.instrument_id];
@@ -213,6 +299,12 @@ void BaseQuotingStrategy::on_quote_reject(const Quote& quote) noexcept {
     }
 }
 
+/**
+ * @brief Implements On order ack.
+ * @param order Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void BaseQuotingStrategy::on_order_ack(const Order& order) noexcept {
     // Update pre-trade risk
     if (pre_risk_) {
@@ -226,6 +318,12 @@ void BaseQuotingStrategy::on_order_ack(const Order& order) noexcept {
     }
 }
 
+/**
+ * @brief Implements On order cancel.
+ * @param id Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void BaseQuotingStrategy::on_order_cancel(OrderId id) noexcept {
     // Update pre-trade risk
     if (pre_risk_) {
@@ -239,6 +337,12 @@ void BaseQuotingStrategy::on_order_cancel(OrderId id) noexcept {
     }
 }
 
+/**
+ * @brief Implements On order reject.
+ * @param order Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void BaseQuotingStrategy::on_order_reject(const Order& order) noexcept {
     // Update order lifecycle
     OrderLifecycleTracker* tracker = find_order_tracker(order.client_order_id);
@@ -247,6 +351,12 @@ void BaseQuotingStrategy::on_order_reject(const Order& order) noexcept {
     }
 }
 
+/**
+ * @brief Implements On timer.
+ * @param event Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void BaseQuotingStrategy::on_timer(const TimerEvent& event) noexcept {
     // Route to subclass implementation
     on_timer_impl(event);
@@ -254,6 +364,13 @@ void BaseQuotingStrategy::on_timer(const TimerEvent& event) noexcept {
 
 // ─── Internal Lifecycle Management ───────────────────────────────────────────
 
+/**
+ * @brief Implements Manage quote lifecycle.
+ * @param instrument_id Parameter supplied by the caller.
+ * @param now_ns Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool BaseQuotingStrategy::manage_quote_lifecycle(uint16_t instrument_id,
                                                  int64_t now_ns) noexcept {
     if (instrument_id >= MAX_INSTRUMENTS) return true;
@@ -281,6 +398,17 @@ bool BaseQuotingStrategy::manage_quote_lifecycle(uint16_t instrument_id,
     return true;
 }
 
+/**
+ * @brief Implements Send quote internal.
+ * @param instrument_id Parameter supplied by the caller.
+ * @param bid Parameter supplied by the caller.
+ * @param ask Parameter supplied by the caller.
+ * @param bid_vol Parameter supplied by the caller.
+ * @param ask_vol Parameter supplied by the caller.
+ * @param now_ns Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void BaseQuotingStrategy::send_quote_internal(uint16_t instrument_id,
                                               double bid, double ask,
                                               Volume bid_vol, Volume ask_vol,
@@ -338,6 +466,13 @@ void BaseQuotingStrategy::send_quote_internal(uint16_t instrument_id,
                                                    now_ns);
 }
 
+/**
+ * @brief Implements Send cancel internal.
+ * @param instrument_id Parameter supplied by the caller.
+ * @param now_ns Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void BaseQuotingStrategy::send_cancel_internal(uint16_t instrument_id,
                                                int64_t now_ns) noexcept {
     if (instrument_id >= MAX_INSTRUMENTS) return;
@@ -391,6 +526,12 @@ void BaseQuotingStrategy::send_cancel_internal(uint16_t instrument_id,
     }
 }
 
+/**
+ * @brief Implements Find order tracker.
+ * @param id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 OrderLifecycleTracker* BaseQuotingStrategy::find_order_tracker(OrderId id) noexcept {
     for (uint16_t i = 0; i < order_tracker_count_; ++i) {
         if (order_trackers_[i].order_id == id) {
@@ -400,6 +541,11 @@ OrderLifecycleTracker* BaseQuotingStrategy::find_order_tracker(OrderId id) noexc
     return nullptr;
 }
 
+/**
+ * @brief Implements Allocate order tracker.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 OrderLifecycleTracker* BaseQuotingStrategy::allocate_order_tracker() noexcept {
     // First try to find an idle or terminal tracker to reuse
     for (uint16_t i = 0; i < order_tracker_count_; ++i) {

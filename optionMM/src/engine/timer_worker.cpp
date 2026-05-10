@@ -18,6 +18,11 @@
 namespace omm {
 // ─── Timer thread ─────────────────────────────────────────────────────────────
 
+/**
+ * @brief Implements Timer loop.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::timer_loop() noexcept {
     set_thread_name("omm-timer");
     pin_if_configured(cfg_.affinity.timer_core);

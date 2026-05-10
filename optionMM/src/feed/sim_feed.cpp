@@ -48,18 +48,31 @@ void fill_top_of_book(TopOfBookTick& tick,
 
 } // namespace
 
+/**
+ * @brief Implements Start.
+ * @return None.
+ */
 void SimFeedHandler::start() {
     stop_flag_.store(false, std::memory_order_relaxed);
     connected_.store(true, std::memory_order_release);
     thread_ = std::thread([this] { run_loop(); });
 }
 
+/**
+ * @brief Implements Stop.
+ * @return None.
+ */
 void SimFeedHandler::stop() {
     stop_flag_.store(true, std::memory_order_release);
     if (thread_.joinable()) thread_.join();
     connected_.store(false, std::memory_order_release);
 }
 
+/**
+ * @brief Implements Run loop.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void SimFeedHandler::run_loop() noexcept {
     if (!tick_buf_ || !instruments_ || n_instruments_ == 0) {
         err_count_.fetch_add(1, std::memory_order_relaxed);

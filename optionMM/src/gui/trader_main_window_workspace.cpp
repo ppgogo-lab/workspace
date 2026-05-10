@@ -21,6 +21,10 @@
 
 namespace omm::gui {
 
+/**
+ * @brief Implements Build main workspace panel.
+ * @return None.
+ */
 void TraderMainWindow::build_main_workspace_panel() {
     auto* session_menu = menuBar()->addMenu("Session");
     logout_action_ = session_menu->addAction("Logout...");
@@ -261,6 +265,11 @@ void TraderMainWindow::build_main_workspace_panel() {
     setCentralWidget(central);
 }
 
+/**
+ * @brief Implements Update blotter cancel controls.
+ * @param tab_index Parameter supplied by the caller.
+ * @return None.
+ */
 void TraderMainWindow::update_blotter_cancel_controls(int tab_index) {
     const QString tab_name = blotter_tabs_ != nullptr && tab_index >= 0
         ? blotter_tabs_->tabText(tab_index)

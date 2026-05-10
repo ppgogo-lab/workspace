@@ -16,6 +16,12 @@
 #include <ctime>
 
 namespace omm {
+/**
+ * @brief Implements Arb loop.
+ * @param idx Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::arb_loop(int idx) noexcept {
     set_thread_name("omm-arb");
     if (idx >= 0 && idx < cfg_.product_count && idx < MAX_PRODUCTS) {

@@ -14,6 +14,11 @@
 
 namespace omm {
 
+/**
+ * @brief Implements Setup socket.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool MulticastFeedHandler::setup_socket() noexcept {
     sock_ = ::socket(AF_INET, SOCK_DGRAM, 0);
     if (sock_ < 0) { err_count_++; return false; }
@@ -58,6 +63,14 @@ bool MulticastFeedHandler::setup_socket() noexcept {
     return true;
 }
 
+/**
+ * @brief Implements Decode and push.
+ * @param buf Parameter supplied by the caller.
+ * @param len Parameter supplied by the caller.
+ * @param recv_ts_ns Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void MulticastFeedHandler::decode_and_push(const uint8_t* buf, int len,
                                              int64_t recv_ts_ns) noexcept {
     // Wire format: simplified fixed-layout binary matching CTP MdApi tick.
@@ -104,6 +117,11 @@ void MulticastFeedHandler::decode_and_push(const uint8_t* buf, int len,
         msg_count_.fetch_add(1, std::memory_order_relaxed);
 }
 
+/**
+ * @brief Implements Run loop.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void MulticastFeedHandler::run_loop() noexcept {
     // recvmmsg batch: amortise syscall overhead
     static constexpr int BATCH = 32;
@@ -136,12 +154,20 @@ void MulticastFeedHandler::run_loop() noexcept {
     }
 }
 
+/**
+ * @brief Implements Start.
+ * @return None.
+ */
 void MulticastFeedHandler::start() {
     if (!setup_socket()) return;
     stop_flag_.store(false, std::memory_order_relaxed);
     thread_ = std::thread([this] { run_loop(); });
 }
 
+/**
+ * @brief Implements Stop.
+ * @return None.
+ */
 void MulticastFeedHandler::stop() {
     stop_flag_.store(true, std::memory_order_release);
     if (thread_.joinable()) thread_.join();

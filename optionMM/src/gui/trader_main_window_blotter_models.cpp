@@ -31,16 +31,36 @@ const typename Rows::value_type* container_row(const Rows& rows, int index) {
 
 } // namespace
 
+/**
+ * @brief Implements OrderBlotterModel.
+ * @return Return value produced by the operation.
+ */
 OrderBlotterModel::OrderBlotterModel(QObject* parent) : QAbstractTableModel(parent) {}
 
+/**
+ * @brief Implements RowCount.
+ * @param parent Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 int OrderBlotterModel::rowCount(const QModelIndex& parent) const {
     return parent.isValid() ? 0 : static_cast<int>(rows_.size());
 }
 
+/**
+ * @brief Implements ColumnCount.
+ * @param parent Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 int OrderBlotterModel::columnCount(const QModelIndex& parent) const {
     return parent.isValid() ? 0 : 11;
 }
 
+/**
+ * @brief Implements Data.
+ * @param index Parameter supplied by the caller.
+ * @param role Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 QVariant OrderBlotterModel::data(const QModelIndex& index, int role) const {
     const auto* row = this->row(index.row());
     if (row == nullptr || !index.isValid()) return {};
@@ -70,6 +90,13 @@ QVariant OrderBlotterModel::data(const QModelIndex& index, int role) const {
     }
 }
 
+/**
+ * @brief Implements HeaderData.
+ * @param section Parameter supplied by the caller.
+ * @param orientation Parameter supplied by the caller.
+ * @param role Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 QVariant OrderBlotterModel::headerData(int section, Qt::Orientation orientation, int role) const {
     static const QStringList headers{
         "OrderId", "Instrument", "Book", "Exchange", "Side", "Price",
@@ -78,26 +105,56 @@ QVariant OrderBlotterModel::headerData(int section, Qt::Orientation orientation,
     return section >= 0 && section < headers.size() ? headers[section] : QVariant{};
 }
 
+/**
+ * @brief Implements Replace rows.
+ * @param rows Parameter supplied by the caller.
+ * @return None.
+ */
 void OrderBlotterModel::replace_rows(std::vector<OrderBlotterRow> rows) {
     beginResetModel();
     rows_ = std::move(rows);
     endResetModel();
 }
 
+/**
+ * @brief Implements Row.
+ * @param index Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 const OrderBlotterRow* OrderBlotterModel::row(int index) const {
     return container_row(rows_, index);
 }
 
+/**
+ * @brief Implements QuoteBlotterModel.
+ * @return Return value produced by the operation.
+ */
 QuoteBlotterModel::QuoteBlotterModel(QObject* parent) : QAbstractTableModel(parent) {}
 
+/**
+ * @brief Implements RowCount.
+ * @param parent Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 int QuoteBlotterModel::rowCount(const QModelIndex& parent) const {
     return parent.isValid() ? 0 : static_cast<int>(rows_.size());
 }
 
+/**
+ * @brief Implements ColumnCount.
+ * @param parent Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 int QuoteBlotterModel::columnCount(const QModelIndex& parent) const {
     return parent.isValid() ? 0 : 9;
 }
 
+/**
+ * @brief Implements Data.
+ * @param index Parameter supplied by the caller.
+ * @param role Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 QVariant QuoteBlotterModel::data(const QModelIndex& index, int role) const {
     const auto* row = this->row(index.row());
     if (row == nullptr || !index.isValid()) return {};
@@ -133,6 +190,13 @@ QVariant QuoteBlotterModel::data(const QModelIndex& index, int role) const {
     }
 }
 
+/**
+ * @brief Implements HeaderData.
+ * @param section Parameter supplied by the caller.
+ * @param orientation Parameter supplied by the caller.
+ * @param role Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 QVariant QuoteBlotterModel::headerData(int section, Qt::Orientation orientation, int role) const {
     static const QStringList headers{
         "Instrument", "Book", "BidPx", "BidQty", "AskPx", "AskQty", "QState", "Why", "Status"};
@@ -140,26 +204,56 @@ QVariant QuoteBlotterModel::headerData(int section, Qt::Orientation orientation,
     return section >= 0 && section < headers.size() ? headers[section] : QVariant{};
 }
 
+/**
+ * @brief Implements Replace rows.
+ * @param rows Parameter supplied by the caller.
+ * @return None.
+ */
 void QuoteBlotterModel::replace_rows(std::vector<QuoteBlotterRow> rows) {
     beginResetModel();
     rows_ = std::move(rows);
     endResetModel();
 }
 
+/**
+ * @brief Implements Row.
+ * @param index Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 const QuoteBlotterRow* QuoteBlotterModel::row(int index) const {
     return container_row(rows_, index);
 }
 
+/**
+ * @brief Implements TradeBlotterModel.
+ * @return Return value produced by the operation.
+ */
 TradeBlotterModel::TradeBlotterModel(QObject* parent) : QAbstractTableModel(parent) {}
 
+/**
+ * @brief Implements RowCount.
+ * @param parent Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 int TradeBlotterModel::rowCount(const QModelIndex& parent) const {
     return parent.isValid() ? 0 : static_cast<int>(rows_.size());
 }
 
+/**
+ * @brief Implements ColumnCount.
+ * @param parent Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 int TradeBlotterModel::columnCount(const QModelIndex& parent) const {
     return parent.isValid() ? 0 : 9;
 }
 
+/**
+ * @brief Implements Data.
+ * @param index Parameter supplied by the caller.
+ * @param role Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 QVariant TradeBlotterModel::data(const QModelIndex& index, int role) const {
     const auto* row = this->row(index.row());
     if (row == nullptr || !index.isValid()) return {};
@@ -187,6 +281,13 @@ QVariant TradeBlotterModel::data(const QModelIndex& index, int role) const {
     }
 }
 
+/**
+ * @brief Implements HeaderData.
+ * @param section Parameter supplied by the caller.
+ * @param orientation Parameter supplied by the caller.
+ * @param role Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 QVariant TradeBlotterModel::headerData(int section, Qt::Orientation orientation, int role) const {
     static const QStringList headers{
         "TradeId", "OrderId", "Instrument", "Book", "Exchange", "Side", "Price", "Qty", "Ts"};
@@ -194,6 +295,11 @@ QVariant TradeBlotterModel::headerData(int section, Qt::Orientation orientation,
     return section >= 0 && section < headers.size() ? headers[section] : QVariant{};
 }
 
+/**
+ * @brief Implements Replace rows.
+ * @param rows Parameter supplied by the caller.
+ * @return None.
+ */
 void TradeBlotterModel::replace_rows(std::vector<TradeBlotterRow> rows) {
     beginResetModel();
     rows_.clear();
@@ -201,6 +307,12 @@ void TradeBlotterModel::replace_rows(std::vector<TradeBlotterRow> rows) {
     endResetModel();
 }
 
+/**
+ * @brief Implements Prepend rows.
+ * @param rows Parameter supplied by the caller.
+ * @param max_rows Parameter supplied by the caller.
+ * @return None.
+ */
 void TradeBlotterModel::prepend_rows(std::vector<TradeBlotterRow> rows, int max_rows) {
     if (rows.empty()) return;
     const int insert_count = std::min<int>(static_cast<int>(rows.size()), max_rows);
@@ -220,6 +332,11 @@ void TradeBlotterModel::prepend_rows(std::vector<TradeBlotterRow> rows, int max_
     }
 }
 
+/**
+ * @brief Implements Row.
+ * @param index Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 const TradeBlotterRow* TradeBlotterModel::row(int index) const {
     return container_row(rows_, index);
 }

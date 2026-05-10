@@ -1,22 +1,25 @@
-# Chi Design Review / Refactor Plan
+# Doxygen Public Method Comment Pass
 
-Goal: Compare the chi production option market making design and optionMMStrategy implementation with the current optionMM design, then apply low-latency lifecycle improvements that keep the strategy framework simple.
+## Goal
+Add Doxygen-style comments to public methods in `include/` and relevant `src/` files, with low-latency design notes where the API is on or adjacent to the hot path.
+
+## Success Criteria
+- Public method declarations in headers have `@brief`, `@param`, and `@return` where applicable.
+- Public/free function implementations in `src/` have Doxygen comments where they expose callable behavior not already documented in a nearby declaration.
+- Comments call out allocation, locking, and hot-path constraints when relevant.
+- A summary plan, implementation notes, and test result are recorded under `docs/`.
+- Documentation-only changes do not disturb existing unrelated worktree changes.
 
 ## Phases
-
-1. Complete - Map chi strategy interface, engine callbacks, market maker service, and trade service lifecycle.
-2. Complete - Map optionMM strategy framework, engine workers, gateway/order lifecycle, and tests/docs.
-3. Complete - Compare responsibilities and extension boundaries.
-4. Complete - Produce actionable design recommendations for optionMM.
-5. Complete - Refactor quote lifecycle follow-up hooks, cancel-give-up alerts, and base order cancel intent.
-6. Complete - Verify with focused strategy lifecycle tests, simple MM integration tests, and main binary build.
-
-## Decisions
-
-- Keep the hot path simple: no dynamic service layer, no heap-heavy lifecycle manager, no extra cancel queue.
+| Phase | Status | Notes |
+|---|---|---|
+| Inventory API surface | complete | Found public APIs across common, feed, gateway, pricing, strategy, risk, engine, persistence, monitoring, and GUI headers. |
+| Add Doxygen comments | complete | Added Doxygen blocks to public declarations and file-scope member definitions. |
+| Verify and document | complete | Added `docs/doxygen_public_methods_20260510.md`; build commands were attempted and blockers are recorded. |
 
 ## Errors Encountered
-
 | Error | Attempt | Resolution |
 |---|---|---|
-| `D:\workspace\chi\chi\tradeservice\src\TradeServce.cpp` not found | Read prompt path directly | Located actual file at `D:\workspace\chi\chi\tradeservice\src\TradeService.cpp` |
+| PowerShell rewrite corrupted existing non-ASCII comments and rewrote line endings | Initial bulk insertion | Reverted generated `include/` and `src/` edits only, then switched to a UTF-8-safe script. |
+| WSL backend build unavailable | `wsl.exe bash -lc "cd /mnt/d/workspace/optionMM && cmake --build build-wsl --target optionmm -j4"` | Recorded blocker; WSL is not installed/available in this session. |
+| Windows GUI build failed before project code validation | CMake GUI build target | MSVC cannot find standard headers such as `cstdint`, `type_traits`, and `limits`; likely environment/toolchain setup issue. |

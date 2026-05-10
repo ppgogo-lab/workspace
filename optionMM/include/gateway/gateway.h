@@ -45,28 +45,80 @@ struct GatewayEvent {
         Quote  quote;
     };
 
+    /**
+     * @brief GatewayEvent.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     GatewayEvent() noexcept : type{}, product_index{}, _pad{}, order{} {}
 };
 
 class IGateway {
 public:
     // ── Lifecycle ────────────────────────────────────────────────────────────
+    /**
+     * @brief Connect.
+     * @param cfg Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     */
     virtual bool connect(const GatewayConfig& cfg)    = 0;
+    /**
+     * @brief Disconnect.
+     * @return None.
+     */
     virtual void disconnect()                          = 0;
+    /**
+     * @brief Is connected.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] virtual bool is_connected() const noexcept = 0;
 
     // ── Order routing (dispatcher thread, noexcept, no alloc) ────────────────
+    /**
+     * @brief Send order.
+     * @param order Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] virtual bool send_order(const Order& order) noexcept = 0;
+    /**
+     * @brief Send quote.
+     * @param quote Parameter supplied by the caller.
+     * @param bid_order_id_out Parameter supplied by the caller.
+     * @param ask_order_id_out Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] virtual bool send_quote(
             const Quote& quote,
             OrderId* bid_order_id_out = nullptr,
             OrderId* ask_order_id_out = nullptr) noexcept = 0;
+    /**
+     * @brief Cancel order.
+     * @param id Parameter supplied by the caller.
+     * @param instrument_id Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] virtual bool cancel_order(OrderId id,
                                             uint16_t instrument_id) noexcept = 0;
+    /**
+     * @brief Cancel quote.
+     * @param id Parameter supplied by the caller.
+     * @param instrument_id Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] virtual bool cancel_quote(QuoteId id,
                                             uint16_t instrument_id) noexcept {
         return cancel_order(id, instrument_id);
     }
+    /**
+     * @brief Supports quote replace.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] virtual bool supports_quote_replace() const noexcept {
         return false;
     }
@@ -74,10 +126,24 @@ public:
     // ── Startup queries ───────────────────────────────────────────────────────
     // Populates instruments[] with all tradeable instruments for this exchange.
     // Blocking — called once at startup before trading begins.
+    /**
+     * @brief Query instruments.
+     * @param instruments Parameter supplied by the caller.
+     * @param count Parameter supplied by the caller.
+     * @param max_count Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     */
     virtual bool query_instruments(Instrument* instruments,
                                     uint16_t*   count,
                                     uint16_t    max_count) = 0;
 
+    /**
+     * @brief Set instruments.
+     * @param instruments Parameter supplied by the caller.
+     * @param n Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     virtual void set_instruments(const Instrument* instruments,
                                  uint16_t n) noexcept {
         instruments_ = instruments;
@@ -90,6 +156,10 @@ public:
     // The dispatcher thread drains it and routes to strategy threads.
     SPSCRingBuffer<GatewayEvent, 1024> callback_buf;
 
+    /**
+     * @brief IGateway.
+     * @return None.
+     */
     virtual ~IGateway() = default;
 
 protected:

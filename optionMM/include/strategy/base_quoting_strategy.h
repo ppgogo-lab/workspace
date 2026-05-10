@@ -108,15 +108,76 @@ protected:
     // These methods are final to ensure consistent lifecycle management.
     // Subclasses cannot override; use the _impl hooks instead.
 public:
+    /**
+     * @brief On signal.
+     * @param signal Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void on_signal(const PricingSignal& signal) noexcept final;
+    /**
+     * @brief On signals.
+     * @param signals Parameter supplied by the caller.
+     * @param count Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void on_signals(const PricingSignal* signals, int count) noexcept final;
+    /**
+     * @brief On fill.
+     * @param trade Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void on_fill(const Trade& trade) noexcept final;
+    /**
+     * @brief On quote ack.
+     * @param quote Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void on_quote_ack(const Quote& quote) noexcept final;
+    /**
+     * @brief On quote cancel.
+     * @param quote Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void on_quote_cancel(const Quote& quote) noexcept final;
+    /**
+     * @brief On quote reject.
+     * @param quote Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void on_quote_reject(const Quote& quote) noexcept final;
+    /**
+     * @brief On order ack.
+     * @param order Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void on_order_ack(const Order& order) noexcept final;
+    /**
+     * @brief On order cancel.
+     * @param id Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void on_order_cancel(OrderId id) noexcept final;
+    /**
+     * @brief On order reject.
+     * @param order Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void on_order_reject(const Order& order) noexcept final;
+    /**
+     * @brief On timer.
+     * @param event Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void on_timer(const TimerEvent& event) noexcept final;
 
     // ─── Per-Instrument State ─────────────────────────────────────────────────

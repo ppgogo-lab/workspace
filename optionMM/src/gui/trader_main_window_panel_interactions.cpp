@@ -10,6 +10,10 @@
 
 namespace omm::gui {
 
+/**
+ * @brief Implements Connect panel interactions.
+ * @return None.
+ */
 void TraderMainWindow::connect_panel_interactions() {
     connect(orders_table_, &QTableView::clicked, this, [this](const QModelIndex& index) {
         if (!index.isValid() || impl_->order_blotter_model == nullptr) return;

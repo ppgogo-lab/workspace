@@ -18,6 +18,11 @@
 namespace omm {
 // ─── Gateway dispatcher thread ────────────────────────────────────────────────
 
+/**
+ * @brief Implements Gateway dispatcher loop.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::gateway_dispatcher_loop() noexcept {
     set_thread_name("omm-gw-disp");
     pin_if_configured(cfg_.affinity.gateway_dispatcher_core);

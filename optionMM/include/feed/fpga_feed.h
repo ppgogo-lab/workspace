@@ -35,26 +35,64 @@ struct FPGARecord {
 
 class FPGAFeedHandler : public IFeedHandler {
 public:
+    /**
+     * @brief FPGAFeedHandler.
+     * @param cfg Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     FPGAFeedHandler(const FpgaConfig& cfg,
                     SPSCRingBuffer<TopOfBookTick, 1024>* tick_buf) noexcept
         : IFeedHandler(tick_buf), cfg_(cfg) {}
 
+    /**
+     * @brief Start.
+     * @return None.
+     */
     void start() override;
+    /**
+     * @brief Stop.
+     * @return None.
+     */
     void stop()  override;
 
+    /**
+     * @brief Is connected.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool     is_connected()  const noexcept override {
         return connected_.load(std::memory_order_relaxed);
     }
+    /**
+     * @brief Message count.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] uint64_t message_count() const noexcept override {
         return msg_count_.load(std::memory_order_relaxed);
     }
+    /**
+     * @brief Error count.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] uint64_t error_count()   const noexcept override {
         return err_count_.load(std::memory_order_relaxed);
     }
+    /**
+     * @brief Dropped count.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] uint64_t dropped_count() const noexcept override {
         return dropped_count_.load(std::memory_order_relaxed);
     }
 
+    /**
+     * @brief FPGAFeedHandler.
+     * @return None.
+     */
     ~FPGAFeedHandler() override { stop(); }
 
 private:

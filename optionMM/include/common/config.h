@@ -116,6 +116,14 @@ struct ProductPricingConfig {
     double         base_offset_value{0.0};                  // Product-level future price offset.
 };
 
+/**
+ * @brief Apply base offset.
+ * @param future_price Parameter supplied by the caller.
+ * @param underlying_tick_size Parameter supplied by the caller.
+ * @param cfg Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 [[nodiscard]] inline double apply_base_offset(double future_price,
                                               double underlying_tick_size,
                                               const ProductPricingConfig& cfg) noexcept {
@@ -333,6 +341,11 @@ struct SystemConfig {
 
 // Throws std::runtime_error on parse failure, with the offending YAML key path
 // included in the message. yaml-cpp types are intentionally hidden in config.cpp.
+/**
+ * @brief Load config.
+ * @param path Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 [[nodiscard]] SystemConfig load_config(std::string_view path);
 
 } // namespace omm

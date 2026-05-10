@@ -68,6 +68,14 @@ struct PCPPairMonitorState {
 
 constexpr uint8_t kArbOrderTag = 0xAEu;
 
+/**
+ * @brief Make arb order id.
+ * @param product_idx Parameter supplied by the caller.
+ * @param type Parameter supplied by the caller.
+ * @param seq Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 [[nodiscard]] inline OrderId make_arb_order_id(uint8_t product_idx,
                                                ArbitrageStrategyType type,
                                                uint64_t seq) noexcept {
@@ -77,39 +85,133 @@ constexpr uint8_t kArbOrderTag = 0xAEu;
         | (seq & ((1ULL << 40) - 1ULL));
 }
 
+/**
+ * @brief Is arb order id.
+ * @param id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 [[nodiscard]] inline bool is_arb_order_id(OrderId id) noexcept {
     return static_cast<uint8_t>(id >> 56) == kArbOrderTag;
 }
 
+/**
+ * @brief Arb order product.
+ * @param id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 [[nodiscard]] inline uint8_t arb_order_product(OrderId id) noexcept {
     return static_cast<uint8_t>((id >> 48) & 0xFFu);
 }
 
+/**
+ * @brief Arb order type.
+ * @param id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 [[nodiscard]] inline ArbitrageStrategyType arb_order_type(OrderId id) noexcept {
     return static_cast<ArbitrageStrategyType>((id >> 40) & 0xFFu);
 }
 
 class IArbitrageStrategy {
 public:
+    /**
+     * @brief IArbitrageStrategy.
+     * @return None.
+     */
     virtual ~IArbitrageStrategy() = default;
 
+    /**
+     * @brief Evaluate.
+     * @param now_ns Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     virtual void evaluate(Timestamp now_ns) noexcept = 0;
+    /**
+     * @brief On market update.
+     * @param instrument_id Parameter supplied by the caller.
+     * @param now_ns Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     virtual void on_market_update(uint16_t instrument_id, Timestamp now_ns) noexcept {
         (void)instrument_id;
         evaluate(now_ns);
     }
+    /**
+     * @brief On timer.
+     * @param now_ns Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     virtual void on_timer(Timestamp now_ns) noexcept {
         evaluate(now_ns);
     }
+    /**
+     * @brief On order ack.
+     * @param order Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     virtual void on_order_ack(const Order& order) noexcept = 0;
+    /**
+     * @brief On fill.
+     * @param trade Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     virtual void on_fill(const Trade& trade) noexcept = 0;
+    /**
+     * @brief On order cancel.
+     * @param id Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     virtual void on_order_cancel(OrderId id) noexcept = 0;
+    /**
+     * @brief On order reject.
+     * @param order Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     virtual void on_order_reject(const Order& order) noexcept = 0;
 
+    /**
+     * @brief Owns order id.
+     * @param id Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] virtual bool owns_order_id(OrderId id) const noexcept = 0;
+    /**
+     * @brief Is enabled.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] virtual bool is_enabled() const noexcept = 0;
+    /**
+     * @brief Strategy type.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] virtual ArbitrageStrategyType strategy_type() const noexcept = 0;
+    /**
+     * @brief Read monitor state.
+     * @param out Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] virtual bool read_monitor_state(ArbStrategyMonitorState* out) const noexcept = 0;
+    /**
+     * @brief Read pcp monitor states.
+     * @param out Parameter supplied by the caller.
+     * @param max_count Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] virtual int read_pcp_monitor_states(PCPPairMonitorState* out,
                                                       int max_count) const noexcept {
         (void)out;

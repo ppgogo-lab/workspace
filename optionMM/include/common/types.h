@@ -42,14 +42,29 @@ template<std::size_t N>
 struct FixedStr {
     char data[N]{};
 
+    /**
+     * @brief FixedStr.
+     * @return None.
+     */
     FixedStr() = default;
 
+    /**
+     * @brief FixedStr.
+     * @param sv Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     explicit FixedStr(std::string_view sv) noexcept {
         std::size_t len = std::min(sv.size(), N - 1);
         std::memcpy(data, sv.data(), len);
         data[len] = '\0';
     }
 
+    /**
+     * @brief View.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     std::string_view view() const noexcept { return {data, std::strlen(data)}; }
 
     bool operator==(const FixedStr& o) const noexcept {
@@ -58,6 +73,11 @@ struct FixedStr {
     bool operator==(std::string_view sv) const noexcept {
         return view() == sv;
     }
+    /**
+     * @brief Empty.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     bool empty() const noexcept { return data[0] == '\0'; }
 };
 
@@ -83,6 +103,12 @@ enum class OrderStatus : uint8_t { New, PartialFilled, Filled, Cancelled, Reject
 enum class InstrumentKind : uint8_t { Future, Option };
 enum class ArbitrageStrategyType : uint8_t { None = 0, PCP = 1 };
 
+/**
+ * @brief Order type from legacy storage.
+ * @param value Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 [[nodiscard]] inline OrderType order_type_from_legacy_storage(int value) noexcept {
     switch (value) {
     case 1: return OrderType::FAK;
@@ -91,6 +117,13 @@ enum class ArbitrageStrategyType : uint8_t { None = 0, PCP = 1 };
     }
 }
 
+/**
+ * @brief Price type from legacy storage.
+ * @param price_type Parameter supplied by the caller.
+ * @param old_order_type Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 [[nodiscard]] inline OrderPriceType price_type_from_legacy_storage(int price_type,
                                                                     int old_order_type) noexcept {
     return (price_type == static_cast<int>(OrderPriceType::Market) || old_order_type == 3)
@@ -98,10 +131,22 @@ enum class ArbitrageStrategyType : uint8_t { None = 0, PCP = 1 };
         : OrderPriceType::Limit;
 }
 
+/**
+ * @brief Is ioc order type.
+ * @param type Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 [[nodiscard]] inline bool is_ioc_order_type(OrderType type) noexcept {
     return type == OrderType::FAK || type == OrderType::FOK;
 }
 
+/**
+ * @brief Is all volume order type.
+ * @param type Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 [[nodiscard]] inline bool is_all_volume_order_type(OrderType type) noexcept {
     return type == OrderType::FOK;
 }
@@ -184,6 +229,12 @@ struct alignas(64) MarketTick {
 static_assert(sizeof(MarketTick) == 256);
 static_assert(alignof(MarketTick) == 64);
 
+/**
+ * @brief To top of book tick.
+ * @param src Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 [[nodiscard]] inline TopOfBookTick to_top_of_book_tick(const MarketTick& src) noexcept {
     TopOfBookTick dst{};
     dst.recv_ts_ns = src.recv_ts_ns;
@@ -198,6 +249,12 @@ static_assert(alignof(MarketTick) == 64);
     return dst;
 }
 
+/**
+ * @brief To depth top of book tick.
+ * @param src Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 [[nodiscard]] inline DepthTopOfBookTick to_depth_top_of_book_tick(const MarketTick& src) noexcept {
     DepthTopOfBookTick dst{};
     dst.recv_ts_ns = src.recv_ts_ns;
@@ -438,6 +495,11 @@ struct PortfolioGreeks {
 };
 
 // ─── FP environment setup (call once in main, before any pricing) ─────────────
+/**
+ * @brief Setup fp environment.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 inline void setup_fp_environment() noexcept {
     // Flush-To-Zero: FP results that would be denormal become 0 instead.
     // Denormals-Are-Zero: denormal inputs treated as 0.

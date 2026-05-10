@@ -24,17 +24,54 @@ namespace omm {
 
 class IFeedHandler {
 public:
+    /**
+     * @brief IFeedHandler.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     explicit IFeedHandler(SPSCRingBuffer<TopOfBookTick, 1024>* tick_buf) noexcept
         : tick_buf_(tick_buf) {}
 
+    /**
+     * @brief Start.
+     * @return None.
+     */
     virtual void start() = 0;
+    /**
+     * @brief Stop.
+     * @return None.
+     */
     virtual void stop()  = 0;
 
+    /**
+     * @brief Is connected.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] virtual bool     is_connected()    const noexcept = 0;
+    /**
+     * @brief Message count.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] virtual uint64_t message_count()   const noexcept = 0;
+    /**
+     * @brief Error count.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] virtual uint64_t error_count()     const noexcept = 0;
+    /**
+     * @brief Dropped count.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] virtual uint64_t dropped_count()   const noexcept = 0;
 
+    /**
+     * @brief IFeedHandler.
+     * @return None.
+     */
     virtual ~IFeedHandler() = default;
 
 protected:
@@ -59,6 +96,13 @@ protected:
     }
 
 public:
+    /**
+     * @brief Set instruments.
+     * @param instruments Parameter supplied by the caller.
+     * @param n Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void set_instruments(const Instrument* instruments,
                          uint16_t n) noexcept {
         instruments_  = instruments;
@@ -68,10 +112,21 @@ public:
 
     // Called by TradingEngine after it takes ownership of the feed,
     // so feed handlers can be constructed before the engine's tick_buf exists.
+    /**
+     * @brief Set tick buf.
+     * @param buf Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void set_tick_buf(SPSCRingBuffer<TopOfBookTick, 1024>* buf) noexcept {
         tick_buf_ = buf;
     }
 
+    /**
+     * @brief Instrument count.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] uint16_t instrument_count() const noexcept {
         return n_instruments_;
     }

@@ -33,6 +33,11 @@ constexpr double kTradingDaysPerYear = 252.0;
 // This is the correct market-making model: the forward price drives repricing,
 // not individual option prints. A single future tick reprices the whole book.
 
+/**
+ * @brief Implements Pricer loop.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::pricer_loop() noexcept {
     set_thread_name("omm-pricer");
     pin_if_configured(cfg_.affinity.pricer_core);

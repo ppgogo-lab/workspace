@@ -18,6 +18,11 @@
 namespace omm {
 // ─── Risk monitor thread ──────────────────────────────────────────────────────
 
+/**
+ * @brief Implements Risk monitor loop.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::risk_monitor_loop() noexcept {
     set_thread_name("omm-risk");
     pin_if_configured(cfg_.affinity.risk_monitor_core);

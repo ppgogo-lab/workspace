@@ -55,9 +55,22 @@ struct StrategyRuntimeStats {
 class IMarketMaker {
 public:
     // Called when the pricer thread delivers a new pricing signal for this product.
+    /**
+     * @brief On signal.
+     * @param signal Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     virtual void on_signal(const PricingSignal& signal) noexcept = 0;
 
     // Called when the strategy thread drains a batch of pricing signals.
+    /**
+     * @brief On signals.
+     * @param signals Parameter supplied by the caller.
+     * @param count Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     virtual void on_signals(const PricingSignal* signals, int count) noexcept {
         if (signals == nullptr || count <= 0) return;
         for (int i = 0; i < count; ++i) {
@@ -66,40 +79,111 @@ public:
     }
 
     // Called when a fill report arrives for an order sent by this strategy.
+    /**
+     * @brief On fill.
+     * @param trade Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     virtual void on_fill(const Trade& trade) noexcept = 0;
 
     // Called when an order ack arrives (exchange accepted our order).
+    /**
+     * @brief On order ack.
+     * @param order Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     virtual void on_order_ack(const Order& order) noexcept = 0;
 
     // Called when a quote ack arrives (exchange accepted or replaced our quote).
+    /**
+     * @brief On quote ack.
+     * @param quote Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     virtual void on_quote_ack(const Quote& quote) noexcept = 0;
 
     // Called when a quote is cancelled or fully withdrawn.
+    /**
+     * @brief On quote cancel.
+     * @param quote Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     virtual void on_quote_cancel(const Quote& quote) noexcept = 0;
 
     // Called when a quote is rejected by the gateway/exchange.
+    /**
+     * @brief On quote reject.
+     * @param quote Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     virtual void on_quote_reject(const Quote& quote) noexcept = 0;
 
     // Called when an order is cancelled.
+    /**
+     * @brief On order cancel.
+     * @param id Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     virtual void on_order_cancel(OrderId id) noexcept = 0;
 
     // Called when an order is rejected.
+    /**
+     * @brief On order reject.
+     * @param order Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     virtual void on_order_reject(const Order& order) noexcept = 0;
 
     // Called by the timer thread (hedge check, quote refresh, session open/close).
+    /**
+     * @brief On timer.
+     * @param event Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     virtual void on_timer(const TimerEvent& event) noexcept = 0;
 
     // Return true if this strategy is currently enabled and quoting.
+    /**
+     * @brief Is enabled.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] virtual bool is_enabled() const noexcept = 0;
 
     // Return the product index (strategy slot index).
+    /**
+     * @brief Product index.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] virtual uint8_t product_index() const noexcept = 0;
 
+    /**
+     * @brief Read product monitor state.
+     * @param out Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] virtual bool read_product_monitor_state(ProductMonitorState* out) const noexcept {
         if (out != nullptr) *out = ProductMonitorState{};
         return false;
     }
 
+    /**
+     * @brief Read instrument monitor states.
+     * @param out Parameter supplied by the caller.
+     * @param max_count Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] virtual int read_instrument_monitor_states(InstrumentMonitorState* out,
                                                              int max_count) const noexcept {
         (void)out;
@@ -107,11 +191,21 @@ public:
         return 0;
     }
 
+    /**
+     * @brief Read runtime stats.
+     * @param out Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] virtual bool read_runtime_stats(StrategyRuntimeStats* out) const noexcept {
         if (out != nullptr) *out = StrategyRuntimeStats{};
         return false;
     }
 
+    /**
+     * @brief IMarketMaker.
+     * @return None.
+     */
     virtual ~IMarketMaker() = default;
 
 protected:

@@ -181,6 +181,14 @@ inline bool numa_migrate_pages(void* addr, std::size_t size, int target_node) no
 
 // Get statistics about NUMA memory usage.
 // Returns the amount of memory (in bytes) allocated on each NUMA node.
+/**
+ * @brief Numa get memory stats.
+ * @param node Parameter supplied by the caller.
+ * @param free_bytes Parameter supplied by the caller.
+ * @param total_bytes Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 inline bool numa_get_memory_stats(int node, std::size_t* free_bytes, std::size_t* total_bytes) noexcept {
 #if defined(__linux__)
     if (numa_available() < 0) {

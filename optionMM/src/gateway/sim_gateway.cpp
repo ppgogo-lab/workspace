@@ -19,10 +19,20 @@ double clamp_probability(double value) noexcept {
 
 } // namespace
 
+/**
+ * @brief Implements SimGateway.
+ * @return None.
+ */
 SimGateway::~SimGateway() {
     disconnect();
 }
 
+/**
+ * @brief Implements Set sim config.
+ * @param cfg Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void SimGateway::set_sim_config(const SimConfig& cfg) noexcept {
     settings_.ack_latency_ms = std::max(0, cfg.gateway_ack_latency_ms);
     settings_.cancel_latency_ms = std::max(0, cfg.gateway_cancel_latency_ms);
@@ -41,6 +51,12 @@ void SimGateway::set_sim_config(const SimConfig& cfg) noexcept {
     settings_.random_seed = cfg.random_seed;
 }
 
+/**
+ * @brief Implements Send order.
+ * @param order Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool SimGateway::send_order(const Order& order) noexcept {
     if (!connected_.load(std::memory_order_relaxed)) return false;
 
@@ -76,6 +92,14 @@ bool SimGateway::send_order(const Order& order) noexcept {
     return true;
 }
 
+/**
+ * @brief Implements Send quote.
+ * @param quote Parameter supplied by the caller.
+ * @param bid_order_id_out Parameter supplied by the caller.
+ * @param ask_order_id_out Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool SimGateway::send_quote(const Quote& quote,
                             OrderId* bid_order_id_out,
                             OrderId* ask_order_id_out) noexcept {
@@ -137,6 +161,13 @@ bool SimGateway::send_quote(const Quote& quote,
     return true;
 }
 
+/**
+ * @brief Implements Cancel order.
+ * @param id Parameter supplied by the caller.
+ * @param instrument_id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool SimGateway::cancel_order(OrderId id, uint16_t instrument_id) noexcept {
     if (!connected_.load(std::memory_order_relaxed)) return false;
 
@@ -154,6 +185,13 @@ bool SimGateway::cancel_order(OrderId id, uint16_t instrument_id) noexcept {
     return false;
 }
 
+/**
+ * @brief Implements Cancel quote.
+ * @param id Parameter supplied by the caller.
+ * @param instrument_id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool SimGateway::cancel_quote(QuoteId id, uint16_t instrument_id) noexcept {
     if (!connected_.load(std::memory_order_relaxed)) return false;
     if (instrument_id >= MAX_INSTRUMENTS) return false;
@@ -170,17 +208,30 @@ bool SimGateway::cancel_quote(QuoteId id, uint16_t instrument_id) noexcept {
     return true;
 }
 
+/**
+ * @brief Implements Start worker.
+ * @return None.
+ */
 void SimGateway::start_worker() {
     stop_worker();
     worker_running_.store(true, std::memory_order_release);
     worker_thread_ = std::thread([this] { worker_loop(); });
 }
 
+/**
+ * @brief Implements Stop worker.
+ * @return None.
+ */
 void SimGateway::stop_worker() {
     worker_running_.store(false, std::memory_order_release);
     if (worker_thread_.joinable()) worker_thread_.join();
 }
 
+/**
+ * @brief Implements Worker loop.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void SimGateway::worker_loop() noexcept {
     set_thread_name("omm-sim-gw");
 
@@ -202,6 +253,13 @@ void SimGateway::worker_loop() noexcept {
     }
 }
 
+/**
+ * @brief Implements Process orders.
+ * @param now_ns Parameter supplied by the caller.
+ * @param rng Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void SimGateway::process_orders(Timestamp now_ns, std::mt19937& rng) noexcept {
     std::lock_guard<std::mutex> lock(state_mutex_);
     for (auto& active : active_orders_) {
@@ -364,6 +422,13 @@ void SimGateway::process_orders(Timestamp now_ns, std::mt19937& rng) noexcept {
     }
 }
 
+/**
+ * @brief Implements Process quotes.
+ * @param now_ns Parameter supplied by the caller.
+ * @param rng Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void SimGateway::process_quotes(Timestamp now_ns, std::mt19937& rng) noexcept {
     std::lock_guard<std::mutex> lock(state_mutex_);
     for (auto& active : active_quotes_) {
@@ -472,6 +537,13 @@ void SimGateway::process_quotes(Timestamp now_ns, std::mt19937& rng) noexcept {
     }
 }
 
+/**
+ * @brief Implements Sample probability.
+ * @param p Parameter supplied by the caller.
+ * @param rng Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool SimGateway::sample_probability(double p, std::mt19937& rng) noexcept {
     if (p <= 0.0) return false;
     if (p >= 1.0) return true;
@@ -479,6 +551,13 @@ bool SimGateway::sample_probability(double p, std::mt19937& rng) noexcept {
     return dist(rng) < p;
 }
 
+/**
+ * @brief Implements Sample fill volume.
+ * @param remaining Parameter supplied by the caller.
+ * @param rng Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 Volume SimGateway::sample_fill_volume(Volume remaining, std::mt19937& rng) noexcept {
     if (remaining <= 1) return remaining;
 
@@ -494,11 +573,23 @@ Volume SimGateway::sample_fill_volume(Volume remaining, std::mt19937& rng) noexc
     return dist(rng);
 }
 
+/**
+ * @brief Implements Market price.
+ * @param instrument_id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 double SimGateway::market_price(uint16_t instrument_id) const noexcept {
     if (instrument_id >= MAX_INSTRUMENTS) return 0.0;
     return last_price_[instrument_id].load(std::memory_order_relaxed);
 }
 
+/**
+ * @brief Implements Tick size.
+ * @param instrument_id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 double SimGateway::tick_size(uint16_t instrument_id) const noexcept {
     if (const Instrument* instr = instrument_by_id(instrument_id); instr != nullptr && instr->tick_size > 0.0) {
         return instr->tick_size;
@@ -506,6 +597,12 @@ double SimGateway::tick_size(uint16_t instrument_id) const noexcept {
     return 0.01;
 }
 
+/**
+ * @brief Implements Fill price for order.
+ * @param active Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 double SimGateway::fill_price_for_order(const ActiveOrder& active) const noexcept {
     const double mkt = market_price(active.order.instrument_id);
     const double tick = tick_size(active.order.instrument_id);

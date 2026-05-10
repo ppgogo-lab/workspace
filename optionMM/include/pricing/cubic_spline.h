@@ -29,6 +29,13 @@ public:
     int         n_slices{0};
 
     // Evaluate spline at log-moneyness k within one slice.
+    /**
+     * @brief Eval slice.
+     * @param s Parameter supplied by the caller.
+     * @param k Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     static double eval_slice(const SplineSlice& s, double k) noexcept {
         if (s.n == 0) return 0.20;
         if (k <= s.k[0])     return s.v[0];
@@ -51,6 +58,13 @@ public:
                               + t  * (t  * t  - 1.0) * s.c[lo + 1]);
     }
 
+    /**
+     * @brief Get vol.
+     * @param k Parameter supplied by the caller.
+     * @param T Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] double get_vol(double k, double T) const noexcept override {
         if (n_slices == 0 || T < 1e-10) return 0.20;
 
@@ -74,12 +88,25 @@ public:
         return 0.20;
     }
 
+    /**
+     * @brief Get vol by strike.
+     * @param F Parameter supplied by the caller.
+     * @param K Parameter supplied by the caller.
+     * @param T Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] double get_vol_by_strike(double F, double K,
                                             double T) const noexcept override {
         if (F < 1e-10 || K < 1e-10) return 0.20;
         return get_vol(std::log(K / F), T);
     }
 
+    /**
+     * @brief Is valid.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool is_valid() const noexcept override {
         return n_slices > 0 && slices[0].valid;
     }
@@ -91,6 +118,16 @@ public:
 // Runs off the critical path.
 //
 // knots must be sorted in ascending order of k = ln(K/F).
+/**
+ * @brief Fit cubic spline slice.
+ * @param k_values Parameter supplied by the caller.
+ * @param vol_values Parameter supplied by the caller.
+ * @param n Parameter supplied by the caller.
+ * @param T Parameter supplied by the caller.
+ * @param out Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void fit_cubic_spline_slice(const double*  k_values,    // log-moneyness array
                              const double*  vol_values,  // implied vol array
                              int            n,

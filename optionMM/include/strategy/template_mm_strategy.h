@@ -33,6 +33,17 @@ namespace omm {
 class TemplateMMStrategy : public BaseQuotingStrategy {
 public:
     // Called by TradingEngine after construction to wire up all dependencies.
+    /**
+     * @brief Init.
+     * @param product_idx Parameter supplied by the caller.
+     * @param quote_buf Parameter supplied by the caller.
+     * @param order_buf Parameter supplied by the caller.
+     * @param pre_risk Parameter supplied by the caller.
+     * @param params Parameter supplied by the caller.
+     * @param instruments Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void init(uint8_t product_idx,
               SPSCRingBuffer<Quote, 512>* quote_buf,
               SPSCRingBuffer<Order, 512>* order_buf,
@@ -64,10 +75,20 @@ public:
         }
     }
 
+    /**
+     * @brief Is enabled.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool is_enabled() const noexcept override {
         return params_ && params_->enabled.load(std::memory_order_relaxed);
     }
 
+    /**
+     * @brief Product index.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] uint8_t product_index() const noexcept override {
         return product_idx_;
     }

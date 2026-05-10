@@ -21,6 +21,20 @@ namespace {
 
 } // namespace
 
+/**
+ * @brief Implements Init.
+ * @param product_idx Parameter supplied by the caller.
+ * @param intent_buf Parameter supplied by the caller.
+ * @param params Parameter supplied by the caller.
+ * @param instruments Parameter supplied by the caller.
+ * @param tick_snapshot Parameter supplied by the caller.
+ * @param greeks_snapshot Parameter supplied by the caller.
+ * @param risk_free_rate Parameter supplied by the caller.
+ * @param hard_risk_cfg Parameter supplied by the caller.
+ * @param account_id Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void PCPArbitrageStrategy::init(uint8_t product_idx,
                                 SPSCRingBuffer<ArbIntent, 256>* intent_buf,
                                 AtomicArbParams* params,
@@ -59,16 +73,33 @@ void PCPArbitrageStrategy::init(uint8_t product_idx,
     refresh_monitor_state(pair_count_ == 0 ? ArbSuppressNoPairs : ArbSuppressNone, get_monotonic_ns());
 }
 
+/**
+ * @brief Implements Owns order id.
+ * @param id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool PCPArbitrageStrategy::owns_order_id(OrderId id) const noexcept {
     return is_arb_order_id(id)
         && arb_order_product(id) == product_idx_
         && arb_order_type(id) == strategy_type();
 }
 
+/**
+ * @brief Implements Is enabled.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool PCPArbitrageStrategy::is_enabled() const noexcept {
     return params_ && params_->enabled.load(std::memory_order_relaxed);
 }
 
+/**
+ * @brief Implements Read monitor state.
+ * @param out Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool PCPArbitrageStrategy::read_monitor_state(ArbStrategyMonitorState* out) const noexcept {
     if (out == nullptr) return false;
     out->product_index = product_idx_;
@@ -89,6 +120,13 @@ bool PCPArbitrageStrategy::read_monitor_state(ArbStrategyMonitorState* out) cons
     return true;
 }
 
+/**
+ * @brief Implements Read pcp monitor states.
+ * @param out Parameter supplied by the caller.
+ * @param max_count Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 int PCPArbitrageStrategy::read_pcp_monitor_states(PCPPairMonitorState* out,
                                                   int max_count) const noexcept {
     if (out == nullptr || max_count <= 0) return 0;
@@ -114,6 +152,11 @@ int PCPArbitrageStrategy::read_pcp_monitor_states(PCPPairMonitorState* out,
     return 0;
 }
 
+/**
+ * @brief Implements Build pairs.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void PCPArbitrageStrategy::build_pairs() noexcept {
     // PCP is intra-product in v1. We first locate the product future, then
     // pair every call with the matching put on:
@@ -167,6 +210,13 @@ void PCPArbitrageStrategy::build_pairs() noexcept {
     }
 }
 
+/**
+ * @brief Implements Discount factor.
+ * @param pair Parameter supplied by the caller.
+ * @param now_ns Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 double PCPArbitrageStrategy::discount_factor(const Pair& pair, Timestamp now_ns) const noexcept {
     if (!pair.active || pair.call_id >= MAX_INSTRUMENTS) return 1.0;
     const Instrument& call = instruments_[pair.call_id];
@@ -177,6 +227,13 @@ double PCPArbitrageStrategy::discount_factor(const Pair& pair, Timestamp now_ns)
     return std::exp(-risk_free_rate_ * T);
 }
 
+/**
+ * @brief Implements Market valid.
+ * @param tick Parameter supplied by the caller.
+ * @param now_ns Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool PCPArbitrageStrategy::market_valid(const TopOfBookTick& tick, Timestamp now_ns) const noexcept {
     return tick.recv_ts_ns > 0
         && now_ns - tick.recv_ts_ns <= kMarketStaleNs
@@ -187,6 +244,14 @@ bool PCPArbitrageStrategy::market_valid(const TopOfBookTick& tick, Timestamp now
         && tick.ask_volume > 0;
 }
 
+/**
+ * @brief Implements Executable volume.
+ * @param pair Parameter supplied by the caller.
+ * @param dir Parameter supplied by the caller.
+ * @param max_order_volume Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 Volume PCPArbitrageStrategy::executable_volume(const Pair& pair,
                                                Direction dir,
                                                int max_order_volume) const noexcept {
@@ -219,6 +284,19 @@ Volume PCPArbitrageStrategy::executable_volume(const Pair& pair,
     return 0;
 }
 
+/**
+ * @brief Implements Scan best opportunity.
+ * @param now_ns Parameter supplied by the caller.
+ * @param best_pair Parameter supplied by the caller.
+ * @param best_pair_index Parameter supplied by the caller.
+ * @param best_dir Parameter supplied by the caller.
+ * @param best_volume Parameter supplied by the caller.
+ * @param best_edge_ticks Parameter supplied by the caller.
+ * @param suppress_flags Parameter supplied by the caller.
+ * @param trigger_instrument_id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool PCPArbitrageStrategy::scan_best_opportunity(Timestamp now_ns,
                                                  Pair* best_pair,
                                                  uint16_t* best_pair_index,
@@ -328,6 +406,13 @@ bool PCPArbitrageStrategy::scan_best_opportunity(Timestamp now_ns,
     return *best_dir != Direction::None;
 }
 
+/**
+ * @brief Implements Next pair for instrument.
+ * @param pair_index Parameter supplied by the caller.
+ * @param instrument_id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 uint16_t PCPArbitrageStrategy::next_pair_for_instrument(uint16_t pair_index,
                                                         uint16_t instrument_id) const noexcept {
     if (pair_index >= pair_count_) return kInvalidPairIndex;
@@ -338,6 +423,15 @@ uint16_t PCPArbitrageStrategy::next_pair_for_instrument(uint16_t pair_index,
     return kInvalidPairIndex;
 }
 
+/**
+ * @brief Implements Publish pair monitor states.
+ * @param now_ns Parameter supplied by the caller.
+ * @param selected_pair_index Parameter supplied by the caller.
+ * @param selected_dir Parameter supplied by the caller.
+ * @param selected_edge_ticks Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void PCPArbitrageStrategy::publish_pair_monitor_states(Timestamp now_ns,
                                                        uint16_t selected_pair_index,
                                                        Direction selected_dir,
@@ -438,6 +532,19 @@ void PCPArbitrageStrategy::publish_pair_monitor_states(Timestamp now_ns,
     monitor_pair_snapshot_version_.store(cur + 2, std::memory_order_release);
 }
 
+/**
+ * @brief Implements Enqueue order.
+ * @param instrument_id Parameter supplied by the caller.
+ * @param side Parameter supplied by the caller.
+ * @param price Parameter supplied by the caller.
+ * @param volume Parameter supplied by the caller.
+ * @param cleanup Parameter supplied by the caller.
+ * @param edge_ticks Parameter supplied by the caller.
+ * @param pair Parameter supplied by the caller.
+ * @param now_ns Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool PCPArbitrageStrategy::enqueue_order(uint16_t instrument_id,
                                          Side side,
                                          double price,
@@ -514,6 +621,16 @@ bool PCPArbitrageStrategy::enqueue_order(uint16_t instrument_id,
     return true;
 }
 
+/**
+ * @brief Implements Start attempt.
+ * @param pair Parameter supplied by the caller.
+ * @param dir Parameter supplied by the caller.
+ * @param volume Parameter supplied by the caller.
+ * @param edge_ticks Parameter supplied by the caller.
+ * @param now_ns Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void PCPArbitrageStrategy::start_attempt(const Pair& pair,
                                          Direction dir,
                                          Volume volume,
@@ -561,6 +678,13 @@ void PCPArbitrageStrategy::start_attempt(const Pair& pair,
     }
 }
 
+/**
+ * @brief Implements Cancel stale orders.
+ * @param now_ns Parameter supplied by the caller.
+ * @param timeout_ns Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void PCPArbitrageStrategy::cancel_stale_orders(Timestamp now_ns, int64_t timeout_ns) noexcept {
     if (!intent_buf_) return;
     for (auto& order : working_orders_) {
@@ -586,6 +710,12 @@ void PCPArbitrageStrategy::cancel_stale_orders(Timestamp now_ns, int64_t timeout
     }
 }
 
+/**
+ * @brief Implements Submit cleanup orders.
+ * @param now_ns Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void PCPArbitrageStrategy::submit_cleanup_orders(Timestamp now_ns) noexcept {
     if (active_call_id_ >= MAX_INSTRUMENTS
         || active_put_id_ >= MAX_INSTRUMENTS
@@ -646,6 +776,11 @@ void PCPArbitrageStrategy::submit_cleanup_orders(Timestamp now_ns) noexcept {
     }
 }
 
+/**
+ * @brief Implements Clear attempt state.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void PCPArbitrageStrategy::clear_attempt_state() noexcept {
     for (auto& order : working_orders_) order = WorkingOrder{};
     attempt_active_ = false;
@@ -655,12 +790,25 @@ void PCPArbitrageStrategy::clear_attempt_state() noexcept {
     active_future_id_ = INVALID_INSTRUMENT_ID;
 }
 
+/**
+ * @brief Implements Set active pair.
+ * @param pair Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void PCPArbitrageStrategy::set_active_pair(const Pair& pair) noexcept {
     active_call_id_ = pair.call_id;
     active_put_id_ = pair.put_id;
     active_future_id_ = pair.future_id;
 }
 
+/**
+ * @brief Implements Refresh monitor state.
+ * @param suppress_flags Parameter supplied by the caller.
+ * @param now_ns Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void PCPArbitrageStrategy::refresh_monitor_state(uint32_t suppress_flags, Timestamp now_ns) noexcept {
     last_suppress_flags_ = suppress_flags;
     monitor_running_.store(is_enabled(), std::memory_order_relaxed);
@@ -673,6 +821,11 @@ void PCPArbitrageStrategy::refresh_monitor_state(uint32_t suppress_flags, Timest
     monitor_last_eval_ts_ns_.store(now_ns, std::memory_order_relaxed);
 }
 
+/**
+ * @brief Implements Live order count.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 int PCPArbitrageStrategy::live_order_count() const noexcept {
     int count = 0;
     for (const auto& order : working_orders_) {
@@ -681,6 +834,12 @@ int PCPArbitrageStrategy::live_order_count() const noexcept {
     return count;
 }
 
+/**
+ * @brief Implements Find working order.
+ * @param id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 PCPArbitrageStrategy::WorkingOrder* PCPArbitrageStrategy::find_working_order(OrderId id) noexcept {
     for (auto& order : working_orders_) {
         if (order.used && order.order.client_order_id == id) return &order;
@@ -688,6 +847,12 @@ PCPArbitrageStrategy::WorkingOrder* PCPArbitrageStrategy::find_working_order(Ord
     return nullptr;
 }
 
+/**
+ * @brief Implements Find working order.
+ * @param id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 const PCPArbitrageStrategy::WorkingOrder* PCPArbitrageStrategy::find_working_order(OrderId id) const noexcept {
     for (const auto& order : working_orders_) {
         if (order.used && order.order.client_order_id == id) return &order;
@@ -695,6 +860,12 @@ const PCPArbitrageStrategy::WorkingOrder* PCPArbitrageStrategy::find_working_ord
     return nullptr;
 }
 
+/**
+ * @brief Implements Maybe finalize attempt.
+ * @param now_ns Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void PCPArbitrageStrategy::maybe_finalize_attempt(Timestamp now_ns) noexcept {
     if (!attempt_active_ || live_order_count() != 0) return;
 
@@ -759,6 +930,14 @@ void PCPArbitrageStrategy::maybe_finalize_attempt(Timestamp now_ns) noexcept {
     submit_cleanup_orders(now_ns);
 }
 
+/**
+ * @brief Implements Evaluate impl.
+ * @param now_ns Parameter supplied by the caller.
+ * @param trigger_instrument_id Parameter supplied by the caller.
+ * @param force_pair_monitor_publish Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void PCPArbitrageStrategy::evaluate_impl(Timestamp now_ns,
                                          uint16_t trigger_instrument_id,
                                          bool force_pair_monitor_publish) noexcept {
@@ -848,14 +1027,33 @@ void PCPArbitrageStrategy::evaluate_impl(Timestamp now_ns,
     refresh_monitor_state(suppress_flags, now_ns);
 }
 
+/**
+ * @brief Implements Evaluate.
+ * @param now_ns Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void PCPArbitrageStrategy::evaluate(Timestamp now_ns) noexcept {
     evaluate_impl(now_ns, INVALID_INSTRUMENT_ID, true);
 }
 
+/**
+ * @brief Implements On market update.
+ * @param instrument_id Parameter supplied by the caller.
+ * @param now_ns Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void PCPArbitrageStrategy::on_market_update(uint16_t instrument_id, Timestamp now_ns) noexcept {
     evaluate_impl(now_ns, instrument_id, false);
 }
 
+/**
+ * @brief Implements On timer.
+ * @param now_ns Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void PCPArbitrageStrategy::on_timer(Timestamp now_ns) noexcept {
     uint32_t suppress_flags = last_suppress_flags_;
     if (!params_) {
@@ -871,6 +1069,12 @@ void PCPArbitrageStrategy::on_timer(Timestamp now_ns) noexcept {
     refresh_monitor_state(suppress_flags, now_ns);
 }
 
+/**
+ * @brief Implements On order ack.
+ * @param order Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void PCPArbitrageStrategy::on_order_ack(const Order& order) noexcept {
     if (!owns_order_id(order.client_order_id)) return;
     if (pre_risk_) pre_risk_->on_order_ack(order);
@@ -880,6 +1084,12 @@ void PCPArbitrageStrategy::on_order_ack(const Order& order) noexcept {
     refresh_monitor_state(last_suppress_flags_, get_monotonic_ns());
 }
 
+/**
+ * @brief Implements On fill.
+ * @param trade Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void PCPArbitrageStrategy::on_fill(const Trade& trade) noexcept {
     if (!owns_order_id(trade.client_order_id)) return;
     if (auto* state = find_working_order(trade.client_order_id)) {
@@ -895,6 +1105,12 @@ void PCPArbitrageStrategy::on_fill(const Trade& trade) noexcept {
     refresh_monitor_state(last_suppress_flags_, get_monotonic_ns());
 }
 
+/**
+ * @brief Implements On order cancel.
+ * @param id Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void PCPArbitrageStrategy::on_order_cancel(OrderId id) noexcept {
     if (!owns_order_id(id)) return;
     if (pre_risk_) pre_risk_->on_order_cancel(id);
@@ -904,6 +1120,12 @@ void PCPArbitrageStrategy::on_order_cancel(OrderId id) noexcept {
     refresh_monitor_state(last_suppress_flags_, get_monotonic_ns());
 }
 
+/**
+ * @brief Implements On order reject.
+ * @param order Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void PCPArbitrageStrategy::on_order_reject(const Order& order) noexcept {
     if (!owns_order_id(order.client_order_id)) return;
     if (pre_risk_) pre_risk_->on_order_cancel(order.client_order_id);

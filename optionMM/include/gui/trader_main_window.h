@@ -29,8 +29,22 @@ namespace omm::gui {
 
 class TraderMainWindow final : public QMainWindow {
 public:
+    /**
+     * @brief TraderMainWindow.
+     * @param grpc_endpoint Parameter supplied by the caller.
+     * @param parent Parameter supplied by the caller.
+     * @return None.
+     */
     explicit TraderMainWindow(std::string grpc_endpoint, QWidget* parent = nullptr);
+    /**
+     * @brief TraderMainWindow.
+     * @return None.
+     */
     ~TraderMainWindow() override;
+    /**
+     * @brief Initialize session.
+     * @return Return value produced by the operation.
+     */
     [[nodiscard]] bool initialize_session();
 
 private:

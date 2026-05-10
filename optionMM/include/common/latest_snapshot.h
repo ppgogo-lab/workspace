@@ -26,10 +26,25 @@ class LatestSnapshot {
     static constexpr std::size_t kWordCount = sizeof(T) / sizeof(uint64_t);
 
 public:
+    /**
+     * @brief LatestSnapshot.
+     * @return None.
+     */
     LatestSnapshot() = default;
+    /**
+     * @brief LatestSnapshot.
+     * @param LatestSnapshot Parameter supplied by the caller.
+     * @return None.
+     */
     LatestSnapshot(const LatestSnapshot&) = delete;
     LatestSnapshot& operator=(const LatestSnapshot&) = delete;
 
+    /**
+     * @brief Publish.
+     * @param value Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void publish(const T& value) noexcept {
         const uint64_t cur = version_.load(std::memory_order_relaxed);
         version_.store(cur + 1, std::memory_order_release);
@@ -43,6 +58,13 @@ public:
         version_.store(cur + 2, std::memory_order_release);
     }
 
+    /**
+     * @brief Read.
+     * @param out Parameter supplied by the caller.
+     * @param max_attempts Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool read(T* out, int max_attempts = 4) const noexcept {
         if (out == nullptr) return false;
 
@@ -65,6 +87,11 @@ public:
         return false;
     }
 
+    /**
+     * @brief Version.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] uint64_t version() const noexcept {
         return version_.load(std::memory_order_acquire);
     }
@@ -77,20 +104,50 @@ private:
 template<typename T, std::size_t N>
 class SnapshotArray {
 public:
+    /**
+     * @brief SnapshotArray.
+     * @return None.
+     */
     SnapshotArray() = default;
+    /**
+     * @brief SnapshotArray.
+     * @param SnapshotArray Parameter supplied by the caller.
+     * @return None.
+     */
     SnapshotArray(const SnapshotArray&) = delete;
     SnapshotArray& operator=(const SnapshotArray&) = delete;
 
+    /**
+     * @brief Publish.
+     * @param index Parameter supplied by the caller.
+     * @param value Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void publish(std::size_t index, const T& value) noexcept {
         if (index >= N) return;
         slots_[index].publish(value);
     }
 
+    /**
+     * @brief Read.
+     * @param index Parameter supplied by the caller.
+     * @param out Parameter supplied by the caller.
+     * @param max_attempts Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool read(std::size_t index, T* out, int max_attempts = 4) const noexcept {
         if (index >= N) return false;
         return slots_[index].read(out, max_attempts);
     }
 
+    /**
+     * @brief Version.
+     * @param index Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] uint64_t version(std::size_t index) const noexcept {
         if (index >= N) return 0;
         return slots_[index].version();

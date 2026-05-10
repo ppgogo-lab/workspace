@@ -20,6 +20,11 @@ struct alignas(64) FPGACtrlBlock {
     uint8_t               _pad[32];
 };
 
+/**
+ * @brief Implements Open device.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool FPGAFeedHandler::open_device() noexcept {
     fd_ = ::open(cfg_.device_path, O_RDWR);
     if (fd_ < 0) { err_count_++; return false; }
@@ -39,6 +44,11 @@ bool FPGAFeedHandler::open_device() noexcept {
     return true;
 }
 
+/**
+ * @brief Implements Close device.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void FPGAFeedHandler::close_device() noexcept {
     if (mmap_base_) {
         ::munmap(mmap_base_,
@@ -49,6 +59,12 @@ void FPGAFeedHandler::close_device() noexcept {
     connected_.store(false, std::memory_order_release);
 }
 
+/**
+ * @brief Implements Decode record.
+ * @param rec Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void FPGAFeedHandler::decode_record(const FPGARecord& rec) noexcept {
     uint16_t id = resolve_instrument(rec.instrument_code);
     if (id == INVALID_INSTRUMENT_ID) return;
@@ -74,6 +90,11 @@ void FPGAFeedHandler::decode_record(const FPGARecord& rec) noexcept {
         msg_count_.fetch_add(1, std::memory_order_relaxed);
 }
 
+/**
+ * @brief Implements Run loop.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void FPGAFeedHandler::run_loop() noexcept {
     if (!mmap_base_) return;
 
@@ -99,12 +120,20 @@ void FPGAFeedHandler::run_loop() noexcept {
     }
 }
 
+/**
+ * @brief Implements Start.
+ * @return None.
+ */
 void FPGAFeedHandler::start() {
     if (!open_device()) return;
     stop_flag_.store(false, std::memory_order_relaxed);
     thread_ = std::thread([this] { run_loop(); });
 }
 
+/**
+ * @brief Implements Stop.
+ * @return None.
+ */
 void FPGAFeedHandler::stop() {
     stop_flag_.store(true, std::memory_order_release);
     if (thread_.joinable()) thread_.join();

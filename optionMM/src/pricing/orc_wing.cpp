@@ -412,6 +412,12 @@ OrcWingShape fit_shape_nelder_mead(const OrcWingFitPoint* pts, int n,
 
 } // namespace
 
+/**
+ * @brief Implements Effective forward.
+ * @param p Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 double OrcWingVolSurface::effective_forward(const OrcWingParams& p) noexcept {
     const double ref = std::max(p.ref_price, 1e-8);
     const double atm = std::max(p.atm_forward, 1e-8);
@@ -419,6 +425,12 @@ double OrcWingVolSurface::effective_forward(const OrcWingParams& p) noexcept {
     return std::exp(ssr * std::log(atm) + (1.0 - ssr) * std::log(ref));
 }
 
+/**
+ * @brief Implements Current vol.
+ * @param p Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 double OrcWingVolSurface::current_vol(const OrcWingParams& p) noexcept {
     const double ref = std::max(p.ref_price, 1e-8);
     const double ssr = std::clamp(p.ssr, 0.0, 1.0);
@@ -426,12 +438,25 @@ double OrcWingVolSurface::current_vol(const OrcWingParams& p) noexcept {
     return clamp_vol(vc);
 }
 
+/**
+ * @brief Implements Current slope.
+ * @param p Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 double OrcWingVolSurface::current_slope(const OrcWingParams& p) noexcept {
     const double ref = std::max(p.ref_price, 1e-8);
     const double ssr = std::clamp(p.ssr, 0.0, 1.0);
     return p.slope_ref - p.scr * ssr * (p.atm_forward - ref) / ref;
 }
 
+/**
+ * @brief Implements Eval x.
+ * @param p Parameter supplied by the caller.
+ * @param x Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 double OrcWingVolSurface::eval_x(const OrcWingParams& p, double x) noexcept {
     const OrcWingShape shape{p.down_cutoff, p.up_cutoff, p.down_smoothing, p.up_smoothing};
     const OrcWingEvalState e = make_eval_state(current_vol(p), current_slope(p),
@@ -439,6 +464,14 @@ double OrcWingVolSurface::eval_x(const OrcWingParams& p, double x) noexcept {
     return eval_state_x(e, x);
 }
 
+/**
+ * @brief Implements Interpolate.
+ * @param a Parameter supplied by the caller.
+ * @param b Parameter supplied by the caller.
+ * @param alpha Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 OrcWingParams OrcWingVolSurface::interpolate(const OrcWingParams& a,
                                              const OrcWingParams& b,
                                              double alpha) noexcept {
@@ -462,6 +495,13 @@ OrcWingParams OrcWingVolSurface::interpolate(const OrcWingParams& a,
     return out;
 }
 
+/**
+ * @brief Implements Get vol.
+ * @param k Parameter supplied by the caller.
+ * @param T Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 double OrcWingVolSurface::get_vol(double k, double T) const noexcept {
     if (n_slices == 0 || T < 1e-10) return 0.20;
     if (T <= slices[0].expiry_T) return eval_x(slices[0], k);
@@ -478,6 +518,14 @@ double OrcWingVolSurface::get_vol(double k, double T) const noexcept {
     return 0.20;
 }
 
+/**
+ * @brief Implements Get vol by strike.
+ * @param F Parameter supplied by the caller.
+ * @param K Parameter supplied by the caller.
+ * @param T Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 double OrcWingVolSurface::get_vol_by_strike(double F, double K, double T) const noexcept {
     if (n_slices == 0 || F < 1e-10 || K < 1e-10 || T < 1e-10) return 0.20;
 
@@ -506,6 +554,16 @@ double OrcWingVolSurface::get_vol_by_strike(double F, double K, double T) const 
     return 0.20;
 }
 
+/**
+ * @brief Implements Get vols by strike.
+ * @param F Parameter supplied by the caller.
+ * @param K_arr Parameter supplied by the caller.
+ * @param T_arr Parameter supplied by the caller.
+ * @param sigma_out Parameter supplied by the caller.
+ * @param count Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void OrcWingVolSurface::get_vols_by_strike(double F,
                                            const double* K_arr,
                                            const double* T_arr,

@@ -20,6 +20,10 @@
 
 namespace omm::gui {
 
+/**
+ * @brief Implements Build order depth panel.
+ * @return Return value produced by the operation.
+ */
 QDockWidget* TraderMainWindow::build_order_depth_panel() {
     auto* depth_dock = new QDockWidget("OrderDepth", this);
     depth_dock->setObjectName("orderDepthDock");

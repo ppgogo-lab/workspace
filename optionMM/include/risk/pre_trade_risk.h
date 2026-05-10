@@ -26,27 +26,74 @@ public:
         TOO_MANY_OPEN_ORDERS,
     };
 
+    /**
+     * @brief PreTradeRisk.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     explicit PreTradeRisk(const HardRiskConfig& cfg) noexcept : cfg_(cfg) {
         reset();
     }
 
     // Check an outgoing order. Returns OK or the rejection reason.
     // Called from the strategy thread — must be noexcept, zero allocation.
+    /**
+     * @brief Check order.
+     * @param order Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] RejectReason check_order(const Order& order) noexcept;
 
     // Check an outgoing quote with stateless hard checks only.
     // Quote lifecycle and live quote ownership remain in the strategy.
+    /**
+     * @brief Check quote.
+     * @param quote Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] RejectReason check_quote(const Quote& quote) noexcept;
 
     // Lifecycle callbacks — keep open order state accurate
+    /**
+     * @brief On order ack.
+     * @param order Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void on_order_ack   (const Order& order) noexcept;
+    /**
+     * @brief On order fill.
+     * @param id Parameter supplied by the caller.
+     * @param filled_qty Parameter supplied by the caller.
+     * @param fully_filled Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void on_order_fill  (OrderId id, Volume filled_qty, bool fully_filled) noexcept;
+    /**
+     * @brief On order cancel.
+     * @param id Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void on_order_cancel(OrderId id) noexcept;
 
     // Query
+    /**
+     * @brief Open order count.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] int open_order_count() const noexcept { return open_count_; }
 
     // Reset all state (used at session open)
+    /**
+     * @brief Reset.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void reset() noexcept;
 
 private:
@@ -65,11 +112,30 @@ private:
     int open_count_{0};
 
     // Find slot by order id; returns -1 if not found
+    /**
+     * @brief Find slot.
+     * @param id Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] int find_slot(OrderId id) const noexcept;
     // Find a free slot; returns -1 if full
+    /**
+     * @brief Alloc slot.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] int alloc_slot() noexcept;
 
     // Check self-trade: would this new order match any existing resting order?
+    /**
+     * @brief Would self trade.
+     * @param instrument_id Parameter supplied by the caller.
+     * @param side Parameter supplied by the caller.
+     * @param price Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool would_self_trade(uint16_t instrument_id,
                                          Side side, double price) const noexcept;
 };

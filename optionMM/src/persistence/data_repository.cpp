@@ -103,6 +103,12 @@ const char* safe_code(const Instrument* instrument) noexcept {
 
 } // namespace
 
+/**
+ * @brief Implements DataRepository.
+ * @param cfg Parameter supplied by the caller.
+ * @param gateway_type Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 DataRepository::DataRepository(const PersistenceConfig& cfg,
                                GatewayType gateway_type,
                                VolMethod vol_method)
@@ -110,18 +116,33 @@ DataRepository::DataRepository(const PersistenceConfig& cfg,
     , gateway_type_(gateway_type)
     , vol_method_(vol_method) {}
 
+/**
+ * @brief Implements DataRepository.
+ * @return None.
+ */
 DataRepository::~DataRepository() {
     stop();
     std::lock_guard<std::mutex> lock(db_mutex_);
     close_locked();
 }
 
+/**
+ * @brief Implements Set instruments.
+ * @param instruments Parameter supplied by the caller.
+ * @param n_instruments Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void DataRepository::set_instruments(const Instrument* instruments,
                                      uint16_t n_instruments) noexcept {
     instruments_ = instruments;
     n_instruments_ = n_instruments;
 }
 
+/**
+ * @brief Implements Open.
+ * @return Return value produced by the operation.
+ */
 bool DataRepository::open() {
     if (!cfg_.enabled) return true;
 
@@ -161,6 +182,10 @@ bool DataRepository::open() {
     return true;
 }
 
+/**
+ * @brief Implements Start.
+ * @return None.
+ */
 void DataRepository::start() {
     if (!cfg_.enabled || writer_running_.load(std::memory_order_acquire)) return;
     stop_flag_.store(false, std::memory_order_release);
@@ -168,12 +193,21 @@ void DataRepository::start() {
     writer_thread_ = std::thread([this] { writer_loop(); });
 }
 
+/**
+ * @brief Implements Stop.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void DataRepository::stop() noexcept {
     if (!writer_running_.exchange(false, std::memory_order_acq_rel)) return;
     stop_flag_.store(true, std::memory_order_release);
     if (writer_thread_.joinable()) writer_thread_.join();
 }
 
+/**
+ * @brief Implements Persist instruments.
+ * @return Return value produced by the operation.
+ */
 bool DataRepository::persist_instruments() {
     if (!cfg_.enabled) return true;
     std::lock_guard<std::mutex> lock(db_mutex_);
@@ -192,6 +226,11 @@ bool DataRepository::persist_instruments() {
     return exec_sql(db_, "COMMIT;");
 }
 
+/**
+ * @brief Implements Seed exchange calendar.
+ * @param cfg Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 bool DataRepository::seed_exchange_calendar(const SystemConfig& cfg) {
     if (!cfg_.enabled) return false;
     std::lock_guard<std::mutex> lock(db_mutex_);
@@ -259,6 +298,11 @@ bool DataRepository::seed_exchange_calendar(const SystemConfig& cfg) {
     return exec_sql(db_, "COMMIT;");
 }
 
+/**
+ * @brief Implements Load exchange calendars.
+ * @param out Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 bool DataRepository::load_exchange_calendars(std::vector<ExchangeTradingCalendar>* out) {
     if (out == nullptr) return false;
     out->clear();
@@ -328,6 +372,12 @@ bool DataRepository::load_exchange_calendars(std::vector<ExchangeTradingCalendar
     return true;
 }
 
+/**
+ * @brief Implements Sync identity state.
+ * @param cfg Parameter supplied by the caller.
+ * @param out Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 bool DataRepository::sync_identity_state(const SystemConfig& cfg, IdentityState* out) {
     if (out == nullptr) return false;
     out->users.clear();
@@ -352,6 +402,11 @@ bool DataRepository::sync_identity_state(const SystemConfig& cfg, IdentityState*
     return load_identity_locked(out);
 }
 
+/**
+ * @brief Implements Load identity locked.
+ * @param out Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 bool DataRepository::load_identity_locked(IdentityState* out) {
     if (out == nullptr) return false;
     out->users.clear();
@@ -423,6 +478,11 @@ bool DataRepository::load_identity_locked(IdentityState* out) {
     return true;
 }
 
+/**
+ * @brief Implements Seed identity locked.
+ * @param cfg Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 bool DataRepository::seed_identity_locked(const SystemConfig& cfg) {
     std::set<BookId> known_books;
     std::set<BookId> seen_book_ids;
@@ -594,6 +654,11 @@ bool DataRepository::seed_identity_locked(const SystemConfig& cfg) {
     return exec_sql(db_, "COMMIT;");
 }
 
+/**
+ * @brief Implements Load recovery state.
+ * @param out Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 bool DataRepository::load_recovery_state(RecoveryState* out) {
     if (out == nullptr) return false;
     *out = RecoveryState{};
@@ -814,6 +879,11 @@ bool DataRepository::load_recovery_state(RecoveryState* out) {
     return ok;
 }
 
+/**
+ * @brief Implements Load trade history.
+ * @param out Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 bool DataRepository::load_trade_history(std::vector<Trade>* out) {
     if (out == nullptr) return false;
     out->clear();
@@ -853,6 +923,11 @@ bool DataRepository::load_trade_history(std::vector<Trade>* out) {
     return true;
 }
 
+/**
+ * @brief Implements Persist end of day snapshot.
+ * @param snapshot Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 bool DataRepository::persist_end_of_day_snapshot(const EndOfDaySnapshot& snapshot) {
     if (!cfg_.enabled) return true;
     std::lock_guard<std::mutex> lock(db_mutex_);
@@ -860,21 +935,46 @@ bool DataRepository::persist_end_of_day_snapshot(const EndOfDaySnapshot& snapsho
     return write_eod_snapshot_locked(snapshot);
 }
 
+/**
+ * @brief Implements Enqueue order event.
+ * @param event Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool DataRepository::enqueue_order_event(const OrderPersistenceEvent& event) noexcept {
     if (!cfg_.enabled) return true;
     return order_events_.try_push(event);
 }
 
+/**
+ * @brief Implements Enqueue quote event.
+ * @param event Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool DataRepository::enqueue_quote_event(const QuotePersistenceEvent& event) noexcept {
     if (!cfg_.enabled) return true;
     return quote_events_.try_push(event);
 }
 
+/**
+ * @brief Implements Enqueue trade.
+ * @param trade Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool DataRepository::enqueue_trade(const Trade& trade) noexcept {
     if (!cfg_.enabled) return true;
     return trades_.try_push(trade);
 }
 
+/**
+ * @brief Implements Enqueue order events batch.
+ * @param events Parameter supplied by the caller.
+ * @param count Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 int DataRepository::enqueue_order_events_batch(const OrderPersistenceEvent* events, int count) noexcept {
     if (!cfg_.enabled) return count;
     int enqueued = 0;
@@ -888,6 +988,13 @@ int DataRepository::enqueue_order_events_batch(const OrderPersistenceEvent* even
     return enqueued;
 }
 
+/**
+ * @brief Implements Enqueue quote events batch.
+ * @param events Parameter supplied by the caller.
+ * @param count Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 int DataRepository::enqueue_quote_events_batch(const QuotePersistenceEvent* events, int count) noexcept {
     if (!cfg_.enabled) return count;
     int enqueued = 0;
@@ -901,6 +1008,13 @@ int DataRepository::enqueue_quote_events_batch(const QuotePersistenceEvent* even
     return enqueued;
 }
 
+/**
+ * @brief Implements Enqueue trades batch.
+ * @param trades Parameter supplied by the caller.
+ * @param count Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 int DataRepository::enqueue_trades_batch(const Trade* trades, int count) noexcept {
     if (!cfg_.enabled) return count;
     int enqueued = 0;
@@ -914,26 +1028,55 @@ int DataRepository::enqueue_trades_batch(const Trade* trades, int count) noexcep
     return enqueued;
 }
 
+/**
+ * @brief Implements Enqueue mm params.
+ * @param event Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool DataRepository::enqueue_mm_params(const MMParamsPersistenceEvent& event) noexcept {
     if (!cfg_.enabled) return true;
     return mm_param_events_.try_push(event);
 }
 
+/**
+ * @brief Implements Enqueue arb params.
+ * @param event Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool DataRepository::enqueue_arb_params(const ArbParamsPersistenceEvent& event) noexcept {
     if (!cfg_.enabled) return true;
     return arb_param_events_.try_push(event);
 }
 
+/**
+ * @brief Implements Enqueue risk params.
+ * @param event Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool DataRepository::enqueue_risk_params(const RiskParamsPersistenceEvent& event) noexcept {
     if (!cfg_.enabled) return true;
     return risk_param_events_.try_push(event);
 }
 
+/**
+ * @brief Implements Enqueue positions snapshot.
+ * @param event Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool DataRepository::enqueue_positions_snapshot(const PositionSnapshotEvent& event) noexcept {
     if (!cfg_.enabled) return true;
     return position_snapshots_.try_push(event);
 }
 
+/**
+ * @brief Implements Writer loop.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void DataRepository::writer_loop() noexcept {
     while (!stop_flag_.load(std::memory_order_acquire)
            || !order_events_.empty_approx()
@@ -957,6 +1100,10 @@ void DataRepository::writer_loop() noexcept {
     }
 }
 
+/**
+ * @brief Implements Ensure schema locked.
+ * @return Return value produced by the operation.
+ */
 bool DataRepository::ensure_schema_locked() {
     static const char* kSchemaSql =
         "CREATE TABLE IF NOT EXISTS instruments ("
@@ -1186,6 +1333,10 @@ bool DataRepository::ensure_schema_locked() {
     return exec_sql(db_, "PRAGMA user_version = 2;");
 }
 
+/**
+ * @brief Implements Migrate book columns locked.
+ * @return Return value produced by the operation.
+ */
 bool DataRepository::migrate_book_columns_locked() {
     if (!column_exists(db_, "trades", "book_id")
         && !exec_sql(db_,
@@ -1205,6 +1356,10 @@ bool DataRepository::migrate_book_columns_locked() {
     return true;
 }
 
+/**
+ * @brief Implements Migrate order semantics columns locked.
+ * @return Return value produced by the operation.
+ */
 bool DataRepository::migrate_order_semantics_columns_locked() {
     if (!column_exists(db_, "live_orders", "price_type")
         && !exec_sql(db_,
@@ -1214,6 +1369,10 @@ bool DataRepository::migrate_order_semantics_columns_locked() {
     return true;
 }
 
+/**
+ * @brief Implements Migrate identity schema locked.
+ * @return Return value produced by the operation.
+ */
 bool DataRepository::migrate_identity_schema_locked() {
     static const char* kIdentitySql =
         "CREATE TABLE IF NOT EXISTS books ("
@@ -1245,6 +1404,10 @@ bool DataRepository::migrate_identity_schema_locked() {
     return exec_sql(db_, kIdentitySql);
 }
 
+/**
+ * @brief Implements Prepare statements locked.
+ * @return Return value produced by the operation.
+ */
 bool DataRepository::prepare_statements_locked() {
     auto prepare = [&](sqlite3_stmt** stmt, const char* sql) {
         return sqlite3_prepare_v2(db_, sql, -1, stmt, nullptr) == SQLITE_OK;
@@ -1394,6 +1557,11 @@ bool DataRepository::prepare_statements_locked() {
                    " VALUES (?, ?, ?, ?)");
 }
 
+/**
+ * @brief Implements Finalize statements locked.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void DataRepository::finalize_statements_locked() noexcept {
     auto finalize = [](sqlite3_stmt*& stmt) {
         if (stmt != nullptr) {
@@ -1427,6 +1595,11 @@ void DataRepository::finalize_statements_locked() noexcept {
     finalize(stmt_upsert_strategy_binding_);
 }
 
+/**
+ * @brief Implements Close locked.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void DataRepository::close_locked() noexcept {
     finalize_statements_locked();
     if (db_ != nullptr) {
@@ -1435,6 +1608,11 @@ void DataRepository::close_locked() noexcept {
     }
 }
 
+/**
+ * @brief Implements Flush once locked.
+ * @param max_rows Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 bool DataRepository::flush_once_locked(int max_rows) {
     if (db_ == nullptr) return false;
 
@@ -1521,6 +1699,11 @@ bool DataRepository::flush_once_locked(int max_rows) {
     return exec_sql(db_, "COMMIT;");
 }
 
+/**
+ * @brief Implements Write order event locked.
+ * @param event Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 bool DataRepository::write_order_event_locked(const OrderPersistenceEvent& event) {
     // Check if this is a quote leg order (no longer using CTP-specific logic)
     const bool is_quote_leg = live_quotes_.find(event.order.client_order_id) != live_quotes_.end();
@@ -1594,6 +1777,11 @@ bool DataRepository::write_order_event_locked(const OrderPersistenceEvent& event
     return step_done(db_, stmt_upsert_live_order_, "upsert live_order");
 }
 
+/**
+ * @brief Implements Write quote event locked.
+ * @param event Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 bool DataRepository::write_quote_event_locked(const QuotePersistenceEvent& event) {
     if (event.type == QuotePersistenceEventType::Submit
         && event.quote.bid_volume == 0
@@ -1653,6 +1841,11 @@ bool DataRepository::write_quote_event_locked(const QuotePersistenceEvent& event
     return step_done(db_, stmt_upsert_live_quote_, "upsert live_quote");
 }
 
+/**
+ * @brief Implements Write trade locked.
+ * @param trade Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 bool DataRepository::write_trade_locked(const Trade& trade) {
     const Instrument* instrument = instrument_by_id(trade.instrument_id);
     if (instrument == nullptr) return true;
@@ -1723,6 +1916,11 @@ bool DataRepository::write_trade_locked(const Trade& trade) {
     return write_quote_event_locked(event);
 }
 
+/**
+ * @brief Implements Write mm params locked.
+ * @param event Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 bool DataRepository::write_mm_params_locked(const MMParamsPersistenceEvent& event) {
     reset_stmt(stmt_upsert_mm_params_);
     bind_integer(stmt_upsert_mm_params_, 1, event.product_index);
@@ -1748,6 +1946,11 @@ bool DataRepository::write_mm_params_locked(const MMParamsPersistenceEvent& even
     return step_done(db_, stmt_upsert_mm_params_, "upsert strategy_params");
 }
 
+/**
+ * @brief Implements Write arb params locked.
+ * @param event Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 bool DataRepository::write_arb_params_locked(const ArbParamsPersistenceEvent& event) {
     reset_stmt(stmt_upsert_arb_params_);
     bind_integer(stmt_upsert_arb_params_, 1, event.product_index);
@@ -1764,6 +1967,11 @@ bool DataRepository::write_arb_params_locked(const ArbParamsPersistenceEvent& ev
     return step_done(db_, stmt_upsert_arb_params_, "upsert arb_strategy_params");
 }
 
+/**
+ * @brief Implements Write risk params locked.
+ * @param event Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 bool DataRepository::write_risk_params_locked(const RiskParamsPersistenceEvent& event) {
     reset_stmt(stmt_replace_risk_params_);
     bind_integer(stmt_replace_risk_params_, 1, event.params.max_net_position);
@@ -1774,6 +1982,11 @@ bool DataRepository::write_risk_params_locked(const RiskParamsPersistenceEvent& 
     return step_done(db_, stmt_replace_risk_params_, "replace risk_params");
 }
 
+/**
+ * @brief Implements Write positions snapshot locked.
+ * @param event Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 bool DataRepository::write_positions_snapshot_locked(const PositionSnapshotEvent& event) {
     reset_stmt(stmt_clear_positions_);
     if (!step_done(db_, stmt_clear_positions_, "clear positions_snapshot")) return false;
@@ -1805,6 +2018,14 @@ bool DataRepository::write_positions_snapshot_locked(const PositionSnapshotEvent
     return true;
 }
 
+/**
+ * @brief Implements Write instruments locked.
+ * @param trading_day Parameter supplied by the caller.
+ * @param table_name Parameter supplied by the caller.
+ * @param instruments Parameter supplied by the caller.
+ * @param n_instruments Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 bool DataRepository::write_instruments_locked(int32_t trading_day,
                                               const char* table_name,
                                               const Instrument* instruments,
@@ -1841,6 +2062,11 @@ bool DataRepository::write_instruments_locked(int32_t trading_day,
     return true;
 }
 
+/**
+ * @brief Implements Write eod snapshot locked.
+ * @param snapshot Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 bool DataRepository::write_eod_snapshot_locked(const EndOfDaySnapshot& snapshot) {
     if (!exec_sql(db_, "BEGIN IMMEDIATE TRANSACTION;")) return false;
 
@@ -1931,6 +2157,11 @@ bool DataRepository::write_eod_snapshot_locked(const EndOfDaySnapshot& snapshot)
     return exec_sql(db_, "COMMIT;");
 }
 
+/**
+ * @brief Implements Prime caches locked.
+ * @param state Parameter supplied by the caller.
+ * @return None.
+ */
 void DataRepository::prime_caches_locked(const RecoveryState& state) {
     live_orders_.clear();
     live_quotes_.clear();
@@ -1948,6 +2179,11 @@ void DataRepository::prime_caches_locked(const RecoveryState& state) {
     }
 }
 
+/**
+ * @brief Implements Mark live order deleted locked.
+ * @param id Parameter supplied by the caller.
+ * @return None.
+ */
 void DataRepository::mark_live_order_deleted_locked(OrderId id) {
     live_orders_.erase(id);
     reset_stmt(stmt_delete_live_order_);
@@ -1955,6 +2191,11 @@ void DataRepository::mark_live_order_deleted_locked(OrderId id) {
     (void)step_done(db_, stmt_delete_live_order_, "delete live_order");
 }
 
+/**
+ * @brief Implements Mark live quote deleted locked.
+ * @param id Parameter supplied by the caller.
+ * @return None.
+ */
 void DataRepository::mark_live_quote_deleted_locked(QuoteId id) {
     live_quotes_.erase(id);
     reset_stmt(stmt_delete_live_quote_);
@@ -1962,11 +2203,23 @@ void DataRepository::mark_live_quote_deleted_locked(QuoteId id) {
     (void)step_done(db_, stmt_delete_live_quote_, "delete live_quote");
 }
 
+/**
+ * @brief Implements Instrument by id.
+ * @param instrument_id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 const Instrument* DataRepository::instrument_by_id(uint16_t instrument_id) const noexcept {
     if (instruments_ == nullptr || instrument_id >= n_instruments_) return nullptr;
     return &instruments_[instrument_id];
 }
 
+/**
+ * @brief Implements Find instrument id by code.
+ * @param code Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 uint16_t DataRepository::find_instrument_id_by_code(const char* code) const noexcept {
     if (code == nullptr || code[0] == '\0' || instruments_ == nullptr) {
         return INVALID_INSTRUMENT_ID;
@@ -1979,6 +2232,11 @@ uint16_t DataRepository::find_instrument_id_by_code(const char* code) const noex
     return INVALID_INSTRUMENT_ID;
 }
 
+/**
+ * @brief Implements Current trading day.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 int32_t DataRepository::current_trading_day() const noexcept {
     const std::time_t now = std::time(nullptr);
     std::tm local_tm{};
@@ -1992,6 +2250,12 @@ int32_t DataRepository::current_trading_day() const noexcept {
          + local_tm.tm_mday;
 }
 
+/**
+ * @brief Implements Is ctp ask leg.
+ * @param id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool DataRepository::is_ctp_ask_leg(OrderId id) noexcept {
     return (id & kCtpSyntheticAskLegBit) != 0;
 }

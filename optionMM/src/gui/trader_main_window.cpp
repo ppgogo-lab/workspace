@@ -1439,6 +1439,11 @@ private:
 
 } // namespace
 
+/**
+ * @brief Implements TraderMainWindow.
+ * @param grpc_endpoint Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 TraderMainWindow::TraderMainWindow(std::string grpc_endpoint, QWidget* parent)
     : QMainWindow(parent),
       grpc_endpoint_(std::move(grpc_endpoint)),
@@ -1457,15 +1462,29 @@ TraderMainWindow::TraderMainWindow(std::string grpc_endpoint, QWidget* parent)
 
 TraderMainWindow::~TraderMainWindow() = default;
 
+/**
+ * @brief Implements Initialize session.
+ * @return Return value produced by the operation.
+ */
 bool TraderMainWindow::initialize_session() {
     return prompt_for_login();
 }
 
+/**
+ * @brief Implements CloseEvent.
+ * @param event Parameter supplied by the caller.
+ * @return None.
+ */
 void TraderMainWindow::closeEvent(QCloseEvent* event) {
     save_ui_state();
     QMainWindow::closeEvent(event);
 }
 
+/**
+ * @brief Implements Prompt for login.
+ * @param reason Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 bool TraderMainWindow::prompt_for_login(const QString& reason) {
     if (impl_->login_dialog_open) return false;
     impl_->login_dialog_open = true;
@@ -1503,6 +1522,10 @@ bool TraderMainWindow::prompt_for_login(const QString& reason) {
     }
 }
 
+/**
+ * @brief Implements Perform logout.
+ * @return None.
+ */
 void TraderMainWindow::perform_logout() {
     if (logout_action_ != nullptr && !logout_action_->isEnabled()) return;
     const auto answer = QMessageBox::question(
@@ -1530,6 +1553,10 @@ void TraderMainWindow::perform_logout() {
     }
 }
 
+/**
+ * @brief Implements Build ui.
+ * @return None.
+ */
 void TraderMainWindow::build_ui() {
     build_main_workspace_panel();
     vol_dock_ = build_vol_curves_panel();
@@ -1542,6 +1569,13 @@ void TraderMainWindow::build_ui() {
     connect_panel_interactions();
 }
 
+/**
+ * @brief Implements Prepare floating panel.
+ * @param panel Parameter supplied by the caller.
+ * @param width Parameter supplied by the caller.
+ * @param height Parameter supplied by the caller.
+ * @return None.
+ */
 void TraderMainWindow::prepare_floating_panel(QDockWidget* panel, int width, int height) {
     if (panel == nullptr) return;
     panel->setAllowedAreas(Qt::NoDockWidgetArea);
@@ -1550,6 +1584,11 @@ void TraderMainWindow::prepare_floating_panel(QDockWidget* panel, int width, int
     panel->hide();
 }
 
+/**
+ * @brief Implements Show floating panel.
+ * @param panel Parameter supplied by the caller.
+ * @return None.
+ */
 void TraderMainWindow::show_floating_panel(QDockWidget* panel) {
     if (panel == nullptr) return;
     panel->setFloating(true);
@@ -1561,10 +1600,19 @@ void TraderMainWindow::show_floating_panel(QDockWidget* panel) {
     panel->activateWindow();
 }
 
+/**
+ * @brief Implements Create vol curve grid widget.
+ * @param parent Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 QWidget* TraderMainWindow::create_vol_curve_grid_widget(QWidget* parent) {
     return new VolCurveGridWidget(&impl_->state, parent);
 }
 
+/**
+ * @brief Implements Ensure vol window.
+ * @return None.
+ */
 void TraderMainWindow::ensure_vol_window() {
     if (vol_window_ != nullptr) return;
 
@@ -1649,6 +1697,10 @@ void TraderMainWindow::ensure_vol_window() {
     vol_window_->setCentralWidget(secondary_root);
 }
 
+/**
+ * @brief Implements Restore ui state.
+ * @return None.
+ */
 void TraderMainWindow::restore_ui_state() {
     QSettings settings;
     const QByteArray geometry = settings.value("main/geometry").toByteArray();
@@ -1658,6 +1710,10 @@ void TraderMainWindow::restore_ui_state() {
     impl_->ui_state_restored = true;
 }
 
+/**
+ * @brief Implements Save ui state.
+ * @return None.
+ */
 void TraderMainWindow::save_ui_state() const {
     QSettings settings;
     settings.setValue("main/geometry", saveGeometry());
@@ -1666,6 +1722,11 @@ void TraderMainWindow::save_ui_state() const {
     settings.setValue("selection/instrument", impl_->selected_instrument_id);
 }
 
+/**
+ * @brief Implements Load strategy params into editors.
+ * @param params Parameter supplied by the caller.
+ * @return None.
+ */
 void TraderMainWindow::load_strategy_params_into_editors(const omm::proto::MMParams& params) {
     const MMParamsConfig defaults{};
 
@@ -1745,6 +1806,10 @@ void TraderMainWindow::load_strategy_params_into_editors(const omm::proto::MMPar
                    : defaults.use_one_sided_at_limits);
 }
 
+/**
+ * @brief Implements Collect strategy params from editors.
+ * @return Return value produced by the operation.
+ */
 omm::proto::MMParams TraderMainWindow::collect_strategy_params_from_editors() const {
     omm::proto::MMParams params;
     params.set_bid_spread(bid_spread_editor_->value());
@@ -1768,6 +1833,10 @@ omm::proto::MMParams TraderMainWindow::collect_strategy_params_from_editors() co
     return params;
 }
 
+/**
+ * @brief Implements Reset strategy params to defaults.
+ * @return None.
+ */
 void TraderMainWindow::reset_strategy_params_to_defaults() {
     const MMParamsConfig defaults{};
     omm::proto::MMParams params;
@@ -1794,6 +1863,10 @@ void TraderMainWindow::reset_strategy_params_to_defaults() {
         .arg(current_time_text());
 }
 
+/**
+ * @brief Implements Revert strategy params to live.
+ * @return None.
+ */
 void TraderMainWindow::revert_strategy_params_to_live() {
     omm::proto::MMParams live_params;
     {
@@ -1811,6 +1884,10 @@ void TraderMainWindow::revert_strategy_params_to_live() {
         .arg(current_time_text());
 }
 
+/**
+ * @brief Implements Send manual order.
+ * @return None.
+ */
 void TraderMainWindow::send_manual_order() {
     const QVariant instrument_data = instrument_selector_->currentData();
     if (!instrument_data.isValid()) {
@@ -1837,6 +1914,12 @@ void TraderMainWindow::send_manual_order() {
               .arg(manual_book_selector_->currentText(), current_time_text());
 }
 
+/**
+ * @brief Implements Send order depth order.
+ * @param side Parameter supplied by the caller.
+ * @param price Parameter supplied by the caller.
+ * @return None.
+ */
 void TraderMainWindow::send_order_depth_order(const QString& side, double price) {
     const QVariant instrument_data = order_depth_instrument_selector_ != nullptr
         ? order_depth_instrument_selector_->currentData()
@@ -1902,6 +1985,11 @@ void TraderMainWindow::send_order_depth_order(const QString& side, double price)
     refresh_ui();
 }
 
+/**
+ * @brief Implements Cancel order depth orders.
+ * @param side_filter Parameter supplied by the caller.
+ * @return None.
+ */
 void TraderMainWindow::cancel_order_depth_orders(const QString& side_filter) {
     auto normalized_side = [](QString side) {
         side = side.trimmed().toLower();
@@ -1994,6 +2082,11 @@ void TraderMainWindow::cancel_order_depth_orders(const QString& side_filter) {
     refresh_ui();
 }
 
+/**
+ * @brief Implements Start strategy.
+ * @param enabled Parameter supplied by the caller.
+ * @return None.
+ */
 void TraderMainWindow::start_strategy(bool enabled) {
     const uint32_t product_index = product_selector_->currentData().toUInt();
     const bool ok = impl_->client->set_strategy_enabled(static_cast<int>(product_index), enabled);
@@ -2008,6 +2101,11 @@ void TraderMainWindow::start_strategy(bool enabled) {
         : QString("Strategy action failed at %1").arg(current_time_text());
 }
 
+/**
+ * @brief Implements Start arb strategy.
+ * @param enabled Parameter supplied by the caller.
+ * @return None.
+ */
 void TraderMainWindow::start_arb_strategy(bool enabled) {
     const QVariant product_data = product_selector_->currentData();
     const QVariant strategy_data = arb_strategy_selector_->currentData();
@@ -2037,6 +2135,10 @@ void TraderMainWindow::start_arb_strategy(bool enabled) {
         : QString("Arbitrage action failed at %1").arg(current_time_text());
 }
 
+/**
+ * @brief Implements Apply strategy params.
+ * @return None.
+ */
 void TraderMainWindow::apply_strategy_params() {
     omm::proto::MMParams params = collect_strategy_params_from_editors();
     const uint32_t product_index = product_selector_->currentData().toUInt();
@@ -2050,6 +2152,10 @@ void TraderMainWindow::apply_strategy_params() {
         : QString("MM params update failed at %1").arg(current_time_text());
 }
 
+/**
+ * @brief Implements Show instrument panel.
+ * @return None.
+ */
 void TraderMainWindow::show_instrument_panel() {
     InstrumentDialog dialog(&impl_->state, impl_->client.get(), this);
     dialog.exec();
@@ -2074,6 +2180,10 @@ std::vector<int> selected_table_rows(QTableView* table) {
 }
 }
 
+/**
+ * @brief Implements Cancel selected order.
+ * @return None.
+ */
 void TraderMainWindow::cancel_selected_order() {
     const std::vector<int> selected_rows = selected_table_rows(orders_table_);
     if (selected_rows.empty() || impl_->order_blotter_model == nullptr) {
@@ -2114,6 +2224,10 @@ void TraderMainWindow::cancel_selected_order() {
             .arg(current_time_text());
 }
 
+/**
+ * @brief Implements Cancel selected product orders.
+ * @return None.
+ */
 void TraderMainWindow::cancel_selected_product_orders() {
     const uint32_t product_index = product_selector_->currentData().toUInt();
     std::vector<std::pair<uint64_t, uint32_t>> working_orders;
@@ -2154,6 +2268,10 @@ void TraderMainWindow::cancel_selected_product_orders() {
             .arg(current_time_text());
 }
 
+/**
+ * @brief Implements Cancel selected quote.
+ * @return None.
+ */
 void TraderMainWindow::cancel_selected_quote() {
     const std::vector<int> selected_rows = selected_table_rows(quotes_table_);
     if (selected_rows.empty() || impl_->quote_blotter_model == nullptr) {
@@ -2225,6 +2343,10 @@ void TraderMainWindow::cancel_selected_quote() {
             .arg(current_time_text());
 }
 
+/**
+ * @brief Implements Cancel selected product quotes.
+ * @return None.
+ */
 void TraderMainWindow::cancel_selected_product_quotes() {
     const uint32_t product_index = product_selector_->currentData().toUInt();
     std::vector<std::pair<uint64_t, uint32_t>> working_quotes;
@@ -2275,6 +2397,10 @@ void TraderMainWindow::cancel_selected_product_quotes() {
             .arg(current_time_text());
 }
 
+/**
+ * @brief Implements Apply risk thresholds.
+ * @return None.
+ */
 void TraderMainWindow::apply_risk_thresholds() {
     const int max_position = soft_position_limit_editor_->value();
     const double max_delta = soft_delta_limit_editor_->value();

@@ -18,6 +18,12 @@
 namespace omm {
 // Strategy thread ──────────────────────────────────────────────────────────
 
+/**
+ * @brief Implements Strategy loop.
+ * @param idx Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::strategy_loop(int idx) noexcept {
     set_thread_name("omm-strat");
     if (idx >= 0 && idx < cfg_.product_count && idx < MAX_PRODUCTS) {

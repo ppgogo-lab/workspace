@@ -37,11 +37,25 @@ public:
     int       n_slices{0};
 
     // Evaluate total variance w(k) for a single SVI slice
+    /**
+     * @brief W.
+     * @param p Parameter supplied by the caller.
+     * @param k Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     static double w(const SVIParams& p, double k) noexcept {
         double dk = k - p.m;
         return p.a + p.b * (p.rho * dk + std::sqrt(dk * dk + p.sigma * p.sigma));
     }
 
+    /**
+     * @brief Get vol.
+     * @param k Parameter supplied by the caller.
+     * @param T Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] double get_vol(double k, double T) const noexcept override {
         if (n_slices == 0 || T < 1e-10) return 0.20;  // fallback flat vol
 
@@ -70,6 +84,12 @@ public:
 
     // Find expiry slice index for a given T (for caching)
     // Returns -1 if T is out of bounds, otherwise returns the lower slice index
+    /**
+     * @brief Find expiry slice index.
+     * @param T Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] int find_expiry_slice_index(double T) const noexcept {
         if (n_slices == 0 || T < 1e-10) return -1;
         if (T <= slices[0].expiry_T) return 0;
@@ -89,6 +109,14 @@ public:
     }
 
     // Fast vol lookup using cached slice index (eliminates linear scan)
+    /**
+     * @brief Get vol cached.
+     * @param k Parameter supplied by the caller.
+     * @param T Parameter supplied by the caller.
+     * @param slice_idx Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] double get_vol_cached(double k, double T, int slice_idx) const noexcept {
         if (slice_idx < 0 || slice_idx >= n_slices || T < 1e-10) return 0.20;
 
@@ -114,12 +142,25 @@ public:
         return std::sqrt(std::fmax(wT, 0.0) / T);
     }
 
+    /**
+     * @brief Get vol by strike.
+     * @param F Parameter supplied by the caller.
+     * @param K Parameter supplied by the caller.
+     * @param T Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] double get_vol_by_strike(double F, double K,
                                             double T) const noexcept override {
         if (F < 1e-10 || K < 1e-10) return 0.20;
         return get_vol(std::log(K / F), T);
     }
 
+    /**
+     * @brief Is valid.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool is_valid() const noexcept override {
         return n_slices > 0 && slices[0].valid;
     }
@@ -131,6 +172,19 @@ public:
 // Runs on the vol fitter side thread — NOT on the critical path.
 //
 // Returns true on convergence, false if max iterations exceeded.
+/**
+ * @brief Fit svi slice.
+ * @param strikes Parameter supplied by the caller.
+ * @param market_vols Parameter supplied by the caller.
+ * @param n Parameter supplied by the caller.
+ * @param F Parameter supplied by the caller.
+ * @param T Parameter supplied by the caller.
+ * @param out Parameter supplied by the caller.
+ * @param max_iter Parameter supplied by the caller.
+ * @param tol Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool fit_svi_slice(const double* strikes,   // array of strike prices
                    const double* market_vols, // array of market implied vols
                    int           n,           // number of points

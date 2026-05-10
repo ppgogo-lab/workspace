@@ -16,6 +16,11 @@
 #include <ctime>
 
 namespace omm {
+/**
+ * @brief Implements Monitor publish loop.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::monitor_publish_loop() noexcept {
     set_thread_name("omm-monitor");
 

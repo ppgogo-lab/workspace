@@ -172,42 +172,181 @@ struct RecoveryState {
 
 class DataRepository {
 public:
+    /**
+     * @brief DataRepository.
+     * @param cfg Parameter supplied by the caller.
+     * @param gateway_type Parameter supplied by the caller.
+     * @param vol_method Parameter supplied by the caller.
+     * @return None.
+     */
     explicit DataRepository(const PersistenceConfig& cfg,
                             GatewayType gateway_type,
                             VolMethod vol_method);
+    /**
+     * @brief DataRepository.
+     * @return None.
+     */
     ~DataRepository();
 
+    /**
+     * @brief DataRepository.
+     * @param DataRepository Parameter supplied by the caller.
+     * @return None.
+     */
     DataRepository(const DataRepository&) = delete;
     DataRepository& operator=(const DataRepository&) = delete;
 
+    /**
+     * @brief Set instruments.
+     * @param instruments Parameter supplied by the caller.
+     * @param n_instruments Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void set_instruments(const Instrument* instruments,
                          uint16_t n_instruments) noexcept;
 
+    /**
+     * @brief Open.
+     * @return Return value produced by the operation.
+     */
     bool open();
+    /**
+     * @brief Start.
+     * @return None.
+     */
     void start();
+    /**
+     * @brief Stop.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void stop() noexcept;
 
+    /**
+     * @brief Is enabled.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool is_enabled() const noexcept { return cfg_.enabled; }
 
+    /**
+     * @brief Persist instruments.
+     * @return Return value produced by the operation.
+     */
     bool persist_instruments();
+    /**
+     * @brief Sync identity state.
+     * @param cfg Parameter supplied by the caller.
+     * @param out Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     */
     bool sync_identity_state(const SystemConfig& cfg, IdentityState* out);
+    /**
+     * @brief Load recovery state.
+     * @param out Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     */
     bool load_recovery_state(RecoveryState* out);
+    /**
+     * @brief Load trade history.
+     * @param out Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     */
     bool load_trade_history(std::vector<Trade>* out);
+    /**
+     * @brief Persist end of day snapshot.
+     * @param snapshot Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     */
     bool persist_end_of_day_snapshot(const EndOfDaySnapshot& snapshot);
+    /**
+     * @brief Seed exchange calendar.
+     * @param cfg Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     */
     bool seed_exchange_calendar(const SystemConfig& cfg);
+    /**
+     * @brief Load exchange calendars.
+     * @param out Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     */
     bool load_exchange_calendars(std::vector<ExchangeTradingCalendar>* out);
 
+    /**
+     * @brief Enqueue order event.
+     * @param event Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     bool enqueue_order_event(const OrderPersistenceEvent& event) noexcept;
+    /**
+     * @brief Enqueue quote event.
+     * @param event Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     bool enqueue_quote_event(const QuotePersistenceEvent& event) noexcept;
+    /**
+     * @brief Enqueue trade.
+     * @param trade Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     bool enqueue_trade(const Trade& trade) noexcept;
+    /**
+     * @brief Enqueue mm params.
+     * @param event Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     bool enqueue_mm_params(const MMParamsPersistenceEvent& event) noexcept;
+    /**
+     * @brief Enqueue arb params.
+     * @param event Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     bool enqueue_arb_params(const ArbParamsPersistenceEvent& event) noexcept;
+    /**
+     * @brief Enqueue risk params.
+     * @param event Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     bool enqueue_risk_params(const RiskParamsPersistenceEvent& event) noexcept;
+    /**
+     * @brief Enqueue positions snapshot.
+     * @param event Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     bool enqueue_positions_snapshot(const PositionSnapshotEvent& event) noexcept;
 
     // Batch enqueue methods for improved throughput
+    /**
+     * @brief Enqueue order events batch.
+     * @param events Parameter supplied by the caller.
+     * @param count Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     int enqueue_order_events_batch(const OrderPersistenceEvent* events, int count) noexcept;
+    /**
+     * @brief Enqueue quote events batch.
+     * @param events Parameter supplied by the caller.
+     * @param count Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     int enqueue_quote_events_batch(const QuotePersistenceEvent* events, int count) noexcept;
+    /**
+     * @brief Enqueue trades batch.
+     * @param trades Parameter supplied by the caller.
+     * @param count Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     int enqueue_trades_batch(const Trade* trades, int count) noexcept;
 
 private:
@@ -222,38 +361,174 @@ private:
         Volume remaining_ask{0};
     };
 
+    /**
+     * @brief Writer loop.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void writer_loop() noexcept;
+    /**
+     * @brief Ensure schema locked.
+     * @return Return value produced by the operation.
+     */
     bool ensure_schema_locked();
+    /**
+     * @brief Prepare statements locked.
+     * @return Return value produced by the operation.
+     */
     bool prepare_statements_locked();
+    /**
+     * @brief Finalize statements locked.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void finalize_statements_locked() noexcept;
+    /**
+     * @brief Close locked.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void close_locked() noexcept;
+    /**
+     * @brief Load identity locked.
+     * @param out Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     */
     bool load_identity_locked(IdentityState* out);
+    /**
+     * @brief Seed identity locked.
+     * @param cfg Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     */
     bool seed_identity_locked(const SystemConfig& cfg);
+    /**
+     * @brief Migrate identity schema locked.
+     * @return Return value produced by the operation.
+     */
     bool migrate_identity_schema_locked();
+    /**
+     * @brief Migrate book columns locked.
+     * @return Return value produced by the operation.
+     */
     bool migrate_book_columns_locked();
+    /**
+     * @brief Migrate order semantics columns locked.
+     * @return Return value produced by the operation.
+     */
     bool migrate_order_semantics_columns_locked();
 
+    /**
+     * @brief Flush once locked.
+     * @param max_rows Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     */
     bool flush_once_locked(int max_rows);
+    /**
+     * @brief Write order event locked.
+     * @param event Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     */
     bool write_order_event_locked(const OrderPersistenceEvent& event);
+    /**
+     * @brief Write quote event locked.
+     * @param event Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     */
     bool write_quote_event_locked(const QuotePersistenceEvent& event);
+    /**
+     * @brief Write trade locked.
+     * @param trade Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     */
     bool write_trade_locked(const Trade& trade);
+    /**
+     * @brief Write mm params locked.
+     * @param event Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     */
     bool write_mm_params_locked(const MMParamsPersistenceEvent& event);
+    /**
+     * @brief Write arb params locked.
+     * @param event Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     */
     bool write_arb_params_locked(const ArbParamsPersistenceEvent& event);
+    /**
+     * @brief Write risk params locked.
+     * @param event Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     */
     bool write_risk_params_locked(const RiskParamsPersistenceEvent& event);
+    /**
+     * @brief Write positions snapshot locked.
+     * @param event Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     */
     bool write_positions_snapshot_locked(const PositionSnapshotEvent& event);
+    /**
+     * @brief Write instruments locked.
+     * @param trading_day Parameter supplied by the caller.
+     * @param table_name Parameter supplied by the caller.
+     * @param instruments Parameter supplied by the caller.
+     * @param n_instruments Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     */
     bool write_instruments_locked(int32_t trading_day,
                                   const char* table_name,
                                   const Instrument* instruments,
                                   uint16_t n_instruments);
+    /**
+     * @brief Write eod snapshot locked.
+     * @param snapshot Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     */
     bool write_eod_snapshot_locked(const EndOfDaySnapshot& snapshot);
 
+    /**
+     * @brief Prime caches locked.
+     * @param state Parameter supplied by the caller.
+     * @return None.
+     */
     void prime_caches_locked(const RecoveryState& state);
+    /**
+     * @brief Mark live order deleted locked.
+     * @param id Parameter supplied by the caller.
+     * @return None.
+     */
     void mark_live_order_deleted_locked(OrderId id);
+    /**
+     * @brief Mark live quote deleted locked.
+     * @param id Parameter supplied by the caller.
+     * @return None.
+     */
     void mark_live_quote_deleted_locked(QuoteId id);
 
+    /**
+     * @brief Instrument by id.
+     * @param instrument_id Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] const Instrument* instrument_by_id(uint16_t instrument_id) const noexcept;
+    /**
+     * @brief Find instrument id by code.
+     * @param code Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] uint16_t find_instrument_id_by_code(const char* code) const noexcept;
+    /**
+     * @brief Current trading day.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] int32_t current_trading_day() const noexcept;
+    /**
+     * @brief Is ctp ask leg.
+     * @param id Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] static bool is_ctp_ask_leg(OrderId id) noexcept;
 
     PersistenceConfig cfg_{};
@@ -305,6 +580,20 @@ private:
     sqlite3_stmt* stmt_upsert_strategy_binding_{nullptr};
 };
 
+/**
+ * @brief Build end of day snapshot.
+ * @param trading_day Parameter supplied by the caller.
+ * @param instruments Parameter supplied by the caller.
+ * @param n_instruments Parameter supplied by the caller.
+ * @param greeks_snapshot Parameter supplied by the caller.
+ * @param model Parameter supplied by the caller.
+ * @param svi_surfaces Parameter supplied by the caller.
+ * @param wing_surfaces Parameter supplied by the caller.
+ * @param orc_wing_surfaces Parameter supplied by the caller.
+ * @param product_count Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 EndOfDaySnapshot build_end_of_day_snapshot(
         int32_t trading_day,
         const Instrument* instruments,

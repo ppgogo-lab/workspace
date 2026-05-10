@@ -89,6 +89,11 @@ int32_t add_days_yyyymmdd(int32_t date, int days) noexcept {
     return yyyymmdd_from_time(t);
 }
 
+/**
+ * @brief Implements Load from config.
+ * @param cfg Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 bool TradingCalendarService::load_from_config(const SystemConfig& cfg) {
     std::vector<ExchangeTradingCalendar> calendars;
     calendars.reserve(static_cast<std::size_t>(cfg.exchange_calendar_count));
@@ -127,6 +132,11 @@ bool TradingCalendarService::load_from_config(const SystemConfig& cfg) {
     return load(std::move(calendars));
 }
 
+/**
+ * @brief Implements Load.
+ * @param calendars Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 bool TradingCalendarService::load(std::vector<ExchangeTradingCalendar> calendars) {
     calendars_.clear();
     index_.clear();
@@ -160,16 +170,34 @@ bool TradingCalendarService::load(std::vector<ExchangeTradingCalendar> calendars
     return true;
 }
 
+/**
+ * @brief Implements Has exchange.
+ * @param exchange_id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool TradingCalendarService::has_exchange(std::string_view exchange_id) const noexcept {
     return find(exchange_id) != nullptr;
 }
 
+/**
+ * @brief Implements Find.
+ * @param exchange_id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 const ExchangeTradingCalendar* TradingCalendarService::find(std::string_view exchange_id) const noexcept {
     const auto it = index_.find(std::string(exchange_id));
     if (it == index_.end() || it->second >= calendars_.size()) return nullptr;
     return &calendars_[it->second];
 }
 
+/**
+ * @brief Implements Validate products.
+ * @param cfg Parameter supplied by the caller.
+ * @param error Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 bool TradingCalendarService::validate_products(const SystemConfig& cfg, std::string* error) const {
     for (int i = 0; i < cfg.product_count && i < MAX_PRODUCTS; ++i) {
         const std::string exchange(cfg.products[i].exchange_id.view());
@@ -183,6 +211,14 @@ bool TradingCalendarService::validate_products(const SystemConfig& cfg, std::str
     return true;
 }
 
+/**
+ * @brief Implements Time to expiry years.
+ * @param exchange_id Parameter supplied by the caller.
+ * @param now_wall Parameter supplied by the caller.
+ * @param expiry_date Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 double TradingCalendarService::time_to_expiry_years(std::string_view exchange_id,
                                                     std::time_t now_wall,
                                                     int32_t expiry_date) const noexcept {

@@ -59,32 +59,68 @@ struct QuoteLifecycleWork {
 
 class QuoteLifecycleController {
 public:
+    /**
+     * @brief Policy for exchange.
+     * @param exchange Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] static constexpr QuoteReplacePolicy policy_for_exchange(Exchange exchange) noexcept {
         return exchange == Exchange::GFEX
             ? QuoteReplacePolicy::CancelFirst
             : QuoteReplacePolicy::DirectReplace;
     }
 
+    /**
+     * @brief Has live quote.
+     * @param state Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] static constexpr bool has_live_quote(const QuoteLifecycleState& state) noexcept {
         return state.live_quote_id != 0;
     }
 
+    /**
+     * @brief Has pending quote.
+     * @param state Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] static constexpr bool has_pending_quote(const QuoteLifecycleState& state) noexcept {
         return state.pending_quote_id != 0;
     }
 
+    /**
+     * @brief Has tracked quote.
+     * @param state Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] static constexpr bool has_tracked_quote(const QuoteLifecycleState& state) noexcept {
         return state.live_quote_id != 0
             || state.pending_quote_id != 0
             || state.cancel_target_quote_id != 0;
     }
 
+    /**
+     * @brief Waiting for quote update.
+     * @param state Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] static constexpr bool waiting_for_quote_update(
             const QuoteLifecycleState& state) noexcept {
         return state.status == StrategyQuoteMonitorState::AckPending
             || state.status == StrategyQuoteMonitorState::CancelPending;
     }
 
+    /**
+     * @brief Should cancel current quote.
+     * @param state Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] static constexpr bool should_cancel_current_quote(
             const QuoteLifecycleState& state) noexcept {
         return state.status == StrategyQuoteMonitorState::Live
@@ -92,6 +128,16 @@ public:
             || state.status == StrategyQuoteMonitorState::CancelPending;
     }
 
+    /**
+     * @brief Is material change.
+     * @param state Parameter supplied by the caller.
+     * @param intent Parameter supplied by the caller.
+     * @param epsilon_px Parameter supplied by the caller.
+     * @param min_interval_ns Parameter supplied by the caller.
+     * @param now_ns Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] static bool is_material_change(const QuoteLifecycleState& state,
                                                  const QuoteLifecycleIntent& intent,
                                                  double epsilon_px,
@@ -111,6 +157,15 @@ public:
         return false;
     }
 
+    /**
+     * @brief Note quote submitted.
+     * @param state Parameter supplied by the caller.
+     * @param quote_id Parameter supplied by the caller.
+     * @param intent Parameter supplied by the caller.
+     * @param now_ns Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     static void note_quote_submitted(QuoteLifecycleState& state,
                                      QuoteId quote_id,
                                      const QuoteLifecycleIntent& intent,
@@ -121,6 +176,12 @@ public:
         state.status = StrategyQuoteMonitorState::AckPending;
     }
 
+    /**
+     * @brief Cancel target quote id.
+     * @param state Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] static QuoteId cancel_target_quote_id(
             const QuoteLifecycleState& state) noexcept {
         if (state.status == StrategyQuoteMonitorState::CancelPending) {
@@ -132,6 +193,15 @@ public:
         return state.pending_quote_id;
     }
 
+    /**
+     * @brief Note cancel submitted.
+     * @param state Parameter supplied by the caller.
+     * @param target_quote_id Parameter supplied by the caller.
+     * @param now_ns Parameter supplied by the caller.
+     * @param cfg Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     static void note_cancel_submitted(QuoteLifecycleState& state,
                                       QuoteId target_quote_id,
                                       int64_t now_ns,
@@ -145,6 +215,14 @@ public:
         state.status = StrategyQuoteMonitorState::CancelPending;
     }
 
+    /**
+     * @brief Manage.
+     * @param state Parameter supplied by the caller.
+     * @param cfg Parameter supplied by the caller.
+     * @param now_ns Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] static QuoteLifecycleWork manage(QuoteLifecycleState& state,
                                                    const QuoteLifecycleConfig& cfg,
                                                    int64_t now_ns) noexcept {
@@ -152,6 +230,12 @@ public:
 
         if (state.status == StrategyQuoteMonitorState::CancelFailed) {
             if (quote_fully_filled(state)) {
+                /**
+                 * @brief Reset.
+                 * @param state Parameter supplied by the caller.
+                 * @param Idle Parameter supplied by the caller.
+                 * @return None.
+                 */
                 reset(state, StrategyQuoteMonitorState::Idle);
             } else {
                 work.block_new_quote = true;
@@ -161,6 +245,12 @@ public:
 
         if (state.status == StrategyQuoteMonitorState::CancelPending) {
             if (quote_fully_filled(state)) {
+                /**
+                 * @brief Reset.
+                 * @param state Parameter supplied by the caller.
+                 * @param Idle Parameter supplied by the caller.
+                 * @return None.
+                 */
                 reset(state, StrategyQuoteMonitorState::Idle);
                 return work;
             }
@@ -192,22 +282,50 @@ public:
         return work;
     }
 
+    /**
+     * @brief Mark requote after update.
+     * @param state Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     static void mark_requote_after_update(QuoteLifecycleState& state) noexcept {
         if (waiting_for_quote_update(state)) {
             state.reevaluate_after_quote_update = true;
         }
     }
 
+    /**
+     * @brief Discard requote after update.
+     * @param state Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     static void discard_requote_after_update(QuoteLifecycleState& state) noexcept {
         state.reevaluate_after_quote_update = false;
     }
 
+    /**
+     * @brief Take requote after update.
+     * @param state Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] static bool take_requote_after_update(QuoteLifecycleState& state) noexcept {
         const bool should_requote = state.reevaluate_after_quote_update;
         state.reevaluate_after_quote_update = false;
         return should_requote;
     }
 
+    /**
+     * @brief Note quote fill.
+     * @param state Parameter supplied by the caller.
+     * @param client_quote_id Parameter supplied by the caller.
+     * @param side Parameter supplied by the caller.
+     * @param fill_volume Parameter supplied by the caller.
+     * @param promote_ts Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] static bool note_quote_fill(QuoteLifecycleState& state,
                                               QuoteId client_quote_id,
                                               Side side,
@@ -229,6 +347,12 @@ public:
             && state.pending_quote_id != 0;
 
         if (matches_pending && state.status == StrategyQuoteMonitorState::AckPending) {
+            /**
+             * @brief Promote pending quote to live.
+             * @param state Parameter supplied by the caller.
+             * @param promote_ts Parameter supplied by the caller.
+             * @return None.
+             */
             promote_pending_quote_to_live(state, promote_ts);
         }
 
@@ -239,16 +363,36 @@ public:
         }
 
         if (filling_replaced_live && state.live_bid_vol <= 0 && state.live_ask_vol <= 0) {
+            /**
+             * @brief Clear live quote.
+             * @param state Parameter supplied by the caller.
+             * @return None.
+             */
             clear_live_quote(state);
             state.status = state.pending_quote_id != 0
                 ? StrategyQuoteMonitorState::AckPending
                 : StrategyQuoteMonitorState::Idle;
         } else if (quote_fully_filled(state)) {
+            /**
+             * @brief Reset.
+             * @param state Parameter supplied by the caller.
+             * @param Idle Parameter supplied by the caller.
+             * @return None.
+             */
             reset(state, StrategyQuoteMonitorState::Idle);
         }
         return true;
     }
 
+    /**
+     * @brief On quote ack.
+     * @param state Parameter supplied by the caller.
+     * @param quote Parameter supplied by the caller.
+     * @param now_ns Parameter supplied by the caller.
+     * @param request_requote Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] static bool on_quote_ack(QuoteLifecycleState& state,
                                            const Quote& quote,
                                            int64_t now_ns,
@@ -267,11 +411,22 @@ public:
 
         if (quote.bid_volume == 0 && quote.ask_volume == 0) {
             if (ack_matches_pending) {
+                /**
+                 * @brief Clear pending quote.
+                 * @param state Parameter supplied by the caller.
+                 * @return None.
+                 */
                 clear_pending_quote(state);
                 if (state.live_quote_id != 0) {
                     state.status = StrategyQuoteMonitorState::Live;
                     if (request_requote) *request_requote = take_requote_after_update(state);
                 } else {
+                    /**
+                     * @brief Reset.
+                     * @param state Parameter supplied by the caller.
+                     * @param Suppressed Parameter supplied by the caller.
+                     * @return None.
+                     */
                     reset(state, StrategyQuoteMonitorState::Suppressed);
                 }
                 return true;
@@ -280,12 +435,24 @@ public:
                 state.status = StrategyQuoteMonitorState::CancelPending;
                 return true;
             }
+            /**
+             * @brief Reset.
+             * @param state Parameter supplied by the caller.
+             * @param Suppressed Parameter supplied by the caller.
+             * @return None.
+             */
             reset(state, StrategyQuoteMonitorState::Suppressed);
             return true;
         }
 
         if (ack_matches_pending) {
             const int64_t ack_ts = quote.ack_ts != 0 ? quote.ack_ts : now_ns;
+            /**
+             * @brief Promote pending quote to live.
+             * @param state Parameter supplied by the caller.
+             * @param ack_ts Parameter supplied by the caller.
+             * @return None.
+             */
             promote_pending_quote_to_live(state, ack_ts);
             if (request_requote) *request_requote = take_requote_after_update(state);
             return true;
@@ -313,6 +480,14 @@ public:
         return true;
     }
 
+    /**
+     * @brief On quote cancel.
+     * @param state Parameter supplied by the caller.
+     * @param quote Parameter supplied by the caller.
+     * @param request_requote Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] static bool on_quote_cancel(QuoteLifecycleState& state,
                                               const Quote& quote,
                                               bool* request_requote) noexcept {
@@ -329,11 +504,22 @@ public:
         }
 
         if (matches_pending) {
+            /**
+             * @brief Clear pending quote.
+             * @param state Parameter supplied by the caller.
+             * @return None.
+             */
             clear_pending_quote(state);
             if (state.live_quote_id != 0) {
                 state.status = StrategyQuoteMonitorState::Live;
                 if (request_requote) *request_requote = take_requote_after_update(state);
             } else {
+                /**
+                 * @brief Reset.
+                 * @param state Parameter supplied by the caller.
+                 * @param Suppressed Parameter supplied by the caller.
+                 * @return None.
+                 */
                 reset(state, StrategyQuoteMonitorState::Suppressed);
                 if (request_requote) *request_requote = true;
             }
@@ -342,11 +528,22 @@ public:
 
         if (matches_cancel_target
             || (matches_live && state.status == StrategyQuoteMonitorState::CancelPending)) {
+            /**
+             * @brief Reset.
+             * @param state Parameter supplied by the caller.
+             * @param Suppressed Parameter supplied by the caller.
+             * @return None.
+             */
             reset(state, StrategyQuoteMonitorState::Suppressed);
             if (request_requote) *request_requote = true;
             return true;
         }
 
+        /**
+         * @brief Clear live quote.
+         * @param state Parameter supplied by the caller.
+         * @return None.
+         */
         clear_live_quote(state);
         if (state.pending_quote_id != 0) {
             state.status = StrategyQuoteMonitorState::AckPending;
@@ -354,11 +551,25 @@ public:
             return true;
         }
 
+        /**
+         * @brief Reset.
+         * @param state Parameter supplied by the caller.
+         * @param Suppressed Parameter supplied by the caller.
+         * @return None.
+         */
         reset(state, StrategyQuoteMonitorState::Suppressed);
         if (request_requote) *request_requote = true;
         return true;
     }
 
+    /**
+     * @brief On quote reject.
+     * @param state Parameter supplied by the caller.
+     * @param quote Parameter supplied by the caller.
+     * @param request_requote Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] static bool on_quote_reject(QuoteLifecycleState& state,
                                               const Quote& quote,
                                               bool* request_requote) noexcept {
@@ -373,6 +584,11 @@ public:
         }
 
         if (matches_pending) {
+            /**
+             * @brief Clear pending quote.
+             * @param state Parameter supplied by the caller.
+             * @return None.
+             */
             clear_pending_quote(state);
             if (state.live_quote_id != 0) {
                 state.status = StrategyQuoteMonitorState::Live;
@@ -381,13 +597,36 @@ public:
             }
         }
 
+        /**
+         * @brief Reset.
+         * @param state Parameter supplied by the caller.
+         * @param Suppressed Parameter supplied by the caller.
+         * @return None.
+         */
         reset(state, StrategyQuoteMonitorState::Suppressed);
         return true;
     }
 
+    /**
+     * @brief Reset.
+     * @param state Parameter supplied by the caller.
+     * @param next_state Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     static void reset(QuoteLifecycleState& state,
                       StrategyQuoteMonitorState next_state) noexcept {
+        /**
+         * @brief Clear live quote.
+         * @param state Parameter supplied by the caller.
+         * @return None.
+         */
         clear_live_quote(state);
+        /**
+         * @brief Clear pending quote.
+         * @param state Parameter supplied by the caller.
+         * @return None.
+         */
         clear_pending_quote(state);
         state.cancel_target_quote_id = 0;
         state.cancel_last_send_ts = 0;

@@ -39,6 +39,13 @@ public:
     int        n_slices{0};
 
     // Evaluate implied volatility for a single Wing slice
+    /**
+     * @brief Wing iv.
+     * @param p Parameter supplied by the caller.
+     * @param k Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     static double wing_iv(const WingParams& p, double k) noexcept {
         double kp = std::fmax(k, 0.0);
         double km = std::fmax(-k, 0.0);
@@ -48,6 +55,13 @@ public:
         return std::fmax(iv, 1e-6); // prevent <= 0
     }
 
+    /**
+     * @brief Get vol.
+     * @param k Parameter supplied by the caller.
+     * @param T Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] double get_vol(double k, double T) const noexcept override {
         if (n_slices == 0 || T < 1e-10) return 0.20;
 
@@ -77,12 +91,25 @@ public:
         return 0.20;
     }
 
+    /**
+     * @brief Get vol by strike.
+     * @param F Parameter supplied by the caller.
+     * @param K Parameter supplied by the caller.
+     * @param T Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] double get_vol_by_strike(double F, double K,
                                             double T) const noexcept override {
         if (F < 1e-10 || K < 1e-10) return 0.20;
         return get_vol(std::log(K / F), T);
     }
 
+    /**
+     * @brief Is valid.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool is_valid() const noexcept override {
         return n_slices > 0 && slices[0].valid;
     }
@@ -92,6 +119,19 @@ public:
 // Fits Wing parameters to a set of (strike, market_vol) pairs for one expiry.
 // Uses Levenberg-Marquardt.
 // Runs on the vol fitter side thread — NOT on the critical path.
+/**
+ * @brief Fit wing slice.
+ * @param strikes Parameter supplied by the caller.
+ * @param market_vols Parameter supplied by the caller.
+ * @param n Parameter supplied by the caller.
+ * @param F Parameter supplied by the caller.
+ * @param T Parameter supplied by the caller.
+ * @param out Parameter supplied by the caller.
+ * @param max_iter Parameter supplied by the caller.
+ * @param tol Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool fit_wing_slice(const double* strikes,
                     const double* market_vols,
                     int           n,

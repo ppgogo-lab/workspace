@@ -1,14 +1,11 @@
-# Chi Design Review Progress
+# Progress
 
-- Initialized review plan and findings files.
-- Located chi core files; initial TradeServce.cpp path did not exist, searching tradeservice.
-- Mapped chi strategy/service/engine/trade lifecycle and optionMM strategy/engine/gateway lifecycle.
-- Completed comparison and prepared recommendations.
-- Implemented the first low-latency refactor:
-  - Base quote lifecycle now notifies strategies after ack/cancel/reject/retry/give-up transitions.
-  - OptionMMCore updates monitor state and performs deferred requote through lifecycle hooks.
-  - Quote cancel give-up alerts are emitted from the shared lifecycle path, including explicit stale/risk/session cancels.
-  - Base order cancellation now pushes a lightweight cancel intent through the existing order ring buffer.
-  - Gateway dispatcher recognizes order cancel intents and calls `IGateway::cancel_order()` without introducing a new queue.
-- Fixed date/order assumptions in `test_simple_mm` integration tests so they match the current future-tick pricer model.
-- Verified `test_option_mm_core`, `test_simple_mm`, and `optionmm` target build under WSL.
+## 2026-05-10
+- Started Doxygen public method comment pass.
+- Confirmed existing unrelated worktree changes and will avoid reverting them.
+- Reverted the first generated `include/` and `src/` pass after detecting encoding corruption from PowerShell file writes.
+- Switched to a UTF-8-safe mechanical insertion approach for the real documentation pass.
+- Added Doxygen comments for public declarations and file-scope member definitions across `include/` and `src/`.
+- Added `docs/doxygen_public_methods_20260510.md` with plan, implementation, and test result.
+- Verification: `git diff --check` completed without whitespace errors, aside from Git `core.autocrlf=true` conversion warnings.
+- Verification blocked: WSL backend build unavailable; Windows GUI build failed because the MSVC environment cannot find standard headers.

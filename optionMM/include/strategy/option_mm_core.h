@@ -21,6 +21,20 @@ namespace omm {
 class OptionMMCoreStrategy : public BaseQuotingStrategy {
 public:
     // Wire the strategy to the product, IO buffers, shared params, and monitor sinks.
+    /**
+     * @brief Init.
+     * @param product_idx Parameter supplied by the caller.
+     * @param quote_buf Parameter supplied by the caller.
+     * @param order_buf Parameter supplied by the caller.
+     * @param pre_risk Parameter supplied by the caller.
+     * @param params Parameter supplied by the caller.
+     * @param instruments Parameter supplied by the caller.
+     * @param tick_snapshot Parameter supplied by the caller.
+     * @param post_risk Parameter supplied by the caller.
+     * @param alert_topic Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void init(uint8_t product_idx,
               SPSCRingBuffer<Quote, 512>* quote_buf,
               SPSCRingBuffer<Order, 512>* order_buf,
@@ -32,11 +46,40 @@ public:
               MonitoringTopic<SystemAlert, 256>* alert_topic) noexcept;
 
     // Monitor-facing snapshot accessors.
+    /**
+     * @brief Is enabled.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool is_enabled() const noexcept override;
+    /**
+     * @brief Product index.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] uint8_t product_index() const noexcept override { return product_idx_; }
+    /**
+     * @brief Read product monitor state.
+     * @param out Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool read_product_monitor_state(ProductMonitorState* out) const noexcept override;
+    /**
+     * @brief Read instrument monitor states.
+     * @param out Parameter supplied by the caller.
+     * @param max_count Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] int read_instrument_monitor_states(InstrumentMonitorState* out,
                                                      int max_count) const noexcept override;
+    /**
+     * @brief Read runtime stats.
+     * @param out Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool read_runtime_stats(StrategyRuntimeStats* out) const noexcept override;
 
 protected:
@@ -137,27 +180,121 @@ private:
     std::atomic<uint64_t> runtime_single_instrument_reevaluations_{0};
 
     // Product-wide work orchestration.
+    /**
+     * @brief Reevaluate all.
+     * @param now_ns Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void reevaluate_all(int64_t now_ns) noexcept;
+    /**
+     * @brief Reevaluate one.
+     * @param instrument_id Parameter supplied by the caller.
+     * @param now_ns Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void reevaluate_one(uint16_t instrument_id, int64_t now_ns) noexcept;
+    /**
+     * @brief Cancel all live.
+     * @param now_ns Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void cancel_all_live(int64_t now_ns) noexcept;
 
     // Per-instrument quote lifecycle.
+    /**
+     * @brief Maybe quote.
+     * @param instrument_id Parameter supplied by the caller.
+     * @param now_ns Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void maybe_quote(uint16_t instrument_id, int64_t now_ns) noexcept;
+    /**
+     * @brief Build decision.
+     * @param state Parameter supplied by the caller.
+     * @param now_ns Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     QuoteDecision build_decision(OptionState& state, int64_t now_ns) const noexcept;
     // REMOVED: send_quote, send_cancel, manage_quote_lifecycle - now in BaseQuotingStrategy
+    /**
+     * @brief Publish cancel failed alert.
+     * @param instrument_id Parameter supplied by the caller.
+     * @param quote_lifecycle Parameter supplied by the caller.
+     * @param now_ns Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void publish_cancel_failed_alert(uint16_t instrument_id,
                                      const QuoteLifecycleState& quote_lifecycle,
                                      int64_t now_ns) noexcept;
 
     // Product exposure and hedging helpers.
+    /**
+     * @brief Maybe trigger hedge.
+     * @param now_ns Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void maybe_trigger_hedge(int64_t now_ns) noexcept;
+    /**
+     * @brief Update product exposure.
+     * @param state Parameter supplied by the caller.
+     * @param old_delta Parameter supplied by the caller.
+     * @param old_vega Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void update_product_exposure(OptionState& state, double old_delta, double old_vega) noexcept;
+    /**
+     * @brief Capture product regime.
+     * @param now_ns Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] ProductRegime capture_product_regime(int64_t now_ns) const noexcept;
+    /**
+     * @brief Handle product regime transition.
+     * @param now_ns Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool handle_product_regime_transition(int64_t now_ns) noexcept;
+    /**
+     * @brief Product exposure breached.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool product_exposure_breached() const noexcept;
+    /**
+     * @brief Product temporarily suppressed.
+     * @param now_ns Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool product_temporarily_suppressed(int64_t now_ns) const noexcept;
+    /**
+     * @brief Update monitor state.
+     * @param state Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void update_monitor_state(const OptionState& state) noexcept;
+    /**
+     * @brief Update monitor product state.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void update_monitor_product_state() noexcept;
+    /**
+     * @brief Update all monitor states.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void update_all_monitor_states() noexcept;
 };
 

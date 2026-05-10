@@ -22,8 +22,18 @@ class MonitoringTopic {
     };
 
 public:
+    /**
+     * @brief MonitoringTopic.
+     * @return None.
+     */
     MonitoringTopic() = default;
 
+    /**
+     * @brief Publish.
+     * @param item Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void publish(const T& item) noexcept {
         const uint64_t seq = next_seq_.fetch_add(1, std::memory_order_relaxed);
         Entry& entry = entries_[seq & (Capacity - 1)];
@@ -32,6 +42,13 @@ public:
         latest_seq_.store(seq, std::memory_order_release);
     }
 
+    /**
+     * @brief Read next.
+     * @param cursor Parameter supplied by the caller.
+     * @param out Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool read_next(uint64_t& cursor, T& out) const noexcept {
         uint64_t latest = latest_seq_.load(std::memory_order_acquire);
         if (latest == 0 || cursor >= latest) return false;
@@ -52,6 +69,11 @@ public:
         return true;
     }
 
+    /**
+     * @brief Latest seq.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] uint64_t latest_seq() const noexcept {
         return latest_seq_.load(std::memory_order_acquire);
     }

@@ -15,6 +15,12 @@ namespace {
     std::shared_ptr<spdlog::logger> g_logger;
 }
 
+/**
+ * @brief Implements Init.
+ * @param log_path Parameter supplied by the caller.
+ * @param to_stdout Parameter supplied by the caller.
+ * @return None.
+ */
 void OmmLogger::init(std::string_view log_path, bool to_stdout) {
     // Ensure log directory exists
     std::filesystem::path p(log_path);
@@ -49,6 +55,11 @@ void OmmLogger::init(std::string_view log_path, bool to_stdout) {
     g_logger->info("[startup] logger initialised path={}", log_path);
 }
 
+/**
+ * @brief Implements Shutdown.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void OmmLogger::shutdown() noexcept {
     if (g_logger) {
         g_logger->info("[shutdown] logger shutting down");
@@ -58,6 +69,11 @@ void OmmLogger::shutdown() noexcept {
     g_logger.reset();
 }
 
+/**
+ * @brief Implements Get.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 spdlog::logger* OmmLogger::get() noexcept {
     return g_logger.get();
 }

@@ -15,6 +15,10 @@
 
 namespace omm::gui {
 
+/**
+ * @brief Implements Build arbitrage panel.
+ * @return Return value produced by the operation.
+ */
 QDockWidget* TraderMainWindow::build_arbitrage_panel() {
     auto* arb_monitor_dock = new QDockWidget("Arbitrage", this);
     arb_monitor_dock->setObjectName("arbitrageDock");

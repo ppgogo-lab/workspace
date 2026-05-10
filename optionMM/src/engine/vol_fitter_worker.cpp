@@ -27,6 +27,11 @@ namespace omm {
 // Needs >= 5 valid option quotes per expiry to attempt a fit; otherwise keeps
 // the existing surface unchanged.
 
+/**
+ * @brief Implements Vol fitter loop.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::vol_fitter_loop() noexcept {
     set_thread_name("omm-volfitter");
     apply_realtime_if_configured(cfg_.scheduling.enable_realtime,

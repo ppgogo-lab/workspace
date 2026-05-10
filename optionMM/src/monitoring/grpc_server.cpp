@@ -1463,12 +1463,21 @@ private:
     }
 };
 
+/**
+ * @brief Implements GrpcMonitorServer.
+ * @param listen_addr Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 GrpcMonitorServer::GrpcMonitorServer(const std::string& listen_addr,
                                      TradingEngine& engine)
     : listen_addr_(listen_addr), engine_(engine) {}
 
 GrpcMonitorServer::~GrpcMonitorServer() { stop(); }
 
+/**
+ * @brief Implements Start.
+ * @return None.
+ */
 void GrpcMonitorServer::start() {
     auto svc = std::make_unique<TradingMonitorServiceImpl>(engine_);
 
@@ -1485,6 +1494,11 @@ void GrpcMonitorServer::start() {
     });
 }
 
+/**
+ * @brief Implements Stop.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void GrpcMonitorServer::stop() noexcept {
     if (server_) {
         OMM_LOG_INFO("grpc", "gRPC server shutting down");

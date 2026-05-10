@@ -37,6 +37,20 @@ namespace omm {
 //     the residual inventory left behind by the partially executed basket.
 class PCPArbitrageStrategy final : public IArbitrageStrategy {
 public:
+    /**
+     * @brief Init.
+     * @param product_idx Parameter supplied by the caller.
+     * @param intent_buf Parameter supplied by the caller.
+     * @param params Parameter supplied by the caller.
+     * @param instruments Parameter supplied by the caller.
+     * @param tick_snapshot Parameter supplied by the caller.
+     * @param greeks_snapshot Parameter supplied by the caller.
+     * @param risk_free_rate Parameter supplied by the caller.
+     * @param hard_risk_cfg Parameter supplied by the caller.
+     * @param account_id Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void init(uint8_t product_idx,
               SPSCRingBuffer<ArbIntent, 256>* intent_buf,
               AtomicArbParams* params,
@@ -47,20 +61,92 @@ public:
               const HardRiskConfig& hard_risk_cfg,
               const AccountId& account_id) noexcept;
 
+    /**
+     * @brief Evaluate.
+     * @param now_ns Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void evaluate(Timestamp now_ns) noexcept override;
+    /**
+     * @brief On market update.
+     * @param instrument_id Parameter supplied by the caller.
+     * @param now_ns Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void on_market_update(uint16_t instrument_id, Timestamp now_ns) noexcept override;
+    /**
+     * @brief On timer.
+     * @param now_ns Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void on_timer(Timestamp now_ns) noexcept override;
+    /**
+     * @brief On order ack.
+     * @param order Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void on_order_ack(const Order& order) noexcept override;
+    /**
+     * @brief On fill.
+     * @param trade Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void on_fill(const Trade& trade) noexcept override;
+    /**
+     * @brief On order cancel.
+     * @param id Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void on_order_cancel(OrderId id) noexcept override;
+    /**
+     * @brief On order reject.
+     * @param order Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void on_order_reject(const Order& order) noexcept override;
 
+    /**
+     * @brief Owns order id.
+     * @param id Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool owns_order_id(OrderId id) const noexcept override;
+    /**
+     * @brief Is enabled.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool is_enabled() const noexcept override;
+    /**
+     * @brief Strategy type.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] ArbitrageStrategyType strategy_type() const noexcept override {
         return ArbitrageStrategyType::PCP;
     }
+    /**
+     * @brief Read monitor state.
+     * @param out Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool read_monitor_state(ArbStrategyMonitorState* out) const noexcept override;
+    /**
+     * @brief Read pcp monitor states.
+     * @param out Parameter supplied by the caller.
+     * @param max_count Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] int read_pcp_monitor_states(PCPPairMonitorState* out,
                                               int max_count) const noexcept override;
 
@@ -103,10 +189,50 @@ private:
     static constexpr int kMaxWorkingOrders = 24;
     static constexpr uint16_t kInvalidPairIndex = 0xFFFF;
 
+    /**
+     * @brief Build pairs.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void build_pairs() noexcept;
+    /**
+     * @brief Discount factor.
+     * @param pair Parameter supplied by the caller.
+     * @param now_ns Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] double discount_factor(const Pair& pair, Timestamp now_ns) const noexcept;
+    /**
+     * @brief Market valid.
+     * @param tick Parameter supplied by the caller.
+     * @param now_ns Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool market_valid(const TopOfBookTick& tick, Timestamp now_ns) const noexcept;
+    /**
+     * @brief Executable volume.
+     * @param pair Parameter supplied by the caller.
+     * @param dir Parameter supplied by the caller.
+     * @param max_order_volume Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] Volume executable_volume(const Pair& pair, Direction dir, int max_order_volume) const noexcept;
+    /**
+     * @brief Scan best opportunity.
+     * @param now_ns Parameter supplied by the caller.
+     * @param best_pair Parameter supplied by the caller.
+     * @param best_pair_index Parameter supplied by the caller.
+     * @param best_dir Parameter supplied by the caller.
+     * @param best_volume Parameter supplied by the caller.
+     * @param best_edge_ticks Parameter supplied by the caller.
+     * @param suppress_flags Parameter supplied by the caller.
+     * @param trigger_instrument_id Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool scan_best_opportunity(Timestamp now_ns,
                                              Pair* best_pair,
                                              uint16_t* best_pair_index,
@@ -115,15 +241,52 @@ private:
                                              double* best_edge_ticks,
                                              uint32_t* suppress_flags,
                                              uint16_t trigger_instrument_id = INVALID_INSTRUMENT_ID) noexcept;
+    /**
+     * @brief Next pair for instrument.
+     * @param pair_index Parameter supplied by the caller.
+     * @param instrument_id Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] uint16_t next_pair_for_instrument(uint16_t pair_index,
                                                     uint16_t instrument_id) const noexcept;
+    /**
+     * @brief Evaluate impl.
+     * @param now_ns Parameter supplied by the caller.
+     * @param trigger_instrument_id Parameter supplied by the caller.
+     * @param force_pair_monitor_publish Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void evaluate_impl(Timestamp now_ns,
                        uint16_t trigger_instrument_id,
                        bool force_pair_monitor_publish) noexcept;
+    /**
+     * @brief Publish pair monitor states.
+     * @param now_ns Parameter supplied by the caller.
+     * @param selected_pair_index Parameter supplied by the caller.
+     * @param selected_dir Parameter supplied by the caller.
+     * @param selected_edge_ticks Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void publish_pair_monitor_states(Timestamp now_ns,
                                      uint16_t selected_pair_index,
                                      Direction selected_dir,
                                      double selected_edge_ticks) noexcept;
+    /**
+     * @brief Enqueue order.
+     * @param instrument_id Parameter supplied by the caller.
+     * @param side Parameter supplied by the caller.
+     * @param price Parameter supplied by the caller.
+     * @param volume Parameter supplied by the caller.
+     * @param cleanup Parameter supplied by the caller.
+     * @param edge_ticks Parameter supplied by the caller.
+     * @param pair Parameter supplied by the caller.
+     * @param now_ns Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool enqueue_order(uint16_t instrument_id,
                                      Side side,
                                      double price,
@@ -132,19 +295,83 @@ private:
                                      double edge_ticks,
                                      const Pair& pair,
                                      Timestamp now_ns) noexcept;
+    /**
+     * @brief Start attempt.
+     * @param pair Parameter supplied by the caller.
+     * @param dir Parameter supplied by the caller.
+     * @param volume Parameter supplied by the caller.
+     * @param edge_ticks Parameter supplied by the caller.
+     * @param now_ns Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void start_attempt(const Pair& pair,
                        Direction dir,
                        Volume volume,
                        double edge_ticks,
                        Timestamp now_ns) noexcept;
+    /**
+     * @brief Cancel stale orders.
+     * @param now_ns Parameter supplied by the caller.
+     * @param timeout_ns Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void cancel_stale_orders(Timestamp now_ns, int64_t timeout_ns) noexcept;
+    /**
+     * @brief Maybe finalize attempt.
+     * @param now_ns Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void maybe_finalize_attempt(Timestamp now_ns) noexcept;
+    /**
+     * @brief Submit cleanup orders.
+     * @param now_ns Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void submit_cleanup_orders(Timestamp now_ns) noexcept;
+    /**
+     * @brief Clear attempt state.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void clear_attempt_state() noexcept;
+    /**
+     * @brief Set active pair.
+     * @param pair Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void set_active_pair(const Pair& pair) noexcept;
+    /**
+     * @brief Refresh monitor state.
+     * @param suppress_flags Parameter supplied by the caller.
+     * @param now_ns Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void refresh_monitor_state(uint32_t suppress_flags, Timestamp now_ns) noexcept;
+    /**
+     * @brief Live order count.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] int live_order_count() const noexcept;
+    /**
+     * @brief Find working order.
+     * @param id Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] WorkingOrder* find_working_order(OrderId id) noexcept;
+    /**
+     * @brief Find working order.
+     * @param id Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] const WorkingOrder* find_working_order(OrderId id) const noexcept;
 
     std::unique_ptr<PreTradeRisk> pre_risk_;

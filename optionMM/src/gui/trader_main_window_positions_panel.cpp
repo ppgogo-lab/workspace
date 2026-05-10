@@ -13,6 +13,10 @@
 
 namespace omm::gui {
 
+/**
+ * @brief Implements Build positions panel.
+ * @return Return value produced by the operation.
+ */
 QDockWidget* TraderMainWindow::build_positions_panel() {
     auto* positions_panel = new QWidget();
     auto* positions_layout = new QVBoxLayout(positions_panel);

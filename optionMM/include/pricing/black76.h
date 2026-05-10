@@ -39,10 +39,40 @@ enum class Black76Backend : uint8_t {
     Avx512,
 };
 
+/**
+ * @brief Black76 backend name.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 [[nodiscard]] const char* black76_backend_name() noexcept;
+/**
+ * @brief Black76 backend.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 [[nodiscard]] Black76Backend black76_backend() noexcept;
+/**
+ * @brief Black76 backend available.
+ * @param backend Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 [[nodiscard]] bool black76_backend_available(Black76Backend backend) noexcept;
 
+/**
+ * @brief Compute scalar.
+ * @param F Parameter supplied by the caller.
+ * @param K Parameter supplied by the caller.
+ * @param T Parameter supplied by the caller.
+ * @param r Parameter supplied by the caller.
+ * @param sigma Parameter supplied by the caller.
+ * @param is_call Parameter supplied by the caller.
+ * @param option_multiplier Parameter supplied by the caller.
+ * @param future_multiplier Parameter supplied by the caller.
+ * @param trading_days_per_year Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 [[nodiscard]] Black76Result compute_scalar(
     double F,
     double K,
@@ -55,6 +85,19 @@ enum class Black76Backend : uint8_t {
     double trading_days_per_year = 252.0
 ) noexcept;
 
+/**
+ * @brief Compute batch.
+ * @param F Parameter supplied by the caller.
+ * @param K Parameter supplied by the caller.
+ * @param T Parameter supplied by the caller.
+ * @param r Parameter supplied by the caller.
+ * @param sigma Parameter supplied by the caller.
+ * @param is_call Parameter supplied by the caller.
+ * @param out Parameter supplied by the caller.
+ * @param count Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void compute_batch(
     const double*  F,
     const double*  K,
@@ -66,6 +109,20 @@ void compute_batch(
     int            count
 ) noexcept;
 
+/**
+ * @brief Compute batch precomputed.
+ * @param F Parameter supplied by the caller.
+ * @param K Parameter supplied by the caller.
+ * @param T Parameter supplied by the caller.
+ * @param sqrt_T Parameter supplied by the caller.
+ * @param disc Parameter supplied by the caller.
+ * @param sigma Parameter supplied by the caller.
+ * @param is_call Parameter supplied by the caller.
+ * @param out Parameter supplied by the caller.
+ * @param count Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void compute_batch_precomputed(
     const double*  F,
     const double*  K,
@@ -78,6 +135,23 @@ void compute_batch_precomputed(
     int            count
 ) noexcept;
 
+/**
+ * @brief Compute batch precomputed scaled.
+ * @param F Parameter supplied by the caller.
+ * @param K Parameter supplied by the caller.
+ * @param T Parameter supplied by the caller.
+ * @param sqrt_T Parameter supplied by the caller.
+ * @param disc Parameter supplied by the caller.
+ * @param sigma Parameter supplied by the caller.
+ * @param option_multiplier Parameter supplied by the caller.
+ * @param future_multiplier Parameter supplied by the caller.
+ * @param is_call Parameter supplied by the caller.
+ * @param trading_days_per_year Parameter supplied by the caller.
+ * @param out Parameter supplied by the caller.
+ * @param count Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void compute_batch_precomputed_scaled(
     const double*  F,
     const double*  K,
@@ -93,6 +167,19 @@ void compute_batch_precomputed_scaled(
     int            count
 ) noexcept;
 
+/**
+ * @brief Compute batch quote precomputed.
+ * @param F Parameter supplied by the caller.
+ * @param K Parameter supplied by the caller.
+ * @param sqrt_T Parameter supplied by the caller.
+ * @param disc Parameter supplied by the caller.
+ * @param sigma Parameter supplied by the caller.
+ * @param is_call Parameter supplied by the caller.
+ * @param out Parameter supplied by the caller.
+ * @param count Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void compute_batch_quote_precomputed(
     const double*  F,
     const double*  K,
@@ -106,6 +193,23 @@ void compute_batch_quote_precomputed(
 
 // Fused batch pricing: computes bid, mid, ask in single pass
 // Reuses sigma lookup and d1/d2 computation (3× → 1×)
+/**
+ * @brief Compute batch quote fused.
+ * @param F_bid Parameter supplied by the caller.
+ * @param F_mid Parameter supplied by the caller.
+ * @param F_ask Parameter supplied by the caller.
+ * @param K Parameter supplied by the caller.
+ * @param sqrt_T Parameter supplied by the caller.
+ * @param disc Parameter supplied by the caller.
+ * @param sigma Parameter supplied by the caller.
+ * @param is_call Parameter supplied by the caller.
+ * @param bid_out Parameter supplied by the caller.
+ * @param mid_out Parameter supplied by the caller.
+ * @param ask_out Parameter supplied by the caller.
+ * @param count Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void compute_batch_quote_fused(
     const double*  F_bid,
     const double*  F_mid,
@@ -121,6 +225,25 @@ void compute_batch_quote_fused(
     int            count
 ) noexcept;
 
+/**
+ * @brief Compute batch quote fused scaled.
+ * @param F_bid Parameter supplied by the caller.
+ * @param F_mid Parameter supplied by the caller.
+ * @param F_ask Parameter supplied by the caller.
+ * @param K Parameter supplied by the caller.
+ * @param sqrt_T Parameter supplied by the caller.
+ * @param disc Parameter supplied by the caller.
+ * @param sigma Parameter supplied by the caller.
+ * @param option_multiplier Parameter supplied by the caller.
+ * @param future_multiplier Parameter supplied by the caller.
+ * @param is_call Parameter supplied by the caller.
+ * @param bid_out Parameter supplied by the caller.
+ * @param mid_out Parameter supplied by the caller.
+ * @param ask_out Parameter supplied by the caller.
+ * @param count Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void compute_batch_quote_fused_scaled(
     const double*  F_bid,
     const double*  F_mid,
@@ -139,6 +262,19 @@ void compute_batch_quote_fused_scaled(
 ) noexcept;
 
 #ifdef OMM_BLACK76_AVX2_BACKEND
+/**
+ * @brief Compute batch avx2.
+ * @param F Parameter supplied by the caller.
+ * @param K Parameter supplied by the caller.
+ * @param T Parameter supplied by the caller.
+ * @param r Parameter supplied by the caller.
+ * @param sigma Parameter supplied by the caller.
+ * @param is_call Parameter supplied by the caller.
+ * @param out Parameter supplied by the caller.
+ * @param count Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void compute_batch_avx2(
     const double*  F,
     const double*  K,
@@ -150,6 +286,20 @@ void compute_batch_avx2(
     int            count
 ) noexcept;
 
+/**
+ * @brief Compute batch avx2 precomputed.
+ * @param F Parameter supplied by the caller.
+ * @param K Parameter supplied by the caller.
+ * @param T Parameter supplied by the caller.
+ * @param sqrt_T Parameter supplied by the caller.
+ * @param disc Parameter supplied by the caller.
+ * @param sigma Parameter supplied by the caller.
+ * @param is_call Parameter supplied by the caller.
+ * @param out Parameter supplied by the caller.
+ * @param count Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void compute_batch_avx2_precomputed(
     const double*  F,
     const double*  K,
@@ -164,6 +314,19 @@ void compute_batch_avx2_precomputed(
 #endif
 
 #ifdef OMM_BLACK76_AVX512_BACKEND
+/**
+ * @brief Compute batch avx512.
+ * @param F Parameter supplied by the caller.
+ * @param K Parameter supplied by the caller.
+ * @param T Parameter supplied by the caller.
+ * @param r Parameter supplied by the caller.
+ * @param sigma Parameter supplied by the caller.
+ * @param is_call Parameter supplied by the caller.
+ * @param out Parameter supplied by the caller.
+ * @param count Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void compute_batch_avx512(
     const double*  F,
     const double*  K,
@@ -175,6 +338,20 @@ void compute_batch_avx512(
     int            count
 ) noexcept;
 
+/**
+ * @brief Compute batch avx512 precomputed.
+ * @param F Parameter supplied by the caller.
+ * @param K Parameter supplied by the caller.
+ * @param T Parameter supplied by the caller.
+ * @param sqrt_T Parameter supplied by the caller.
+ * @param disc Parameter supplied by the caller.
+ * @param sigma Parameter supplied by the caller.
+ * @param is_call Parameter supplied by the caller.
+ * @param out Parameter supplied by the caller.
+ * @param count Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void compute_batch_avx512_precomputed(
     const double*  F,
     const double*  K,
@@ -188,6 +365,18 @@ void compute_batch_avx512_precomputed(
 ) noexcept;
 #endif
 
+/**
+ * @brief Implied vol.
+ * @param market_price Parameter supplied by the caller.
+ * @param F Parameter supplied by the caller.
+ * @param K Parameter supplied by the caller.
+ * @param T Parameter supplied by the caller.
+ * @param r Parameter supplied by the caller.
+ * @param is_call Parameter supplied by the caller.
+ * @param tol Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 [[nodiscard]] double implied_vol(
     double market_price,
     double F,

@@ -24,47 +24,128 @@ namespace omm {
 
 class SimGateway : public IGateway {
 public:
+    /**
+     * @brief SimGateway.
+     * @return None.
+     */
     SimGateway() = default;
+    /**
+     * @brief SimGateway.
+     * @return None.
+     */
     ~SimGateway() override;
 
+    /**
+     * @brief Set sim config.
+     * @param cfg Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void set_sim_config(const SimConfig& cfg) noexcept;
 
     // Add a simulated instrument (call before connect())
+    /**
+     * @brief Add instrument.
+     * @param instr Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void add_instrument(const Instrument& instr) noexcept {
         if (n_instruments_ < MAX_INSTRUMENTS)
             sim_instruments_[n_instruments_++] = instr;
     }
 
     // Set the simulated last price for an instrument (drives fill simulation)
+    /**
+     * @brief Set last price.
+     * @param id Parameter supplied by the caller.
+     * @param price Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void set_last_price(uint16_t id, double price) noexcept {
         if (id < MAX_INSTRUMENTS) last_price_[id].store(price, std::memory_order_relaxed);
     }
 
+    /**
+     * @brief Connect.
+     * @param GatewayConfig Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     */
     bool connect(const GatewayConfig&) override {
         stop_worker();
         connected_.store(true, std::memory_order_release);
         start_worker();
         return true;
     }
+    /**
+     * @brief Disconnect.
+     * @return None.
+     */
     void disconnect() override {
         stop_worker();
         connected_.store(false, std::memory_order_release);
     }
+    /**
+     * @brief Is connected.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool is_connected() const noexcept override {
         return connected_.load(std::memory_order_relaxed);
     }
 
+    /**
+     * @brief Send order.
+     * @param order Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool send_order(const Order& order) noexcept override;
+    /**
+     * @brief Send quote.
+     * @param quote Parameter supplied by the caller.
+     * @param bid_order_id_out Parameter supplied by the caller.
+     * @param ask_order_id_out Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool send_quote(
             const Quote& quote,
             OrderId* bid_order_id_out = nullptr,
             OrderId* ask_order_id_out = nullptr) noexcept override;
+    /**
+     * @brief Cancel order.
+     * @param id Parameter supplied by the caller.
+     * @param instrument_id Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool cancel_order(OrderId id,
                                      uint16_t instrument_id) noexcept override;
+    /**
+     * @brief Cancel quote.
+     * @param id Parameter supplied by the caller.
+     * @param instrument_id Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool cancel_quote(QuoteId id,
                                     uint16_t instrument_id) noexcept override;
+    /**
+     * @brief Supports quote replace.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool supports_quote_replace() const noexcept override { return true; }
 
+    /**
+     * @brief Query instruments.
+     * @param out Parameter supplied by the caller.
+     * @param count Parameter supplied by the caller.
+     * @param max_count Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     */
     bool query_instruments(Instrument* out, uint16_t* count,
                             uint16_t max_count) override {
         uint16_t n = (n_instruments_ < max_count) ? n_instruments_ : max_count;
@@ -73,8 +154,23 @@ public:
         return true;
     }
 
+    /**
+     * @brief Orders sent.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] uint64_t orders_sent()  const noexcept { return orders_sent_.load(); }
+    /**
+     * @brief Quotes sent.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] uint64_t quotes_sent()  const noexcept { return quotes_sent_.load(); }
+    /**
+     * @brief Orders filled.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] uint64_t orders_filled()const noexcept { return orders_filled_.load();}
 
 private:
@@ -121,15 +217,74 @@ private:
         Timestamp cancel_due_ns{0};
     };
 
+    /**
+     * @brief Start worker.
+     * @return None.
+     */
     void start_worker();
+    /**
+     * @brief Stop worker.
+     * @return None.
+     */
     void stop_worker();
+    /**
+     * @brief Worker loop.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void worker_loop() noexcept;
+    /**
+     * @brief Process orders.
+     * @param now_ns Parameter supplied by the caller.
+     * @param rng Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void process_orders(Timestamp now_ns, std::mt19937& rng) noexcept;
+    /**
+     * @brief Process quotes.
+     * @param now_ns Parameter supplied by the caller.
+     * @param rng Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void process_quotes(Timestamp now_ns, std::mt19937& rng) noexcept;
+    /**
+     * @brief Sample probability.
+     * @param p Parameter supplied by the caller.
+     * @param rng Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool sample_probability(double p, std::mt19937& rng) noexcept;
+    /**
+     * @brief Sample fill volume.
+     * @param remaining Parameter supplied by the caller.
+     * @param rng Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] Volume sample_fill_volume(Volume remaining, std::mt19937& rng) noexcept;
+    /**
+     * @brief Market price.
+     * @param instrument_id Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] double market_price(uint16_t instrument_id) const noexcept;
+    /**
+     * @brief Tick size.
+     * @param instrument_id Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] double tick_size(uint16_t instrument_id) const noexcept;
+    /**
+     * @brief Fill price for order.
+     * @param active Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] double fill_price_for_order(const ActiveOrder& active) const noexcept;
 
     std::atomic<bool>     connected_{false};

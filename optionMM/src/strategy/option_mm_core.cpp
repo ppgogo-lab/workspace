@@ -49,6 +49,20 @@ Volume scale_volume(Volume base, double scale) noexcept {
 
 } // namespace
 
+/**
+ * @brief Implements Init.
+ * @param product_idx Parameter supplied by the caller.
+ * @param quote_buf Parameter supplied by the caller.
+ * @param order_buf Parameter supplied by the caller.
+ * @param pre_risk Parameter supplied by the caller.
+ * @param params Parameter supplied by the caller.
+ * @param instruments Parameter supplied by the caller.
+ * @param tick_snapshot Parameter supplied by the caller.
+ * @param post_risk Parameter supplied by the caller.
+ * @param alert_topic Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void OptionMMCoreStrategy::init(uint8_t product_idx,
                                 SPSCRingBuffer<Quote, 512>* quote_buf,
                                 SPSCRingBuffer<Order, 512>* order_buf,
@@ -122,10 +136,21 @@ void OptionMMCoreStrategy::init(uint8_t product_idx,
     update_all_monitor_states();
 }
 
+/**
+ * @brief Implements Is enabled.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool OptionMMCoreStrategy::is_enabled() const noexcept {
     return params_ && params_->enabled.load(std::memory_order_relaxed) && session_open_;
 }
 
+/**
+ * @brief Implements Read product monitor state.
+ * @param out Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool OptionMMCoreStrategy::read_product_monitor_state(ProductMonitorState* out) const noexcept {
     if (out == nullptr) return false;
 
@@ -146,6 +171,13 @@ bool OptionMMCoreStrategy::read_product_monitor_state(ProductMonitorState* out) 
     return true;
 }
 
+/**
+ * @brief Implements Read instrument monitor states.
+ * @param out Parameter supplied by the caller.
+ * @param max_count Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 int OptionMMCoreStrategy::read_instrument_monitor_states(InstrumentMonitorState* out,
                                                          int max_count) const noexcept {
     if (out == nullptr || max_count <= 0) return 0;
@@ -168,6 +200,12 @@ int OptionMMCoreStrategy::read_instrument_monitor_states(InstrumentMonitorState*
     return count;
 }
 
+/**
+ * @brief Implements Read runtime stats.
+ * @param out Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool OptionMMCoreStrategy::read_runtime_stats(StrategyRuntimeStats* out) const noexcept {
     if (out == nullptr) return false;
 
@@ -178,6 +216,12 @@ bool OptionMMCoreStrategy::read_runtime_stats(StrategyRuntimeStats* out) const n
     return true;
 }
 
+/**
+ * @brief Implements On signal impl.
+ * @param signal Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void OptionMMCoreStrategy::on_signal_impl(const PricingSignal& signal) noexcept {
     if (!params_) return;
     const uint16_t id = signal.instrument_id;
@@ -233,6 +277,12 @@ void OptionMMCoreStrategy::on_signal_impl(const PricingSignal& signal) noexcept 
     reevaluate_one(id, now_ns);
 }
 
+/**
+ * @brief Implements On fill impl.
+ * @param trade Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void OptionMMCoreStrategy::on_fill_impl(const Trade& trade) noexcept {
     // Base class has already updated instrument_state_[].net_position and
     // handled quote lifecycle fills. We handle strategy-specific logic here.
@@ -282,6 +332,12 @@ void OptionMMCoreStrategy::on_fill_impl(const Trade& trade) noexcept {
 // Note: Order lifecycle event handlers (on_order_ack, on_order_cancel, on_order_reject)
 // are now handled by BaseQuotingStrategy. We override on_fill_impl to handle hedge orders.
 
+/**
+ * @brief Implements On timer impl.
+ * @param event Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void OptionMMCoreStrategy::on_timer_impl(const TimerEvent& event) noexcept {
     switch (event.type) {
     case TimerEventType::QuoteRefresh:
@@ -314,6 +370,14 @@ void OptionMMCoreStrategy::on_timer_impl(const TimerEvent& event) noexcept {
     }
 }
 
+/**
+ * @brief Implements On quote lifecycle update.
+ * @param instrument_id Parameter supplied by the caller.
+ * @param now_ns Parameter supplied by the caller.
+ * @param reevaluate Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void OptionMMCoreStrategy::on_quote_lifecycle_update(uint16_t instrument_id,
                                                      int64_t now_ns,
                                                      bool reevaluate) noexcept {
@@ -327,6 +391,14 @@ void OptionMMCoreStrategy::on_quote_lifecycle_update(uint16_t instrument_id,
     }
 }
 
+/**
+ * @brief Implements On quote cancel give up.
+ * @param instrument_id Parameter supplied by the caller.
+ * @param quote_lifecycle Parameter supplied by the caller.
+ * @param now_ns Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void OptionMMCoreStrategy::on_quote_cancel_give_up(
         uint16_t instrument_id,
         const QuoteLifecycleState& quote_lifecycle,
@@ -334,6 +406,12 @@ void OptionMMCoreStrategy::on_quote_cancel_give_up(
     publish_cancel_failed_alert(instrument_id, quote_lifecycle, now_ns);
 }
 
+/**
+ * @brief Implements Reevaluate all.
+ * @param now_ns Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void OptionMMCoreStrategy::reevaluate_all(int64_t now_ns) noexcept {
     runtime_full_book_reevaluations_.fetch_add(1, std::memory_order_relaxed);
     if (product_exposure_breached() || product_temporarily_suppressed(now_ns)) {
@@ -346,17 +424,37 @@ void OptionMMCoreStrategy::reevaluate_all(int64_t now_ns) noexcept {
     }
 }
 
+/**
+ * @brief Implements Reevaluate one.
+ * @param instrument_id Parameter supplied by the caller.
+ * @param now_ns Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void OptionMMCoreStrategy::reevaluate_one(uint16_t instrument_id, int64_t now_ns) noexcept {
     runtime_single_instrument_reevaluations_.fetch_add(1, std::memory_order_relaxed);
     maybe_quote(instrument_id, now_ns);
 }
 
+/**
+ * @brief Implements Cancel all live.
+ * @param now_ns Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void OptionMMCoreStrategy::cancel_all_live(int64_t now_ns) noexcept {
     for (uint16_t i = 0; i < option_count_; ++i) {
         request_cancel(option_ids_[i], now_ns);
     }
 }
 
+/**
+ * @brief Implements Maybe quote.
+ * @param instrument_id Parameter supplied by the caller.
+ * @param now_ns Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void OptionMMCoreStrategy::maybe_quote(uint16_t instrument_id, int64_t now_ns) noexcept {
     if (instrument_id >= MAX_INSTRUMENTS) return;
     OptionState& state = option_state_[instrument_id];
@@ -380,6 +478,13 @@ void OptionMMCoreStrategy::maybe_quote(uint16_t instrument_id, int64_t now_ns) n
 }
 
 OptionMMCoreStrategy::QuoteDecision
+/**
+ * @brief Implements Build decision.
+ * @param state Parameter supplied by the caller.
+ * @param now_ns Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 OptionMMCoreStrategy::build_decision(OptionState& state, int64_t now_ns) const noexcept {
     QuoteDecision decision{};
 
@@ -561,6 +666,14 @@ OptionMMCoreStrategy::build_decision(OptionState& state, int64_t now_ns) const n
 // These methods are now implemented in BaseQuotingStrategy.
 // The base class handles all quote lifecycle management.
 
+/**
+ * @brief Implements Publish cancel failed alert.
+ * @param instrument_id Parameter supplied by the caller.
+ * @param quote_lifecycle Parameter supplied by the caller.
+ * @param now_ns Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void OptionMMCoreStrategy::publish_cancel_failed_alert(
         uint16_t instrument_id,
         const QuoteLifecycleState& quote_lifecycle,
@@ -581,6 +694,12 @@ void OptionMMCoreStrategy::publish_cancel_failed_alert(
     alert_topic_->publish(alert);
 }
 
+/**
+ * @brief Implements Maybe trigger hedge.
+ * @param now_ns Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void OptionMMCoreStrategy::maybe_trigger_hedge(int64_t now_ns) noexcept {
     if (!params_ || !session_open_ || !params_->enabled.load(std::memory_order_relaxed)) return;
     if (!order_buf_ || !pre_risk_ || !tick_snapshot_ || underlying_id_ >= MAX_INSTRUMENTS) return;
@@ -640,6 +759,14 @@ void OptionMMCoreStrategy::maybe_trigger_hedge(int64_t now_ns) noexcept {
     last_hedge_ts_ns_ = now_ns;
 }
 
+/**
+ * @brief Implements Update product exposure.
+ * @param state Parameter supplied by the caller.
+ * @param old_delta Parameter supplied by the caller.
+ * @param old_vega Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void OptionMMCoreStrategy::update_product_exposure(OptionState& state,
                                                    double old_delta,
                                                    double old_vega) noexcept {
@@ -649,6 +776,12 @@ void OptionMMCoreStrategy::update_product_exposure(OptionState& state,
 }
 
 OptionMMCoreStrategy::ProductRegime
+/**
+ * @brief Implements Capture product regime.
+ * @param now_ns Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 OptionMMCoreStrategy::capture_product_regime(int64_t now_ns) const noexcept {
     ProductRegime regime{};
     // Product gating is intentionally conservative: any session/risk/exposure/shock issue
@@ -665,6 +798,12 @@ OptionMMCoreStrategy::capture_product_regime(int64_t now_ns) const noexcept {
     return regime;
 }
 
+/**
+ * @brief Implements Handle product regime transition.
+ * @param now_ns Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool OptionMMCoreStrategy::handle_product_regime_transition(int64_t now_ns) noexcept {
     const ProductRegime next = capture_product_regime(now_ns);
     const bool product_changed =
@@ -689,6 +828,11 @@ bool OptionMMCoreStrategy::handle_product_regime_transition(int64_t now_ns) noex
     return true;
 }
 
+/**
+ * @brief Implements Product exposure breached.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool OptionMMCoreStrategy::product_exposure_breached() const noexcept {
     if (!params_) return false;
 
@@ -701,10 +845,22 @@ bool OptionMMCoreStrategy::product_exposure_breached() const noexcept {
     return delta_breach || vega_breach;
 }
 
+/**
+ * @brief Implements Product temporarily suppressed.
+ * @param now_ns Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool OptionMMCoreStrategy::product_temporarily_suppressed(int64_t now_ns) const noexcept {
     return suppress_until_ns_ > now_ns;
 }
 
+/**
+ * @brief Implements Update monitor state.
+ * @param state Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void OptionMMCoreStrategy::update_monitor_state(const OptionState& state) noexcept {
     if (!state.active || state.instrument_id >= MAX_INSTRUMENTS) return;
 
@@ -725,6 +881,11 @@ void OptionMMCoreStrategy::update_monitor_state(const OptionState& state) noexce
         quote_lifecycle.last_quote_ts, std::memory_order_relaxed);
 }
 
+/**
+ * @brief Implements Update monitor product state.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void OptionMMCoreStrategy::update_monitor_product_state() noexcept {
     monitor_session_open_.store(session_open_, std::memory_order_relaxed);
     monitor_product_suppressed_.store(regime_state_.product_suppressed, std::memory_order_relaxed);
@@ -733,6 +894,11 @@ void OptionMMCoreStrategy::update_monitor_product_state() noexcept {
         regime_state_.underlying_shock_suppressed, std::memory_order_relaxed);
 }
 
+/**
+ * @brief Implements Update all monitor states.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void OptionMMCoreStrategy::update_all_monitor_states() noexcept {
     update_monitor_product_state();
     for (uint16_t i = 0; i < option_count_; ++i) {

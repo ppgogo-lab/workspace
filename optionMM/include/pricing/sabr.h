@@ -26,6 +26,15 @@ struct SABRParams {
 
 // Hagan 2002 SABR implied vol formula (lognormal approximation)
 // Returns Black-76 implied volatility for forward F, strike K, expiry T.
+/**
+ * @brief Sabr vol.
+ * @param p Parameter supplied by the caller.
+ * @param F Parameter supplied by the caller.
+ * @param K Parameter supplied by the caller.
+ * @param T Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 inline double sabr_vol(const SABRParams& p, double F, double K, double T) noexcept {
     if (T < 1e-10 || F < 1e-10 || K < 1e-10) return p.alpha;
 
@@ -68,6 +77,13 @@ public:
     SABRParams slices[MAX_EXPIRIES]{};
     int        n_slices{0};
 
+    /**
+     * @brief Get vol.
+     * @param k Parameter supplied by the caller.
+     * @param T Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] double get_vol(double k, double T) const noexcept override {
         // k = ln(K/F), so K = F*exp(k)
         // Use the actual forward F stored in params (fitted with that F)
@@ -82,6 +98,14 @@ public:
         return sabr_vol(*p, p->forward_F, p->forward_F * std::exp(k), T);
     }
 
+    /**
+     * @brief Get vol by strike.
+     * @param F Parameter supplied by the caller.
+     * @param K Parameter supplied by the caller.
+     * @param T Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] double get_vol_by_strike(double F, double K,
                                             double T) const noexcept override {
         if (n_slices == 0 || T < 1e-10) return 0.20;
@@ -104,6 +128,11 @@ public:
         return 0.20;
     }
 
+    /**
+     * @brief Is valid.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool is_valid() const noexcept override {
         return n_slices > 0 && slices[0].valid;
     }
@@ -113,6 +142,20 @@ public:
 // Fits {alpha, rho, nu} to market vols for one expiry slice.
 // beta is fixed from config (not fitted). Uses gradient descent.
 // Runs off the critical path on the vol fitter thread.
+/**
+ * @brief Fit sabr slice.
+ * @param strikes Parameter supplied by the caller.
+ * @param market_vols Parameter supplied by the caller.
+ * @param n Parameter supplied by the caller.
+ * @param F Parameter supplied by the caller.
+ * @param T Parameter supplied by the caller.
+ * @param beta Parameter supplied by the caller.
+ * @param out Parameter supplied by the caller.
+ * @param max_iter Parameter supplied by the caller.
+ * @param tol Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool fit_sabr_slice(const double* strikes,
                     const double* market_vols,
                     int           n,

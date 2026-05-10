@@ -6,6 +6,10 @@
 
 namespace omm::gui {
 
+/**
+ * @brief Implements Build vol curves panel.
+ * @return Return value produced by the operation.
+ */
 QDockWidget* TraderMainWindow::build_vol_curves_panel() {
     vol_dock_ = new QDockWidget("ORC Wing / Vol Curves", this);
     vol_dock_->setObjectName("volCurvesDock");

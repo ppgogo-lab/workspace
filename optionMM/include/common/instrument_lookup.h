@@ -13,8 +13,20 @@ namespace omm {
 // instrument discovery and then used on the feed/gateway hot path.
 class InstrumentLookup {
 public:
+    /**
+     * @brief Capacity.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     static constexpr std::size_t capacity() noexcept { return kCapacity; }
 
+    /**
+     * @brief Build.
+     * @param instruments Parameter supplied by the caller.
+     * @param n_instruments Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void build(const Instrument* instruments, uint16_t n_instruments) noexcept {
         instruments_ = instruments;
         n_instruments_ = n_instruments;
@@ -29,6 +41,12 @@ public:
         }
     }
 
+    /**
+     * @brief Find.
+     * @param code Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] uint16_t find(std::string_view code) const noexcept {
         if (!instruments_ || code.empty()) return INVALID_INSTRUMENT_ID;
 
@@ -60,6 +78,12 @@ private:
     static_assert((kCapacity & (kCapacity - 1)) == 0,
                   "InstrumentLookup capacity must be a power of 2");
 
+    /**
+     * @brief Hash code.
+     * @param code Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     static uint64_t hash_code(std::string_view code) noexcept {
         uint64_t hash = 1469598103934665603ULL;
         for (unsigned char ch : code) {
@@ -69,10 +93,23 @@ private:
         return hash == 0 ? 1ULL : hash;
     }
 
+    /**
+     * @brief Bucket.
+     * @param hash Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     static constexpr std::size_t bucket(uint64_t hash) noexcept {
         return static_cast<std::size_t>(hash) & (kCapacity - 1);
     }
 
+    /**
+     * @brief Insert.
+     * @param code Parameter supplied by the caller.
+     * @param instrument_id Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void insert(std::string_view code, uint16_t instrument_id) noexcept {
         const uint64_t hash = hash_code(code);
         std::size_t idx = bucket(hash);

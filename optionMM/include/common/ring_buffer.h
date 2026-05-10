@@ -64,9 +64,18 @@ class SPSCRingBuffer {
     alignas(64) Slot buffer_[Capacity];
 
 public:
+    /**
+     * @brief SPSCRingBuffer.
+     * @return None.
+     */
     SPSCRingBuffer() = default;
 
     // Non-copyable, non-movable: ring buffers are owned in-place by TradingEngine.
+    /**
+     * @brief SPSCRingBuffer.
+     * @param SPSCRingBuffer Parameter supplied by the caller.
+     * @return None.
+     */
     SPSCRingBuffer(const SPSCRingBuffer&) = delete;
     SPSCRingBuffer& operator=(const SPSCRingBuffer&) = delete;
 
@@ -75,6 +84,12 @@ public:
     // Try to push one item. Returns false if the buffer is full (non-blocking).
     // The item is copied into the buffer slot before the head cursor is advanced,
     // ensuring the consumer never sees a partially-written slot.
+    /**
+     * @brief Try push.
+     * @param item Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool try_push(const T& item) noexcept {
         const std::size_t head = head_.load(std::memory_order_relaxed);
         const std::size_t next = (head + 1) & MASK;
@@ -92,6 +107,13 @@ public:
     // Push N items atomically: writes all slots, then ONE release-store to publish.
     // Returns false without pushing anything if there is not enough space for all N items.
     // NOTE: producer-side only; N must be >= 1.
+    /**
+     * @brief Try push batch.
+     * @param items Parameter supplied by the caller.
+     * @param count Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool try_push_batch(const T* items, int count) noexcept {
         if (count <= 0) return true;
         const std::size_t head = head_.load(std::memory_order_relaxed);
@@ -111,6 +133,12 @@ public:
 
     // Try to pop one item. Returns false if the buffer is empty (non-blocking).
     // Prefetches next slot to reduce cache miss latency.
+    /**
+     * @brief Try pop.
+     * @param item Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool try_pop(T& item) noexcept {
         const std::size_t tail = tail_.load(std::memory_order_relaxed);
         // Acquire: synchronizes with producer's release-store to head_.
@@ -138,6 +166,13 @@ public:
     // Returns the actual number of items popped (0 if empty, up to max_count if available).
     // Prefetches all slots in batch to reduce cache miss latency.
     // NOTE: consumer-side only; max_count must be >= 1.
+    /**
+     * @brief Try pop batch.
+     * @param items Parameter supplied by the caller.
+     * @param max_count Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] int try_pop_batch(T* items, int max_count) noexcept {
         if (max_count <= 0) return 0;
         const std::size_t tail = tail_.load(std::memory_order_relaxed);
@@ -173,16 +208,31 @@ public:
 
     // Returns an approximate item count. Not linearizable — only use for
     // monitoring/logging, never for correctness decisions.
+    /**
+     * @brief Size approx.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] std::size_t size_approx() const noexcept {
         const std::size_t head = head_.load(std::memory_order_relaxed);
         const std::size_t tail = tail_.load(std::memory_order_relaxed);
         return (head - tail) & MASK;
     }
 
+    /**
+     * @brief Empty approx.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool empty_approx() const noexcept {
         return size_approx() == 0;
     }
 
+    /**
+     * @brief Capacity.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] static constexpr std::size_t capacity() noexcept {
         return Capacity - 1;   // one slot reserved
     }
@@ -193,6 +243,11 @@ public:
 // On x86: PAUSE instruction — reduces power consumption, improves branch
 // prediction recovery on HT, and prevents the CPU from burning the memory bus.
 // On ARM: yield hint via __asm__ volatile("yield").
+/**
+ * @brief Spin pause.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 inline void spin_pause() noexcept {
 #if defined(__x86_64__) || defined(__i386__)
     _mm_pause();
@@ -205,6 +260,12 @@ inline void spin_pause() noexcept {
 
 // Adaptive spin-pause with exponential backoff
 // Reduces CPU overhead when idle while maintaining low latency when active
+/**
+ * @brief Adaptive spin pause.
+ * @param spin_count Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 inline void adaptive_spin_pause(int& spin_count) noexcept {
     constexpr int kFastSpins = 100;      // ~100ns of spinning (fast path)
     constexpr int kYieldSpins = 1000;    // ~1μs before sleep (medium path)

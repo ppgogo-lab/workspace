@@ -8,6 +8,10 @@
 
 namespace omm {
 
+/**
+ * @brief Implements Start.
+ * @return None.
+ */
 void FEMASFeedHandler::start() {
     if (api_ || !tick_buf_) return;
     if (instrument_count() == 0) {
@@ -37,6 +41,10 @@ void FEMASFeedHandler::start() {
                  cfg_.front_addr, cfg_.topic_id, instrument_count());
 }
 
+/**
+ * @brief Implements Stop.
+ * @return None.
+ */
 void FEMASFeedHandler::stop() {
     stop_flag_.store(true, std::memory_order_release);
     login_ready_.store(false, std::memory_order_release);
@@ -48,6 +56,11 @@ void FEMASFeedHandler::stop() {
     api_ = nullptr;
 }
 
+/**
+ * @brief Implements Subscribe all instruments.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void FEMASFeedHandler::subscribe_all_instruments() noexcept {
     if (!api_ || !instruments_ || n_instruments_ == 0) return;
 
@@ -78,6 +91,12 @@ void FEMASFeedHandler::subscribe_all_instruments() noexcept {
     OMM_LOG_INFO("femas-md", "subscription request submitted count={}", codes.size());
 }
 
+/**
+ * @brief Implements Push tick.
+ * @param md Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void FEMASFeedHandler::push_tick(const CUstpFtdcDepthMarketDataField& md) noexcept {
     if (!tick_buf_) return;
 
@@ -105,6 +124,10 @@ void FEMASFeedHandler::push_tick(const CUstpFtdcDepthMarketDataField& md) noexce
     }
 }
 
+/**
+ * @brief Implements OnFrontConnected.
+ * @return None.
+ */
 void FEMASFeedHandler::OnFrontConnected() {
     if (stop_flag_.load(std::memory_order_relaxed)) return;
 
@@ -121,6 +144,11 @@ void FEMASFeedHandler::OnFrontConnected() {
     }
 }
 
+/**
+ * @brief Implements OnFrontDisconnected.
+ * @param nReason Parameter supplied by the caller.
+ * @return None.
+ */
 void FEMASFeedHandler::OnFrontDisconnected(int nReason) {
     connected_.store(false, std::memory_order_release);
     login_ready_.store(false, std::memory_order_release);
@@ -128,13 +156,32 @@ void FEMASFeedHandler::OnFrontDisconnected(int nReason) {
     OMM_LOG_WARN("femas-md", "front disconnected reason={}", nReason);
 }
 
+/**
+ * @brief Implements OnPackageStart.
+ * @param int Parameter supplied by the caller.
+ * @param nSequenceNo Parameter supplied by the caller.
+ * @return None.
+ */
 void FEMASFeedHandler::OnPackageStart(int, int nSequenceNo) {
     current_sequence_no_.store(nSequenceNo, std::memory_order_relaxed);
 }
 
+/**
+ * @brief Implements OnPackageEnd.
+ * @param int Parameter supplied by the caller.
+ * @param int Parameter supplied by the caller.
+ * @return None.
+ */
 void FEMASFeedHandler::OnPackageEnd(int, int) {
 }
 
+/**
+ * @brief Implements OnRspError.
+ * @param pRspInfo Parameter supplied by the caller.
+ * @param int Parameter supplied by the caller.
+ * @param bool Parameter supplied by the caller.
+ * @return None.
+ */
 void FEMASFeedHandler::OnRspError(CUstpFtdcRspInfoField* pRspInfo,
                                   int, bool) {
     err_count_.fetch_add(1, std::memory_order_relaxed);
@@ -143,6 +190,14 @@ void FEMASFeedHandler::OnRspError(CUstpFtdcRspInfoField* pRspInfo,
                  pRspInfo ? pRspInfo->ErrorMsg : "");
 }
 
+/**
+ * @brief Implements OnRspUserLogin.
+ * @param pRspUserLogin Parameter supplied by the caller.
+ * @param pRspInfo Parameter supplied by the caller.
+ * @param int Parameter supplied by the caller.
+ * @param bool Parameter supplied by the caller.
+ * @return None.
+ */
 void FEMASFeedHandler::OnRspUserLogin(CUstpFtdcRspUserLoginField* pRspUserLogin,
                                       CUstpFtdcRspInfoField* pRspInfo,
                                       int, bool) {
@@ -160,6 +215,14 @@ void FEMASFeedHandler::OnRspUserLogin(CUstpFtdcRspUserLoginField* pRspUserLogin,
     subscribe_all_instruments();
 }
 
+/**
+ * @brief Implements OnRspUserLogout.
+ * @param CUstpFtdcRspUserLogoutField Parameter supplied by the caller.
+ * @param pRspInfo Parameter supplied by the caller.
+ * @param int Parameter supplied by the caller.
+ * @param bool Parameter supplied by the caller.
+ * @return None.
+ */
 void FEMASFeedHandler::OnRspUserLogout(CUstpFtdcRspUserLogoutField*,
                                        CUstpFtdcRspInfoField* pRspInfo,
                                        int, bool) {
@@ -170,11 +233,24 @@ void FEMASFeedHandler::OnRspUserLogout(CUstpFtdcRspUserLogoutField*,
     }
 }
 
+/**
+ * @brief Implements OnRtnDepthMarketData.
+ * @param pDepthMarketData Parameter supplied by the caller.
+ * @return None.
+ */
 void FEMASFeedHandler::OnRtnDepthMarketData(CUstpFtdcDepthMarketDataField* pDepthMarketData) {
     if (!pDepthMarketData || stop_flag_.load(std::memory_order_relaxed)) return;
     push_tick(*pDepthMarketData);
 }
 
+/**
+ * @brief Implements OnRspSubMarketData.
+ * @param pSpecificInstrument Parameter supplied by the caller.
+ * @param pRspInfo Parameter supplied by the caller.
+ * @param int Parameter supplied by the caller.
+ * @param bIsLast Parameter supplied by the caller.
+ * @return None.
+ */
 void FEMASFeedHandler::OnRspSubMarketData(CUstpFtdcSpecificInstrumentField* pSpecificInstrument,
                                           CUstpFtdcRspInfoField* pRspInfo,
                                           int, bool bIsLast) {

@@ -3,6 +3,12 @@
 
 namespace omm {
 
+/**
+ * @brief Implements On signal impl.
+ * @param signal Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void SimpleMMStrategy::on_signal_impl(const PricingSignal& signal) noexcept {
     if (!params_ || !params_->enabled.load(std::memory_order_relaxed)) return;
 
@@ -48,6 +54,12 @@ void SimpleMMStrategy::on_signal_impl(const PricingSignal& signal) noexcept {
     request_quote(id, bid, ask, bid_vol, ask_vol, now);
 }
 
+/**
+ * @brief Implements On fill impl.
+ * @param trade Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void SimpleMMStrategy::on_fill_impl(const Trade& trade) noexcept {
     // Base class has already updated instrument_state_[].net_position
     if (trade.instrument_id >= MAX_INSTRUMENTS) return;
@@ -58,6 +70,12 @@ void SimpleMMStrategy::on_fill_impl(const Trade& trade) noexcept {
     portfolio_delta_ += (trade.side == Side::Buy ? 1.0 : -1.0) * trade.fill_volume * 0.5;
 }
 
+/**
+ * @brief Implements On timer impl.
+ * @param event Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void SimpleMMStrategy::on_timer_impl(const TimerEvent& event) noexcept {
     switch (event.type) {
     case TimerEventType::HedgeCheck: {
@@ -94,6 +112,14 @@ void SimpleMMStrategy::on_timer_impl(const TimerEvent& event) noexcept {
     }
 }
 
+/**
+ * @brief Implements Send hedge order.
+ * @param underlying_id Parameter supplied by the caller.
+ * @param side Parameter supplied by the caller.
+ * @param qty Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void SimpleMMStrategy::send_hedge_order(uint16_t underlying_id,
                                          Side side, Volume qty) noexcept {
     if (!order_buf_) return;

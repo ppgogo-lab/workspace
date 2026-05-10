@@ -36,16 +36,45 @@ class TradingEngine;  // forward
 
 class GrpcMonitorServer {
 public:
+    /**
+     * @brief GrpcMonitorServer.
+     * @param listen_addr Parameter supplied by the caller.
+     * @param engine Parameter supplied by the caller.
+     * @return None.
+     */
     GrpcMonitorServer(const std::string& listen_addr, TradingEngine& engine);
+    /**
+     * @brief GrpcMonitorServer.
+     * @return None.
+     */
     ~GrpcMonitorServer();
 
     // Non-copyable
+    /**
+     * @brief GrpcMonitorServer.
+     * @param GrpcMonitorServer Parameter supplied by the caller.
+     * @return None.
+     */
     GrpcMonitorServer(const GrpcMonitorServer&)            = delete;
     GrpcMonitorServer& operator=(const GrpcMonitorServer&) = delete;
 
+    /**
+     * @brief Start.
+     * @return None.
+     */
     void start();
+    /**
+     * @brief Stop.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void stop() noexcept;
 
+    /**
+     * @brief Is running.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool is_running() const noexcept {
         return running_.load(std::memory_order_relaxed);
     }

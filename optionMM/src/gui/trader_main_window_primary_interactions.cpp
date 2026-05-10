@@ -12,6 +12,10 @@
 
 namespace omm::gui {
 
+/**
+ * @brief Implements Connect primary interactions.
+ * @return None.
+ */
 void TraderMainWindow::connect_primary_interactions() {
     connect(buy_button_, &QPushButton::clicked, this, [this] {
         side_selector_->setCurrentText("buy");

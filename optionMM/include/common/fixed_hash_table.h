@@ -54,6 +54,13 @@ class FixedHashTable {
     static_assert(std::is_integral<K>::value, "FixedHashTable requires an integral key");
 
 public:
+    /**
+     * @brief Insert.
+     * @param key Parameter supplied by the caller.
+     * @param value Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool insert(K key, const V& value) noexcept {
         if (key == K{}) return false;
         std::size_t first_tombstone = Capacity;
@@ -84,16 +91,34 @@ public:
         return false;
     }
 
+    /**
+     * @brief Find.
+     * @param key Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] V* find(K key) noexcept {
         const std::size_t idx = find_index(key);
         return idx == Capacity ? nullptr : &slots_[idx].value;
     }
 
+    /**
+     * @brief Find.
+     * @param key Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] const V* find(K key) const noexcept {
         const std::size_t idx = find_index(key);
         return idx == Capacity ? nullptr : &slots_[idx].value;
     }
 
+    /**
+     * @brief Erase.
+     * @param key Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     bool erase(K key) noexcept {
         const std::size_t idx = find_index(key);
         if (idx == Capacity) return false;
@@ -102,15 +127,36 @@ public:
         return true;
     }
 
+    /**
+     * @brief Clear.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void clear() noexcept {
         for (Slot& slot : slots_) slot.state = State::Empty;
         size_ = 0;
     }
 
+    /**
+     * @brief Size.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] std::size_t size() const noexcept { return size_; }
+    /**
+     * @brief Empty.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool empty() const noexcept { return size_ == 0; }
 
     template <typename Fn>
+    /**
+     * @brief For each.
+     * @param fn Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void for_each(Fn&& fn) noexcept {
         for (Slot& slot : slots_) {
             if (slot.state == State::Occupied) fn(slot.key, slot.value);
@@ -118,6 +164,12 @@ public:
     }
 
     template <typename Fn>
+    /**
+     * @brief For each.
+     * @param fn Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void for_each(Fn&& fn) const noexcept {
         for (const Slot& slot : slots_) {
             if (slot.state == State::Occupied) fn(slot.key, slot.value);
@@ -133,10 +185,22 @@ private:
         V value{};
     };
 
+    /**
+     * @brief Bucket.
+     * @param key Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] std::size_t bucket(K key) const noexcept {
         return static_cast<std::size_t>(detail::numeric_hash(key)) & (Capacity - 1);
     }
 
+    /**
+     * @brief Find index.
+     * @param key Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] std::size_t find_index(K key) const noexcept {
         if (key == K{}) return Capacity;
         const std::size_t start = bucket(key);
@@ -149,6 +213,14 @@ private:
         return Capacity;
     }
 
+    /**
+     * @brief Occupy.
+     * @param idx Parameter supplied by the caller.
+     * @param key Parameter supplied by the caller.
+     * @param value Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void occupy(std::size_t idx, K key, const V& value) noexcept {
         Slot& slot = slots_[idx];
         slot.key = key;
@@ -167,6 +239,13 @@ class FixedStringHashTable {
     static_assert(detail::is_power_of_two(Capacity), "Capacity must be a power of two");
 
 public:
+    /**
+     * @brief Insert.
+     * @param key Parameter supplied by the caller.
+     * @param value Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool insert(const char* key, const V& value) noexcept {
         if (key == nullptr || key[0] == '\0') return false;
         std::size_t first_tombstone = Capacity;
@@ -197,16 +276,34 @@ public:
         return false;
     }
 
+    /**
+     * @brief Find.
+     * @param key Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] V* find(const char* key) noexcept {
         const std::size_t idx = find_index(key);
         return idx == Capacity ? nullptr : &slots_[idx].value;
     }
 
+    /**
+     * @brief Find.
+     * @param key Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] const V* find(const char* key) const noexcept {
         const std::size_t idx = find_index(key);
         return idx == Capacity ? nullptr : &slots_[idx].value;
     }
 
+    /**
+     * @brief Erase.
+     * @param key Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     bool erase(const char* key) noexcept {
         const std::size_t idx = find_index(key);
         if (idx == Capacity) return false;
@@ -215,12 +312,27 @@ public:
         return true;
     }
 
+    /**
+     * @brief Clear.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void clear() noexcept {
         for (Slot& slot : slots_) slot.state = State::Empty;
         size_ = 0;
     }
 
+    /**
+     * @brief Size.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] std::size_t size() const noexcept { return size_; }
+    /**
+     * @brief Empty.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] bool empty() const noexcept { return size_ == 0; }
 
 private:
@@ -232,10 +344,22 @@ private:
         V value{};
     };
 
+    /**
+     * @brief Bucket.
+     * @param key Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] std::size_t bucket(const char* key) const noexcept {
         return static_cast<std::size_t>(detail::fnv1a_bounded(key, KeySize - 1)) & (Capacity - 1);
     }
 
+    /**
+     * @brief Find index.
+     * @param key Parameter supplied by the caller.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     [[nodiscard]] std::size_t find_index(const char* key) const noexcept {
         if (key == nullptr || key[0] == '\0') return Capacity;
         const std::size_t start = bucket(key);
@@ -251,6 +375,14 @@ private:
         return Capacity;
     }
 
+    /**
+     * @brief Occupy.
+     * @param idx Parameter supplied by the caller.
+     * @param key Parameter supplied by the caller.
+     * @param value Parameter supplied by the caller.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     void occupy(std::size_t idx, const char* key, const V& value) noexcept {
         Slot& slot = slots_[idx];
         std::strncpy(slot.key.data(), key, KeySize - 1);

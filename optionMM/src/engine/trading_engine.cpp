@@ -117,6 +117,12 @@ void apply_fill_to_position(PositionLike* pos, const Trade& trade) noexcept {
 
 // ─── Construction / destruction ───────────────────────────────────────────────
 
+/**
+ * @brief Implements TradingEngine.
+ * @param cfg Parameter supplied by the caller.
+ * @param gateway Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 TradingEngine::TradingEngine(const SystemConfig& cfg,
                               std::unique_ptr<IGateway>     gateway,
                               std::unique_ptr<IFeedHandler> feed)
@@ -177,6 +183,12 @@ TradingEngine::TradingEngine(const SystemConfig& cfg,
 
 TradingEngine::~TradingEngine() { stop(); }
 
+/**
+ * @brief Implements Product pricing.
+ * @param i Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 ProductPricingConfig TradingEngine::product_pricing(int i) const noexcept {
     ProductPricingConfig pricing{};
     if (i < 0 || i >= MAX_PRODUCTS) return pricing;
@@ -186,6 +198,13 @@ ProductPricingConfig TradingEngine::product_pricing(int i) const noexcept {
     return pricing;
 }
 
+/**
+ * @brief Implements Set product pricing.
+ * @param i Parameter supplied by the caller.
+ * @param pricing Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool TradingEngine::set_product_pricing(int i, const ProductPricingConfig& pricing) noexcept {
     if (i < 0 || i >= cfg_.product_count || i >= MAX_PRODUCTS) return false;
     product_base_offset_type_[i].store(
@@ -194,6 +213,11 @@ bool TradingEngine::set_product_pricing(int i, const ProductPricingConfig& prici
     return true;
 }
 
+/**
+ * @brief Implements Enable huge pages for large arrays.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 int TradingEngine::enable_huge_pages_for_large_arrays() noexcept {
     if (!huge_pages_available()) {
         OMM_LOG_INFO("hugepages", "Transparent huge pages not available on this system");
@@ -252,6 +276,11 @@ int TradingEngine::enable_huge_pages_for_large_arrays() noexcept {
     return enabled_count;
 }
 
+/**
+ * @brief Implements Enable numa awareness.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool TradingEngine::enable_numa_awareness() noexcept {
     if (!numa_available_multi_node()) {
         OMM_LOG_INFO("numa", "NUMA not available or single-node system - skipping NUMA optimization");
@@ -301,6 +330,11 @@ bool TradingEngine::enable_numa_awareness() noexcept {
 
 // ─── Startup ──────────────────────────────────────────────────────────────────
 
+/**
+ * @brief Implements Populate instrument registry.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::populate_instrument_registry() noexcept {
     // Query instruments from gateway (blocking at startup)
     gateway_->query_instruments(instruments_, &n_instruments_, MAX_INSTRUMENTS);
@@ -352,6 +386,11 @@ void TradingEngine::populate_instrument_registry() noexcept {
 
 }
 
+/**
+ * @brief Implements Refresh option T.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::refresh_option_T() noexcept {
     const double r = cfg_.pricing.risk_free_rate;
     for (int p = 0; p < cfg_.product_count && p < MAX_PRODUCTS; ++p) {
@@ -384,6 +423,12 @@ void TradingEngine::refresh_option_T() noexcept {
     }
 }
 
+/**
+ * @brief Implements Option time to expiry years.
+ * @param opt Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 double TradingEngine::option_time_to_expiry_years(const Instrument& opt) const noexcept {
     if (trading_calendar_ready_) {
         return trading_calendar_.time_to_expiry_years(
@@ -394,6 +439,11 @@ double TradingEngine::option_time_to_expiry_years(const Instrument& opt) const n
     return fallback > 1e-4 ? fallback : 1e-4;
 }
 
+/**
+ * @brief Implements Init strategies.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::init_strategies() noexcept {
     for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i) {
         if (std::strncmp(cfg_.products[i].strategy_type, "option_mm_core",
@@ -422,6 +472,11 @@ void TradingEngine::init_strategies() noexcept {
     }
 }
 
+/**
+ * @brief Implements Init vol surfaces.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::init_vol_surfaces() noexcept {
     for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i) {
         // Initialise both ping-pong buffers with a flat default surface
@@ -471,6 +526,11 @@ void TradingEngine::init_vol_surfaces() noexcept {
     }
 }
 
+/**
+ * @brief Implements Init arbitrage strategies.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::init_arbitrage_strategies() noexcept {
     for (int product = 0; product < cfg_.product_count && product < MAX_PRODUCTS; ++product) {
         for (int slot = 0;
@@ -495,6 +555,11 @@ void TradingEngine::init_arbitrage_strategies() noexcept {
     }
 }
 
+/**
+ * @brief Implements Init identity from config.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::init_identity_from_config() noexcept {
     identity_state_.users.clear();
     identity_state_.books.clear();
@@ -544,6 +609,12 @@ void TradingEngine::init_identity_from_config() noexcept {
     }
 }
 
+/**
+ * @brief Implements Apply identity state.
+ * @param state Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::apply_identity_state(const IdentityState& state) noexcept {
     identity_state_ = state;
     mm_book_ids_.fill(INVALID_BOOK_ID);
@@ -561,6 +632,11 @@ void TradingEngine::apply_identity_state(const IdentityState& state) noexcept {
     }
 }
 
+/**
+ * @brief Implements Init persistence.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::init_persistence() noexcept {
     if (!repository_) return;
 
@@ -591,6 +667,11 @@ void TradingEngine::init_persistence() noexcept {
     persist_risk_limits_update(post_risk_.limits());
 }
 
+/**
+ * @brief Implements Init trading calendar.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool TradingEngine::init_trading_calendar() noexcept {
     std::string error;
     if (repository_) {
@@ -619,6 +700,11 @@ bool TradingEngine::init_trading_calendar() noexcept {
     return true;
 }
 
+/**
+ * @brief Implements Persist shutdown state.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::persist_shutdown_state() noexcept {
     if (!repository_) return;
 
@@ -634,6 +720,10 @@ void TradingEngine::persist_shutdown_state() noexcept {
     repository_->stop();
 }
 
+/**
+ * @brief Implements Start.
+ * @return None.
+ */
 void TradingEngine::start() {
     // Startup order matters:
     // 1. instrument registry builds routing tables used by every worker;
@@ -680,6 +770,11 @@ void TradingEngine::start() {
     if (feed_) feed_->start();
 }
 
+/**
+ * @brief Implements Stop.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::stop() noexcept {
     // stop_flag_ asks workers to exit their loops. Joining before persistence
     // shutdown lets deferred events drain into repository queues where possible.
@@ -703,6 +798,13 @@ void TradingEngine::stop() noexcept {
     if (gateway_) gateway_->disconnect();
 }
 
+/**
+ * @brief Implements Read all greeks.
+ * @param out Parameter supplied by the caller.
+ * @param max_count Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 int TradingEngine::read_all_greeks(Greeks* out, int max_count) const noexcept {
     if (out == nullptr || max_count <= 0) return 0;
     const int count = std::min<int>(max_count, n_instruments_);
@@ -721,6 +823,11 @@ int TradingEngine::read_all_greeks(Greeks* out, int max_count) const noexcept {
 // Monitoring accessors below intentionally tolerate eventually consistent
 // single-writer counters. They are read by UI/gRPC paths and must not stall hot
 // pricing or strategy threads.
+/**
+ * @brief Implements Total coalesced signal writes.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 uint64_t TradingEngine::total_coalesced_signal_writes() const noexcept {
     uint64_t total = 0;
     for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i)
@@ -728,6 +835,11 @@ uint64_t TradingEngine::total_coalesced_signal_writes() const noexcept {
     return total;
 }
 
+/**
+ * @brief Implements Total coalesced signal overwrites.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 uint64_t TradingEngine::total_coalesced_signal_overwrites() const noexcept {
     uint64_t total = 0;
     for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i)
@@ -735,6 +847,11 @@ uint64_t TradingEngine::total_coalesced_signal_overwrites() const noexcept {
     return total;
 }
 
+/**
+ * @brief Implements Total coalesced timer writes.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 uint64_t TradingEngine::total_coalesced_timer_writes() const noexcept {
     uint64_t total = 0;
     for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i)
@@ -742,6 +859,11 @@ uint64_t TradingEngine::total_coalesced_timer_writes() const noexcept {
     return total;
 }
 
+/**
+ * @brief Implements Total coalesced timer overwrites.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 uint64_t TradingEngine::total_coalesced_timer_overwrites() const noexcept {
     uint64_t total = 0;
     for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i)
@@ -749,6 +871,11 @@ uint64_t TradingEngine::total_coalesced_timer_overwrites() const noexcept {
     return total;
 }
 
+/**
+ * @brief Implements Total signal emit count.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 uint64_t TradingEngine::total_signal_emit_count() const noexcept {
     uint64_t total = 0;
     for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i)
@@ -756,6 +883,11 @@ uint64_t TradingEngine::total_signal_emit_count() const noexcept {
     return total;
 }
 
+/**
+ * @brief Implements Total signal suppressed count.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 uint64_t TradingEngine::total_signal_suppressed_count() const noexcept {
     uint64_t total = 0;
     for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i)
@@ -763,6 +895,11 @@ uint64_t TradingEngine::total_signal_suppressed_count() const noexcept {
     return total;
 }
 
+/**
+ * @brief Implements Total pending future tick overwrites.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 uint64_t TradingEngine::total_pending_future_tick_overwrites() const noexcept {
     uint64_t total = 0;
     for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i)
@@ -770,6 +907,11 @@ uint64_t TradingEngine::total_pending_future_tick_overwrites() const noexcept {
     return total;
 }
 
+/**
+ * @brief Implements Max signal queue depth.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 uint32_t TradingEngine::max_signal_queue_depth() const noexcept {
     uint32_t max_depth = 0;
     for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i) {
@@ -778,6 +920,11 @@ uint32_t TradingEngine::max_signal_queue_depth() const noexcept {
     return max_depth;
 }
 
+/**
+ * @brief Implements Max signal mailbox depth.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 uint32_t TradingEngine::max_signal_mailbox_depth() const noexcept {
     uint32_t max_depth = 0;
     for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i) {
@@ -786,6 +933,11 @@ uint32_t TradingEngine::max_signal_mailbox_depth() const noexcept {
     return max_depth;
 }
 
+/**
+ * @brief Implements Max timer queue depth.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 uint32_t TradingEngine::max_timer_queue_depth() const noexcept {
     uint32_t max_depth = 0;
     for (int i = 0; i < cfg_.product_count && i < MAX_PRODUCTS; ++i) {
@@ -794,36 +946,79 @@ uint32_t TradingEngine::max_timer_queue_depth() const noexcept {
     return max_depth;
 }
 
+/**
+ * @brief Implements Last signal emit ts.
+ * @param instrument_id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 int64_t TradingEngine::last_signal_emit_ts(uint16_t instrument_id) const noexcept {
     if (instrument_id >= MAX_INSTRUMENTS) return 0;
     return last_signal_emit_ts_[instrument_id];  // Plain read
 }
 
+/**
+ * @brief Implements Last strategy signal ts.
+ * @param instrument_id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 int64_t TradingEngine::last_strategy_signal_ts(uint16_t instrument_id) const noexcept {
     if (instrument_id >= MAX_INSTRUMENTS) return 0;
     return last_strategy_signal_ts_[instrument_id];  // Plain read (eventual consistency OK)
 }
 
+/**
+ * @brief Implements Last quote ack route ts.
+ * @param instrument_id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 int64_t TradingEngine::last_quote_ack_route_ts(uint16_t instrument_id) const noexcept {
     if (instrument_id >= MAX_INSTRUMENTS) return 0;
     return last_quote_ack_route_ts_[instrument_id];  // Plain read (eventual consistency OK)
 }
 
+/**
+ * @brief Implements Last quote cancel route ts.
+ * @param instrument_id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 int64_t TradingEngine::last_quote_cancel_route_ts(uint16_t instrument_id) const noexcept {
     if (instrument_id >= MAX_INSTRUMENTS) return 0;
     return last_quote_cancel_route_ts_[instrument_id];  // Plain read (eventual consistency OK)
 }
 
+/**
+ * @brief Implements Last quote ack route latency ns.
+ * @param instrument_id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 int64_t TradingEngine::last_quote_ack_route_latency_ns(uint16_t instrument_id) const noexcept {
     if (instrument_id >= MAX_INSTRUMENTS) return 0;
     return last_quote_ack_route_latency_ns_[instrument_id];  // Plain read (eventual consistency OK)
 }
 
+/**
+ * @brief Implements Last quote cancel route latency ns.
+ * @param instrument_id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 int64_t TradingEngine::last_quote_cancel_route_latency_ns(uint16_t instrument_id) const noexcept {
     if (instrument_id >= MAX_INSTRUMENTS) return 0;
     return last_quote_cancel_route_latency_ns_[instrument_id];  // Plain read (eventual consistency OK)
 }
 
+/**
+ * @brief Implements Strategy runtime stats.
+ * @param product_idx Parameter supplied by the caller.
+ * @param out Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool TradingEngine::strategy_runtime_stats(int product_idx,
                                            StrategyRuntimeStats* out) const noexcept {
     if (product_idx < 0 || product_idx >= product_count()) return false;
@@ -831,6 +1026,13 @@ bool TradingEngine::strategy_runtime_stats(int product_idx,
     return strategies_[product_idx]->read_runtime_stats(out);
 }
 
+/**
+ * @brief Implements Find arbitrage slot.
+ * @param product_idx Parameter supplied by the caller.
+ * @param type Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 int TradingEngine::find_arbitrage_slot(int product_idx,
                                        ArbitrageStrategyType type) const noexcept {
     if (product_idx < 0 || product_idx >= product_count()) return -1;
@@ -842,6 +1044,14 @@ int TradingEngine::find_arbitrage_slot(int product_idx,
     return -1;
 }
 
+/**
+ * @brief Implements Arbitrage strategy state.
+ * @param product_idx Parameter supplied by the caller.
+ * @param type Parameter supplied by the caller.
+ * @param out Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool TradingEngine::arbitrage_strategy_state(int product_idx,
                                              ArbitrageStrategyType type,
                                              ArbStrategyMonitorState* out) const noexcept {
@@ -852,6 +1062,15 @@ bool TradingEngine::arbitrage_strategy_state(int product_idx,
     return strategy->read_monitor_state(out);
 }
 
+/**
+ * @brief Implements Arbitrage pcp monitor states.
+ * @param product_idx Parameter supplied by the caller.
+ * @param type Parameter supplied by the caller.
+ * @param out Parameter supplied by the caller.
+ * @param max_count Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 int TradingEngine::arbitrage_pcp_monitor_states(int product_idx,
                                                 ArbitrageStrategyType type,
                                                 PCPPairMonitorState* out,
@@ -865,6 +1084,14 @@ int TradingEngine::arbitrage_pcp_monitor_states(int product_idx,
     return strategy->read_pcp_monitor_states(out, max_count);
 }
 
+/**
+ * @brief Implements Arbitrage params snapshot.
+ * @param product_idx Parameter supplied by the caller.
+ * @param type Parameter supplied by the caller.
+ * @param out Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool TradingEngine::arbitrage_params_snapshot(int product_idx,
                                               ArbitrageStrategyType type,
                                               ArbParamsConfig* out) const noexcept {
@@ -875,6 +1102,14 @@ bool TradingEngine::arbitrage_params_snapshot(int product_idx,
     return true;
 }
 
+/**
+ * @brief Implements Set arbitrage enabled.
+ * @param product_idx Parameter supplied by the caller.
+ * @param type Parameter supplied by the caller.
+ * @param enabled Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool TradingEngine::set_arbitrage_enabled(int product_idx,
                                           ArbitrageStrategyType type,
                                           bool enabled) noexcept {
@@ -885,6 +1120,13 @@ bool TradingEngine::set_arbitrage_enabled(int product_idx,
     return true;
 }
 
+/**
+ * @brief Implements Arbitrage params.
+ * @param product_idx Parameter supplied by the caller.
+ * @param type Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 AtomicArbParams* TradingEngine::arbitrage_params(int product_idx,
                                                  ArbitrageStrategyType type) noexcept {
     const int slot = find_arbitrage_slot(product_idx, type);
@@ -895,6 +1137,14 @@ AtomicArbParams* TradingEngine::arbitrage_params(int product_idx,
 // Pricing signals can arrive faster than a strategy thread can consume them.
 // For each option slot, keep only the latest signal and queue the slot index as
 // a wake-up hint. If the index queue overflows, the consumer rescans all slots.
+/**
+ * @brief Implements Coalesce signal.
+ * @param product_idx Parameter supplied by the caller.
+ * @param option_slot Parameter supplied by the caller.
+ * @param sig Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::coalesce_signal(uint8_t product_idx,
                                     uint16_t option_slot,
                                     const PricingSignal& sig) noexcept {
@@ -915,6 +1165,14 @@ void TradingEngine::coalesce_signal(uint8_t product_idx,
                static_cast<uint32_t>(coalesced_signal_index_buf_[product_idx].size_approx()));
 }
 
+/**
+ * @brief Implements Drain coalesced signals.
+ * @param product_idx Parameter supplied by the caller.
+ * @param seen_versions Parameter supplied by the caller.
+ * @param budget Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 int TradingEngine::drain_coalesced_signals(int product_idx,
                                            uint64_t* seen_versions,
                                            int budget) noexcept {
@@ -970,6 +1228,13 @@ int TradingEngine::drain_coalesced_signals(int product_idx,
 
 // Timer events are latest-only by type: hedge checks and quote refreshes are
 // periodic nudges, so redundant queued copies can be collapsed safely.
+/**
+ * @brief Implements Coalesce timer event.
+ * @param product_idx Parameter supplied by the caller.
+ * @param ev Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::coalesce_timer_event(int product_idx, const TimerEvent& ev) noexcept {
     const int slot = timer_mailbox_slot(ev.type);
     if (slot < 0 || slot >= kCoalescedTimerSlotCount) return;
@@ -980,6 +1245,14 @@ void TradingEngine::coalesce_timer_event(int product_idx, const TimerEvent& ev) 
     coalesced_timer_writes_[product_idx].fetch_add(1, std::memory_order_relaxed);
 }
 
+/**
+ * @brief Implements Drain coalesced timers.
+ * @param product_idx Parameter supplied by the caller.
+ * @param seen_versions Parameter supplied by the caller.
+ * @param budget Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 int TradingEngine::drain_coalesced_timers(int product_idx,
                                           uint64_t* seen_versions,
                                           int budget) noexcept {
@@ -1012,6 +1285,15 @@ int TradingEngine::drain_coalesced_timers(int product_idx,
     return drained;
 }
 
+/**
+ * @brief Implements Should emit signal.
+ * @param product_idx Parameter supplied by the caller.
+ * @param option_slot Parameter supplied by the caller.
+ * @param sig Parameter supplied by the caller.
+ * @param surface_version Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool TradingEngine::should_emit_signal(uint8_t product_idx,
                                        uint16_t option_slot,
                                        const PricingSignal& sig,
@@ -1069,6 +1351,16 @@ bool TradingEngine::should_emit_signal(uint8_t product_idx,
     return false;
 }
 
+/**
+ * @brief Implements Note signal emitted.
+ * @param product_idx Parameter supplied by the caller.
+ * @param option_slot Parameter supplied by the caller.
+ * @param instrument_id Parameter supplied by the caller.
+ * @param sig Parameter supplied by the caller.
+ * @param surface_version Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::note_signal_emitted(uint8_t product_idx,
                                         uint16_t option_slot,
                                         uint16_t instrument_id,
@@ -1098,6 +1390,12 @@ void TradingEngine::note_signal_emitted(uint8_t product_idx,
 // Hot workers call publish_monitor_* directly. Depending on config, events are
 // either published inline or deferred to MonitorPublisherWorker to keep the hot
 // path from doing heavier history/persistence work.
+/**
+ * @brief Implements Publish monitor tick.
+ * @param tick Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::publish_monitor_tick(const TopOfBookTick& tick) noexcept {
     switch (cfg_.monitoring.hot_path_publish_mode) {
     case MonitoringPublishMode::Full:
@@ -1111,6 +1409,12 @@ void TradingEngine::publish_monitor_tick(const TopOfBookTick& tick) noexcept {
     }
 }
 
+/**
+ * @brief Implements Publish monitor order.
+ * @param order Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::publish_monitor_order(const Order& order) noexcept {
     switch (cfg_.monitoring.hot_path_publish_mode) {
     case MonitoringPublishMode::Full:
@@ -1124,6 +1428,12 @@ void TradingEngine::publish_monitor_order(const Order& order) noexcept {
     }
 }
 
+/**
+ * @brief Implements Publish monitor quote.
+ * @param quote Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::publish_monitor_quote(const Quote& quote) noexcept {
     switch (cfg_.monitoring.hot_path_publish_mode) {
     case MonitoringPublishMode::Full:
@@ -1137,6 +1447,12 @@ void TradingEngine::publish_monitor_quote(const Quote& quote) noexcept {
     }
 }
 
+/**
+ * @brief Implements Publish monitor trade.
+ * @param trade Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::publish_monitor_trade(const Trade& trade) noexcept {
     switch (cfg_.monitoring.hot_path_publish_mode) {
     case MonitoringPublishMode::Full:
@@ -1150,6 +1466,13 @@ void TradingEngine::publish_monitor_trade(const Trade& trade) noexcept {
     }
 }
 
+/**
+ * @brief Implements Defer order persistence.
+ * @param type Parameter supplied by the caller.
+ * @param order Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::defer_order_persistence(
         OrderPersistenceEventType type,
         const Order& order) noexcept {
@@ -1162,6 +1485,14 @@ void TradingEngine::defer_order_persistence(
     }
 }
 
+/**
+ * @brief Implements Defer quote persistence.
+ * @param type Parameter supplied by the caller.
+ * @param quote Parameter supplied by the caller.
+ * @param unused Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::defer_quote_persistence(
         QuotePersistenceEventType type,
         const Quote& quote,
@@ -1176,6 +1507,12 @@ void TradingEngine::defer_quote_persistence(
     }
 }
 
+/**
+ * @brief Implements Defer trade persistence.
+ * @param trade Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::defer_trade_persistence(const Trade& trade) noexcept {
     if (!repository_) return;
     if (!deferred_persist_trades_.try_push(trade)) {
@@ -1183,6 +1520,11 @@ void TradingEngine::defer_trade_persistence(const Trade& trade) noexcept {
     }
 }
 
+/**
+ * @brief Implements Persist end of day snapshot.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::persist_end_of_day_snapshot() noexcept {
     if (!repository_) return;
     std::array<Greeks, MAX_INSTRUMENTS> greeks{};
@@ -1215,11 +1557,25 @@ void TradingEngine::persist_end_of_day_snapshot() noexcept {
 
 // Book positions are keyed by book + instrument. The risk worker owns updates;
 // readers take book_state_mutex_ to build consistent snapshots for monitoring.
+/**
+ * @brief Implements Book position key.
+ * @param book_id Parameter supplied by the caller.
+ * @param instrument_id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 uint64_t TradingEngine::book_position_key(BookId book_id,
                                           uint16_t instrument_id) noexcept {
     return (static_cast<uint64_t>(book_id) << 16) | instrument_id;
 }
 
+/**
+ * @brief Implements Arb book id for type.
+ * @param product_idx Parameter supplied by the caller.
+ * @param type Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 BookId TradingEngine::arb_book_id_for_type(int product_idx,
                                            ArbitrageStrategyType type) const noexcept {
     const int slot = find_arbitrage_slot(product_idx, type);
@@ -1229,6 +1585,12 @@ BookId TradingEngine::arb_book_id_for_type(int product_idx,
     return arb_book_ids_[product_idx][slot];
 }
 
+/**
+ * @brief Implements Rebuild book position locked.
+ * @param trade Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::rebuild_book_position_locked(const Trade& trade) noexcept {
     if (trade.book_id == INVALID_BOOK_ID) return;
     BookPosition& position = book_positions_[book_position_key(trade.book_id, trade.instrument_id)];
@@ -1236,6 +1598,13 @@ void TradingEngine::rebuild_book_position_locked(const Trade& trade) noexcept {
     apply_fill_to_position(&position, trade);
 }
 
+/**
+ * @brief Implements Book positions snapshot.
+ * @param out Parameter supplied by the caller.
+ * @param max_count Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 int TradingEngine::book_positions_snapshot(BookPosition* out, int max_count) const noexcept {
     if (out == nullptr || max_count <= 0) return 0;
     std::lock_guard<std::mutex> lock(book_state_mutex_);
@@ -1254,6 +1623,13 @@ int TradingEngine::book_positions_snapshot(BookPosition* out, int max_count) con
     return count;
 }
 
+/**
+ * @brief Implements Book portfolios snapshot.
+ * @param out Parameter supplied by the caller.
+ * @param max_count Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 int TradingEngine::book_portfolios_snapshot(BookPortfolioGreeks* out,
                                             int max_count) const noexcept {
     if (out == nullptr || max_count <= 0) return 0;
@@ -1296,10 +1672,20 @@ int TradingEngine::book_portfolios_snapshot(BookPortfolioGreeks* out,
     return count;
 }
 
+/**
+ * @brief Implements Note session activated.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::note_session_activated() noexcept {
     strategy_dispatch_suspended_.store(false, std::memory_order_release);
 }
 
+/**
+ * @brief Implements Shutdown on zero sessions.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::shutdown_on_zero_sessions() noexcept {
     // Zero active sessions is treated as a protective shutdown: prevent new
     // strategy dispatch, persist disabled params, and cancel outstanding live
@@ -1330,6 +1716,12 @@ void TradingEngine::shutdown_on_zero_sessions() noexcept {
 // The gateway may report fills/acks with only exchange-side identifiers. These
 // live-state helpers restore product/book/account metadata before events are
 // routed to strategies, monitoring, persistence, and risk.
+/**
+ * @brief Implements Track live order submit.
+ * @param order Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::track_live_order_submit(const Order& order) noexcept {
     LiveOrderState state{};
     state.order = order;
@@ -1338,6 +1730,14 @@ void TradingEngine::track_live_order_submit(const Order& order) noexcept {
     }
 }
 
+/**
+ * @brief Implements Track live quote submit.
+ * @param quote Parameter supplied by the caller.
+ * @param bid_order_id Parameter supplied by the caller.
+ * @param ask_order_id Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::track_live_quote_submit(const Quote& quote,
                                             OrderId bid_order_id,
                                             OrderId ask_order_id) noexcept {
@@ -1371,6 +1771,13 @@ void TradingEngine::track_live_quote_submit(const Quote& quote,
     }
 }
 
+/**
+ * @brief Implements Handle gateway order update.
+ * @param order Parameter supplied by the caller.
+ * @param type Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::handle_gateway_order_update(Order& order,
                                                 GatewayEventType type) noexcept {
     LiveOrderState* state = live_orders_.find(order.client_order_id);
@@ -1405,6 +1812,13 @@ void TradingEngine::handle_gateway_order_update(Order& order,
     }
 }
 
+/**
+ * @brief Implements Handle gateway quote update.
+ * @param quote Parameter supplied by the caller.
+ * @param type Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::handle_gateway_quote_update(Quote& quote,
                                                 GatewayEventType type) noexcept {
     LiveQuoteState* state = live_quotes_.find(quote.client_quote_id);
@@ -1429,6 +1843,13 @@ void TradingEngine::handle_gateway_quote_update(Quote& quote,
     }
 }
 
+/**
+ * @brief Implements Handle gateway fill.
+ * @param trade Parameter supplied by the caller.
+ * @param type Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::handle_gateway_fill(Trade* trade,
                                         GatewayEventType* type) noexcept {
     if (trade == nullptr || type == nullptr) return;
@@ -1505,10 +1926,20 @@ void TradingEngine::handle_gateway_fill(Trade* trade,
     }
 }
 
+/**
+ * @brief Implements Request cancel all live orders and quotes.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::request_cancel_all_live_orders_and_quotes() noexcept {
     cancel_all_live_requested_.store(true, std::memory_order_release);
 }
 
+/**
+ * @brief Implements Cancel all live orders and quotes.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::cancel_all_live_orders_and_quotes() noexcept {
     std::array<Order, MAX_OPEN_ORDERS> orders{};
     std::size_t order_count = 0;
@@ -1534,6 +1965,12 @@ void TradingEngine::cancel_all_live_orders_and_quotes() noexcept {
 
 // ─── Manual order / cancel (called from gRPC server thread) ──────────────────
 
+/**
+ * @brief Implements Submit manual order.
+ * @param o Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool TradingEngine::submit_manual_order(const Order& o) noexcept {
     if (!gateway_ || !gateway_->is_connected()) return false;
     // Route through the product's order buffer so the gateway dispatcher sends it
@@ -1541,6 +1978,13 @@ bool TradingEngine::submit_manual_order(const Order& o) noexcept {
     return order_buf_[prod].try_push(o);
 }
 
+/**
+ * @brief Implements Persist mm params update.
+ * @param product_index Parameter supplied by the caller.
+ * @param params Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::persist_mm_params_update(int product_index,
                                              const MMParamsConfig& params) noexcept {
     if (!repository_ || product_index < 0 || product_index >= MAX_PRODUCTS) return;
@@ -1553,6 +1997,14 @@ void TradingEngine::persist_mm_params_update(int product_index,
     }
 }
 
+/**
+ * @brief Implements Persist arb params update.
+ * @param product_index Parameter supplied by the caller.
+ * @param type Parameter supplied by the caller.
+ * @param params Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::persist_arb_params_update(int product_index,
                                               ArbitrageStrategyType type,
                                               const ArbParamsConfig& params) noexcept {
@@ -1568,6 +2020,12 @@ void TradingEngine::persist_arb_params_update(int product_index,
     }
 }
 
+/**
+ * @brief Implements Persist risk limits update.
+ * @param cfg Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void TradingEngine::persist_risk_limits_update(const SoftRiskConfig& cfg) noexcept {
     if (!repository_) return;
     RiskParamsPersistenceEvent event{};
@@ -1578,11 +2036,25 @@ void TradingEngine::persist_risk_limits_update(const SoftRiskConfig& cfg) noexce
     }
 }
 
+/**
+ * @brief Implements Cancel order.
+ * @param id Parameter supplied by the caller.
+ * @param instrument_id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool TradingEngine::cancel_order(OrderId id, uint16_t instrument_id) noexcept {
     if (!gateway_ || !gateway_->is_connected()) return false;
     return gateway_->cancel_order(id, instrument_id);
 }
 
+/**
+ * @brief Implements Cancel quote.
+ * @param id Parameter supplied by the caller.
+ * @param instrument_id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool TradingEngine::cancel_quote(QuoteId id, uint16_t instrument_id) noexcept {
     if (!gateway_ || !gateway_->is_connected()) return false;
     return gateway_->cancel_quote(id, instrument_id);

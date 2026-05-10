@@ -4,6 +4,11 @@
 
 namespace omm {
 
+/**
+ * @brief Implements Reset.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void PostTradeRisk::reset() noexcept {
     for (auto& p : positions_) p = Position{};
     portfolio_ = PortfolioGreeks{};
@@ -13,6 +18,13 @@ void PostTradeRisk::reset() noexcept {
     vega_breach_.store(false, std::memory_order_relaxed);
 }
 
+/**
+ * @brief Implements Restore positions.
+ * @param positions Parameter supplied by the caller.
+ * @param n_positions Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void PostTradeRisk::restore_positions(const Position* positions,
                                       uint16_t n_positions) noexcept {
     reset();
@@ -25,6 +37,12 @@ void PostTradeRisk::restore_positions(const Position* positions,
     }
 }
 
+/**
+ * @brief Implements On fill.
+ * @param trade Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void PostTradeRisk::on_fill(const Trade& trade) noexcept {
     if (trade.instrument_id >= MAX_INSTRUMENTS) return;
 
@@ -61,6 +79,13 @@ void PostTradeRisk::on_fill(const Trade& trade) noexcept {
         pos_breach_.store(true, std::memory_order_release);
 }
 
+/**
+ * @brief Implements Check limits.
+ * @param greeks_table Parameter supplied by the caller.
+ * @param n_instruments Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool PostTradeRisk::check_limits(const Greeks* greeks_table,
                                   uint16_t n_instruments) noexcept {
     // Aggregate portfolio Greeks from current positions × per-instrument Greeks

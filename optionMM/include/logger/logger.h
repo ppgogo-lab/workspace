@@ -32,14 +32,34 @@ public:
     // Call once at startup (before engine.start()).
     // log_path: path to rotating log file (directory must exist).
     // to_stdout: also log to console.
+    /**
+     * @brief Init.
+     * @param log_path Parameter supplied by the caller.
+     * @param to_stdout Parameter supplied by the caller.
+     * @return None.
+     */
     static void init(std::string_view log_path, bool to_stdout = true);
 
     // Flush and shut down async thread. Call after engine.stop().
+    /**
+     * @brief Shutdown.
+     * @return None.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     static void shutdown() noexcept;
 
     // Raw access for the macros below.
+    /**
+     * @brief Get.
+     * @return Return value produced by the operation.
+     * @note Noexcept API preserves hot-path failure and latency invariants.
+     */
     static spdlog::logger* get() noexcept;
 
+    /**
+     * @brief OmmLogger.
+     * @return None.
+     */
     OmmLogger() = delete;
 };
 

@@ -453,6 +453,10 @@ bool combo_matches(QComboBox* combo,
     return true;
 }
 
+/**
+ * @brief Implements Refresh order depth panel.
+ * @return None.
+ */
 void TraderMainWindow::refresh_order_depth_panel() {
     if (order_depth_table_ == nullptr || order_depth_instrument_selector_ == nullptr) return;
 
@@ -725,6 +729,10 @@ void TraderMainWindow::refresh_order_depth_panel() {
     }
 }
 
+/**
+ * @brief Implements Refresh ui.
+ * @return None.
+ */
 void TraderMainWindow::refresh_ui() {
     std::lock_guard<std::mutex> lock(impl_->state.mutex);
     const bool connected = impl_->state.connected;

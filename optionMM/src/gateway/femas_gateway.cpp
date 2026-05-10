@@ -48,6 +48,12 @@ int64_t estimate_expiry_epoch_ns(const char* expire_date) noexcept {
 
 } // namespace
 
+/**
+ * @brief Implements Decode offset.
+ * @param femas_offset Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 OffsetFlag FEMASGateway::decode_offset(char femas_offset) noexcept {
     switch (femas_offset) {
     case USTP_FTDC_OF_Close:
@@ -61,6 +67,12 @@ OffsetFlag FEMASGateway::decode_offset(char femas_offset) noexcept {
     }
 }
 
+/**
+ * @brief Implements Encode offset.
+ * @param offset Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 char FEMASGateway::encode_offset(OffsetFlag offset) noexcept {
     switch (offset) {
     case OffsetFlag::Close:
@@ -74,6 +86,12 @@ char FEMASGateway::encode_offset(OffsetFlag offset) noexcept {
     }
 }
 
+/**
+ * @brief Implements Decode order status.
+ * @param femas_status Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 OrderStatus FEMASGateway::decode_order_status(char femas_status) noexcept {
     switch (femas_status) {
     case USTP_FTDC_OS_AllTraded:
@@ -91,11 +109,22 @@ OrderStatus FEMASGateway::decode_order_status(char femas_status) noexcept {
     }
 }
 
+/**
+ * @brief Implements Parse numeric id.
+ * @param text Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 uint64_t FEMASGateway::parse_numeric_id(const char* text) noexcept {
     if (!text || !text[0]) return 0;
     return static_cast<uint64_t>(std::strtoull(text, nullptr, 10));
 }
 
+/**
+ * @brief Implements Alloc order state.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 FEMASGateway::OrderState* FEMASGateway::alloc_order_state() noexcept {
     for (auto& state : order_states_) {
         if (!state.used.load(std::memory_order_relaxed)) {
@@ -122,6 +151,11 @@ FEMASGateway::OrderState* FEMASGateway::alloc_order_state() noexcept {
 // Lock-free allocation for send path: uses atomic CAS to claim slots without mutex.
 // This eliminates contention between send path (dispatcher thread) and callback path
 // (gateway internal thread). The hint provides a starting point to reduce collisions.
+/**
+ * @brief Implements Alloc order state lockfree.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 FEMASGateway::OrderState* FEMASGateway::alloc_order_state_lockfree() noexcept {
     const uint32_t start_hint = next_order_slot_hint_.fetch_add(1, std::memory_order_relaxed);
     // Try MAX_OPEN_ORDERS slots starting from hint (wraps around)
@@ -152,6 +186,11 @@ FEMASGateway::OrderState* FEMASGateway::alloc_order_state_lockfree() noexcept {
     return nullptr;  // All slots full
 }
 
+/**
+ * @brief Implements Alloc quote state.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 FEMASGateway::QuoteState* FEMASGateway::alloc_quote_state() noexcept {
     for (auto& state : quote_states_) {
         if (!state.used.load(std::memory_order_relaxed)) {
@@ -172,6 +211,11 @@ FEMASGateway::QuoteState* FEMASGateway::alloc_quote_state() noexcept {
 }
 
 // Lock-free allocation for send path (quotes)
+/**
+ * @brief Implements Alloc quote state lockfree.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 FEMASGateway::QuoteState* FEMASGateway::alloc_quote_state_lockfree() noexcept {
     const uint32_t start_hint = next_quote_slot_hint_.fetch_add(1, std::memory_order_relaxed);
     const uint32_t max_slots = static_cast<uint32_t>(quote_states_.size());
@@ -197,14 +241,32 @@ FEMASGateway::QuoteState* FEMASGateway::alloc_quote_state_lockfree() noexcept {
     return nullptr;
 }
 
+/**
+ * @brief Implements Order index.
+ * @param state Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 std::size_t FEMASGateway::order_index(const OrderState* state) const noexcept {
     return static_cast<std::size_t>(state - order_states_.data());
 }
 
+/**
+ * @brief Implements Quote index.
+ * @param state Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 std::size_t FEMASGateway::quote_index(const QuoteState* state) const noexcept {
     return static_cast<std::size_t>(state - quote_states_.data());
 }
 
+/**
+ * @brief Implements Index order state.
+ * @param state Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void FEMASGateway::index_order_state(OrderState* state) noexcept {
     if (!state || !state->used) return;
     const std::size_t idx = order_index(state);
@@ -219,6 +281,12 @@ void FEMASGateway::index_order_state(OrderState* state) noexcept {
     }
 }
 
+/**
+ * @brief Implements Index quote state.
+ * @param state Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void FEMASGateway::index_quote_state(QuoteState* state) noexcept {
     if (!state || !state->used) return;
     const std::size_t idx = quote_index(state);
@@ -233,6 +301,12 @@ void FEMASGateway::index_quote_state(QuoteState* state) noexcept {
     }
 }
 
+/**
+ * @brief Implements Unindex order state.
+ * @param state Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void FEMASGateway::unindex_order_state(OrderState* state) noexcept {
     if (!state) return;
     if (!state->is_quote_leg && state->client_order_id != 0) {
@@ -246,6 +320,12 @@ void FEMASGateway::unindex_order_state(OrderState* state) noexcept {
     }
 }
 
+/**
+ * @brief Implements Unindex quote state.
+ * @param state Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void FEMASGateway::unindex_quote_state(QuoteState* state) noexcept {
     if (!state) return;
     if (state->quote.client_quote_id != 0) {
@@ -259,6 +339,12 @@ void FEMASGateway::unindex_quote_state(QuoteState* state) noexcept {
     }
 }
 
+/**
+ * @brief Implements Find order by local id.
+ * @param local_id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 FEMASGateway::OrderState* FEMASGateway::find_order_by_local_id(const char* local_id) noexcept {
     if (!local_id || !local_id[0]) return nullptr;
     const std::size_t* idx = order_local_index_.find(local_id);
@@ -266,6 +352,12 @@ FEMASGateway::OrderState* FEMASGateway::find_order_by_local_id(const char* local
     return nullptr;
 }
 
+/**
+ * @brief Implements Find order by sys id.
+ * @param order_sys_id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 FEMASGateway::OrderState* FEMASGateway::find_order_by_sys_id(const char* order_sys_id) noexcept {
     if (!order_sys_id || !order_sys_id[0]) return nullptr;
     const std::size_t* idx = order_sys_index_.find(order_sys_id);
@@ -273,12 +365,24 @@ FEMASGateway::OrderState* FEMASGateway::find_order_by_sys_id(const char* order_s
     return nullptr;
 }
 
+/**
+ * @brief Implements Find quote by client id.
+ * @param quote_id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 FEMASGateway::QuoteState* FEMASGateway::find_quote_by_client_id(QuoteId quote_id) noexcept {
     const std::size_t* idx = quote_client_index_.find(quote_id);
     if (idx != nullptr && *idx < quote_states_.size()) return &quote_states_[*idx];
     return nullptr;
 }
 
+/**
+ * @brief Implements Find quote by local id.
+ * @param local_id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 FEMASGateway::QuoteState* FEMASGateway::find_quote_by_local_id(const char* local_id) noexcept {
     if (!local_id || !local_id[0]) return nullptr;
     const std::size_t* idx = quote_local_index_.find(local_id);
@@ -286,6 +390,12 @@ FEMASGateway::QuoteState* FEMASGateway::find_quote_by_local_id(const char* local
     return nullptr;
 }
 
+/**
+ * @brief Implements Find quote by sys id.
+ * @param quote_sys_id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 FEMASGateway::QuoteState* FEMASGateway::find_quote_by_sys_id(const char* quote_sys_id) noexcept {
     if (!quote_sys_id || !quote_sys_id[0]) return nullptr;
     const std::size_t* idx = quote_sys_index_.find(quote_sys_id);
@@ -293,6 +403,12 @@ FEMASGateway::QuoteState* FEMASGateway::find_quote_by_sys_id(const char* quote_s
     return nullptr;
 }
 
+/**
+ * @brief Implements Clear order state.
+ * @param local_id Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void FEMASGateway::clear_order_state(const char* local_id) noexcept {
     if (OrderState* state = find_order_by_local_id(local_id)) {
         unindex_order_state(state);
@@ -309,6 +425,12 @@ void FEMASGateway::clear_order_state(const char* local_id) noexcept {
     }
 }
 
+/**
+ * @brief Implements Clear quote state.
+ * @param quote_id Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void FEMASGateway::clear_quote_state(QuoteId quote_id) noexcept {
     QuoteState* quote = find_quote_by_client_id(quote_id);
     if (!quote) return;
@@ -327,6 +449,15 @@ void FEMASGateway::clear_quote_state(QuoteId quote_id) noexcept {
     std::memset(quote->ask_order_sys_id, 0, sizeof(quote->ask_order_sys_id));
 }
 
+/**
+ * @brief Implements Push order event.
+ * @param type Parameter supplied by the caller.
+ * @param state Parameter supplied by the caller.
+ * @param status Parameter supplied by the caller.
+ * @param filled_volume Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void FEMASGateway::push_order_event(GatewayEventType type,
                                     const OrderState& state,
                                     OrderStatus status,
@@ -349,6 +480,14 @@ void FEMASGateway::push_order_event(GatewayEventType type,
     (void)callback_buf.try_push(ev);
 }
 
+/**
+ * @brief Implements Push trade event.
+ * @param type Parameter supplied by the caller.
+ * @param state Parameter supplied by the caller.
+ * @param trade Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void FEMASGateway::push_trade_event(GatewayEventType type,
                                     const OrderState& state,
                                     const CUstpFtdcTradeField& trade) noexcept {
@@ -368,6 +507,11 @@ void FEMASGateway::push_trade_event(GatewayEventType type,
     (void)callback_buf.try_push(ev);
 }
 
+/**
+ * @brief Implements Connect.
+ * @param cfg Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 bool FEMASGateway::connect(const GatewayConfig& cfg) {
     cfg_ = cfg;
 
@@ -387,6 +531,10 @@ bool FEMASGateway::connect(const GatewayConfig& cfg) {
     return true;
 }
 
+/**
+ * @brief Implements Disconnect.
+ * @return None.
+ */
 void FEMASGateway::disconnect() {
     trading_ready_.store(false, std::memory_order_release);
     {
@@ -429,6 +577,12 @@ void FEMASGateway::disconnect() {
     }
 }
 
+/**
+ * @brief Implements Send order.
+ * @param order Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool FEMASGateway::send_order(const Order& order) noexcept {
     if (!api_ || !trading_ready_.load(std::memory_order_relaxed)) return false;
 
@@ -500,6 +654,14 @@ bool FEMASGateway::send_order(const Order& order) noexcept {
     return true;
 }
 
+/**
+ * @brief Implements Send quote.
+ * @param quote Parameter supplied by the caller.
+ * @param bid_order_id_out Parameter supplied by the caller.
+ * @param ask_order_id_out Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool FEMASGateway::send_quote(const Quote& quote,
                               OrderId* bid_order_id_out,
                               OrderId* ask_order_id_out) noexcept {
@@ -607,6 +769,13 @@ bool FEMASGateway::send_quote(const Quote& quote,
     return true;
 }
 
+/**
+ * @brief Implements Cancel order.
+ * @param id Parameter supplied by the caller.
+ * @param instrument_id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool FEMASGateway::cancel_order(OrderId id, uint16_t instrument_id) noexcept {
     if (!api_ || !trading_ready_.load(std::memory_order_relaxed)) return false;
 
@@ -682,10 +851,24 @@ bool FEMASGateway::cancel_order(OrderId id, uint16_t instrument_id) noexcept {
     return true;
 }
 
+/**
+ * @brief Implements Cancel quote.
+ * @param id Parameter supplied by the caller.
+ * @param instrument_id Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 bool FEMASGateway::cancel_quote(QuoteId id, uint16_t instrument_id) noexcept {
     return cancel_order(id, instrument_id);
 }
 
+/**
+ * @brief Implements Query instruments.
+ * @param out Parameter supplied by the caller.
+ * @param count Parameter supplied by the caller.
+ * @param max_count Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 bool FEMASGateway::query_instruments(Instrument* out, uint16_t* count, uint16_t max_count) {
     if (!api_ || !trading_ready_.load(std::memory_order_relaxed)) {
         *count = 0;
@@ -710,6 +893,10 @@ bool FEMASGateway::query_instruments(Instrument* out, uint16_t* count, uint16_t 
     return qry_done_;
 }
 
+/**
+ * @brief Implements OnFrontConnected.
+ * @return None.
+ */
 void FEMASGateway::OnFrontConnected() {
     OMM_LOG_INFO("femas", "front connected, logging in");
 
@@ -720,6 +907,11 @@ void FEMASGateway::OnFrontConnected() {
     api_->ReqUserLogin(&req, next_req_id());
 }
 
+/**
+ * @brief Implements OnFrontDisconnected.
+ * @param nReason Parameter supplied by the caller.
+ * @return None.
+ */
 void FEMASGateway::OnFrontDisconnected(int nReason) {
     trading_ready_.store(false, std::memory_order_release);
     OMM_LOG_WARN("femas", "front disconnected reason={}", nReason);
@@ -729,6 +921,14 @@ void FEMASGateway::OnFrontDisconnected(int nReason) {
     (void)callback_buf.try_push(ev);
 }
 
+/**
+ * @brief Implements OnRspUserLogin.
+ * @param pLogin Parameter supplied by the caller.
+ * @param pRspInfo Parameter supplied by the caller.
+ * @param int Parameter supplied by the caller.
+ * @param bool Parameter supplied by the caller.
+ * @return None.
+ */
 void FEMASGateway::OnRspUserLogin(CUstpFtdcRspUserLoginField* pLogin,
                                   CUstpFtdcRspInfoField* pRspInfo,
                                   int,
@@ -752,6 +952,14 @@ void FEMASGateway::OnRspUserLogin(CUstpFtdcRspUserLoginField* pLogin,
     (void)callback_buf.try_push(ev);
 }
 
+/**
+ * @brief Implements OnRspOrderInsert.
+ * @param pOrder Parameter supplied by the caller.
+ * @param pRspInfo Parameter supplied by the caller.
+ * @param int Parameter supplied by the caller.
+ * @param bool Parameter supplied by the caller.
+ * @return None.
+ */
 void FEMASGateway::OnRspOrderInsert(CUstpFtdcInputOrderField* pOrder,
                                     CUstpFtdcRspInfoField* pRspInfo,
                                     int,
@@ -786,6 +994,11 @@ void FEMASGateway::OnRspOrderInsert(CUstpFtdcInputOrderField* pOrder,
     }
 }
 
+/**
+ * @brief Implements OnRtnOrder.
+ * @param pOrder Parameter supplied by the caller.
+ * @return None.
+ */
 void FEMASGateway::OnRtnOrder(CUstpFtdcOrderField* pOrder) {
     if (!pOrder) return;
 
@@ -840,6 +1053,11 @@ void FEMASGateway::OnRtnOrder(CUstpFtdcOrderField* pOrder) {
     }
 }
 
+/**
+ * @brief Implements OnRtnTrade.
+ * @param pTrade Parameter supplied by the caller.
+ * @return None.
+ */
 void FEMASGateway::OnRtnTrade(CUstpFtdcTradeField* pTrade) {
     if (!pTrade) return;
 
@@ -896,6 +1114,12 @@ void FEMASGateway::OnRtnTrade(CUstpFtdcTradeField* pTrade) {
     }
 }
 
+/**
+ * @brief Implements OnErrRtnOrderInsert.
+ * @param pOrder Parameter supplied by the caller.
+ * @param pRspInfo Parameter supplied by the caller.
+ * @return None.
+ */
 void FEMASGateway::OnErrRtnOrderInsert(CUstpFtdcInputOrderField* pOrder,
                                        CUstpFtdcRspInfoField* pRspInfo) {
     if (!pOrder) return;
@@ -939,6 +1163,14 @@ void FEMASGateway::OnErrRtnOrderInsert(CUstpFtdcInputOrderField* pOrder,
     }
 }
 
+/**
+ * @brief Implements OnRspOrderAction.
+ * @param pOrderAction Parameter supplied by the caller.
+ * @param pRspInfo Parameter supplied by the caller.
+ * @param int Parameter supplied by the caller.
+ * @param bool Parameter supplied by the caller.
+ * @return None.
+ */
 void FEMASGateway::OnRspOrderAction(CUstpFtdcOrderActionField* pOrderAction,
                                     CUstpFtdcRspInfoField* pRspInfo,
                                     int,
@@ -951,6 +1183,14 @@ void FEMASGateway::OnRspOrderAction(CUstpFtdcOrderActionField* pOrderAction,
     }
 }
 
+/**
+ * @brief Implements OnRspQuoteInsert.
+ * @param pQuote Parameter supplied by the caller.
+ * @param pRspInfo Parameter supplied by the caller.
+ * @param int Parameter supplied by the caller.
+ * @param bool Parameter supplied by the caller.
+ * @return None.
+ */
 void FEMASGateway::OnRspQuoteInsert(CUstpFtdcInputQuoteField* pQuote,
                                     CUstpFtdcRspInfoField* pRspInfo,
                                     int,
@@ -997,6 +1237,11 @@ void FEMASGateway::OnRspQuoteInsert(CUstpFtdcInputQuoteField* pQuote,
     }
 }
 
+/**
+ * @brief Implements OnRtnQuote.
+ * @param pQuote Parameter supplied by the caller.
+ * @return None.
+ */
 void FEMASGateway::OnRtnQuote(CUstpFtdcRtnQuoteField* pQuote) {
     if (!pQuote) return;
 
@@ -1070,6 +1315,12 @@ void FEMASGateway::OnRtnQuote(CUstpFtdcRtnQuoteField* pQuote) {
     }
 }
 
+/**
+ * @brief Implements OnErrRtnQuoteInsert.
+ * @param pQuote Parameter supplied by the caller.
+ * @param pRspInfo Parameter supplied by the caller.
+ * @return None.
+ */
 void FEMASGateway::OnErrRtnQuoteInsert(CUstpFtdcInputQuoteField* pQuote,
                                        CUstpFtdcRspInfoField* pRspInfo) {
     if (!pQuote) return;
@@ -1110,6 +1361,14 @@ void FEMASGateway::OnErrRtnQuoteInsert(CUstpFtdcInputQuoteField* pQuote,
     }
 }
 
+/**
+ * @brief Implements OnRspQuoteAction.
+ * @param pQuoteAction Parameter supplied by the caller.
+ * @param pRspInfo Parameter supplied by the caller.
+ * @param int Parameter supplied by the caller.
+ * @param bool Parameter supplied by the caller.
+ * @return None.
+ */
 void FEMASGateway::OnRspQuoteAction(CUstpFtdcQuoteActionField* pQuoteAction,
                                     CUstpFtdcRspInfoField* pRspInfo,
                                     int,
@@ -1122,6 +1381,12 @@ void FEMASGateway::OnRspQuoteAction(CUstpFtdcQuoteActionField* pQuoteAction,
     }
 }
 
+/**
+ * @brief Implements OnErrRtnQuoteAction.
+ * @param pQuoteAction Parameter supplied by the caller.
+ * @param pRspInfo Parameter supplied by the caller.
+ * @return None.
+ */
 void FEMASGateway::OnErrRtnQuoteAction(CUstpFtdcQuoteActionField* pQuoteAction,
                                        CUstpFtdcRspInfoField* pRspInfo) {
     OMM_LOG_WARN("femas", "quote cancel error ErrorID={} Msg={} quote_sys_id={} quote_local_id={}",
@@ -1131,6 +1396,14 @@ void FEMASGateway::OnErrRtnQuoteAction(CUstpFtdcQuoteActionField* pQuoteAction,
                  pQuoteAction ? pQuoteAction->UserQuoteLocalID : "");
 }
 
+/**
+ * @brief Implements OnRspQryInstrument.
+ * @param pInstrument Parameter supplied by the caller.
+ * @param CUstpFtdcRspInfoField Parameter supplied by the caller.
+ * @param int Parameter supplied by the caller.
+ * @param bIsLast Parameter supplied by the caller.
+ * @return None.
+ */
 void FEMASGateway::OnRspQryInstrument(CUstpFtdcRspInstrumentField* pInstrument,
                                       CUstpFtdcRspInfoField*,
                                       int,
@@ -1147,6 +1420,14 @@ void FEMASGateway::OnRspQryInstrument(CUstpFtdcRspInstrumentField* pInstrument,
     }
 }
 
+/**
+ * @brief Implements Fill instrument.
+ * @param out Parameter supplied by the caller.
+ * @param src Parameter supplied by the caller.
+ * @param id Parameter supplied by the caller.
+ * @return None.
+ * @note Noexcept API preserves hot-path failure and latency invariants.
+ */
 void FEMASGateway::fill_instrument(Instrument& out,
                                    const CUstpFtdcRspInstrumentField& src,
                                    uint16_t id) noexcept {

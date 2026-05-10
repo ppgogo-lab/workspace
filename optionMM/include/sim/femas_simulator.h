@@ -20,11 +20,28 @@ struct FemasSimFrontConfig {
     bool max_speed{false};
 };
 
+/**
+ * @brief Parse femas sim front.
+ * @param front_addr Parameter supplied by the caller.
+ * @param out Parameter supplied by the caller.
+ * @param error Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 [[nodiscard]] bool parse_femas_sim_front(std::string_view front_addr,
                                          FemasSimFrontConfig* out,
                                          std::string* error);
 
+/**
+ * @brief Create sim femas md api.
+ * @param front_addr Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 [[nodiscard]] IFemasMdApi* create_sim_femas_md_api(std::string_view front_addr);
+/**
+ * @brief Create sim femas trader api.
+ * @param front_addr Parameter supplied by the caller.
+ * @return Return value produced by the operation.
+ */
 [[nodiscard]] IFemasTraderApi* create_sim_femas_trader_api(std::string_view front_addr);
 
 } // namespace omm

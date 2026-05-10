@@ -17,6 +17,10 @@
 
 namespace omm::gui {
 
+/**
+ * @brief Implements Build ticket panel.
+ * @return Return value produced by the operation.
+ */
 QDockWidget* TraderMainWindow::build_ticket_panel() {
     auto* ticket_dock = new QDockWidget("Ticket", this);
     ticket_dock->setObjectName("ticketDock");
@@ -66,6 +70,10 @@ QDockWidget* TraderMainWindow::build_ticket_panel() {
     return ticket_dock;
 }
 
+/**
+ * @brief Implements Build parameters panel.
+ * @return Return value produced by the operation.
+ */
 QDockWidget* TraderMainWindow::build_parameters_panel() {
     auto* parameters_dock = new QDockWidget("Parameters", this);
     parameters_dock->setObjectName("parametersDock");
