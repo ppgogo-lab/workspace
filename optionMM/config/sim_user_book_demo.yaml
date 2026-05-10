@@ -96,7 +96,7 @@ products:
       market_width_widen_threshold_ticks: 4.0
       underlying_move_widen_threshold_ticks: 2.0
       use_one_sided_at_limits: true
-      enabled: true
+      enabled: false
 
   - underlying_id: "ag2406"
     exchange_id: "SHFE"
@@ -120,7 +120,7 @@ products:
       market_width_widen_threshold_ticks: 6.0
       underlying_move_widen_threshold_ticks: 2.0
       use_one_sided_at_limits: true
-      enabled: true
+      enabled: false
 
 timer:
   hedge_check_interval_ms: 1000

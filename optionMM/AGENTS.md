@@ -42,6 +42,8 @@ Expected successful startup log:
 gRPC server listening on 0.0.0.0:50061
 ```
 
+Market making must be stopped by default after backend startup. The trader starts quoting manually from the Windows GUI with the `Start MM` button, which calls the backend `StartStrategy` RPC.
+
 **Stop the backend if needed:**
 
 ```powershell

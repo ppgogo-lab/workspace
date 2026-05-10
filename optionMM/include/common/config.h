@@ -173,7 +173,7 @@ struct MMParamsConfig {
     double  market_width_widen_threshold_ticks{6.0}; // Widen quotes when market is this wide.
     double  underlying_move_widen_threshold_ticks{2.0}; // Widen after large underlying move.
     bool    use_one_sided_at_limits{true}; // Quote only the reducing side at position limits.
-    bool    enabled{true};          // Enables this product's market-making strategy.
+    bool    enabled{false};         // MM starts stopped; GUI Start MM enables quoting explicitly.
     uint8_t _pad[2];                // Padding for stable struct layout.
 };
 

@@ -118,7 +118,7 @@ products:
       market_width_widen_threshold_ticks: 4.0
       underlying_move_widen_threshold_ticks: 2.0
       use_one_sided_at_limits: true
-      enabled: true
+      enabled: false
     arbitrage_strategies:
       - type: pcp
         book_id: 102
@@ -158,7 +158,7 @@ products:
       market_width_widen_threshold_ticks: 6.0
       underlying_move_widen_threshold_ticks: 2.0
       use_one_sided_at_limits: true
-      enabled: true
+      enabled: false
     arbitrage_strategies:
       - type: pcp
         book_id: 202

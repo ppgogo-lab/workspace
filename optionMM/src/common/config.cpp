@@ -320,7 +320,7 @@ static MMParamsConfig parse_mm_params(const YAML::Node& n, std::string path_pref
                                                           2.0);
     p.use_one_sided_at_limits = get<bool>(n["use_one_sided_at_limits"],
                                           (path_prefix+".use_one_sided_at_limits").c_str(), true);
-    p.enabled                = get<bool>(n["enabled"], (path_prefix+".enabled").c_str(), true);
+    p.enabled                = get<bool>(n["enabled"], (path_prefix+".enabled").c_str(), false);
     return p;
 }
 

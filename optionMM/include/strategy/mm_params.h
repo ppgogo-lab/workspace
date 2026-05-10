@@ -40,7 +40,7 @@ struct alignas(64) AtomicMMParams {
     std::atomic<double> market_width_widen_threshold_ticks{6.0};  // Market width beyond this level adds extra spread widening.
     std::atomic<double> underlying_move_widen_threshold_ticks{2.0};  // Underlying move threshold that triggers a temporary product shock hold.
     std::atomic<bool> use_one_sided_at_limits{true};  // Allow quoting only the risk-reducing side near warning/max position.
-    std::atomic<bool> enabled{true};  // Global product strategy switch seen by the MM thread.
+    std::atomic<bool> enabled{false};  // Default stopped so startup never quotes before trader approval.
 
     // Load the current atomic view into a plain struct for logging, UI, and RPC snapshots.
     MMParamsConfig snapshot() const noexcept {
