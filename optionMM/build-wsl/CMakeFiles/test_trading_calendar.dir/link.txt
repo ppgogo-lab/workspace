@@ -1,1 +1,0 @@
-/usr/bin/c++ -O0 -g3 -fsanitize=address,undefined -Wall -Wextra -Wpedantic -fno-rtti CMakeFiles/test_trading_calendar.dir/tests/test_trading_calendar.cpp.o -o test_trading_calendar  libcommon_lib.a /usr/lib/x86_64-linux-gnu/libgtest_main.a /usr/lib/x86_64-linux-gnu/libcrypto.so -lyaml-cpp /usr/lib/x86_64-linux-gnu/libgtest.a 

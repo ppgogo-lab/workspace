@@ -1,1 +1,0 @@
-/usr/bin/c++ -O0 -g3 -fsanitize=address,undefined -Wall -Wextra -Wpedantic -fno-rtti CMakeFiles/test_monitoring_topic.dir/tests/test_monitoring_topic.cpp.o -o test_monitoring_topic  /usr/lib/x86_64-linux-gnu/libgtest_main.a /usr/lib/x86_64-linux-gnu/libgtest.a 

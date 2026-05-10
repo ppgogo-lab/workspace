@@ -1,2 +1,0 @@
-/usr/bin/ar qc librisk_lib.a CMakeFiles/risk_lib.dir/src/risk/pre_trade_risk.cpp.o CMakeFiles/risk_lib.dir/src/risk/post_trade_risk.cpp.o
-/usr/bin/ranlib librisk_lib.a

@@ -1,1 +1,0 @@
-/usr/bin/c++ -O0 -g3 -fsanitize=address,undefined -Wall -Wextra -Wpedantic -fno-rtti CMakeFiles/test_option_mm_core.dir/tests/test_option_mm_core.cpp.o -o test_option_mm_core  libstrategy_lib.a librisk_lib.a libcommon_lib.a /usr/lib/x86_64-linux-gnu/libgtest_main.a /usr/lib/x86_64-linux-gnu/libcrypto.so -lyaml-cpp /usr/lib/x86_64-linux-gnu/libgtest.a 

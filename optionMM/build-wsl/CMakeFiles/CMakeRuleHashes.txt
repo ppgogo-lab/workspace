@@ -1,2 +1,0 @@
-# Hashes of file build rules.
-84416b3863f8b3068501d3fd3f6cf440 proto/gen/trading.pb.cc

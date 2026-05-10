@@ -1,2 +1,0 @@
-/usr/bin/ar qc libfeed_lib.a CMakeFiles/feed_lib.dir/src/feed/multicast_feed.cpp.o CMakeFiles/feed_lib.dir/src/feed/fpga_feed.cpp.o CMakeFiles/feed_lib.dir/src/feed/femas_feed.cpp.o CMakeFiles/feed_lib.dir/src/feed/sim_feed.cpp.o
-/usr/bin/ranlib libfeed_lib.a

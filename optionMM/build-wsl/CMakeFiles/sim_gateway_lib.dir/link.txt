@@ -1,2 +1,0 @@
-/usr/bin/ar qc libsim_gateway_lib.a CMakeFiles/sim_gateway_lib.dir/src/gateway/sim_gateway.cpp.o
-/usr/bin/ranlib libsim_gateway_lib.a

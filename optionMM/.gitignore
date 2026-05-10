@@ -1,0 +1,14 @@
+# CMake build trees and generated binaries
+/build-wsl/
+/build-win-gui/
+/build-*/
+
+# Runtime outputs
+/logs/
+/data/*.sqlite
+*.log
+
+# Local developer environments and tool output
+/.venv-grpc/
+/.claude/
+aqtinstall.log

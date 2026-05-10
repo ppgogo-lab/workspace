@@ -1,1 +1,0 @@
-/usr/bin/c++ -O0 -g3 -fsanitize=address,undefined -Wall -Wextra -Wpedantic -fno-rtti CMakeFiles/test_black76.dir/tests/test_black76.cpp.o -o test_black76  libpricing_lib.a /usr/lib/x86_64-linux-gnu/libgtest_main.a /usr/lib/x86_64-linux-gnu/libgtest.a 
