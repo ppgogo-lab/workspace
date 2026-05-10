@@ -286,6 +286,16 @@ struct ScenarioConfig {
     double signal_emit_vega_epsilon{0.0};
 };
 
+struct LatencyBudget {
+    int64_t tick_to_gateway_ns{20'000'000LL};
+    int64_t tick_to_signal_emit_ns{10'000'000LL};
+    int64_t signal_emit_to_strategy_ns{10'000'000LL};
+    int64_t strategy_to_quote_send_ns{10'000'000LL};
+    int64_t quote_send_to_gateway_ns{5'000'000LL};
+    int64_t callback_route_ns{20'000'000LL};
+    double min_capture_ratio_pct{5.0};
+};
+
 struct ScenarioResult {
     std::vector<int64_t> tick_to_gateway_ns;
     std::vector<int64_t> tick_to_signal_emit_ns;
@@ -315,6 +325,41 @@ static int64_t percentile_sorted(const std::vector<int64_t>& sorted, double p) {
     return sorted[idx];
 }
 
+static int64_t env_i64_or(const char* name, int64_t fallback) {
+    const char* value = std::getenv(name);
+    if (value == nullptr || value[0] == '\0') return fallback;
+    char* end = nullptr;
+    const long long parsed = std::strtoll(value, &end, 10);
+    return (end != value && parsed >= 0) ? static_cast<int64_t>(parsed) : fallback;
+}
+
+static double env_double_or(const char* name, double fallback) {
+    const char* value = std::getenv(name);
+    if (value == nullptr || value[0] == '\0') return fallback;
+    char* end = nullptr;
+    const double parsed = std::strtod(value, &end);
+    return (end != value && parsed >= 0.0) ? parsed : fallback;
+}
+
+static LatencyBudget latency_budget_from_env() {
+    LatencyBudget budget{};
+    budget.tick_to_gateway_ns = env_i64_or("OMM_LATENCY_BUDGET_TICK_TO_GATEWAY_NS",
+                                           budget.tick_to_gateway_ns);
+    budget.tick_to_signal_emit_ns = env_i64_or("OMM_LATENCY_BUDGET_TICK_SIGNAL_NS",
+                                               budget.tick_to_signal_emit_ns);
+    budget.signal_emit_to_strategy_ns = env_i64_or("OMM_LATENCY_BUDGET_SIGNAL_STRATEGY_NS",
+                                                   budget.signal_emit_to_strategy_ns);
+    budget.strategy_to_quote_send_ns = env_i64_or("OMM_LATENCY_BUDGET_STRATEGY_SEND_NS",
+                                                  budget.strategy_to_quote_send_ns);
+    budget.quote_send_to_gateway_ns = env_i64_or("OMM_LATENCY_BUDGET_SEND_GATEWAY_NS",
+                                                 budget.quote_send_to_gateway_ns);
+    budget.callback_route_ns = env_i64_or("OMM_LATENCY_BUDGET_CALLBACK_ROUTE_NS",
+                                          budget.callback_route_ns);
+    budget.min_capture_ratio_pct = env_double_or("OMM_LATENCY_MIN_CAPTURE_RATIO_PCT",
+                                                 budget.min_capture_ratio_pct);
+    return budget;
+}
+
 static void print_series(const char* label, std::vector<int64_t> values) {
     if (values.empty()) return;
     std::sort(values.begin(), values.end());
@@ -334,8 +379,22 @@ static void expect_stage_p99_under(const char* label,
     ASSERT_GE(values.size(), min_samples) << label << " did not capture enough samples";
     std::sort(values.begin(), values.end());
     EXPECT_GE(values.front(), 0LL) << label << " produced negative latency";
+    std::cout << "[BUDGET] " << label
+              << " p99=" << percentile_sorted(values, 0.99)
+              << " ns budget=" << budget_ns
+              << " ns samples=" << values.size() << "\n";
     EXPECT_LT(percentile_sorted(values, 0.99), budget_ns)
         << label << " p99 exceeded " << budget_ns << " ns";
+}
+
+static void expect_capture_ratio_at_least(const ScenarioResult& result,
+                                          double min_capture_ratio_pct) {
+    ASSERT_GT(result.expected_total_quotes, 0u);
+    const double ratio = 100.0 * static_cast<double>(result.tick_to_gateway_ns.size())
+                       / static_cast<double>(result.expected_total_quotes);
+    std::cout << "[BUDGET] capture_ratio=" << ratio
+              << "% minimum=" << min_capture_ratio_pct << "%\n";
+    EXPECT_GE(ratio, min_capture_ratio_pct);
 }
 
 static ProductScenario build_product(uint8_t product_idx,
@@ -751,33 +810,45 @@ TEST(LatencyTest, TickToQuoteLatency) {
     cfg.monitoring_mode = monitoring_mode_from_env();
     cfg.hot_path_greeks_mode = hot_path_greeks_mode_from_env();
 
+    const LatencyBudget budget = latency_budget_from_env();
     ScenarioResult result = run_latency_scenario(cfg);
 
     const size_t min_quotes = std::max<size_t>(256, result.expected_total_quotes / 20);
     EXPECT_GT(result.tick_to_gateway_ns.size(), min_quotes)
         << "Expected a stable quote stream from option_mm_core direct-replace benchmark";
+    expect_capture_ratio_at_least(result, budget.min_capture_ratio_pct);
     EXPECT_GT(result.signal_emits, 0u);
     EXPECT_GT(result.strategy_stats[0].single_instrument_reevaluations, 0u);
     EXPECT_GT(result.pending_future_tick_overwrites, 0u)
         << "Expected the production-scale direct-replace scenario to overwrite pending future ticks";
 
     const size_t min_stage_samples = std::max<size_t>(128, result.tick_to_gateway_ns.size() / 2);
+    expect_stage_p99_under("Direct-replace tick->gateway",
+                           result.tick_to_gateway_ns,
+                           budget.tick_to_gateway_ns,
+                           min_stage_samples);
     expect_stage_p99_under("Direct-replace tick->signal_emit",
                            result.tick_to_signal_emit_ns,
-                           10'000'000LL,
+                           budget.tick_to_signal_emit_ns,
                            min_stage_samples);
     expect_stage_p99_under("Direct-replace signal_emit->strategy",
                            result.signal_emit_to_strategy_ns,
-                           10'000'000LL,
+                           budget.signal_emit_to_strategy_ns,
                            min_stage_samples);
     expect_stage_p99_under("Direct-replace strategy->quote_send",
                            result.strategy_to_quote_send_ns,
-                           10'000'000LL,
+                           budget.strategy_to_quote_send_ns,
                            min_stage_samples);
     expect_stage_p99_under("Direct-replace quote_send->gateway",
                            result.quote_send_to_gateway_ns,
-                           5'000'000LL,
+                           budget.quote_send_to_gateway_ns,
                            min_stage_samples);
+    if (!result.quote_ack_route_latency_ns.empty()) {
+        expect_stage_p99_under("Direct-replace quote ack callback route",
+                               result.quote_ack_route_latency_ns,
+                               budget.callback_route_ns,
+                               1);
+    }
 }
 
 TEST(LatencyTest, TickToQuoteLatencyCancelFirst) {
@@ -796,33 +867,45 @@ TEST(LatencyTest, TickToQuoteLatencyCancelFirst) {
     cfg.hot_path_greeks_mode = hot_path_greeks_mode_from_env();
     cfg.gateway_cancel_latency_ms = 1;
 
+    const LatencyBudget budget = latency_budget_from_env();
     ScenarioResult result = run_latency_scenario(cfg);
 
     EXPECT_GT(result.tick_to_gateway_ns.size(), 32u)
         << "Expected a measurable replacement stream from cancel-first benchmark";
+    expect_capture_ratio_at_least(result, budget.min_capture_ratio_pct);
     EXPECT_GT(result.quote_cancel_route_latency_ns.size(), 0u)
         << "Expected cancel-first benchmark to capture quote-cancel callback routing";
     EXPECT_GT(result.strategy_stats[0].single_instrument_reevaluations, 0u);
 
     const size_t min_stage_samples = std::max<size_t>(16, result.tick_to_gateway_ns.size() / 2);
+    expect_stage_p99_under("Cancel-first tick->gateway",
+                           result.tick_to_gateway_ns,
+                           budget.tick_to_gateway_ns,
+                           min_stage_samples);
     expect_stage_p99_under("Cancel-first tick->signal_emit",
                            result.tick_to_signal_emit_ns,
-                           10'000'000LL,
+                           budget.tick_to_signal_emit_ns,
                            min_stage_samples);
     expect_stage_p99_under("Cancel-first signal_emit->strategy",
                            result.signal_emit_to_strategy_ns,
-                           10'000'000LL,
+                           budget.signal_emit_to_strategy_ns,
                            min_stage_samples);
     expect_stage_p99_under("Cancel-first strategy->quote_send",
                            result.strategy_to_quote_send_ns,
-                           10'000'000LL,
+                           budget.strategy_to_quote_send_ns,
                            min_stage_samples);
     expect_stage_p99_under("Cancel-first quote_send->gateway",
                            result.quote_send_to_gateway_ns,
-                           5'000'000LL,
+                           budget.quote_send_to_gateway_ns,
                            min_stage_samples);
+    if (!result.quote_ack_route_latency_ns.empty()) {
+        expect_stage_p99_under("Cancel-first quote ack callback route",
+                               result.quote_ack_route_latency_ns,
+                               budget.callback_route_ns,
+                               1);
+    }
     expect_stage_p99_under("Cancel-first quote cancel callback route",
                            result.quote_cancel_route_latency_ns,
-                           20'000'000LL,
+                           budget.callback_route_ns,
                            1);
 }

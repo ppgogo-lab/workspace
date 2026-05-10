@@ -169,6 +169,38 @@ TEST_F(OptionMmCoreTest, GeneratesQuoteFromValidSignal) {
     EXPECT_EQ(quote.ask_volume, 5);
 }
 
+TEST_F(OptionMmCoreTest, HedgeFillClearsPreTradeRiskOpenOrder) {
+    params.product_delta_threshold.store(1.0, std::memory_order_relaxed);
+    strat.on_signal(make_signal(1, 9.8, 10.2, 5.0));
+
+    Quote quote{};
+    ASSERT_TRUE(quote_buf.try_pop(quote));
+
+    Trade option_fill{};
+    option_fill.instrument_id = 1;
+    option_fill.product_index = PROD;
+    option_fill.side = Side::Buy;
+    option_fill.fill_volume = 1;
+    strat.on_fill(option_fill);
+
+    Order hedge{};
+    ASSERT_TRUE(order_buf.try_pop(hedge));
+    EXPECT_TRUE(hedge.is_hedge);
+
+    strat.on_order_ack(hedge);
+    EXPECT_EQ(pre_risk.open_order_count(), 1);
+
+    Trade hedge_fill{};
+    hedge_fill.client_order_id = hedge.client_order_id;
+    hedge_fill.instrument_id = hedge.instrument_id;
+    hedge_fill.product_index = PROD;
+    hedge_fill.side = hedge.side;
+    hedge_fill.fill_volume = hedge.volume;
+    strat.on_fill(hedge_fill);
+
+    EXPECT_EQ(pre_risk.open_order_count(), 0);
+}
+
 TEST_F(OptionMmCoreTest, SwitchesToOneSidedQuoteNearWarningPosition) {
     for (int i = 0; i < 5; ++i) {
         Trade trade{};

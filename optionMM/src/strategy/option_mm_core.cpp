@@ -293,6 +293,11 @@ void OptionMMCoreStrategy::on_fill_impl(const Trade& trade) noexcept {
 
     // Handle hedge order fills
     if (trade.client_order_id != 0 && trade.client_order_id == live_hedge_order_id_) {
+        if (pre_risk_) {
+            pre_risk_->on_order_fill(trade.client_order_id,
+                                     trade.fill_volume,
+                                     trade.fill_volume >= live_hedge_remaining_);
+        }
         underlying_net_position_ += signed_qty;
         live_hedge_remaining_ = std::max<Volume>(0, live_hedge_remaining_ - trade.fill_volume);
         if (live_hedge_remaining_ <= 0) {

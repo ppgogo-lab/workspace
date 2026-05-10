@@ -1,25 +1,31 @@
-# Doxygen Public Method Comment Pass
+# Architecture Latency Implementation Pass
 
 ## Goal
-Add Doxygen-style comments to public methods in `include/` and relevant `src/` files, with low-latency design notes where the API is on or adjacent to the hot path.
+Implement the highest-value recommendations from `docs/architecture_latency_review_20260510.md` while preserving the low-latency constraints.
+
+## Assumptions
+- The review document is the implementation guide.
+- Changes should start with correctness and measurable latency hygiene before riskier gateway refactors.
+- No dynamic allocation, locks, exceptions, or RTTI should be added to strategy/gateway hot paths.
+- Existing review/planning artifacts are user-visible work and must be preserved.
 
 ## Success Criteria
-- Public method declarations in headers have `@brief`, `@param`, and `@return` where applicable.
-- Public/free function implementations in `src/` have Doxygen comments where they expose callable behavior not already documented in a nearby declaration.
-- Comments call out allocation, locking, and hot-path constraints when relevant.
-- A summary plan, implementation notes, and test result are recorded under `docs/`.
-- Documentation-only changes do not disturb existing unrelated worktree changes.
+- Fix pre-trade risk fill bookkeeping and reduce the strategy-side pre-trade risk check cost.
+- Add useful latency regression thresholds or reporting around the existing latency benchmark.
+- Document the implementation and test result under `docs/`.
+- Run focused tests/builds where available and record blockers.
 
 ## Phases
 | Phase | Status | Notes |
 |---|---|---|
-| Inventory API surface | complete | Found public APIs across common, feed, gateway, pricing, strategy, risk, engine, persistence, monitoring, and GUI headers. |
-| Add Doxygen comments | complete | Added Doxygen blocks to public declarations and file-scope member definitions. |
-| Verify and document | complete | Added `docs/doxygen_public_methods_20260510.md`; build commands were attempted and blockers are recorded. |
+| Inspect implementation targets | complete | Read risk, strategy lifecycle, latency tests, and build presets. |
+| Implement pre-trade risk improvements | complete | Fixed fill bookkeeping and replaced hot check scans with fixed indexes/summaries. |
+| Add latency threshold support | complete | Added configurable p99/capture thresholds to `tests/test_latency.cpp`. |
+| Document implementation | complete | Added `docs/architecture_latency_implementation_20260510.md`. |
+| Verify | complete | Focused WSL tests and release latency preset passed; warnings recorded. |
 
 ## Errors Encountered
 | Error | Attempt | Resolution |
 |---|---|---|
-| PowerShell rewrite corrupted existing non-ASCII comments and rewrote line endings | Initial bulk insertion | Reverted generated `include/` and `src/` edits only, then switched to a UTF-8-safe script. |
-| WSL backend build unavailable | `wsl.exe bash -lc "cd /mnt/d/workspace/optionMM && cmake --build build-wsl --target optionmm -j4"` | Recorded blocker; WSL is not installed/available in this session. |
-| Windows GUI build failed before project code validation | CMake GUI build target | MSVC cannot find standard headers such as `cstdint`, `type_traits`, and `limits`; likely environment/toolchain setup issue. |
+| Best-side recompute still included removed order | Focused `test_pre_trade_risk` run | Clear the slot's `used` flag before recomputing the instrument side summary. |
+| Hedge fill did not clear pre-trade risk state | Focused `test_option_mm_core` run | Add hedge-specific `pre_risk_->on_order_fill` in `OptionMMCoreStrategy::on_fill_impl`. |

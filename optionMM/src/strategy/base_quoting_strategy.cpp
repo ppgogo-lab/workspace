@@ -219,10 +219,17 @@ void BaseQuotingStrategy::on_fill(const Trade& trade) noexcept {
         }
     }
 
-    // Update order lifecycle if this fill is for a tracked order
+    // Update order lifecycle and pre-trade risk if this fill is for a tracked
+    // order. Quote fills are not inserted into PreTradeRisk because quote risk
+    // checks are stateless and quote lifecycle is tracked per instrument.
     OrderLifecycleTracker* tracker = find_order_tracker(trade.client_order_id);
     if (tracker) {
         OrderLifecycleController::on_fill(*tracker, trade.fill_volume);
+        if (pre_risk_) {
+            pre_risk_->on_order_fill(trade.client_order_id,
+                                     trade.fill_volume,
+                                     tracker->remaining_volume <= 0);
+        }
     }
 
     // Update position tracking

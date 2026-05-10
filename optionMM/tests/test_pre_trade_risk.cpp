@@ -84,6 +84,38 @@ TEST_F(PreTradeRiskTest, PartialFillKeepsOpen) {
     EXPECT_EQ(risk->open_order_count(), 0);
 }
 
+TEST_F(PreTradeRiskTest, FullFillRecomputesBestAskForSelfTradeCheck) {
+    auto best_ask = make_order(1, 0, Side::Sell, 100.0, 5);
+    auto next_ask = make_order(2, 0, Side::Sell, 105.0, 5);
+    risk->on_order_ack(best_ask);
+    risk->on_order_ack(next_ask);
+
+    risk->on_order_fill(best_ask.client_order_id, best_ask.volume, true);
+
+    auto buy_below_remaining_ask = make_order(3, 0, Side::Buy, 102.0, 1);
+    EXPECT_EQ(risk->check_order(buy_below_remaining_ask), PreTradeRisk::RejectReason::OK);
+
+    auto buy_crossing_remaining_ask = make_order(4, 0, Side::Buy, 105.0, 1);
+    EXPECT_EQ(risk->check_order(buy_crossing_remaining_ask),
+              PreTradeRisk::RejectReason::SELF_TRADE);
+}
+
+TEST_F(PreTradeRiskTest, CancelRecomputesBestBidForSelfTradeCheck) {
+    auto best_bid = make_order(1, 0, Side::Buy, 100.0, 5);
+    auto next_bid = make_order(2, 0, Side::Buy, 95.0, 5);
+    risk->on_order_ack(best_bid);
+    risk->on_order_ack(next_bid);
+
+    risk->on_order_cancel(best_bid.client_order_id);
+
+    auto sell_above_remaining_bid = make_order(3, 0, Side::Sell, 97.0, 1);
+    EXPECT_EQ(risk->check_order(sell_above_remaining_bid), PreTradeRisk::RejectReason::OK);
+
+    auto sell_crossing_remaining_bid = make_order(4, 0, Side::Sell, 95.0, 1);
+    EXPECT_EQ(risk->check_order(sell_crossing_remaining_bid),
+              PreTradeRisk::RejectReason::SELF_TRADE);
+}
+
 TEST_F(PreTradeRiskTest, SelfTradeBuyCrossesOwnAsk) {
     // Post own sell at 100 → new buy at 100 should be rejected
     auto sell = make_order(1, 0, Side::Sell, 100.0, 5);
