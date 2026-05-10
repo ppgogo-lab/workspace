@@ -16,11 +16,11 @@ if "%ENDPOINT%"=="" (
   if not defined WSL_IP (
     echo Failed to resolve WSL IP address.
     echo Start WSL and pass an explicit endpoint if needed, for example:
-    echo   %~nx0 172.20.10.2:50051
+    echo   %~nx0 172.20.10.2:50061
     exit /b 1
   )
 
-  set "ENDPOINT=!WSL_IP!:50051"
+  set "ENDPOINT=!WSL_IP!:50061"
 )
 
 if not exist "%EXE%" (

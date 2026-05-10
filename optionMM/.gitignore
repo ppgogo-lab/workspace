@@ -5,7 +5,7 @@
 
 # Runtime outputs
 /logs/
-/data/*.sqlite
+/data/*
 *.log
 
 # Local developer environments and tool output
