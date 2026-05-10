@@ -1,6 +1,7 @@
 # agent.md
 
 ## 1. Project Overview
+
 **Low Latency design is high priority**
 OptionMM is an ultra-low latency (<2μs tick-to-trade), high-frequency trading system for market making in Chinese commodity and equity index options markets (SHFE, DCE, CZCE, CFFEX). The system uses Black-76 pricing, lock-free ring buffers, SIMD-optimized math (AVX2/AVX-512), and core pinning to achieve sub-microsecond latency on the critical path.
 
@@ -13,8 +14,12 @@ OptionMM is an ultra-low latency (<2μs tick-to-trade), high-frequency trading s
 
 ## 2. Code and build
 
-- Code: add detail comments for every task, especially special design for low latency
-- Build: when in dev stage, build backend in WSL + Ubuntu, while building ui in windows.
+- **Code** add detail comments for every task, especially special design for low latency.
+- **Plan** finish a plan, document the plan, implementation, test result into a .md file in /docs
+- **Comment** add **Doxygen style** comment for every public method, containing @brief, @param, @return. If the implementation is complex, or special design for lower latency, add @note to introduce the idea.
+- **Build** when in dev stage, build backend in WSL + Ubuntu, while building ui in windows.
+- **Test** Run backend in WSL, using scripts/run_sim_demo.sh; Run GUI in windows, using scripts/run_windows_gui.cmd
+
 
 ## 3. Architecture
 
