@@ -104,7 +104,13 @@ struct RiskAlertDefaultTypeInternal {
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 RiskAlertDefaultTypeInternal _RiskAlert_default_instance_;
 PROTOBUF_CONSTEXPR Tick::Tick(
     ::_pbi::ConstantInitialized): _impl_{
-    /*decltype(_impl_.last_price_)*/0
+    /*decltype(_impl_.bid_prices_)*/{}
+  , /*decltype(_impl_.ask_prices_)*/{}
+  , /*decltype(_impl_.bid_volumes_)*/{}
+  , /*decltype(_impl_._bid_volumes_cached_byte_size_)*/{0}
+  , /*decltype(_impl_.ask_volumes_)*/{}
+  , /*decltype(_impl_._ask_volumes_cached_byte_size_)*/{0}
+  , /*decltype(_impl_.last_price_)*/0
   , /*decltype(_impl_.bid_price_)*/0
   , /*decltype(_impl_.instrument_id_)*/0u
   , /*decltype(_impl_.bid_volume_)*/0
@@ -775,6 +781,9 @@ PROTOBUF_CONSTEXPR ManualOrderRequest::ManualOrderRequest(
     /*decltype(_impl_._has_bits_)*/{}
   , /*decltype(_impl_._cached_size_)*/{}
   , /*decltype(_impl_.side_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.order_type_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.price_type_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.volume_condition_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
   , /*decltype(_impl_.instrument_id_)*/0u
   , /*decltype(_impl_.volume_)*/0
   , /*decltype(_impl_.price_)*/0
@@ -989,6 +998,10 @@ const uint32_t TableStruct_trading_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(
   PROTOBUF_FIELD_OFFSET(::omm::proto::Tick, _impl_.ask_volume_),
   PROTOBUF_FIELD_OFFSET(::omm::proto::Tick, _impl_.exchange_ts_ns_),
   PROTOBUF_FIELD_OFFSET(::omm::proto::Tick, _impl_.recv_ts_ns_),
+  PROTOBUF_FIELD_OFFSET(::omm::proto::Tick, _impl_.bid_prices_),
+  PROTOBUF_FIELD_OFFSET(::omm::proto::Tick, _impl_.ask_prices_),
+  PROTOBUF_FIELD_OFFSET(::omm::proto::Tick, _impl_.bid_volumes_),
+  PROTOBUF_FIELD_OFFSET(::omm::proto::Tick, _impl_.ask_volumes_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::omm::proto::OrderUpdate, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -1443,11 +1456,17 @@ const uint32_t TableStruct_trading_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(
   PROTOBUF_FIELD_OFFSET(::omm::proto::ManualOrderRequest, _impl_.price_),
   PROTOBUF_FIELD_OFFSET(::omm::proto::ManualOrderRequest, _impl_.volume_),
   PROTOBUF_FIELD_OFFSET(::omm::proto::ManualOrderRequest, _impl_.book_id_),
+  PROTOBUF_FIELD_OFFSET(::omm::proto::ManualOrderRequest, _impl_.order_type_),
+  PROTOBUF_FIELD_OFFSET(::omm::proto::ManualOrderRequest, _impl_.price_type_),
+  PROTOBUF_FIELD_OFFSET(::omm::proto::ManualOrderRequest, _impl_.volume_condition_),
   ~0u,
   ~0u,
   ~0u,
   ~0u,
   0,
+  ~0u,
+  ~0u,
+  ~0u,
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::omm::proto::ManualOrderResponse, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -1532,53 +1551,53 @@ static const ::_pbi::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protode
   { 37, -1, -1, sizeof(::omm::proto::PortfolioGreeks)},
   { 47, -1, -1, sizeof(::omm::proto::RiskAlert)},
   { 56, -1, -1, sizeof(::omm::proto::Tick)},
-  { 70, -1, -1, sizeof(::omm::proto::OrderUpdate)},
-  { 88, -1, -1, sizeof(::omm::proto::QuoteUpdate)},
-  { 103, -1, -1, sizeof(::omm::proto::InstrumentInfo)},
-  { 121, -1, -1, sizeof(::omm::proto::UserInfo)},
-  { 132, -1, -1, sizeof(::omm::proto::LoginRequest)},
-  { 140, -1, -1, sizeof(::omm::proto::LoginResponse)},
-  { 150, -1, -1, sizeof(::omm::proto::LogoutRequest)},
-  { 156, -1, -1, sizeof(::omm::proto::LogoutResponse)},
-  { 165, -1, -1, sizeof(::omm::proto::WhoAmIRequest)},
-  { 171, -1, -1, sizeof(::omm::proto::WhoAmIResponse)},
-  { 180, -1, -1, sizeof(::omm::proto::BookInfo)},
-  { 191, -1, -1, sizeof(::omm::proto::BookPosition)},
-  { 206, -1, -1, sizeof(::omm::proto::BookPortfolio)},
-  { 221, -1, -1, sizeof(::omm::proto::VolSurfaceSlice)},
-  { 230, -1, -1, sizeof(::omm::proto::VolSurface)},
-  { 239, 263, -1, sizeof(::omm::proto::MMParams)},
-  { 281, -1, -1, sizeof(::omm::proto::ProductPricingParams)},
-  { 290, 304, -1, sizeof(::omm::proto::ArbParams)},
-  { 312, -1, -1, sizeof(::omm::proto::ArbStrategyId)},
-  { 320, -1, -1, sizeof(::omm::proto::ArbStrategyParamsEntry)},
-  { 329, -1, -1, sizeof(::omm::proto::SetStrategyParamsRequest)},
-  { 337, -1, -1, sizeof(::omm::proto::SetStrategyParamsResponse)},
-  { 345, -1, -1, sizeof(::omm::proto::SetProductPricingParamsRequest)},
-  { 352, -1, -1, sizeof(::omm::proto::SetProductPricingParamsResponse)},
-  { 360, -1, -1, sizeof(::omm::proto::SetArbStrategyParamsRequest)},
-  { 368, -1, -1, sizeof(::omm::proto::SetArbStrategyParamsResponse)},
-  { 376, -1, -1, sizeof(::omm::proto::StartStopRequest)},
-  { 383, -1, -1, sizeof(::omm::proto::StartStopResponse)},
-  { 391, -1, -1, sizeof(::omm::proto::ArbStartStopRequest)},
-  { 398, -1, -1, sizeof(::omm::proto::ArbStartStopResponse)},
-  { 406, -1, -1, sizeof(::omm::proto::RiskThreshold)},
-  { 416, -1, -1, sizeof(::omm::proto::RiskState)},
-  { 427, -1, -1, sizeof(::omm::proto::ProductMMState)},
-  { 438, -1, -1, sizeof(::omm::proto::InstrumentMMState)},
-  { 451, -1, -1, sizeof(::omm::proto::ArbStrategyState)},
-  { 472, -1, -1, sizeof(::omm::proto::PcpOpportunityState)},
-  { 498, -1, -1, sizeof(::omm::proto::SetRiskThresholdRequest)},
-  { 505, -1, -1, sizeof(::omm::proto::SetRiskThresholdResponse)},
-  { 513, 524, -1, sizeof(::omm::proto::ManualOrderRequest)},
-  { 529, -1, -1, sizeof(::omm::proto::ManualOrderResponse)},
-  { 539, -1, -1, sizeof(::omm::proto::CancelOrderRequest)},
-  { 547, -1, -1, sizeof(::omm::proto::CancelOrderResponse)},
-  { 555, -1, -1, sizeof(::omm::proto::CancelQuoteRequest)},
-  { 563, -1, -1, sizeof(::omm::proto::CancelQuoteResponse)},
-  { 571, -1, -1, sizeof(::omm::proto::SnapshotRequest)},
-  { 577, -1, -1, sizeof(::omm::proto::SnapshotResponse)},
-  { 599, -1, -1, sizeof(::omm::proto::StreamRequest)},
+  { 74, -1, -1, sizeof(::omm::proto::OrderUpdate)},
+  { 92, -1, -1, sizeof(::omm::proto::QuoteUpdate)},
+  { 107, -1, -1, sizeof(::omm::proto::InstrumentInfo)},
+  { 125, -1, -1, sizeof(::omm::proto::UserInfo)},
+  { 136, -1, -1, sizeof(::omm::proto::LoginRequest)},
+  { 144, -1, -1, sizeof(::omm::proto::LoginResponse)},
+  { 154, -1, -1, sizeof(::omm::proto::LogoutRequest)},
+  { 160, -1, -1, sizeof(::omm::proto::LogoutResponse)},
+  { 169, -1, -1, sizeof(::omm::proto::WhoAmIRequest)},
+  { 175, -1, -1, sizeof(::omm::proto::WhoAmIResponse)},
+  { 184, -1, -1, sizeof(::omm::proto::BookInfo)},
+  { 195, -1, -1, sizeof(::omm::proto::BookPosition)},
+  { 210, -1, -1, sizeof(::omm::proto::BookPortfolio)},
+  { 225, -1, -1, sizeof(::omm::proto::VolSurfaceSlice)},
+  { 234, -1, -1, sizeof(::omm::proto::VolSurface)},
+  { 243, 267, -1, sizeof(::omm::proto::MMParams)},
+  { 285, -1, -1, sizeof(::omm::proto::ProductPricingParams)},
+  { 294, 308, -1, sizeof(::omm::proto::ArbParams)},
+  { 316, -1, -1, sizeof(::omm::proto::ArbStrategyId)},
+  { 324, -1, -1, sizeof(::omm::proto::ArbStrategyParamsEntry)},
+  { 333, -1, -1, sizeof(::omm::proto::SetStrategyParamsRequest)},
+  { 341, -1, -1, sizeof(::omm::proto::SetStrategyParamsResponse)},
+  { 349, -1, -1, sizeof(::omm::proto::SetProductPricingParamsRequest)},
+  { 356, -1, -1, sizeof(::omm::proto::SetProductPricingParamsResponse)},
+  { 364, -1, -1, sizeof(::omm::proto::SetArbStrategyParamsRequest)},
+  { 372, -1, -1, sizeof(::omm::proto::SetArbStrategyParamsResponse)},
+  { 380, -1, -1, sizeof(::omm::proto::StartStopRequest)},
+  { 387, -1, -1, sizeof(::omm::proto::StartStopResponse)},
+  { 395, -1, -1, sizeof(::omm::proto::ArbStartStopRequest)},
+  { 402, -1, -1, sizeof(::omm::proto::ArbStartStopResponse)},
+  { 410, -1, -1, sizeof(::omm::proto::RiskThreshold)},
+  { 420, -1, -1, sizeof(::omm::proto::RiskState)},
+  { 431, -1, -1, sizeof(::omm::proto::ProductMMState)},
+  { 442, -1, -1, sizeof(::omm::proto::InstrumentMMState)},
+  { 455, -1, -1, sizeof(::omm::proto::ArbStrategyState)},
+  { 476, -1, -1, sizeof(::omm::proto::PcpOpportunityState)},
+  { 502, -1, -1, sizeof(::omm::proto::SetRiskThresholdRequest)},
+  { 509, -1, -1, sizeof(::omm::proto::SetRiskThresholdResponse)},
+  { 517, 531, -1, sizeof(::omm::proto::ManualOrderRequest)},
+  { 539, -1, -1, sizeof(::omm::proto::ManualOrderResponse)},
+  { 549, -1, -1, sizeof(::omm::proto::CancelOrderRequest)},
+  { 557, -1, -1, sizeof(::omm::proto::CancelOrderResponse)},
+  { 565, -1, -1, sizeof(::omm::proto::CancelQuoteRequest)},
+  { 573, -1, -1, sizeof(::omm::proto::CancelQuoteResponse)},
+  { 581, -1, -1, sizeof(::omm::proto::SnapshotRequest)},
+  { 587, -1, -1, sizeof(::omm::proto::SnapshotResponse)},
+  { 609, -1, -1, sizeof(::omm::proto::StreamRequest)},
 };
 
 static const ::_pb::Message* const file_default_instances[] = {
@@ -1657,267 +1676,271 @@ const char descriptor_table_protodef_trading_2eproto[] PROTOBUF_SECTION_VARIABLE
   "ts_ns\030\003 \001(\003\"o\n\tAlertType\022\023\n\017POSITION_BRE"
   "ACH\020\000\022\020\n\014DELTA_BREACH\020\001\022\020\n\014GAMMA_BREACH\020"
   "\002\022\017\n\013VEGA_BREACH\020\003\022\030\n\024QUOTE_CANCEL_GIVE_"
-  "UP\020\004\"\253\001\n\004Tick\022\025\n\rinstrument_id\030\001 \001(\r\022\022\n\n"
+  "UP\020\004\"\375\001\n\004Tick\022\025\n\rinstrument_id\030\001 \001(\r\022\022\n\n"
   "last_price\030\002 \001(\001\022\021\n\tbid_price\030\003 \001(\001\022\021\n\ta"
   "sk_price\030\004 \001(\001\022\022\n\nbid_volume\030\005 \001(\005\022\022\n\nas"
   "k_volume\030\006 \001(\005\022\026\n\016exchange_ts_ns\030\007 \001(\003\022\022"
-  "\n\nrecv_ts_ns\030\010 \001(\003\"\363\001\n\013OrderUpdate\022\027\n\017cl"
-  "ient_order_id\030\001 \001(\004\022\025\n\rinstrument_id\030\002 \001"
-  "(\r\022\016\n\006status\030\003 \001(\t\022\022\n\nfill_price\030\004 \001(\001\022\023"
-  "\n\013fill_volume\030\005 \001(\005\022\r\n\005ts_ns\030\006 \001(\003\022\023\n\013ex"
-  "change_id\030\007 \001(\t\022\014\n\004side\030\010 \001(\t\022\r\n\005price\030\t"
-  " \001(\001\022\016\n\006volume\030\n \001(\005\022\031\n\021exchange_trade_i"
-  "d\030\013 \001(\004\022\017\n\007book_id\030\014 \001(\r\"\273\001\n\013QuoteUpdate"
-  "\022\027\n\017client_quote_id\030\001 \001(\004\022\025\n\rinstrument_"
-  "id\030\002 \001(\r\022\021\n\tbid_price\030\003 \001(\001\022\021\n\task_price"
-  "\030\004 \001(\001\022\022\n\nbid_volume\030\005 \001(\005\022\022\n\nask_volume"
-  "\030\006 \001(\005\022\016\n\006status\030\007 \001(\t\022\r\n\005ts_ns\030\010 \001(\003\022\017\n"
-  "\007book_id\030\t \001(\r\"\200\002\n\016InstrumentInfo\022\025\n\rins"
-  "trument_id\030\001 \001(\r\022\014\n\004code\030\002 \001(\t\022\027\n\017underl"
-  "ying_code\030\003 \001(\t\022\014\n\004kind\030\004 \001(\t\022\023\n\013option_"
-  "type\030\005 \001(\t\022\016\n\006strike\030\006 \001(\001\022\025\n\rproduct_in"
-  "dex\030\007 \001(\r\022\025\n\runderlying_id\030\010 \001(\r\022\023\n\013exch"
-  "ange_id\030\t \001(\t\022\023\n\013expiry_date\030\n \001(\005\022\021\n\tti"
-  "ck_size\030\013 \001(\001\022\022\n\nmultiplier\030\014 \001(\001\"l\n\010Use"
-  "rInfo\022\017\n\007user_id\030\001 \001(\r\022\020\n\010username\030\002 \001(\t"
-  "\022\024\n\014display_name\030\003 \001(\t\022\016\n\006active\030\004 \001(\010\022\027"
-  "\n\017default_book_id\030\005 \001(\r\"2\n\014LoginRequest\022"
-  "\020\n\010username\030\001 \001(\t\022\020\n\010password\030\002 \001(\t\"f\n\rL"
-  "oginResponse\022\n\n\002ok\030\001 \001(\010\022\017\n\007message\030\002 \001("
-  "\t\022\025\n\rsession_token\030\003 \001(\t\022!\n\004user\030\004 \001(\0132\023"
-  ".omm.proto.UserInfo\"\017\n\rLogoutRequest\"I\n\016"
-  "LogoutResponse\022\n\n\002ok\030\001 \001(\010\022\017\n\007message\030\002 "
-  "\001(\t\022\032\n\022triggered_shutdown\030\003 \001(\010\"\017\n\rWhoAm"
-  "IRequest\"P\n\016WhoAmIResponse\022\n\n\002ok\030\001 \001(\010\022\017"
-  "\n\007message\030\002 \001(\t\022!\n\004user\030\003 \001(\0132\023.omm.prot"
-  "o.UserInfo\"i\n\010BookInfo\022\017\n\007book_id\030\001 \001(\r\022"
-  "\021\n\tbook_code\030\002 \001(\t\022\024\n\014display_name\030\003 \001(\t"
-  "\022\016\n\006active\030\004 \001(\010\022\023\n\013description\030\005 \001(\t\"\331\001"
-  "\n\014BookPosition\022\017\n\007book_id\030\001 \001(\r\022\025\n\rinstr"
-  "ument_id\030\002 \001(\r\022\025\n\rproduct_index\030\003 \001(\r\022\024\n"
-  "\014net_position\030\004 \001(\005\022\025\n\rlong_position\030\005 \001"
-  "(\005\022\026\n\016short_position\030\006 \001(\005\022\026\n\016avg_long_p"
-  "rice\030\007 \001(\001\022\027\n\017avg_short_price\030\010 \001(\001\022\024\n\014r"
-  "ealized_pnl\030\t \001(\001\"\314\001\n\rBookPortfolio\022\017\n\007b"
-  "ook_id\030\001 \001(\r\022\025\n\rproduct_index\030\002 \001(\r\022\023\n\013t"
-  "otal_delta\030\003 \001(\001\022\023\n\013total_gamma\030\004 \001(\001\022\022\n"
-  "\ntotal_vega\030\005 \001(\001\022\023\n\013total_theta\030\006 \001(\001\022\024"
-  "\n\014realized_pnl\030\007 \001(\001\022\026\n\016unrealized_pnl\030\010"
-  " \001(\001\022\022\n\ncalc_ts_ns\030\t \001(\003\"B\n\017VolSurfaceSl"
-  "ice\022\020\n\010expiry_T\030\001 \001(\001\022\017\n\007strikes\030\002 \003(\001\022\014"
-  "\n\004vols\030\003 \003(\001\"b\n\nVolSurface\022\025\n\rproduct_in"
-  "dex\030\001 \001(\r\022*\n\006slices\030\002 \003(\0132\032.omm.proto.Vo"
-  "lSurfaceSlice\022\021\n\tfit_ts_ns\030\003 \001(\003\"\300\010\n\010MMP"
-  "arams\022\027\n\nbid_spread\030\001 \001(\001H\000\210\001\001\022\027\n\nask_sp"
-  "read\030\002 \001(\001H\001\210\001\001\022$\n\027product_delta_thresho"
-  "ld\030\003 \001(\001H\002\210\001\001\022\031\n\014quote_volume\030\004 \001(\005H\003\210\001\001"
-  "\022\031\n\014max_position\030\005 \001(\005H\004\210\001\001\022\024\n\007enabled\030\006"
-  " \001(\010H\005\210\001\001\022#\n\026product_vega_threshold\030\007 \001("
-  "\001H\006\210\001\001\022\"\n\025min_quote_interval_ms\030\010 \001(\001H\007\210"
-  "\001\001\022\035\n\020warning_position\030\t \001(\005H\010\210\001\001\022#\n\026bas"
-  "e_half_spread_ticks\030\n \001(\001H\t\210\001\001\022\"\n\025min_ha"
-  "lf_spread_ticks\030\013 \001(\001H\n\210\001\001\022\"\n\025max_half_s"
-  "pread_ticks\030\014 \001(\001H\013\210\001\001\022)\n\034inventory_skew"
-  "_per_lot_ticks\030\r \001(\001H\014\210\001\001\022\032\n\rfollow_weig"
-  "ht\030\016 \001(\001H\r\210\001\001\022(\n\033requote_price_epsilon_t"
-  "icks\030\017 \001(\001H\016\210\001\001\022/\n\"market_width_widen_th"
-  "reshold_ticks\030\020 \001(\001H\017\210\001\001\0222\n%underlying_m"
-  "ove_widen_threshold_ticks\030\021 \001(\001H\020\210\001\001\022$\n\027"
-  "use_one_sided_at_limits\030\022 \001(\010H\021\210\001\001B\r\n\013_b"
-  "id_spreadB\r\n\013_ask_spreadB\032\n\030_product_del"
-  "ta_thresholdB\017\n\r_quote_volumeB\017\n\r_max_po"
-  "sitionB\n\n\010_enabledB\031\n\027_product_vega_thre"
-  "sholdB\030\n\026_min_quote_interval_msB\023\n\021_warn"
-  "ing_positionB\031\n\027_base_half_spread_ticksB"
-  "\030\n\026_min_half_spread_ticksB\030\n\026_max_half_s"
-  "pread_ticksB\037\n\035_inventory_skew_per_lot_t"
-  "icksB\020\n\016_follow_weightB\036\n\034_requote_price"
-  "_epsilon_ticksB%\n#_market_width_widen_th"
-  "reshold_ticksB(\n&_underlying_move_widen_"
-  "threshold_ticksB\032\n\030_use_one_sided_at_lim"
-  "its\"b\n\024ProductPricingParams\022\025\n\rproduct_i"
-  "ndex\030\001 \001(\r\022\030\n\020base_offset_type\030\002 \001(\t\022\031\n\021"
-  "base_offset_value\030\003 \001(\001\"\221\003\n\tArbParams\022\033\n"
-  "\016min_edge_ticks\030\001 \001(\001H\000\210\001\001\022\030\n\013cooldown_m"
-  "s\030\002 \001(\001H\001\210\001\001\022\035\n\020scan_interval_ms\030\003 \001(\001H\002"
-  "\210\001\001\022\037\n\022cleanup_timeout_ms\030\004 \001(\001H\003\210\001\001\022\035\n\020"
-  "max_order_volume\030\005 \001(\005H\004\210\001\001\022\034\n\017max_live_"
-  "orders\030\006 \001(\005H\005\210\001\001\022\037\n\022cleanup_on_partial\030"
-  "\007 \001(\010H\006\210\001\001\022\024\n\007enabled\030\010 \001(\010H\007\210\001\001B\021\n\017_min"
-  "_edge_ticksB\016\n\014_cooldown_msB\023\n\021_scan_int"
-  "erval_msB\025\n\023_cleanup_timeout_msB\023\n\021_max_"
-  "order_volumeB\022\n\020_max_live_ordersB\025\n\023_cle"
-  "anup_on_partialB\n\n\010_enabled\"_\n\rArbStrate"
-  "gyId\022\025\n\rproduct_index\030\001 \001(\r\0227\n\rstrategy_"
-  "type\030\002 \001(\0162 .omm.proto.ArbitrageStrategy"
-  "Type\"\216\001\n\026ArbStrategyParamsEntry\022\025\n\rprodu"
-  "ct_index\030\001 \001(\r\0227\n\rstrategy_type\030\002 \001(\0162 ."
-  "omm.proto.ArbitrageStrategyType\022$\n\006param"
-  "s\030\003 \001(\0132\024.omm.proto.ArbParams\"V\n\030SetStra"
-  "tegyParamsRequest\022\025\n\rproduct_index\030\001 \001(\r"
-  "\022#\n\006params\030\002 \001(\0132\023.omm.proto.MMParams\"8\n"
-  "\031SetStrategyParamsResponse\022\n\n\002ok\030\001 \001(\010\022\017"
-  "\n\007message\030\002 \001(\t\"Q\n\036SetProductPricingPara"
-  "msRequest\022/\n\006params\030\001 \001(\0132\037.omm.proto.Pr"
-  "oductPricingParams\">\n\037SetProductPricingP"
-  "aramsResponse\022\n\n\002ok\030\001 \001(\010\022\017\n\007message\030\002 \001"
-  "(\t\"i\n\033SetArbStrategyParamsRequest\022$\n\002id\030"
-  "\001 \001(\0132\030.omm.proto.ArbStrategyId\022$\n\006param"
-  "s\030\002 \001(\0132\024.omm.proto.ArbParams\";\n\034SetArbS"
-  "trategyParamsResponse\022\n\n\002ok\030\001 \001(\010\022\017\n\007mes"
-  "sage\030\002 \001(\t\")\n\020StartStopRequest\022\025\n\rproduc"
-  "t_index\030\001 \001(\005\"0\n\021StartStopResponse\022\n\n\002ok"
-  "\030\001 \001(\010\022\017\n\007message\030\002 \001(\t\";\n\023ArbStartStopR"
-  "equest\022$\n\002id\030\001 \001(\0132\030.omm.proto.ArbStrate"
-  "gyId\"3\n\024ArbStartStopResponse\022\n\n\002ok\030\001 \001(\010"
-  "\022\017\n\007message\030\002 \001(\t\"a\n\rRiskThreshold\022\030\n\020ma"
-  "x_net_position\030\001 \001(\001\022\021\n\tmax_delta\030\002 \001(\001\022"
-  "\021\n\tmax_gamma\030\003 \001(\001\022\020\n\010max_vega\030\004 \001(\001\"\222\001\n"
-  "\tRiskState\022+\n\tthreshold\030\001 \001(\0132\030.omm.prot"
-  "o.RiskThreshold\022\027\n\017position_breach\030\002 \001(\010"
-  "\022\024\n\014delta_breach\030\003 \001(\010\022\024\n\014gamma_breach\030\004"
-  " \001(\010\022\023\n\013vega_breach\030\005 \001(\010\"\241\001\n\016ProductMMS"
-  "tate\022\025\n\rproduct_index\030\001 \001(\r\022\030\n\020strategy_"
-  "enabled\030\002 \001(\010\022\024\n\014session_open\030\003 \001(\010\022\032\n\022p"
-  "roduct_suppressed\030\004 \001(\010\022,\n\007reasons\030\005 \003(\016"
-  "2\033.omm.proto.MMSuppressReason\"\346\001\n\021Instru"
-  "mentMMState\022\025\n\rinstrument_id\030\001 \001(\r\022\025\n\rpr"
-  "oduct_index\030\002 \001(\r\022,\n\013quote_state\030\003 \001(\0162\027"
-  ".omm.proto.MMQuoteState\022,\n\007reasons\030\004 \003(\016"
-  "2\033.omm.proto.MMSuppressReason\022\024\n\014net_pos"
-  "ition\030\005 \001(\005\022\027\n\017cancel_attempts\030\006 \001(\r\022\030\n\020"
-  "last_quote_ts_ns\030\007 \001(\003\"\254\003\n\020ArbStrategySt"
-  "ate\022\025\n\rproduct_index\030\001 \001(\r\0227\n\rstrategy_t"
-  "ype\030\002 \001(\0162 .omm.proto.ArbitrageStrategyT"
-  "ype\022\017\n\007enabled\030\003 \001(\010\022\017\n\007running\030\004 \001(\010\022\026\n"
-  "\016cleanup_active\030\005 \001(\010\022\023\n\013live_orders\030\006 \001"
-  "(\r\022\022\n\npair_count\030\007 \001(\r\022\026\n\016active_call_id"
-  "\030\010 \001(\r\022\025\n\ractive_put_id\030\t \001(\r\022\030\n\020active_"
-  "future_id\030\n \001(\r\022-\n\007reasons\030\013 \003(\0162\034.omm.p"
-  "roto.ArbSuppressReason\022\027\n\017last_edge_tick"
-  "s\030\014 \001(\001\022\037\n\027last_trigger_edge_ticks\030\r \001(\001"
-  "\022\027\n\017last_eval_ts_ns\030\016 \001(\003\022\032\n\022last_trigge"
-  "r_ts_ns\030\017 \001(\003\"\222\004\n\023PcpOpportunityState\022\025\n"
-  "\rproduct_index\030\001 \001(\r\0227\n\rstrategy_type\030\002 "
-  "\001(\0162 .omm.proto.ArbitrageStrategyType\022\017\n"
-  "\007call_id\030\003 \001(\r\022\016\n\006put_id\030\004 \001(\r\022\021\n\tfuture"
-  "_id\030\005 \001(\r\022\023\n\013expiry_date\030\006 \001(\005\022\016\n\006strike"
-  "\030\007 \001(\001\022\024\n\014market_valid\030\010 \001(\010\022\020\n\010selected"
-  "\030\t \001(\010\022\027\n\017discount_factor\030\n \001(\001\022\025\n\rsynth"
-  "etic_bid\030\013 \001(\001\022\025\n\rsynthetic_ask\030\014 \001(\001\022\022\n"
-  "\nfuture_bid\030\r \001(\001\022\022\n\nfuture_ask\030\016 \001(\001\022\035\n"
-  "\025long_synth_edge_ticks\030\017 \001(\001\022\036\n\026short_sy"
-  "nth_edge_ticks\030\020 \001(\001\022\027\n\017best_edge_ticks\030"
-  "\021 \001(\001\022:\n\016best_direction\030\022 \001(\0162\".omm.prot"
-  "o.PcpOpportunityDirection\022\023\n\013best_volume"
-  "\030\023 \001(\005\022\022\n\neval_ts_ns\030\024 \001(\003\"F\n\027SetRiskThr"
-  "esholdRequest\022+\n\tthreshold\030\001 \001(\0132\030.omm.p"
-  "roto.RiskThreshold\"7\n\030SetRiskThresholdRe"
-  "sponse\022\n\n\002ok\030\001 \001(\010\022\017\n\007message\030\002 \001(\t\"z\n\022M"
-  "anualOrderRequest\022\025\n\rinstrument_id\030\001 \001(\r"
-  "\022\014\n\004side\030\002 \001(\t\022\r\n\005price\030\003 \001(\001\022\016\n\006volume\030"
-  "\004 \001(\005\022\024\n\007book_id\030\005 \001(\rH\000\210\001\001B\n\n\010_book_id\""
-  "U\n\023ManualOrderResponse\022\n\n\002ok\030\001 \001(\010\022\017\n\007me"
-  "ssage\030\002 \001(\t\022\020\n\010order_id\030\003 \001(\004\022\017\n\007book_id"
-  "\030\004 \001(\r\"=\n\022CancelOrderRequest\022\020\n\010order_id"
-  "\030\001 \001(\004\022\025\n\rinstrument_id\030\002 \001(\r\"2\n\023CancelO"
-  "rderResponse\022\n\n\002ok\030\001 \001(\010\022\017\n\007message\030\002 \001("
-  "\t\"=\n\022CancelQuoteRequest\022\020\n\010quote_id\030\001 \001("
-  "\004\022\025\n\rinstrument_id\030\002 \001(\r\"2\n\023CancelQuoteR"
-  "esponse\022\n\n\002ok\030\001 \001(\010\022\017\n\007message\030\002 \001(\t\"\021\n\017"
-  "SnapshotRequest\"\232\006\n\020SnapshotResponse\022!\n\006"
-  "greeks\030\001 \003(\0132\021.omm.proto.Greeks\022&\n\tposit"
-  "ions\030\002 \003(\0132\023.omm.proto.Position\022-\n\tportf"
-  "olio\030\003 \001(\0132\032.omm.proto.PortfolioGreeks\022&"
-  "\n\tmm_params\030\004 \003(\0132\023.omm.proto.MMParams\022."
-  "\n\013instruments\030\005 \003(\0132\031.omm.proto.Instrume"
-  "ntInfo\022(\n\nrisk_state\030\006 \001(\0132\024.omm.proto.R"
-  "iskState\0221\n\016product_states\030\007 \003(\0132\031.omm.p"
-  "roto.ProductMMState\0227\n\021instrument_states"
-  "\030\010 \003(\0132\034.omm.proto.InstrumentMMState\0225\n\n"
-  "arb_params\030\t \003(\0132!.omm.proto.ArbStrategy"
-  "ParamsEntry\0228\n\023arb_strategy_states\030\n \003(\013"
-  "2\033.omm.proto.ArbStrategyState\0229\n\021pcp_opp"
-  "ortunities\030\013 \003(\0132\036.omm.proto.PcpOpportun"
-  "ityState\022)\n\014current_user\030\014 \001(\0132\023.omm.pro"
-  "to.UserInfo\022\"\n\005books\030\r \003(\0132\023.omm.proto.B"
-  "ookInfo\022/\n\016book_positions\030\016 \003(\0132\027.omm.pr"
-  "oto.BookPosition\0221\n\017book_portfolios\030\017 \003("
-  "\0132\030.omm.proto.BookPortfolio\022\?\n\026product_p"
-  "ricing_params\030\020 \003(\0132\037.omm.proto.ProductP"
-  "ricingParams\"&\n\rStreamRequest\022\025\n\rproduct"
-  "_index\030\001 \001(\r*D\n\025ArbitrageStrategyType\022\025\n"
-  "\021ARB_STRATEGY_NONE\020\000\022\024\n\020ARB_STRATEGY_PCP"
-  "\020\001*\240\001\n\014MMQuoteState\022\021\n\rMM_QUOTE_IDLE\020\000\022\021"
-  "\n\rMM_QUOTE_LIVE\020\001\022\030\n\024MM_QUOTE_ACK_PENDIN"
-  "G\020\002\022\033\n\027MM_QUOTE_CANCEL_PENDING\020\003\022\032\n\026MM_Q"
-  "UOTE_CANCEL_FAILED\020\004\022\027\n\023MM_QUOTE_SUPPRES"
-  "SED\020\005*\300\002\n\020MMSuppressReason\022\022\n\016MM_REASON_"
-  "NONE\020\000\022\026\n\022MM_REASON_DISABLED\020\001\022\034\n\030MM_REA"
-  "SON_SESSION_CLOSED\020\002\022\030\n\024MM_REASON_STALE_"
-  "THEO\020\003\022\034\n\030MM_REASON_INVALID_MARKET\020\004\022\034\n\030"
-  "MM_REASON_POSITION_LIMIT\020\005\022\030\n\024MM_REASON_"
-  "RISK_LIMIT\020\006\022\026\n\022MM_REASON_THROTTLE\020\007\022\036\n\032"
-  "MM_REASON_UNDERLYING_SHOCK\020\010\022\036\n\032MM_REASO"
-  "N_PRODUCT_EXPOSURE\020\t\022\032\n\026MM_REASON_CANCEL"
-  "_STUCK\020\n*\362\001\n\021ArbSuppressReason\022\023\n\017ARB_RE"
-  "ASON_NONE\020\000\022\027\n\023ARB_REASON_DISABLED\020\001\022\027\n\023"
-  "ARB_REASON_NO_PAIRS\020\002\022\035\n\031ARB_REASON_INVA"
-  "LID_MARKET\020\003\022\027\n\023ARB_REASON_COOLDOWN\020\004\022\"\n"
-  "\036ARB_REASON_INTENT_BACKPRESSURE\020\005\022\032\n\026ARB"
-  "_REASON_LIVE_ORDERS\020\006\022\036\n\032ARB_REASON_CLEA"
-  "NUP_PENDING\020\007*u\n\027PcpOpportunityDirection"
-  "\022\020\n\014PCP_DIR_NONE\020\000\022#\n\037PCP_DIR_LONG_SYNTH"
-  "_SHORT_FUTURE\020\001\022#\n\037PCP_DIR_SHORT_SYNTH_L"
-  "ONG_FUTURE\020\0022\360\r\n\016TradingMonitor\022:\n\005Login"
-  "\022\027.omm.proto.LoginRequest\032\030.omm.proto.Lo"
-  "ginResponse\022=\n\006Logout\022\030.omm.proto.Logout"
-  "Request\032\031.omm.proto.LogoutResponse\022=\n\006Wh"
-  "oAmI\022\030.omm.proto.WhoAmIRequest\032\031.omm.pro"
-  "to.WhoAmIResponse\022=\n\014StreamGreeks\022\030.omm."
-  "proto.StreamRequest\032\021.omm.proto.Greeks0\001"
-  "\022B\n\017StreamPositions\022\030.omm.proto.StreamRe"
-  "quest\032\023.omm.proto.Position0\001\022:\n\013StreamTi"
-  "cks\022\030.omm.proto.StreamRequest\032\017.omm.prot"
-  "o.Tick0\001\022B\n\014StreamOrders\022\030.omm.proto.Str"
-  "eamRequest\032\026.omm.proto.OrderUpdate0\001\022B\n\014"
-  "StreamTrades\022\030.omm.proto.StreamRequest\032\026"
-  ".omm.proto.OrderUpdate0\001\022B\n\014StreamQuotes"
-  "\022\030.omm.proto.StreamRequest\032\026.omm.proto.Q"
-  "uoteUpdate0\001\022D\n\020StreamRiskAlerts\022\030.omm.p"
-  "roto.StreamRequest\032\024.omm.proto.RiskAlert"
-  "0\001\022E\n\020StreamVolSurface\022\030.omm.proto.Strea"
-  "mRequest\032\025.omm.proto.VolSurface0\001\022^\n\021Set"
-  "StrategyParams\022#.omm.proto.SetStrategyPa"
-  "ramsRequest\032$.omm.proto.SetStrategyParam"
-  "sResponse\022p\n\027SetProductPricingParams\022).o"
-  "mm.proto.SetProductPricingParamsRequest\032"
-  "*.omm.proto.SetProductPricingParamsRespo"
-  "nse\022J\n\rStartStrategy\022\033.omm.proto.StartSt"
-  "opRequest\032\034.omm.proto.StartStopResponse\022"
-  "I\n\014StopStrategy\022\033.omm.proto.StartStopReq"
-  "uest\032\034.omm.proto.StartStopResponse\022g\n\024Se"
-  "tArbStrategyParams\022&.omm.proto.SetArbStr"
-  "ategyParamsRequest\032\'.omm.proto.SetArbStr"
-  "ategyParamsResponse\022S\n\020StartArbStrategy\022"
-  "\036.omm.proto.ArbStartStopRequest\032\037.omm.pr"
-  "oto.ArbStartStopResponse\022R\n\017StopArbStrat"
-  "egy\022\036.omm.proto.ArbStartStopRequest\032\037.om"
-  "m.proto.ArbStartStopResponse\022[\n\020SetRiskT"
-  "hreshold\022\".omm.proto.SetRiskThresholdReq"
-  "uest\032#.omm.proto.SetRiskThresholdRespons"
-  "e\022P\n\017SendManualOrder\022\035.omm.proto.ManualO"
-  "rderRequest\032\036.omm.proto.ManualOrderRespo"
-  "nse\022L\n\013CancelOrder\022\035.omm.proto.CancelOrd"
-  "erRequest\032\036.omm.proto.CancelOrderRespons"
-  "e\022L\n\013CancelQuote\022\035.omm.proto.CancelQuote"
-  "Request\032\036.omm.proto.CancelQuoteResponse\022"
-  "F\n\013GetSnapshot\022\032.omm.proto.SnapshotReque"
-  "st\032\033.omm.proto.SnapshotResponseb\006proto3"
+  "\n\nrecv_ts_ns\030\010 \001(\003\022\022\n\nbid_prices\030\t \003(\001\022\022"
+  "\n\nask_prices\030\n \003(\001\022\023\n\013bid_volumes\030\013 \003(\005\022"
+  "\023\n\013ask_volumes\030\014 \003(\005\"\363\001\n\013OrderUpdate\022\027\n\017"
+  "client_order_id\030\001 \001(\004\022\025\n\rinstrument_id\030\002"
+  " \001(\r\022\016\n\006status\030\003 \001(\t\022\022\n\nfill_price\030\004 \001(\001"
+  "\022\023\n\013fill_volume\030\005 \001(\005\022\r\n\005ts_ns\030\006 \001(\003\022\023\n\013"
+  "exchange_id\030\007 \001(\t\022\014\n\004side\030\010 \001(\t\022\r\n\005price"
+  "\030\t \001(\001\022\016\n\006volume\030\n \001(\005\022\031\n\021exchange_trade"
+  "_id\030\013 \001(\004\022\017\n\007book_id\030\014 \001(\r\"\273\001\n\013QuoteUpda"
+  "te\022\027\n\017client_quote_id\030\001 \001(\004\022\025\n\rinstrumen"
+  "t_id\030\002 \001(\r\022\021\n\tbid_price\030\003 \001(\001\022\021\n\task_pri"
+  "ce\030\004 \001(\001\022\022\n\nbid_volume\030\005 \001(\005\022\022\n\nask_volu"
+  "me\030\006 \001(\005\022\016\n\006status\030\007 \001(\t\022\r\n\005ts_ns\030\010 \001(\003\022"
+  "\017\n\007book_id\030\t \001(\r\"\200\002\n\016InstrumentInfo\022\025\n\ri"
+  "nstrument_id\030\001 \001(\r\022\014\n\004code\030\002 \001(\t\022\027\n\017unde"
+  "rlying_code\030\003 \001(\t\022\014\n\004kind\030\004 \001(\t\022\023\n\013optio"
+  "n_type\030\005 \001(\t\022\016\n\006strike\030\006 \001(\001\022\025\n\rproduct_"
+  "index\030\007 \001(\r\022\025\n\runderlying_id\030\010 \001(\r\022\023\n\013ex"
+  "change_id\030\t \001(\t\022\023\n\013expiry_date\030\n \001(\005\022\021\n\t"
+  "tick_size\030\013 \001(\001\022\022\n\nmultiplier\030\014 \001(\001\"l\n\010U"
+  "serInfo\022\017\n\007user_id\030\001 \001(\r\022\020\n\010username\030\002 \001"
+  "(\t\022\024\n\014display_name\030\003 \001(\t\022\016\n\006active\030\004 \001(\010"
+  "\022\027\n\017default_book_id\030\005 \001(\r\"2\n\014LoginReques"
+  "t\022\020\n\010username\030\001 \001(\t\022\020\n\010password\030\002 \001(\t\"f\n"
+  "\rLoginResponse\022\n\n\002ok\030\001 \001(\010\022\017\n\007message\030\002 "
+  "\001(\t\022\025\n\rsession_token\030\003 \001(\t\022!\n\004user\030\004 \001(\013"
+  "2\023.omm.proto.UserInfo\"\017\n\rLogoutRequest\"I"
+  "\n\016LogoutResponse\022\n\n\002ok\030\001 \001(\010\022\017\n\007message\030"
+  "\002 \001(\t\022\032\n\022triggered_shutdown\030\003 \001(\010\"\017\n\rWho"
+  "AmIRequest\"P\n\016WhoAmIResponse\022\n\n\002ok\030\001 \001(\010"
+  "\022\017\n\007message\030\002 \001(\t\022!\n\004user\030\003 \001(\0132\023.omm.pr"
+  "oto.UserInfo\"i\n\010BookInfo\022\017\n\007book_id\030\001 \001("
+  "\r\022\021\n\tbook_code\030\002 \001(\t\022\024\n\014display_name\030\003 \001"
+  "(\t\022\016\n\006active\030\004 \001(\010\022\023\n\013description\030\005 \001(\t\""
+  "\331\001\n\014BookPosition\022\017\n\007book_id\030\001 \001(\r\022\025\n\rins"
+  "trument_id\030\002 \001(\r\022\025\n\rproduct_index\030\003 \001(\r\022"
+  "\024\n\014net_position\030\004 \001(\005\022\025\n\rlong_position\030\005"
+  " \001(\005\022\026\n\016short_position\030\006 \001(\005\022\026\n\016avg_long"
+  "_price\030\007 \001(\001\022\027\n\017avg_short_price\030\010 \001(\001\022\024\n"
+  "\014realized_pnl\030\t \001(\001\"\314\001\n\rBookPortfolio\022\017\n"
+  "\007book_id\030\001 \001(\r\022\025\n\rproduct_index\030\002 \001(\r\022\023\n"
+  "\013total_delta\030\003 \001(\001\022\023\n\013total_gamma\030\004 \001(\001\022"
+  "\022\n\ntotal_vega\030\005 \001(\001\022\023\n\013total_theta\030\006 \001(\001"
+  "\022\024\n\014realized_pnl\030\007 \001(\001\022\026\n\016unrealized_pnl"
+  "\030\010 \001(\001\022\022\n\ncalc_ts_ns\030\t \001(\003\"B\n\017VolSurface"
+  "Slice\022\020\n\010expiry_T\030\001 \001(\001\022\017\n\007strikes\030\002 \003(\001"
+  "\022\014\n\004vols\030\003 \003(\001\"b\n\nVolSurface\022\025\n\rproduct_"
+  "index\030\001 \001(\r\022*\n\006slices\030\002 \003(\0132\032.omm.proto."
+  "VolSurfaceSlice\022\021\n\tfit_ts_ns\030\003 \001(\003\"\300\010\n\010M"
+  "MParams\022\027\n\nbid_spread\030\001 \001(\001H\000\210\001\001\022\027\n\nask_"
+  "spread\030\002 \001(\001H\001\210\001\001\022$\n\027product_delta_thres"
+  "hold\030\003 \001(\001H\002\210\001\001\022\031\n\014quote_volume\030\004 \001(\005H\003\210"
+  "\001\001\022\031\n\014max_position\030\005 \001(\005H\004\210\001\001\022\024\n\007enabled"
+  "\030\006 \001(\010H\005\210\001\001\022#\n\026product_vega_threshold\030\007 "
+  "\001(\001H\006\210\001\001\022\"\n\025min_quote_interval_ms\030\010 \001(\001H"
+  "\007\210\001\001\022\035\n\020warning_position\030\t \001(\005H\010\210\001\001\022#\n\026b"
+  "ase_half_spread_ticks\030\n \001(\001H\t\210\001\001\022\"\n\025min_"
+  "half_spread_ticks\030\013 \001(\001H\n\210\001\001\022\"\n\025max_half"
+  "_spread_ticks\030\014 \001(\001H\013\210\001\001\022)\n\034inventory_sk"
+  "ew_per_lot_ticks\030\r \001(\001H\014\210\001\001\022\032\n\rfollow_we"
+  "ight\030\016 \001(\001H\r\210\001\001\022(\n\033requote_price_epsilon"
+  "_ticks\030\017 \001(\001H\016\210\001\001\022/\n\"market_width_widen_"
+  "threshold_ticks\030\020 \001(\001H\017\210\001\001\0222\n%underlying"
+  "_move_widen_threshold_ticks\030\021 \001(\001H\020\210\001\001\022$"
+  "\n\027use_one_sided_at_limits\030\022 \001(\010H\021\210\001\001B\r\n\013"
+  "_bid_spreadB\r\n\013_ask_spreadB\032\n\030_product_d"
+  "elta_thresholdB\017\n\r_quote_volumeB\017\n\r_max_"
+  "positionB\n\n\010_enabledB\031\n\027_product_vega_th"
+  "resholdB\030\n\026_min_quote_interval_msB\023\n\021_wa"
+  "rning_positionB\031\n\027_base_half_spread_tick"
+  "sB\030\n\026_min_half_spread_ticksB\030\n\026_max_half"
+  "_spread_ticksB\037\n\035_inventory_skew_per_lot"
+  "_ticksB\020\n\016_follow_weightB\036\n\034_requote_pri"
+  "ce_epsilon_ticksB%\n#_market_width_widen_"
+  "threshold_ticksB(\n&_underlying_move_wide"
+  "n_threshold_ticksB\032\n\030_use_one_sided_at_l"
+  "imits\"b\n\024ProductPricingParams\022\025\n\rproduct"
+  "_index\030\001 \001(\r\022\030\n\020base_offset_type\030\002 \001(\t\022\031"
+  "\n\021base_offset_value\030\003 \001(\001\"\221\003\n\tArbParams\022"
+  "\033\n\016min_edge_ticks\030\001 \001(\001H\000\210\001\001\022\030\n\013cooldown"
+  "_ms\030\002 \001(\001H\001\210\001\001\022\035\n\020scan_interval_ms\030\003 \001(\001"
+  "H\002\210\001\001\022\037\n\022cleanup_timeout_ms\030\004 \001(\001H\003\210\001\001\022\035"
+  "\n\020max_order_volume\030\005 \001(\005H\004\210\001\001\022\034\n\017max_liv"
+  "e_orders\030\006 \001(\005H\005\210\001\001\022\037\n\022cleanup_on_partia"
+  "l\030\007 \001(\010H\006\210\001\001\022\024\n\007enabled\030\010 \001(\010H\007\210\001\001B\021\n\017_m"
+  "in_edge_ticksB\016\n\014_cooldown_msB\023\n\021_scan_i"
+  "nterval_msB\025\n\023_cleanup_timeout_msB\023\n\021_ma"
+  "x_order_volumeB\022\n\020_max_live_ordersB\025\n\023_c"
+  "leanup_on_partialB\n\n\010_enabled\"_\n\rArbStra"
+  "tegyId\022\025\n\rproduct_index\030\001 \001(\r\0227\n\rstrateg"
+  "y_type\030\002 \001(\0162 .omm.proto.ArbitrageStrate"
+  "gyType\"\216\001\n\026ArbStrategyParamsEntry\022\025\n\rpro"
+  "duct_index\030\001 \001(\r\0227\n\rstrategy_type\030\002 \001(\0162"
+  " .omm.proto.ArbitrageStrategyType\022$\n\006par"
+  "ams\030\003 \001(\0132\024.omm.proto.ArbParams\"V\n\030SetSt"
+  "rategyParamsRequest\022\025\n\rproduct_index\030\001 \001"
+  "(\r\022#\n\006params\030\002 \001(\0132\023.omm.proto.MMParams\""
+  "8\n\031SetStrategyParamsResponse\022\n\n\002ok\030\001 \001(\010"
+  "\022\017\n\007message\030\002 \001(\t\"Q\n\036SetProductPricingPa"
+  "ramsRequest\022/\n\006params\030\001 \001(\0132\037.omm.proto."
+  "ProductPricingParams\">\n\037SetProductPricin"
+  "gParamsResponse\022\n\n\002ok\030\001 \001(\010\022\017\n\007message\030\002"
+  " \001(\t\"i\n\033SetArbStrategyParamsRequest\022$\n\002i"
+  "d\030\001 \001(\0132\030.omm.proto.ArbStrategyId\022$\n\006par"
+  "ams\030\002 \001(\0132\024.omm.proto.ArbParams\";\n\034SetAr"
+  "bStrategyParamsResponse\022\n\n\002ok\030\001 \001(\010\022\017\n\007m"
+  "essage\030\002 \001(\t\")\n\020StartStopRequest\022\025\n\rprod"
+  "uct_index\030\001 \001(\005\"0\n\021StartStopResponse\022\n\n\002"
+  "ok\030\001 \001(\010\022\017\n\007message\030\002 \001(\t\";\n\023ArbStartSto"
+  "pRequest\022$\n\002id\030\001 \001(\0132\030.omm.proto.ArbStra"
+  "tegyId\"3\n\024ArbStartStopResponse\022\n\n\002ok\030\001 \001"
+  "(\010\022\017\n\007message\030\002 \001(\t\"a\n\rRiskThreshold\022\030\n\020"
+  "max_net_position\030\001 \001(\001\022\021\n\tmax_delta\030\002 \001("
+  "\001\022\021\n\tmax_gamma\030\003 \001(\001\022\020\n\010max_vega\030\004 \001(\001\"\222"
+  "\001\n\tRiskState\022+\n\tthreshold\030\001 \001(\0132\030.omm.pr"
+  "oto.RiskThreshold\022\027\n\017position_breach\030\002 \001"
+  "(\010\022\024\n\014delta_breach\030\003 \001(\010\022\024\n\014gamma_breach"
+  "\030\004 \001(\010\022\023\n\013vega_breach\030\005 \001(\010\"\241\001\n\016ProductM"
+  "MState\022\025\n\rproduct_index\030\001 \001(\r\022\030\n\020strateg"
+  "y_enabled\030\002 \001(\010\022\024\n\014session_open\030\003 \001(\010\022\032\n"
+  "\022product_suppressed\030\004 \001(\010\022,\n\007reasons\030\005 \003"
+  "(\0162\033.omm.proto.MMSuppressReason\"\346\001\n\021Inst"
+  "rumentMMState\022\025\n\rinstrument_id\030\001 \001(\r\022\025\n\r"
+  "product_index\030\002 \001(\r\022,\n\013quote_state\030\003 \001(\016"
+  "2\027.omm.proto.MMQuoteState\022,\n\007reasons\030\004 \003"
+  "(\0162\033.omm.proto.MMSuppressReason\022\024\n\014net_p"
+  "osition\030\005 \001(\005\022\027\n\017cancel_attempts\030\006 \001(\r\022\030"
+  "\n\020last_quote_ts_ns\030\007 \001(\003\"\254\003\n\020ArbStrategy"
+  "State\022\025\n\rproduct_index\030\001 \001(\r\0227\n\rstrategy"
+  "_type\030\002 \001(\0162 .omm.proto.ArbitrageStrateg"
+  "yType\022\017\n\007enabled\030\003 \001(\010\022\017\n\007running\030\004 \001(\010\022"
+  "\026\n\016cleanup_active\030\005 \001(\010\022\023\n\013live_orders\030\006"
+  " \001(\r\022\022\n\npair_count\030\007 \001(\r\022\026\n\016active_call_"
+  "id\030\010 \001(\r\022\025\n\ractive_put_id\030\t \001(\r\022\030\n\020activ"
+  "e_future_id\030\n \001(\r\022-\n\007reasons\030\013 \003(\0162\034.omm"
+  ".proto.ArbSuppressReason\022\027\n\017last_edge_ti"
+  "cks\030\014 \001(\001\022\037\n\027last_trigger_edge_ticks\030\r \001"
+  "(\001\022\027\n\017last_eval_ts_ns\030\016 \001(\003\022\032\n\022last_trig"
+  "ger_ts_ns\030\017 \001(\003\"\222\004\n\023PcpOpportunityState\022"
+  "\025\n\rproduct_index\030\001 \001(\r\0227\n\rstrategy_type\030"
+  "\002 \001(\0162 .omm.proto.ArbitrageStrategyType\022"
+  "\017\n\007call_id\030\003 \001(\r\022\016\n\006put_id\030\004 \001(\r\022\021\n\tfutu"
+  "re_id\030\005 \001(\r\022\023\n\013expiry_date\030\006 \001(\005\022\016\n\006stri"
+  "ke\030\007 \001(\001\022\024\n\014market_valid\030\010 \001(\010\022\020\n\010select"
+  "ed\030\t \001(\010\022\027\n\017discount_factor\030\n \001(\001\022\025\n\rsyn"
+  "thetic_bid\030\013 \001(\001\022\025\n\rsynthetic_ask\030\014 \001(\001\022"
+  "\022\n\nfuture_bid\030\r \001(\001\022\022\n\nfuture_ask\030\016 \001(\001\022"
+  "\035\n\025long_synth_edge_ticks\030\017 \001(\001\022\036\n\026short_"
+  "synth_edge_ticks\030\020 \001(\001\022\027\n\017best_edge_tick"
+  "s\030\021 \001(\001\022:\n\016best_direction\030\022 \001(\0162\".omm.pr"
+  "oto.PcpOpportunityDirection\022\023\n\013best_volu"
+  "me\030\023 \001(\005\022\022\n\neval_ts_ns\030\024 \001(\003\"F\n\027SetRiskT"
+  "hresholdRequest\022+\n\tthreshold\030\001 \001(\0132\030.omm"
+  ".proto.RiskThreshold\"7\n\030SetRiskThreshold"
+  "Response\022\n\n\002ok\030\001 \001(\010\022\017\n\007message\030\002 \001(\t\"\300\001"
+  "\n\022ManualOrderRequest\022\025\n\rinstrument_id\030\001 "
+  "\001(\r\022\014\n\004side\030\002 \001(\t\022\r\n\005price\030\003 \001(\001\022\016\n\006volu"
+  "me\030\004 \001(\005\022\024\n\007book_id\030\005 \001(\rH\000\210\001\001\022\022\n\norder_"
+  "type\030\006 \001(\t\022\022\n\nprice_type\030\007 \001(\t\022\034\n\020volume"
+  "_condition\030\010 \001(\tB\002\030\001B\n\n\010_book_id\"U\n\023Manu"
+  "alOrderResponse\022\n\n\002ok\030\001 \001(\010\022\017\n\007message\030\002"
+  " \001(\t\022\020\n\010order_id\030\003 \001(\004\022\017\n\007book_id\030\004 \001(\r\""
+  "=\n\022CancelOrderRequest\022\020\n\010order_id\030\001 \001(\004\022"
+  "\025\n\rinstrument_id\030\002 \001(\r\"2\n\023CancelOrderRes"
+  "ponse\022\n\n\002ok\030\001 \001(\010\022\017\n\007message\030\002 \001(\t\"=\n\022Ca"
+  "ncelQuoteRequest\022\020\n\010quote_id\030\001 \001(\004\022\025\n\rin"
+  "strument_id\030\002 \001(\r\"2\n\023CancelQuoteResponse"
+  "\022\n\n\002ok\030\001 \001(\010\022\017\n\007message\030\002 \001(\t\"\021\n\017Snapsho"
+  "tRequest\"\232\006\n\020SnapshotResponse\022!\n\006greeks\030"
+  "\001 \003(\0132\021.omm.proto.Greeks\022&\n\tpositions\030\002 "
+  "\003(\0132\023.omm.proto.Position\022-\n\tportfolio\030\003 "
+  "\001(\0132\032.omm.proto.PortfolioGreeks\022&\n\tmm_pa"
+  "rams\030\004 \003(\0132\023.omm.proto.MMParams\022.\n\013instr"
+  "uments\030\005 \003(\0132\031.omm.proto.InstrumentInfo\022"
+  "(\n\nrisk_state\030\006 \001(\0132\024.omm.proto.RiskStat"
+  "e\0221\n\016product_states\030\007 \003(\0132\031.omm.proto.Pr"
+  "oductMMState\0227\n\021instrument_states\030\010 \003(\0132"
+  "\034.omm.proto.InstrumentMMState\0225\n\narb_par"
+  "ams\030\t \003(\0132!.omm.proto.ArbStrategyParamsE"
+  "ntry\0228\n\023arb_strategy_states\030\n \003(\0132\033.omm."
+  "proto.ArbStrategyState\0229\n\021pcp_opportunit"
+  "ies\030\013 \003(\0132\036.omm.proto.PcpOpportunityStat"
+  "e\022)\n\014current_user\030\014 \001(\0132\023.omm.proto.User"
+  "Info\022\"\n\005books\030\r \003(\0132\023.omm.proto.BookInfo"
+  "\022/\n\016book_positions\030\016 \003(\0132\027.omm.proto.Boo"
+  "kPosition\0221\n\017book_portfolios\030\017 \003(\0132\030.omm"
+  ".proto.BookPortfolio\022\?\n\026product_pricing_"
+  "params\030\020 \003(\0132\037.omm.proto.ProductPricingP"
+  "arams\"&\n\rStreamRequest\022\025\n\rproduct_index\030"
+  "\001 \001(\r*D\n\025ArbitrageStrategyType\022\025\n\021ARB_ST"
+  "RATEGY_NONE\020\000\022\024\n\020ARB_STRATEGY_PCP\020\001*\240\001\n\014"
+  "MMQuoteState\022\021\n\rMM_QUOTE_IDLE\020\000\022\021\n\rMM_QU"
+  "OTE_LIVE\020\001\022\030\n\024MM_QUOTE_ACK_PENDING\020\002\022\033\n\027"
+  "MM_QUOTE_CANCEL_PENDING\020\003\022\032\n\026MM_QUOTE_CA"
+  "NCEL_FAILED\020\004\022\027\n\023MM_QUOTE_SUPPRESSED\020\005*\300"
+  "\002\n\020MMSuppressReason\022\022\n\016MM_REASON_NONE\020\000\022"
+  "\026\n\022MM_REASON_DISABLED\020\001\022\034\n\030MM_REASON_SES"
+  "SION_CLOSED\020\002\022\030\n\024MM_REASON_STALE_THEO\020\003\022"
+  "\034\n\030MM_REASON_INVALID_MARKET\020\004\022\034\n\030MM_REAS"
+  "ON_POSITION_LIMIT\020\005\022\030\n\024MM_REASON_RISK_LI"
+  "MIT\020\006\022\026\n\022MM_REASON_THROTTLE\020\007\022\036\n\032MM_REAS"
+  "ON_UNDERLYING_SHOCK\020\010\022\036\n\032MM_REASON_PRODU"
+  "CT_EXPOSURE\020\t\022\032\n\026MM_REASON_CANCEL_STUCK\020"
+  "\n*\362\001\n\021ArbSuppressReason\022\023\n\017ARB_REASON_NO"
+  "NE\020\000\022\027\n\023ARB_REASON_DISABLED\020\001\022\027\n\023ARB_REA"
+  "SON_NO_PAIRS\020\002\022\035\n\031ARB_REASON_INVALID_MAR"
+  "KET\020\003\022\027\n\023ARB_REASON_COOLDOWN\020\004\022\"\n\036ARB_RE"
+  "ASON_INTENT_BACKPRESSURE\020\005\022\032\n\026ARB_REASON"
+  "_LIVE_ORDERS\020\006\022\036\n\032ARB_REASON_CLEANUP_PEN"
+  "DING\020\007*u\n\027PcpOpportunityDirection\022\020\n\014PCP"
+  "_DIR_NONE\020\000\022#\n\037PCP_DIR_LONG_SYNTH_SHORT_"
+  "FUTURE\020\001\022#\n\037PCP_DIR_SHORT_SYNTH_LONG_FUT"
+  "URE\020\0022\360\r\n\016TradingMonitor\022:\n\005Login\022\027.omm."
+  "proto.LoginRequest\032\030.omm.proto.LoginResp"
+  "onse\022=\n\006Logout\022\030.omm.proto.LogoutRequest"
+  "\032\031.omm.proto.LogoutResponse\022=\n\006WhoAmI\022\030."
+  "omm.proto.WhoAmIRequest\032\031.omm.proto.WhoA"
+  "mIResponse\022=\n\014StreamGreeks\022\030.omm.proto.S"
+  "treamRequest\032\021.omm.proto.Greeks0\001\022B\n\017Str"
+  "eamPositions\022\030.omm.proto.StreamRequest\032\023"
+  ".omm.proto.Position0\001\022:\n\013StreamTicks\022\030.o"
+  "mm.proto.StreamRequest\032\017.omm.proto.Tick0"
+  "\001\022B\n\014StreamOrders\022\030.omm.proto.StreamRequ"
+  "est\032\026.omm.proto.OrderUpdate0\001\022B\n\014StreamT"
+  "rades\022\030.omm.proto.StreamRequest\032\026.omm.pr"
+  "oto.OrderUpdate0\001\022B\n\014StreamQuotes\022\030.omm."
+  "proto.StreamRequest\032\026.omm.proto.QuoteUpd"
+  "ate0\001\022D\n\020StreamRiskAlerts\022\030.omm.proto.St"
+  "reamRequest\032\024.omm.proto.RiskAlert0\001\022E\n\020S"
+  "treamVolSurface\022\030.omm.proto.StreamReques"
+  "t\032\025.omm.proto.VolSurface0\001\022^\n\021SetStrateg"
+  "yParams\022#.omm.proto.SetStrategyParamsReq"
+  "uest\032$.omm.proto.SetStrategyParamsRespon"
+  "se\022p\n\027SetProductPricingParams\022).omm.prot"
+  "o.SetProductPricingParamsRequest\032*.omm.p"
+  "roto.SetProductPricingParamsResponse\022J\n\r"
+  "StartStrategy\022\033.omm.proto.StartStopReque"
+  "st\032\034.omm.proto.StartStopResponse\022I\n\014Stop"
+  "Strategy\022\033.omm.proto.StartStopRequest\032\034."
+  "omm.proto.StartStopResponse\022g\n\024SetArbStr"
+  "ategyParams\022&.omm.proto.SetArbStrategyPa"
+  "ramsRequest\032\'.omm.proto.SetArbStrategyPa"
+  "ramsResponse\022S\n\020StartArbStrategy\022\036.omm.p"
+  "roto.ArbStartStopRequest\032\037.omm.proto.Arb"
+  "StartStopResponse\022R\n\017StopArbStrategy\022\036.o"
+  "mm.proto.ArbStartStopRequest\032\037.omm.proto"
+  ".ArbStartStopResponse\022[\n\020SetRiskThreshol"
+  "d\022\".omm.proto.SetRiskThresholdRequest\032#."
+  "omm.proto.SetRiskThresholdResponse\022P\n\017Se"
+  "ndManualOrder\022\035.omm.proto.ManualOrderReq"
+  "uest\032\036.omm.proto.ManualOrderResponse\022L\n\013"
+  "CancelOrder\022\035.omm.proto.CancelOrderReque"
+  "st\032\036.omm.proto.CancelOrderResponse\022L\n\013Ca"
+  "ncelQuote\022\035.omm.proto.CancelQuoteRequest"
+  "\032\036.omm.proto.CancelQuoteResponse\022F\n\013GetS"
+  "napshot\022\032.omm.proto.SnapshotRequest\032\033.om"
+  "m.proto.SnapshotResponseb\006proto3"
   ;
 static ::_pbi::once_flag descriptor_table_trading_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_trading_2eproto = {
-    false, false, 11079, descriptor_table_protodef_trading_2eproto,
+    false, false, 11232, descriptor_table_protodef_trading_2eproto,
     "trading.proto",
     &descriptor_table_trading_2eproto_once, nullptr, 0, 52,
     schemas, file_default_instances, TableStruct_trading_2eproto::offsets,
@@ -3817,7 +3840,13 @@ Tick::Tick(const Tick& from)
   : ::PROTOBUF_NAMESPACE_ID::Message() {
   Tick* const _this = this; (void)_this;
   new (&_impl_) Impl_{
-      decltype(_impl_.last_price_){}
+      decltype(_impl_.bid_prices_){from._impl_.bid_prices_}
+    , decltype(_impl_.ask_prices_){from._impl_.ask_prices_}
+    , decltype(_impl_.bid_volumes_){from._impl_.bid_volumes_}
+    , /*decltype(_impl_._bid_volumes_cached_byte_size_)*/{0}
+    , decltype(_impl_.ask_volumes_){from._impl_.ask_volumes_}
+    , /*decltype(_impl_._ask_volumes_cached_byte_size_)*/{0}
+    , decltype(_impl_.last_price_){}
     , decltype(_impl_.bid_price_){}
     , decltype(_impl_.instrument_id_){}
     , decltype(_impl_.bid_volume_){}
@@ -3839,7 +3868,13 @@ inline void Tick::SharedCtor(
   (void)arena;
   (void)is_message_owned;
   new (&_impl_) Impl_{
-      decltype(_impl_.last_price_){0}
+      decltype(_impl_.bid_prices_){arena}
+    , decltype(_impl_.ask_prices_){arena}
+    , decltype(_impl_.bid_volumes_){arena}
+    , /*decltype(_impl_._bid_volumes_cached_byte_size_)*/{0}
+    , decltype(_impl_.ask_volumes_){arena}
+    , /*decltype(_impl_._ask_volumes_cached_byte_size_)*/{0}
+    , decltype(_impl_.last_price_){0}
     , decltype(_impl_.bid_price_){0}
     , decltype(_impl_.instrument_id_){0u}
     , decltype(_impl_.bid_volume_){0}
@@ -3862,6 +3897,10 @@ Tick::~Tick() {
 
 inline void Tick::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.bid_prices_.~RepeatedField();
+  _impl_.ask_prices_.~RepeatedField();
+  _impl_.bid_volumes_.~RepeatedField();
+  _impl_.ask_volumes_.~RepeatedField();
 }
 
 void Tick::SetCachedSize(int size) const {
@@ -3874,6 +3913,10 @@ void Tick::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
+  _impl_.bid_prices_.Clear();
+  _impl_.ask_prices_.Clear();
+  _impl_.bid_volumes_.Clear();
+  _impl_.ask_volumes_.Clear();
   ::memset(&_impl_.last_price_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&_impl_.ask_volume_) -
       reinterpret_cast<char*>(&_impl_.last_price_)) + sizeof(_impl_.ask_volume_));
@@ -3946,6 +3989,50 @@ const char* Tick::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
       case 8:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 64)) {
           _impl_.recv_ts_ns_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // repeated double bid_prices = 9;
+      case 9:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 74)) {
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedDoubleParser(_internal_mutable_bid_prices(), ptr, ctx);
+          CHK_(ptr);
+        } else if (static_cast<uint8_t>(tag) == 73) {
+          _internal_add_bid_prices(::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr));
+          ptr += sizeof(double);
+        } else
+          goto handle_unusual;
+        continue;
+      // repeated double ask_prices = 10;
+      case 10:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 82)) {
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedDoubleParser(_internal_mutable_ask_prices(), ptr, ctx);
+          CHK_(ptr);
+        } else if (static_cast<uint8_t>(tag) == 81) {
+          _internal_add_ask_prices(::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr));
+          ptr += sizeof(double);
+        } else
+          goto handle_unusual;
+        continue;
+      // repeated int32 bid_volumes = 11;
+      case 11:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 90)) {
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedInt32Parser(_internal_mutable_bid_volumes(), ptr, ctx);
+          CHK_(ptr);
+        } else if (static_cast<uint8_t>(tag) == 88) {
+          _internal_add_bid_volumes(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr));
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // repeated int32 ask_volumes = 12;
+      case 12:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 98)) {
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedInt32Parser(_internal_mutable_ask_volumes(), ptr, ctx);
+          CHK_(ptr);
+        } else if (static_cast<uint8_t>(tag) == 96) {
+          _internal_add_ask_volumes(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr));
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -4039,6 +4126,34 @@ uint8_t* Tick::_InternalSerialize(
     target = ::_pbi::WireFormatLite::WriteInt64ToArray(8, this->_internal_recv_ts_ns(), target);
   }
 
+  // repeated double bid_prices = 9;
+  if (this->_internal_bid_prices_size() > 0) {
+    target = stream->WriteFixedPacked(9, _internal_bid_prices(), target);
+  }
+
+  // repeated double ask_prices = 10;
+  if (this->_internal_ask_prices_size() > 0) {
+    target = stream->WriteFixedPacked(10, _internal_ask_prices(), target);
+  }
+
+  // repeated int32 bid_volumes = 11;
+  {
+    int byte_size = _impl_._bid_volumes_cached_byte_size_.load(std::memory_order_relaxed);
+    if (byte_size > 0) {
+      target = stream->WriteInt32Packed(
+          11, _internal_bid_volumes(), byte_size, target);
+    }
+  }
+
+  // repeated int32 ask_volumes = 12;
+  {
+    int byte_size = _impl_._ask_volumes_cached_byte_size_.load(std::memory_order_relaxed);
+    if (byte_size > 0) {
+      target = stream->WriteInt32Packed(
+          12, _internal_ask_volumes(), byte_size, target);
+    }
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -4054,6 +4169,56 @@ size_t Tick::ByteSizeLong() const {
   uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
+
+  // repeated double bid_prices = 9;
+  {
+    unsigned int count = static_cast<unsigned int>(this->_internal_bid_prices_size());
+    size_t data_size = 8UL * count;
+    if (data_size > 0) {
+      total_size += 1 +
+        ::_pbi::WireFormatLite::Int32Size(static_cast<int32_t>(data_size));
+    }
+    total_size += data_size;
+  }
+
+  // repeated double ask_prices = 10;
+  {
+    unsigned int count = static_cast<unsigned int>(this->_internal_ask_prices_size());
+    size_t data_size = 8UL * count;
+    if (data_size > 0) {
+      total_size += 1 +
+        ::_pbi::WireFormatLite::Int32Size(static_cast<int32_t>(data_size));
+    }
+    total_size += data_size;
+  }
+
+  // repeated int32 bid_volumes = 11;
+  {
+    size_t data_size = ::_pbi::WireFormatLite::
+      Int32Size(this->_impl_.bid_volumes_);
+    if (data_size > 0) {
+      total_size += 1 +
+        ::_pbi::WireFormatLite::Int32Size(static_cast<int32_t>(data_size));
+    }
+    int cached_size = ::_pbi::ToCachedSize(data_size);
+    _impl_._bid_volumes_cached_byte_size_.store(cached_size,
+                                    std::memory_order_relaxed);
+    total_size += data_size;
+  }
+
+  // repeated int32 ask_volumes = 12;
+  {
+    size_t data_size = ::_pbi::WireFormatLite::
+      Int32Size(this->_impl_.ask_volumes_);
+    if (data_size > 0) {
+      total_size += 1 +
+        ::_pbi::WireFormatLite::Int32Size(static_cast<int32_t>(data_size));
+    }
+    int cached_size = ::_pbi::ToCachedSize(data_size);
+    _impl_._ask_volumes_cached_byte_size_.store(cached_size,
+                                    std::memory_order_relaxed);
+    total_size += data_size;
+  }
 
   // double last_price = 2;
   static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
@@ -4125,6 +4290,10 @@ void Tick::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
+  _this->_impl_.bid_prices_.MergeFrom(from._impl_.bid_prices_);
+  _this->_impl_.ask_prices_.MergeFrom(from._impl_.ask_prices_);
+  _this->_impl_.bid_volumes_.MergeFrom(from._impl_.bid_volumes_);
+  _this->_impl_.ask_volumes_.MergeFrom(from._impl_.ask_volumes_);
   static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
   double tmp_last_price = from._internal_last_price();
   uint64_t raw_last_price;
@@ -4178,6 +4347,10 @@ bool Tick::IsInitialized() const {
 void Tick::InternalSwap(Tick* other) {
   using std::swap;
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  _impl_.bid_prices_.InternalSwap(&other->_impl_.bid_prices_);
+  _impl_.ask_prices_.InternalSwap(&other->_impl_.ask_prices_);
+  _impl_.bid_volumes_.InternalSwap(&other->_impl_.bid_volumes_);
+  _impl_.ask_volumes_.InternalSwap(&other->_impl_.ask_volumes_);
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
       PROTOBUF_FIELD_OFFSET(Tick, _impl_.ask_volume_)
       + sizeof(Tick::_impl_.ask_volume_)
@@ -16138,6 +16311,9 @@ ManualOrderRequest::ManualOrderRequest(const ManualOrderRequest& from)
       decltype(_impl_._has_bits_){from._impl_._has_bits_}
     , /*decltype(_impl_._cached_size_)*/{}
     , decltype(_impl_.side_){}
+    , decltype(_impl_.order_type_){}
+    , decltype(_impl_.price_type_){}
+    , decltype(_impl_.volume_condition_){}
     , decltype(_impl_.instrument_id_){}
     , decltype(_impl_.volume_){}
     , decltype(_impl_.price_){}
@@ -16150,6 +16326,30 @@ ManualOrderRequest::ManualOrderRequest(const ManualOrderRequest& from)
   #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (!from._internal_side().empty()) {
     _this->_impl_.side_.Set(from._internal_side(), 
+      _this->GetArenaForAllocation());
+  }
+  _impl_.order_type_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.order_type_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_order_type().empty()) {
+    _this->_impl_.order_type_.Set(from._internal_order_type(), 
+      _this->GetArenaForAllocation());
+  }
+  _impl_.price_type_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.price_type_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_price_type().empty()) {
+    _this->_impl_.price_type_.Set(from._internal_price_type(), 
+      _this->GetArenaForAllocation());
+  }
+  _impl_.volume_condition_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.volume_condition_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_volume_condition().empty()) {
+    _this->_impl_.volume_condition_.Set(from._internal_volume_condition(), 
       _this->GetArenaForAllocation());
   }
   ::memcpy(&_impl_.instrument_id_, &from._impl_.instrument_id_,
@@ -16166,6 +16366,9 @@ inline void ManualOrderRequest::SharedCtor(
       decltype(_impl_._has_bits_){}
     , /*decltype(_impl_._cached_size_)*/{}
     , decltype(_impl_.side_){}
+    , decltype(_impl_.order_type_){}
+    , decltype(_impl_.price_type_){}
+    , decltype(_impl_.volume_condition_){}
     , decltype(_impl_.instrument_id_){0u}
     , decltype(_impl_.volume_){0}
     , decltype(_impl_.price_){0}
@@ -16174,6 +16377,18 @@ inline void ManualOrderRequest::SharedCtor(
   _impl_.side_.InitDefault();
   #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
     _impl_.side_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.order_type_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.order_type_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.price_type_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.price_type_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.volume_condition_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.volume_condition_.Set("", GetArenaForAllocation());
   #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
@@ -16189,6 +16404,9 @@ ManualOrderRequest::~ManualOrderRequest() {
 inline void ManualOrderRequest::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
   _impl_.side_.Destroy();
+  _impl_.order_type_.Destroy();
+  _impl_.price_type_.Destroy();
+  _impl_.volume_condition_.Destroy();
 }
 
 void ManualOrderRequest::SetCachedSize(int size) const {
@@ -16202,6 +16420,9 @@ void ManualOrderRequest::Clear() {
   (void) cached_has_bits;
 
   _impl_.side_.ClearToEmpty();
+  _impl_.order_type_.ClearToEmpty();
+  _impl_.price_type_.ClearToEmpty();
+  _impl_.volume_condition_.ClearToEmpty();
   ::memset(&_impl_.instrument_id_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&_impl_.price_) -
       reinterpret_cast<char*>(&_impl_.instrument_id_)) + sizeof(_impl_.price_));
@@ -16257,6 +16478,36 @@ const char* ManualOrderRequest::_InternalParse(const char* ptr, ::_pbi::ParseCon
           _Internal::set_has_book_id(&has_bits);
           _impl_.book_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // string order_type = 6;
+      case 6:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 50)) {
+          auto str = _internal_mutable_order_type();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, "omm.proto.ManualOrderRequest.order_type"));
+        } else
+          goto handle_unusual;
+        continue;
+      // string price_type = 7;
+      case 7:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 58)) {
+          auto str = _internal_mutable_price_type();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, "omm.proto.ManualOrderRequest.price_type"));
+        } else
+          goto handle_unusual;
+        continue;
+      // string volume_condition = 8 [deprecated = true];
+      case 8:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 66)) {
+          auto str = _internal_mutable_volume_condition();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, "omm.proto.ManualOrderRequest.volume_condition"));
         } else
           goto handle_unusual;
         continue;
@@ -16328,6 +16579,36 @@ uint8_t* ManualOrderRequest::_InternalSerialize(
     target = ::_pbi::WireFormatLite::WriteUInt32ToArray(5, this->_internal_book_id(), target);
   }
 
+  // string order_type = 6;
+  if (!this->_internal_order_type().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_order_type().data(), static_cast<int>(this->_internal_order_type().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "omm.proto.ManualOrderRequest.order_type");
+    target = stream->WriteStringMaybeAliased(
+        6, this->_internal_order_type(), target);
+  }
+
+  // string price_type = 7;
+  if (!this->_internal_price_type().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_price_type().data(), static_cast<int>(this->_internal_price_type().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "omm.proto.ManualOrderRequest.price_type");
+    target = stream->WriteStringMaybeAliased(
+        7, this->_internal_price_type(), target);
+  }
+
+  // string volume_condition = 8 [deprecated = true];
+  if (!this->_internal_volume_condition().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_volume_condition().data(), static_cast<int>(this->_internal_volume_condition().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "omm.proto.ManualOrderRequest.volume_condition");
+    target = stream->WriteStringMaybeAliased(
+        8, this->_internal_volume_condition(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -16349,6 +16630,27 @@ size_t ManualOrderRequest::ByteSizeLong() const {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
         this->_internal_side());
+  }
+
+  // string order_type = 6;
+  if (!this->_internal_order_type().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_order_type());
+  }
+
+  // string price_type = 7;
+  if (!this->_internal_price_type().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_price_type());
+  }
+
+  // string volume_condition = 8 [deprecated = true];
+  if (!this->_internal_volume_condition().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_volume_condition());
   }
 
   // uint32 instrument_id = 1;
@@ -16397,6 +16699,15 @@ void ManualOrderRequest::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, con
   if (!from._internal_side().empty()) {
     _this->_internal_set_side(from._internal_side());
   }
+  if (!from._internal_order_type().empty()) {
+    _this->_internal_set_order_type(from._internal_order_type());
+  }
+  if (!from._internal_price_type().empty()) {
+    _this->_internal_set_price_type(from._internal_price_type());
+  }
+  if (!from._internal_volume_condition().empty()) {
+    _this->_internal_set_volume_condition(from._internal_volume_condition());
+  }
   if (from._internal_instrument_id() != 0) {
     _this->_internal_set_instrument_id(from._internal_instrument_id());
   }
@@ -16436,6 +16747,18 @@ void ManualOrderRequest::InternalSwap(ManualOrderRequest* other) {
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
       &_impl_.side_, lhs_arena,
       &other->_impl_.side_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.order_type_, lhs_arena,
+      &other->_impl_.order_type_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.price_type_, lhs_arena,
+      &other->_impl_.price_type_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.volume_condition_, lhs_arena,
+      &other->_impl_.volume_condition_, rhs_arena
   );
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
       PROTOBUF_FIELD_OFFSET(ManualOrderRequest, _impl_.book_id_)

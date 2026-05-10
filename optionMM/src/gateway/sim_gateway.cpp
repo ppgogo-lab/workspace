@@ -68,7 +68,7 @@ bool SimGateway::send_order(const Order& order) noexcept {
     slot.ack_due_ns = now_ns + static_cast<Timestamp>(settings_.ack_latency_ms) * 1'000'000LL;
     slot.next_fill_due_ns = slot.ack_due_ns + static_cast<Timestamp>(settings_.fill_interval_ms) * 1'000'000LL;
     slot.reject_pending = order.volume <= 0
-                       || (order.order_type != OrderType::Market && order.price <= 0.0);
+                       || (order.price_type != OrderPriceType::Market && order.price <= 0.0);
 
     // Add to hash index for O(1) lookup
     (void)order_client_index_.insert(order.client_order_id, slot_index);
@@ -208,7 +208,8 @@ void SimGateway::process_orders(Timestamp now_ns, std::mt19937& rng) noexcept {
         if (!active.used) continue;
 
         if (!active.ack_sent && now_ns >= active.ack_due_ns) {
-            if (active.order.volume <= 0 || (active.order.order_type != OrderType::Market && active.order.price <= 0.0)) {
+            if (active.order.volume <= 0
+                || (active.order.price_type != OrderPriceType::Market && active.order.price <= 0.0)) {
                 active.reject_pending = true;
             } else if (sample_probability(settings_.reject_probability, rng)) {
                 active.reject_pending = true;
@@ -263,15 +264,63 @@ void SimGateway::process_orders(Timestamp now_ns, std::mt19937& rng) noexcept {
         if (active.remaining_volume <= 0 || now_ns < active.next_fill_due_ns) continue;
 
         const double mkt = market_price(active.order.instrument_id);
-        const bool marketable = (active.order.order_type == OrderType::Market)
+        const bool marketable = (active.order.price_type == OrderPriceType::Market)
             || (active.order.side == Side::Buy && mkt > 0.0 && active.order.price >= mkt)
             || (active.order.side == Side::Sell && mkt > 0.0 && active.order.price <= mkt);
-        if (!marketable || !sample_probability(settings_.order_fill_probability, rng)) {
+        const bool ioc = is_ioc_order_type(active.order.order_type);
+        const bool all_volume = is_all_volume_order_type(active.order.order_type);
+        const bool can_fill = marketable && sample_probability(settings_.order_fill_probability, rng);
+        if (!can_fill) {
+            if (ioc) {
+                GatewayEvent cancel{};
+                cancel.type = GatewayEventType::OrderCancel;
+                cancel.product_index = active.order.product_index;
+                cancel.order = active.order;
+                cancel.order.exchange_order_id = active.exchange_order_id;
+                cancel.order.status = OrderStatus::Cancelled;
+                cancel.order.filled_volume = active.order.volume - active.remaining_volume;
+                cancel.order.avg_fill_price = cancel.order.filled_volume > 0
+                    ? active.fill_notional / static_cast<double>(cancel.order.filled_volume)
+                    : 0.0;
+                cancel.order.ack_ts = now_ns;
+                (void)callback_buf.try_push(cancel);
+                order_client_index_.erase(active.order.client_order_id);
+                active = ActiveOrder{};
+            } else {
+                active.next_fill_due_ns = now_ns + static_cast<Timestamp>(settings_.fill_interval_ms) * 1'000'000LL;
+            }
+            continue;
+        }
+
+        const Volume max_immediate_fill = settings_.max_fill_size > 0
+            ? std::max<Volume>(1, settings_.max_fill_size)
+            : active.remaining_volume;
+        if (all_volume && active.remaining_volume > max_immediate_fill) {
+            GatewayEvent cancel{};
+            cancel.type = GatewayEventType::OrderCancel;
+            cancel.product_index = active.order.product_index;
+            cancel.order = active.order;
+            cancel.order.exchange_order_id = active.exchange_order_id;
+            cancel.order.status = OrderStatus::Cancelled;
+            cancel.order.filled_volume = active.order.volume - active.remaining_volume;
+            cancel.order.avg_fill_price = cancel.order.filled_volume > 0
+                ? active.fill_notional / static_cast<double>(cancel.order.filled_volume)
+                : 0.0;
+            cancel.order.ack_ts = now_ns;
+            (void)callback_buf.try_push(cancel);
+            order_client_index_.erase(active.order.client_order_id);
+            active = ActiveOrder{};
+            continue;
+        }
+
+        if (!marketable) {
             active.next_fill_due_ns = now_ns + static_cast<Timestamp>(settings_.fill_interval_ms) * 1'000'000LL;
             continue;
         }
 
-        const Volume fill_volume = sample_fill_volume(active.remaining_volume, rng);
+        const Volume fill_volume = all_volume
+            ? active.remaining_volume
+            : sample_fill_volume(active.remaining_volume, rng);
         const double fill_price = fill_price_for_order(active);
         orders_filled_.fetch_add(1, std::memory_order_relaxed);
 
@@ -294,7 +343,21 @@ void SimGateway::process_orders(Timestamp now_ns, std::mt19937& rng) noexcept {
         active.remaining_volume -= fill_volume;
         active.fill_notional += fill_price * static_cast<double>(fill_volume);
         active.next_fill_due_ns = now_ns + static_cast<Timestamp>(settings_.fill_interval_ms) * 1'000'000LL;
-        if (active.remaining_volume <= 0) {
+        if (active.remaining_volume <= 0 || ioc) {
+            if (ioc && active.remaining_volume > 0) {
+                GatewayEvent cancel{};
+                cancel.type = GatewayEventType::OrderCancel;
+                cancel.product_index = active.order.product_index;
+                cancel.order = active.order;
+                cancel.order.exchange_order_id = active.exchange_order_id;
+                cancel.order.status = OrderStatus::Cancelled;
+                cancel.order.filled_volume = active.order.volume - active.remaining_volume;
+                cancel.order.avg_fill_price = cancel.order.filled_volume > 0
+                    ? active.fill_notional / static_cast<double>(cancel.order.filled_volume)
+                    : 0.0;
+                cancel.order.ack_ts = now_ns;
+                (void)callback_buf.try_push(cancel);
+            }
             order_client_index_.erase(active.order.client_order_id);  // Remove from hash index
             active = ActiveOrder{};
         }
@@ -447,7 +510,7 @@ double SimGateway::fill_price_for_order(const ActiveOrder& active) const noexcep
     const double mkt = market_price(active.order.instrument_id);
     const double tick = tick_size(active.order.instrument_id);
     const double slip = static_cast<double>(settings_.slippage_ticks) * tick;
-    if (active.order.order_type == OrderType::Market) {
+    if (active.order.price_type == OrderPriceType::Market) {
         if (mkt <= 0.0) return active.order.price;
         return active.order.side == Side::Buy ? mkt + slip : std::max(0.0, mkt - slip);
     }

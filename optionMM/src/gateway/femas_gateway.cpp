@@ -449,7 +449,7 @@ bool FEMASGateway::send_order(const Order& order) noexcept {
     encode_local_id(local_id, next_local_id());
     std::strncpy(req.UserOrderLocalID, local_id, sizeof(req.UserOrderLocalID) - 1);
 
-    req.OrderPriceType = (order.order_type == OrderType::Market)
+    req.OrderPriceType = (order.price_type == OrderPriceType::Market)
         ? USTP_FTDC_OPT_AnyPrice
         : USTP_FTDC_OPT_LimitPrice;
     req.Direction = (order.side == Side::Buy) ? USTP_FTDC_D_Buy : USTP_FTDC_D_Sell;
@@ -457,8 +457,12 @@ bool FEMASGateway::send_order(const Order& order) noexcept {
     req.HedgeFlag = kSpecHedge;
     req.LimitPrice = order.price;
     req.Volume = order.volume;
-    req.TimeCondition = USTP_FTDC_TC_GFD;
-    req.VolumeCondition = USTP_FTDC_VC_AV;
+    req.TimeCondition = is_ioc_order_type(order.order_type)
+        ? USTP_FTDC_TC_IOC
+        : USTP_FTDC_TC_GFD;
+    req.VolumeCondition = is_all_volume_order_type(order.order_type)
+        ? USTP_FTDC_VC_CV
+        : USTP_FTDC_VC_AV;
     req.MinVolume = 1;
     req.ForceCloseReason = USTP_FTDC_FCR_NotForceClose;
 

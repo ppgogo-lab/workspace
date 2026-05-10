@@ -64,6 +64,10 @@ message Tick {
     int32  ask_volume     = 6;
     int64  exchange_ts_ns = 7;
     int64  recv_ts_ns     = 8;
+    repeated double bid_prices  = 9;
+    repeated double ask_prices  = 10;
+    repeated int32  bid_volumes = 11;
+    repeated int32  ask_volumes = 12;
 }
 
 message OrderUpdate {
@@ -414,6 +418,9 @@ message ManualOrderRequest {
     double price         = 3;
     int32  volume        = 4;
     optional uint32 book_id = 5;
+    string order_type = 6;      // "GFD" | "FAK" | "FOK"; field 6 was time_condition
+    string price_type = 7;      // "Limit" | "Market"
+    string volume_condition = 8 [deprecated = true]; // legacy "Any" | "All" fallback
 }
 message ManualOrderResponse {
     bool ok = 1;

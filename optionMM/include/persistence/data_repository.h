@@ -231,6 +231,7 @@ private:
     bool seed_identity_locked(const SystemConfig& cfg);
     bool migrate_identity_schema_locked();
     bool migrate_book_columns_locked();
+    bool migrate_order_semantics_columns_locked();
 
     bool flush_once_locked(int max_rows);
     bool write_order_event_locked(const OrderPersistenceEvent& event);

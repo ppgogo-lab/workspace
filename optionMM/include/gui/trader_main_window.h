@@ -40,6 +40,7 @@ private:
     QDockWidget* build_vol_curves_panel();
     QDockWidget* build_parameters_panel();
     QDockWidget* build_ticket_panel();
+    QDockWidget* build_order_depth_panel();
     QDockWidget* build_arbitrage_panel();
     QDockWidget* build_positions_panel();
     void connect_primary_interactions();
@@ -49,9 +50,12 @@ private:
     void update_blotter_cancel_controls(int tab_index);
     QWidget* create_vol_curve_grid_widget(QWidget* parent = nullptr);
     void refresh_ui();
+    void refresh_order_depth_panel();
     [[nodiscard]] bool prompt_for_login(const QString& reason = {});
     void perform_logout();
     void send_manual_order();
+    void send_order_depth_order(const QString& side, double price);
+    void cancel_order_depth_orders(const QString& side_filter);
     void start_strategy(bool enabled);
     void start_arb_strategy(bool enabled);
     void apply_strategy_params();
@@ -83,6 +87,12 @@ private:
     QComboBox* product_selector_{nullptr};
     QComboBox* instrument_selector_{nullptr};
     QComboBox* manual_book_selector_{nullptr};
+    QComboBox* order_depth_instrument_selector_{nullptr};
+    QComboBox* order_depth_book_selector_{nullptr};
+    QComboBox* order_depth_price_type_selector_{nullptr};
+    QComboBox* order_depth_time_condition_selector_{nullptr};
+    QSpinBox* order_depth_volume_editor_{nullptr};
+    QComboBox* order_depth_expand_by_selector_{nullptr};
     QComboBox* side_selector_{nullptr};
     QDoubleSpinBox* price_editor_{nullptr};
     QSpinBox* volume_editor_{nullptr};
@@ -145,6 +155,7 @@ private:
     QComboBox* pms_book_filter_{nullptr};
     QComboBox* pms_product_filter_{nullptr};
     QTableWidget* t_table_{nullptr};
+    QTableWidget* order_depth_table_{nullptr};
     QTreeWidget* positions_tree_{nullptr};
     QTableView* orders_table_{nullptr};
     QTableView* quotes_table_{nullptr};
@@ -158,6 +169,7 @@ private:
     QDockWidget* pms_dock_{nullptr};
     QDockWidget* parameters_dock_{nullptr};
     QDockWidget* ticket_dock_{nullptr};
+    QDockWidget* order_depth_dock_{nullptr};
     QDockWidget* arbitrage_dock_{nullptr};
     QMainWindow* vol_window_{nullptr};
     QWidget* vol_window_widget_{nullptr};
@@ -168,6 +180,7 @@ private:
     QAction* vol_action_{nullptr};
     QAction* parameters_action_{nullptr};
     QAction* ticket_action_{nullptr};
+    QAction* order_depth_action_{nullptr};
     QAction* arbitrage_action_{nullptr};
     QLabel* secondary_gate_label_{nullptr};
     QLabel* secondary_greeks_label_{nullptr};
@@ -176,6 +189,10 @@ private:
     QLabel* secondary_alert_label_{nullptr};
     QTableWidget* secondary_risk_table_{nullptr};
     QTableWidget* secondary_alerts_table_{nullptr};
+    QPushButton* order_depth_cancel_bid_button_{nullptr};
+    QPushButton* order_depth_cancel_all_button_{nullptr};
+    QPushButton* order_depth_cancel_ask_button_{nullptr};
+    QLabel* order_depth_message_label_{nullptr};
 };
 
 } // namespace omm::gui

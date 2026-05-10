@@ -716,7 +716,8 @@ bool DataRepository::load_recovery_state(RecoveryState* out) {
         sqlite3_stmt* stmt = nullptr;
         const char* sql =
             "SELECT client_order_id, instrument_code, product_index, account_id, exchange_id,"
-            " side, offset_flag, order_type, status, price, volume, filled_volume, avg_fill_price,"
+            " side, offset_flag, order_type, price_type,"
+            " status, price, volume, filled_volume, avg_fill_price,"
             " send_ts, ack_ts, is_manual, is_hedge, book_id, exchange_order_id"
             " FROM live_orders";
         if (sqlite3_prepare_v2(db_, sql, -1, &stmt, nullptr) != SQLITE_OK) return false;
@@ -737,18 +738,21 @@ bool DataRepository::load_recovery_state(RecoveryState* out) {
                             sqlite3_column_text(stmt, 4));
             order.side = static_cast<Side>(sqlite3_column_int(stmt, 5));
             order.offset = static_cast<OffsetFlag>(sqlite3_column_int(stmt, 6));
-            order.order_type = static_cast<OrderType>(sqlite3_column_int(stmt, 7));
-            order.status = static_cast<OrderStatus>(sqlite3_column_int(stmt, 8));
-            order.price = sqlite3_column_double(stmt, 9);
-            order.volume = sqlite3_column_int(stmt, 10);
-            order.filled_volume = sqlite3_column_int(stmt, 11);
-            order.avg_fill_price = sqlite3_column_double(stmt, 12);
-            order.send_ts = sqlite3_column_int64(stmt, 13);
-            order.ack_ts = sqlite3_column_int64(stmt, 14);
-            order.is_manual = sqlite3_column_int(stmt, 15) != 0;
-            order.is_hedge = sqlite3_column_int(stmt, 16) != 0;
-            order.book_id = static_cast<BookId>(sqlite3_column_int64(stmt, 17));
-            order.exchange_order_id = static_cast<OrderId>(sqlite3_column_int64(stmt, 18));
+            const int stored_order_type = sqlite3_column_int(stmt, 7);
+            const int stored_price_type = sqlite3_column_int(stmt, 8);
+            order.order_type = order_type_from_legacy_storage(stored_order_type);
+            order.price_type = price_type_from_legacy_storage(stored_price_type, stored_order_type);
+            order.status = static_cast<OrderStatus>(sqlite3_column_int(stmt, 9));
+            order.price = sqlite3_column_double(stmt, 10);
+            order.volume = sqlite3_column_int(stmt, 11);
+            order.filled_volume = sqlite3_column_int(stmt, 12);
+            order.avg_fill_price = sqlite3_column_double(stmt, 13);
+            order.send_ts = sqlite3_column_int64(stmt, 14);
+            order.ack_ts = sqlite3_column_int64(stmt, 15);
+            order.is_manual = sqlite3_column_int(stmt, 16) != 0;
+            order.is_hedge = sqlite3_column_int(stmt, 17) != 0;
+            order.book_id = static_cast<BookId>(sqlite3_column_int64(stmt, 18));
+            order.exchange_order_id = static_cast<OrderId>(sqlite3_column_int64(stmt, 19));
 
             out->live_orders.push_back(order);
         }
@@ -1011,6 +1015,7 @@ bool DataRepository::ensure_schema_locked() {
         " side INTEGER NOT NULL,"
         " offset_flag INTEGER NOT NULL,"
         " order_type INTEGER NOT NULL,"
+        " price_type INTEGER NOT NULL DEFAULT 0,"
         " status INTEGER NOT NULL,"
         " price REAL NOT NULL,"
         " volume INTEGER NOT NULL,"
@@ -1176,6 +1181,7 @@ bool DataRepository::ensure_schema_locked() {
         ");";
     if (!exec_sql(db_, kSchemaSql)) return false;
     if (!migrate_book_columns_locked()) return false;
+    if (!migrate_order_semantics_columns_locked()) return false;
     if (!migrate_identity_schema_locked()) return false;
     return exec_sql(db_, "PRAGMA user_version = 2;");
 }
@@ -1194,6 +1200,15 @@ bool DataRepository::migrate_book_columns_locked() {
     if (!column_exists(db_, "live_quotes", "book_id")
         && !exec_sql(db_,
                      "ALTER TABLE live_quotes ADD COLUMN book_id INTEGER NOT NULL DEFAULT 0;")) {
+        return false;
+    }
+    return true;
+}
+
+bool DataRepository::migrate_order_semantics_columns_locked() {
+    if (!column_exists(db_, "live_orders", "price_type")
+        && !exec_sql(db_,
+                     "ALTER TABLE live_orders ADD COLUMN price_type INTEGER NOT NULL DEFAULT 0;")) {
         return false;
     }
     return true;
@@ -1238,10 +1253,11 @@ bool DataRepository::prepare_statements_locked() {
     return prepare(&stmt_upsert_live_order_,
                    "INSERT INTO live_orders ("
                    " client_order_id, instrument_code, product_index, account_id, exchange_id,"
-                   " side, offset_flag, order_type, status, price, volume, filled_volume,"
+                   " side, offset_flag, order_type, price_type,"
+                   " status, price, volume, filled_volume,"
                    " avg_fill_price, send_ts, ack_ts, is_manual, is_hedge, book_id,"
                    " exchange_order_id, is_quote_leg, client_quote_id, exchange_local_id, order_sys_id)"
-                   " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                   " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
                    " ON CONFLICT(client_order_id) DO UPDATE SET"
                    " instrument_code=excluded.instrument_code,"
                    " product_index=excluded.product_index,"
@@ -1250,6 +1266,7 @@ bool DataRepository::prepare_statements_locked() {
                    " side=excluded.side,"
                    " offset_flag=excluded.offset_flag,"
                    " order_type=excluded.order_type,"
+                   " price_type=excluded.price_type,"
                    " status=excluded.status,"
                    " price=excluded.price,"
                    " volume=excluded.volume,"
@@ -1558,21 +1575,22 @@ bool DataRepository::write_order_event_locked(const OrderPersistenceEvent& event
     bind_integer(stmt_upsert_live_order_, 6, static_cast<int>(record.order.side));
     bind_integer(stmt_upsert_live_order_, 7, static_cast<int>(record.order.offset));
     bind_integer(stmt_upsert_live_order_, 8, static_cast<int>(record.order.order_type));
-    bind_integer(stmt_upsert_live_order_, 9, static_cast<int>(record.order.status));
-    sqlite3_bind_double(stmt_upsert_live_order_, 10, record.order.price);
-    bind_integer(stmt_upsert_live_order_, 11, record.order.volume);
-    bind_integer(stmt_upsert_live_order_, 12, record.order.filled_volume);
-    sqlite3_bind_double(stmt_upsert_live_order_, 13, record.order.avg_fill_price);
-    bind_integer(stmt_upsert_live_order_, 14, record.order.send_ts);
-    bind_integer(stmt_upsert_live_order_, 15, record.order.ack_ts);
-    bind_integer(stmt_upsert_live_order_, 16, record.order.is_manual ? 1 : 0);
-    bind_integer(stmt_upsert_live_order_, 17, record.order.is_hedge ? 1 : 0);
-    bind_integer(stmt_upsert_live_order_, 18, record.order.book_id);
-    bind_integer(stmt_upsert_live_order_, 19, record.order.exchange_order_id);
-    bind_integer(stmt_upsert_live_order_, 20, 0);  // is_quote_leg (removed)
-    bind_integer(stmt_upsert_live_order_, 21, 0);  // client_quote_id (removed)
-    bind_text(stmt_upsert_live_order_, 22, "");    // exchange_local_id (removed)
-    bind_text(stmt_upsert_live_order_, 23, "");    // order_sys_id (removed)
+    bind_integer(stmt_upsert_live_order_, 9, static_cast<int>(record.order.price_type));
+    bind_integer(stmt_upsert_live_order_, 10, static_cast<int>(record.order.status));
+    sqlite3_bind_double(stmt_upsert_live_order_, 11, record.order.price);
+    bind_integer(stmt_upsert_live_order_, 12, record.order.volume);
+    bind_integer(stmt_upsert_live_order_, 13, record.order.filled_volume);
+    sqlite3_bind_double(stmt_upsert_live_order_, 14, record.order.avg_fill_price);
+    bind_integer(stmt_upsert_live_order_, 15, record.order.send_ts);
+    bind_integer(stmt_upsert_live_order_, 16, record.order.ack_ts);
+    bind_integer(stmt_upsert_live_order_, 17, record.order.is_manual ? 1 : 0);
+    bind_integer(stmt_upsert_live_order_, 18, record.order.is_hedge ? 1 : 0);
+    bind_integer(stmt_upsert_live_order_, 19, record.order.book_id);
+    bind_integer(stmt_upsert_live_order_, 20, record.order.exchange_order_id);
+    bind_integer(stmt_upsert_live_order_, 21, 0);  // is_quote_leg (removed)
+    bind_integer(stmt_upsert_live_order_, 22, 0);  // client_quote_id (removed)
+    bind_text(stmt_upsert_live_order_, 23, "");    // exchange_local_id (removed)
+    bind_text(stmt_upsert_live_order_, 24, "");    // order_sys_id (removed)
     return step_done(db_, stmt_upsert_live_order_, "upsert live_order");
 }
 

@@ -419,9 +419,16 @@ public:
                            std::string side,
                            double price,
                            int volume,
-                           uint32_t book_id) {
+                           uint32_t book_id,
+                           const std::string& order_type = "GFD",
+                           std::string* out_message = nullptr,
+                           uint64_t* out_order_id = nullptr,
+                           const std::string& price_type = "Limit") {
         grpc::ClientContext ctx;
-        if (!prepare_authenticated_context(&ctx)) return false;
+        if (!prepare_authenticated_context(&ctx)) {
+            if (out_message != nullptr) *out_message = "no active session";
+            return false;
+        }
         omm::proto::ManualOrderRequest req;
         omm::proto::ManualOrderResponse resp;
         req.set_instrument_id(instrument_id);
@@ -429,11 +436,16 @@ public:
         req.set_price(price);
         req.set_volume(volume);
         req.set_book_id(book_id);
+        req.set_order_type(order_type);
+        req.set_price_type(price_type);
         grpc::Status status = stub_->SendManualOrder(&ctx, req, &resp);
         if (!status.ok()) {
+            if (out_message != nullptr) *out_message = status.error_message();
             handle_authenticated_failure(status);
             return false;
         }
+        if (out_message != nullptr) *out_message = resp.message();
+        if (out_order_id != nullptr) *out_order_id = resp.order_id();
         return status.ok() && resp.ok();
     }
 
@@ -1523,6 +1535,7 @@ void TraderMainWindow::build_ui() {
     vol_dock_ = build_vol_curves_panel();
     parameters_dock_ = build_parameters_panel();
     ticket_dock_ = build_ticket_panel();
+    order_depth_dock_ = build_order_depth_panel();
     arbitrage_dock_ = build_arbitrage_panel();
     pms_dock_ = build_positions_panel();
     connect_primary_interactions();
@@ -1822,6 +1835,163 @@ void TraderMainWindow::send_manual_order() {
               .arg(manual_book_selector_->currentText(), current_time_text())
         : QString("Manual order rejected for %1 at %2")
               .arg(manual_book_selector_->currentText(), current_time_text());
+}
+
+void TraderMainWindow::send_order_depth_order(const QString& side, double price) {
+    const QVariant instrument_data = order_depth_instrument_selector_ != nullptr
+        ? order_depth_instrument_selector_->currentData()
+        : QVariant{};
+    const QVariant book_data = order_depth_book_selector_ != nullptr
+        ? order_depth_book_selector_->currentData()
+        : QVariant{};
+    if (!instrument_data.isValid() || instrument_data.toUInt() == 0) {
+        impl_->last_order_depth_message = "Select an instrument before sending an OrderDepth order.";
+        refresh_ui();
+        return;
+    }
+    if (!book_data.isValid() || book_data.toUInt() == 0) {
+        impl_->last_order_depth_message = "Select a book before sending an OrderDepth order.";
+        refresh_ui();
+        return;
+    }
+    const int volume = order_depth_volume_editor_ != nullptr ? order_depth_volume_editor_->value() : 0;
+    if (volume <= 0 || price <= 0.0) {
+        impl_->last_order_depth_message = "OrderDepth order requires positive price and volume.";
+        refresh_ui();
+        return;
+    }
+
+    const QString order_type = order_depth_time_condition_selector_ != nullptr
+        ? order_depth_time_condition_selector_->currentText()
+        : QString("GFD");
+    std::string response_message;
+    uint64_t order_id = 0;
+    const bool ok = impl_->client->send_manual_order(
+        instrument_data.toUInt(),
+        side.toStdString(),
+        price,
+        volume,
+        book_data.toUInt(),
+        order_type.toStdString(),
+        &response_message,
+        &order_id,
+        "Limit");
+    const QString book_text = order_depth_book_selector_ != nullptr
+        ? order_depth_book_selector_->currentText()
+        : QString("Book %1").arg(book_data.toUInt());
+    const QString instrument_text = order_depth_instrument_selector_ != nullptr
+        ? order_depth_instrument_selector_->currentText().section(' ', 0, 0)
+        : QString("Instrument %1").arg(instrument_data.toUInt());
+    const QString message_text = QString::fromStdString(response_message);
+    impl_->last_order_depth_message = ok
+        ? QString("%1 %2 %3@%4 %5 submitted%6")
+              .arg(instrument_text,
+                   book_text,
+                   side == "buy" ? "Buy" : "Sell",
+                   QString::number(volume),
+                   QString::number(price, 'f', 4),
+                   order_id == 0 ? QString{} : QString(" order %1").arg(order_id))
+        : QString("%1 %2 %3@%4 %5 submit failed%6")
+              .arg(instrument_text,
+                   book_text,
+                   side == "buy" ? "Buy" : "Sell",
+                   QString::number(volume),
+                   QString::number(price, 'f', 4),
+                   message_text.isEmpty() ? QString{} : QString("  %1").arg(message_text));
+    impl_->last_operator_status_text = impl_->last_order_depth_message;
+    refresh_ui();
+}
+
+void TraderMainWindow::cancel_order_depth_orders(const QString& side_filter) {
+    auto normalized_side = [](QString side) {
+        side = side.trimmed().toLower();
+        if (side == "buy" || side == "bid") return QString("buy");
+        if (side == "sell" || side == "ask") return QString("sell");
+        return side;
+    };
+    const QString normalized_filter = normalized_side(side_filter);
+    const QVariant instrument_data = order_depth_instrument_selector_ != nullptr
+        ? order_depth_instrument_selector_->currentData()
+        : QVariant{};
+    const QVariant book_data = order_depth_book_selector_ != nullptr
+        ? order_depth_book_selector_->currentData()
+        : QVariant{};
+    if (!instrument_data.isValid() || instrument_data.toUInt() == 0
+        || !book_data.isValid() || book_data.toUInt() == 0) {
+        impl_->last_order_depth_message = "Select an instrument and book before sending OrderDepth cancel.";
+        refresh_ui();
+        return;
+    }
+
+    struct LiveOrder {
+        uint32_t instrument_id{0};
+        uint32_t book_id{0};
+        QString side;
+        int volume{0};
+        int filled_from_orders{0};
+        int filled_from_trades{0};
+        bool terminal{false};
+    };
+
+    std::vector<std::pair<uint64_t, uint32_t>> cancelable_orders;
+    {
+        std::lock_guard<std::mutex> lock(impl_->state.mutex);
+        std::unordered_map<uint64_t, LiveOrder> live_orders;
+        for (auto it = impl_->state.orders.rbegin(); it != impl_->state.orders.rend(); ++it) {
+            const auto& order = *it;
+            if (order.client_order_id() == 0
+                || order.instrument_id() != instrument_data.toUInt()
+                || order.book_id() != book_data.toUInt()) {
+                continue;
+            }
+            LiveOrder& live = live_orders[order.client_order_id()];
+            live.instrument_id = order.instrument_id();
+            live.book_id = order.book_id();
+            const QString side = normalized_side(QString::fromStdString(order.side()));
+            if (!side.isEmpty()) live.side = side;
+            if (order.volume() > 0) live.volume = order.volume();
+            const std::string& status = order.status();
+            if (status == "Rejected" || status == "Cancelled") {
+                live.terminal = true;
+            } else if (status == "Filled") {
+                live.filled_from_orders = std::max(live.filled_from_orders, live.volume);
+            } else if (order.fill_volume() > 0) {
+                live.filled_from_orders = std::max(live.filled_from_orders, order.fill_volume());
+            }
+        }
+        for (auto it = impl_->state.trades.rbegin(); it != impl_->state.trades.rend(); ++it) {
+            const auto& trade = *it;
+            auto live_it = live_orders.find(trade.client_order_id());
+            if (live_it == live_orders.end()) continue;
+            live_it->second.filled_from_trades += std::max(0, trade.fill_volume());
+        }
+        for (const auto& [order_id, live] : live_orders) {
+            const int filled = std::max(live.filled_from_orders, live.filled_from_trades);
+            if (live.terminal || live.volume <= 0 || filled >= live.volume) continue;
+            if (!normalized_filter.isEmpty() && live.side != normalized_filter) continue;
+            cancelable_orders.emplace_back(order_id, live.instrument_id);
+        }
+    }
+
+    if (cancelable_orders.empty()) {
+        impl_->last_order_depth_message = "No live OrderDepth orders match the selected instrument, book, and side.";
+        refresh_ui();
+        return;
+    }
+
+    int sent = 0;
+    for (const auto& [order_id, instrument_id] : cancelable_orders) {
+        if (impl_->client->cancel_order(order_id, instrument_id)) ++sent;
+    }
+    const QString label = normalized_filter == "buy" ? "bid"
+        : (normalized_filter == "sell" ? "ask" : "all");
+    impl_->last_order_depth_message = QString("Cancel %1 sent for %2 / %3 live orders at %4")
+        .arg(label)
+        .arg(sent)
+        .arg(cancelable_orders.size())
+        .arg(current_time_text());
+    impl_->last_operator_status_text = impl_->last_order_depth_message;
+    refresh_ui();
 }
 
 void TraderMainWindow::start_strategy(bool enabled) {

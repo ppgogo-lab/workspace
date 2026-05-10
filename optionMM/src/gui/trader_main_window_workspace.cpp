@@ -42,6 +42,8 @@ void TraderMainWindow::build_main_workspace_panel() {
     connect(parameters_action_, &QAction::triggered, this, [this] { show_floating_panel(parameters_dock_); });
     ticket_action_ = trade_menu->addAction("Ticket");
     connect(ticket_action_, &QAction::triggered, this, [this] { show_floating_panel(ticket_dock_); });
+    order_depth_action_ = trade_menu->addAction("OrderDepth");
+    connect(order_depth_action_, &QAction::triggered, this, [this] { show_floating_panel(order_depth_dock_); });
     arbitrage_action_ = trade_menu->addAction("Arbitrage");
     connect(arbitrage_action_, &QAction::triggered, this, [this] { show_floating_panel(arbitrage_dock_); });
 

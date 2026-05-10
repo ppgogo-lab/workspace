@@ -475,7 +475,8 @@ bool PCPArbitrageStrategy::enqueue_order(uint16_t instrument_id,
     order.exchange_id = instruments_[instrument_id].exchange_id;
     order.side = side;
     order.offset = cleanup ? OffsetFlag::Close : OffsetFlag::Open;
-    order.order_type = OrderType::Limit;
+    order.price_type = OrderPriceType::Limit;
+    order.order_type = OrderType::GFD;
     order.price = price;
     order.volume = volume;
     order.send_ts = now_ns;

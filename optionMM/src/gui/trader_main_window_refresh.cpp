@@ -10,6 +10,7 @@
 #include <QComboBox>
 #include <QDockWidget>
 #include <QDoubleSpinBox>
+#include <QFont>
 #include <QHeaderView>
 #include <QLabel>
 #include <QPushButton>
@@ -423,6 +424,13 @@ QString current_time_text() {
     return QTime::currentTime().toString("hh:mm:ss");
 }
 
+QString normalized_order_side(QString side) {
+    side = side.trimmed().toLower();
+    if (side == "buy" || side == "bid") return "buy";
+    if (side == "sell" || side == "ask") return "sell";
+    return side;
+}
+
 QString book_label_from_map(const std::map<uint32_t, omm::proto::BookInfo>& books, uint32_t book_id) {
     if (book_id == 0) return "-";
     auto it = books.find(book_id);
@@ -445,6 +453,278 @@ bool combo_matches(QComboBox* combo,
     return true;
 }
 
+void TraderMainWindow::refresh_order_depth_panel() {
+    if (order_depth_table_ == nullptr || order_depth_instrument_selector_ == nullptr) return;
+
+    const QVariant selected_instrument_data =
+        QVariant::fromValue(impl_->selected_order_depth_instrument_id != 0
+            ? impl_->selected_order_depth_instrument_id
+            : impl_->selected_instrument_id);
+
+    std::vector<const InstrumentMeta*> sorted_instruments;
+    sorted_instruments.reserve(impl_->state.instruments.size());
+    for (const auto& [_, meta] : impl_->state.instruments) sorted_instruments.push_back(&meta);
+    std::sort(sorted_instruments.begin(), sorted_instruments.end(),
+              [](const InstrumentMeta* lhs, const InstrumentMeta* rhs) {
+                  if (lhs->product_index != rhs->product_index) return lhs->product_index < rhs->product_index;
+                  return lhs->code < rhs->code;
+              });
+
+    std::vector<std::pair<QString, QVariant>> instrument_items;
+    instrument_items.reserve(sorted_instruments.size());
+    for (const InstrumentMeta* meta : sorted_instruments) {
+        QString label = QString("%1  %2")
+            .arg(QString::fromStdString(meta->code))
+            .arg(meta->kind.empty() ? QString("Instrument") : QString::fromStdString(meta->kind));
+        instrument_items.push_back({label, QVariant::fromValue(meta->instrument_id)});
+    }
+    if (!combo_matches(order_depth_instrument_selector_, instrument_items)) {
+        QSignalBlocker blocker(order_depth_instrument_selector_);
+        order_depth_instrument_selector_->clear();
+        for (const auto& [label, data] : instrument_items) {
+            order_depth_instrument_selector_->addItem(label, data);
+        }
+    }
+    {
+        QSignalBlocker blocker(order_depth_instrument_selector_);
+        int restore_index = order_depth_instrument_selector_->findData(selected_instrument_data);
+        if (restore_index >= 0) {
+            order_depth_instrument_selector_->setCurrentIndex(restore_index);
+            impl_->selected_order_depth_instrument_id = order_depth_instrument_selector_->currentData().toUInt();
+        } else if (order_depth_instrument_selector_->count() > 0) {
+            order_depth_instrument_selector_->setCurrentIndex(0);
+            impl_->selected_order_depth_instrument_id = order_depth_instrument_selector_->currentData().toUInt();
+        } else {
+            impl_->selected_order_depth_instrument_id = 0;
+        }
+    }
+
+    std::vector<std::pair<QString, QVariant>> book_items;
+    book_items.reserve(impl_->state.books.size());
+    for (const auto& [book_id, book] : impl_->state.books) {
+        if (!book.active()) continue;
+        book_items.push_back({book_label_from_map(impl_->state.books, book_id), QVariant::fromValue(book_id)});
+    }
+    if (!combo_matches(order_depth_book_selector_, book_items)) {
+        QSignalBlocker blocker(order_depth_book_selector_);
+        order_depth_book_selector_->clear();
+        for (const auto& [label, data] : book_items) {
+            order_depth_book_selector_->addItem(label, data);
+        }
+    }
+    {
+        QSignalBlocker blocker(order_depth_book_selector_);
+        const uint32_t preferred_book = impl_->selected_order_depth_book_id != 0
+            ? impl_->selected_order_depth_book_id
+            : impl_->state.current_user.default_book_id();
+        int restore_index = order_depth_book_selector_->findData(QVariant::fromValue(preferred_book));
+        if (restore_index >= 0) {
+            order_depth_book_selector_->setCurrentIndex(restore_index);
+            impl_->selected_order_depth_book_id = order_depth_book_selector_->currentData().toUInt();
+        } else if (order_depth_book_selector_->count() > 0) {
+            order_depth_book_selector_->setCurrentIndex(0);
+            impl_->selected_order_depth_book_id = order_depth_book_selector_->currentData().toUInt();
+        } else {
+            impl_->selected_order_depth_book_id = 0;
+        }
+    }
+
+    auto set_order_depth_message = [this](const QString& text) {
+        if (order_depth_message_label_ != nullptr) order_depth_message_label_->setText(text);
+    };
+    set_order_depth_message(impl_->last_order_depth_message);
+
+    const uint32_t instrument_id = impl_->selected_order_depth_instrument_id;
+    const uint32_t book_id = impl_->selected_order_depth_book_id;
+    const auto meta_it = impl_->state.instruments.find(instrument_id);
+    const auto tick_it = impl_->state.ticks.find(instrument_id);
+    if (instrument_id == 0 || book_id == 0 || meta_it == impl_->state.instruments.end()
+        || tick_it == impl_->state.ticks.end()) {
+        order_depth_table_->setRowCount(0);
+        if (instrument_id == 0 || book_id == 0) {
+            set_order_depth_message("Select an instrument and book before using OrderDepth.");
+        } else if (impl_->last_order_depth_message == "Waiting for order depth") {
+            set_order_depth_message("Waiting for market data for selected instrument.");
+        }
+        return;
+    }
+
+    const InstrumentMeta& meta = meta_it->second;
+    const omm::proto::Tick& tick = tick_it->second;
+    const double tick_size = meta.tick_size > 0.0 ? meta.tick_size : 1.0;
+
+    auto price_at = [](const omm::proto::Tick& t, bool bid, int level) {
+        if (bid) {
+            return level < t.bid_prices_size() ? t.bid_prices(level)
+                 : (level == 0 ? t.bid_price() : 0.0);
+        }
+        return level < t.ask_prices_size() ? t.ask_prices(level)
+             : (level == 0 ? t.ask_price() : 0.0);
+    };
+    auto volume_at = [](const omm::proto::Tick& t, bool bid, int level) {
+        if (bid) {
+            return level < t.bid_volumes_size() ? t.bid_volumes(level)
+                 : (level == 0 ? t.bid_volume() : 0);
+        }
+        return level < t.ask_volumes_size() ? t.ask_volumes(level)
+             : (level == 0 ? t.ask_volume() : 0);
+    };
+
+    struct LiveOrder {
+        uint32_t instrument_id{0};
+        uint32_t book_id{0};
+        QString side;
+        double price{0.0};
+        int volume{0};
+        int filled_from_orders{0};
+        int filled_from_trades{0};
+        bool terminal{false};
+    };
+    std::unordered_map<uint64_t, LiveOrder> live_orders;
+    for (auto it = impl_->state.orders.rbegin(); it != impl_->state.orders.rend(); ++it) {
+        const auto& order = *it;
+        if (order.client_order_id() == 0
+            || order.instrument_id() != instrument_id
+            || order.book_id() != book_id) {
+            continue;
+        }
+        LiveOrder& live = live_orders[order.client_order_id()];
+        live.instrument_id = order.instrument_id();
+        live.book_id = order.book_id();
+        const QString side = normalized_order_side(QString::fromStdString(order.side()));
+        if (!side.isEmpty()) live.side = side;
+        if (order.price() > 0.0) live.price = order.price();
+        if (order.volume() > 0) live.volume = order.volume();
+        const std::string& status = order.status();
+        if (status == "Rejected" || status == "Cancelled") {
+            live.terminal = true;
+        } else if (status == "Filled") {
+            live.filled_from_orders = std::max(live.filled_from_orders, live.volume);
+        } else if (order.fill_volume() > 0) {
+            live.filled_from_orders = std::max(live.filled_from_orders, order.fill_volume());
+        }
+    }
+    for (auto it = impl_->state.trades.rbegin(); it != impl_->state.trades.rend(); ++it) {
+        const auto& trade = *it;
+        auto live_it = live_orders.find(trade.client_order_id());
+        if (live_it == live_orders.end()) continue;
+        live_it->second.filled_from_trades += std::max(0, trade.fill_volume());
+    }
+
+    std::map<double, int> own_bid_by_price;
+    std::map<double, int> own_ask_by_price;
+    for (const auto& [_, live] : live_orders) {
+        if (live.terminal || live.volume <= 0 || live.price <= 0.0) continue;
+        const int filled = std::max(live.filled_from_orders, live.filled_from_trades);
+        const int remaining = std::max(0, live.volume - filled);
+        if (remaining <= 0) continue;
+        if (live.side == "buy") {
+            own_bid_by_price[live.price] += remaining;
+        } else if (live.side == "sell") {
+            own_ask_by_price[live.price] += remaining;
+        }
+    }
+
+    std::map<double, int> market_bid_by_price;
+    std::map<double, int> market_ask_by_price;
+    int received_bid_depth = 0;
+    int received_ask_depth = 0;
+    for (int level = 0; level < 5; ++level) {
+        const double bid_price = price_at(tick, true, level);
+        const double ask_price = price_at(tick, false, level);
+        const int bid_volume = volume_at(tick, true, level);
+        const int ask_volume = volume_at(tick, false, level);
+        if (bid_price > 0.0) {
+            market_bid_by_price[bid_price] += bid_volume;
+            if (bid_volume > 0) ++received_bid_depth;
+        }
+        if (ask_price > 0.0) {
+            market_ask_by_price[ask_price] += ask_volume;
+            if (ask_volume > 0) ++received_ask_depth;
+        }
+    }
+
+    std::vector<double> prices;
+    const bool fifth_order = order_depth_expand_by_selector_ != nullptr
+        && order_depth_expand_by_selector_->currentText() == "FifthOrder";
+    if (fifth_order) {
+        for (const auto& [price, _] : market_ask_by_price) prices.push_back(price);
+        for (const auto& [price, _] : market_bid_by_price) prices.push_back(price);
+        if (prices.size() <= 2) {
+            const double best_ask = price_at(tick, false, 0);
+            const double best_bid = price_at(tick, true, 0);
+            for (int level = 0; level < 5; ++level) {
+                if (best_ask > 0.0) prices.push_back(best_ask + level * tick_size);
+                if (best_bid > 0.0) prices.push_back(best_bid - level * tick_size);
+            }
+        }
+        std::sort(prices.begin(), prices.end(), std::greater<double>());
+        prices.erase(std::unique(prices.begin(), prices.end(), [](double lhs, double rhs) {
+            return std::abs(lhs - rhs) < 1e-9;
+        }), prices.end());
+    } else {
+        const double best_ask = price_at(tick, false, 0);
+        const double best_bid = price_at(tick, true, 0);
+        const double anchor = best_ask > 0.0 ? best_ask
+            : (best_bid > 0.0 ? best_bid + tick_size : tick.last_price());
+        if (anchor > 0.0) {
+            const double top = std::round((anchor + 5.0 * tick_size) / tick_size) * tick_size;
+            for (int row = 0; row < 21; ++row) prices.push_back(top - row * tick_size);
+        }
+    }
+
+    auto format_price = [tick_size](double price) {
+        const int decimals = tick_size < 0.001 ? 4 : (tick_size < 0.01 ? 3 : (tick_size < 1.0 ? 2 : 0));
+        QString text = QString::number(price, 'f', decimals);
+        while (text.contains('.') && text.endsWith('0')) text.chop(1);
+        if (text.endsWith('.')) text.chop(1);
+        return text;
+    };
+    auto make_item = [](const QString& text, const QColor& bg) {
+        auto* item = new QTableWidgetItem(text);
+        item->setBackground(bg);
+        item->setTextAlignment(Qt::AlignCenter);
+        return item;
+    };
+
+    order_depth_table_->setRowCount(static_cast<int>(prices.size()));
+    const QColor own_bg("#ffffff");
+    const QColor bid_bg("#ffe7e7");
+    const QColor price_bg("#e8f6ff");
+    const QColor ask_bg("#e7ffe7");
+    for (int row = 0; row < static_cast<int>(prices.size()); ++row) {
+        const double price = prices[static_cast<std::size_t>(row)];
+        const int own_bid = own_bid_by_price.count(price) ? own_bid_by_price[price] : 0;
+        const int market_bid = market_bid_by_price.count(price) ? market_bid_by_price[price] : 0;
+        const int market_ask = market_ask_by_price.count(price) ? market_ask_by_price[price] : 0;
+        const int own_ask = own_ask_by_price.count(price) ? own_ask_by_price[price] : 0;
+
+        order_depth_table_->setItem(row, 0, make_item(own_bid > 0 ? QString::number(own_bid) : QString{}, own_bg));
+        order_depth_table_->setItem(row, 1, make_item(market_bid > 0 ? QString::number(market_bid) : QString{}, bid_bg));
+        auto* price_item = make_item(format_price(price), price_bg);
+        price_item->setData(Qt::UserRole, price);
+        if (std::abs(price - price_at(tick, true, 0)) < 1e-9
+            || std::abs(price - price_at(tick, false, 0)) < 1e-9) {
+            QFont font = price_item->font();
+            font.setBold(true);
+            price_item->setFont(font);
+            price_item->setForeground(QColor("#d40000"));
+        } else {
+            price_item->setForeground(QColor("#008000"));
+        }
+        order_depth_table_->setItem(row, 2, price_item);
+        order_depth_table_->setItem(row, 3, make_item(market_ask > 0 ? QString::number(market_ask) : QString{}, ask_bg));
+        order_depth_table_->setItem(row, 4, make_item(own_ask > 0 ? QString::number(own_ask) : QString{}, own_bg));
+    }
+
+    if (impl_->last_order_depth_message == "Waiting for order depth"
+        || impl_->last_order_depth_message.startsWith("Market depth:")) {
+        set_order_depth_message(QString("Market depth: bid %1 / ask %2 levels")
+            .arg(received_bid_depth)
+            .arg(received_ask_depth));
+    }
+}
+
 void TraderMainWindow::refresh_ui() {
     std::lock_guard<std::mutex> lock(impl_->state.mutex);
     const bool connected = impl_->state.connected;
@@ -464,6 +744,9 @@ void TraderMainWindow::refresh_ui() {
     cancel_product_orders_button_->setEnabled(connected);
     cancel_selected_quote_button_->setEnabled(connected);
     cancel_product_quotes_button_->setEnabled(connected);
+    if (order_depth_cancel_bid_button_ != nullptr) order_depth_cancel_bid_button_->setEnabled(connected);
+    if (order_depth_cancel_all_button_ != nullptr) order_depth_cancel_all_button_->setEnabled(connected);
+    if (order_depth_cancel_ask_button_ != nullptr) order_depth_cancel_ask_button_->setEnabled(connected);
 
     struct SideView {
         uint32_t instrument_id{0};
@@ -1687,6 +1970,7 @@ void TraderMainWindow::refresh_ui() {
     };
     populate_alert_table(alerts_table_);
     populate_alert_table(secondary_alerts_table_);
+    refresh_order_depth_panel();
 
     if (vol_widget_ != nullptr && vol_dock_ != nullptr && vol_dock_->isVisible()) {
         vol_widget_->update();

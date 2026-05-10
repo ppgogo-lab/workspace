@@ -617,6 +617,7 @@ void OptionMMCoreStrategy::maybe_trigger_hedge(int64_t now_ns) noexcept {
     hedge.product_index = product_idx_;
     hedge.side = (total_delta > 0.0) ? Side::Sell : Side::Buy;
     hedge.offset = OffsetFlag::Open;
+    hedge.price_type = OrderPriceType::Limit;
     hedge.order_type = OrderType::FAK;
     hedge.price = (hedge.side == Side::Buy) ? underlying_md.ask_price[0] : underlying_md.bid_price[0];
     hedge.volume = std::max<Volume>(

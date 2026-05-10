@@ -77,10 +77,34 @@ enum class Exchange : uint8_t {
 enum class OptionType  : uint8_t { Call, Put };
 enum class Side        : uint8_t { Buy, Sell };
 enum class OffsetFlag  : uint8_t { Open, Close, CloseToday, CloseYesterday };
-enum class OrderType   : uint8_t { Limit, FAK, FOK, Market };
+enum class OrderPriceType : uint8_t { Limit, Market };
+enum class OrderType   : uint8_t { GFD, FAK, FOK };
 enum class OrderStatus : uint8_t { New, PartialFilled, Filled, Cancelled, Rejected };
 enum class InstrumentKind : uint8_t { Future, Option };
 enum class ArbitrageStrategyType : uint8_t { None = 0, PCP = 1 };
+
+[[nodiscard]] inline OrderType order_type_from_legacy_storage(int value) noexcept {
+    switch (value) {
+    case 1: return OrderType::FAK;
+    case 2: return OrderType::FOK;
+    default: return OrderType::GFD;
+    }
+}
+
+[[nodiscard]] inline OrderPriceType price_type_from_legacy_storage(int price_type,
+                                                                    int old_order_type) noexcept {
+    return (price_type == static_cast<int>(OrderPriceType::Market) || old_order_type == 3)
+        ? OrderPriceType::Market
+        : OrderPriceType::Limit;
+}
+
+[[nodiscard]] inline bool is_ioc_order_type(OrderType type) noexcept {
+    return type == OrderType::FAK || type == OrderType::FOK;
+}
+
+[[nodiscard]] inline bool is_all_volume_order_type(OrderType type) noexcept {
+    return type == OrderType::FOK;
+}
 
 // ─── Instrument (registry entry, off hot path) ───────────────────────────────
 // Populated at startup: futures from config, options from gateway query.
@@ -114,13 +138,13 @@ struct alignas(64) TopOfBookTick {
     uint16_t instrument_id;
     uint8_t  _pad0[6];
     double   last_price;
-    double   bid_price[1];
-    double   ask_price[1];
-    int32_t  bid_volume[1];
-    int32_t  ask_volume[1];
+    double   bid_price[5];
+    double   ask_price[5];
+    int32_t  bid_volume[5];
+    int32_t  ask_volume[5];
     uint64_t sequence_no;
 };
-static_assert(sizeof(TopOfBookTick) == 64);
+static_assert(sizeof(TopOfBookTick) == 192);
 static_assert(alignof(TopOfBookTick) == 64);
 
 struct alignas(64) MarketTick {
@@ -151,10 +175,12 @@ static_assert(alignof(MarketTick) == 64);
     dst.exchange_ts_ns = src.exchange_ts_ns;
     dst.instrument_id = src.instrument_id;
     dst.last_price = src.last_price;
-    dst.bid_price[0] = src.bid_price[0];
-    dst.ask_price[0] = src.ask_price[0];
-    dst.bid_volume[0] = src.bid_volume[0];
-    dst.ask_volume[0] = src.ask_volume[0];
+    for (int i = 0; i < 5; ++i) {
+        dst.bid_price[i] = src.bid_price[i];
+        dst.ask_price[i] = src.ask_price[i];
+        dst.bid_volume[i] = src.bid_volume[i];
+        dst.ask_volume[i] = src.ask_volume[i];
+    }
     dst.sequence_no = src.sequence_no;
     return dst;
 }
@@ -241,9 +267,10 @@ struct alignas(64) Order {
     ExchangeId exchange_id;
     Side       side;
     OffsetFlag offset;
-    OrderType  order_type;
+    OrderPriceType price_type{OrderPriceType::Limit};
+    OrderType  order_type{OrderType::GFD};
     OrderStatus status{OrderStatus::New};
-    uint8_t    _pad1[4];
+    uint8_t    _pad1[3];
     double     price;
     Volume     volume;
     Volume     filled_volume{0};

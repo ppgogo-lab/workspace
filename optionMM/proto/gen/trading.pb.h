@@ -1500,6 +1500,10 @@ class Tick final :
   // accessors -------------------------------------------------------
 
   enum : int {
+    kBidPricesFieldNumber = 9,
+    kAskPricesFieldNumber = 10,
+    kBidVolumesFieldNumber = 11,
+    kAskVolumesFieldNumber = 12,
     kLastPriceFieldNumber = 2,
     kBidPriceFieldNumber = 3,
     kInstrumentIdFieldNumber = 1,
@@ -1509,6 +1513,94 @@ class Tick final :
     kRecvTsNsFieldNumber = 8,
     kAskVolumeFieldNumber = 6,
   };
+  // repeated double bid_prices = 9;
+  int bid_prices_size() const;
+  private:
+  int _internal_bid_prices_size() const;
+  public:
+  void clear_bid_prices();
+  private:
+  double _internal_bid_prices(int index) const;
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< double >&
+      _internal_bid_prices() const;
+  void _internal_add_bid_prices(double value);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< double >*
+      _internal_mutable_bid_prices();
+  public:
+  double bid_prices(int index) const;
+  void set_bid_prices(int index, double value);
+  void add_bid_prices(double value);
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< double >&
+      bid_prices() const;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< double >*
+      mutable_bid_prices();
+
+  // repeated double ask_prices = 10;
+  int ask_prices_size() const;
+  private:
+  int _internal_ask_prices_size() const;
+  public:
+  void clear_ask_prices();
+  private:
+  double _internal_ask_prices(int index) const;
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< double >&
+      _internal_ask_prices() const;
+  void _internal_add_ask_prices(double value);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< double >*
+      _internal_mutable_ask_prices();
+  public:
+  double ask_prices(int index) const;
+  void set_ask_prices(int index, double value);
+  void add_ask_prices(double value);
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< double >&
+      ask_prices() const;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< double >*
+      mutable_ask_prices();
+
+  // repeated int32 bid_volumes = 11;
+  int bid_volumes_size() const;
+  private:
+  int _internal_bid_volumes_size() const;
+  public:
+  void clear_bid_volumes();
+  private:
+  int32_t _internal_bid_volumes(int index) const;
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >&
+      _internal_bid_volumes() const;
+  void _internal_add_bid_volumes(int32_t value);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >*
+      _internal_mutable_bid_volumes();
+  public:
+  int32_t bid_volumes(int index) const;
+  void set_bid_volumes(int index, int32_t value);
+  void add_bid_volumes(int32_t value);
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >&
+      bid_volumes() const;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >*
+      mutable_bid_volumes();
+
+  // repeated int32 ask_volumes = 12;
+  int ask_volumes_size() const;
+  private:
+  int _internal_ask_volumes_size() const;
+  public:
+  void clear_ask_volumes();
+  private:
+  int32_t _internal_ask_volumes(int index) const;
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >&
+      _internal_ask_volumes() const;
+  void _internal_add_ask_volumes(int32_t value);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >*
+      _internal_mutable_ask_volumes();
+  public:
+  int32_t ask_volumes(int index) const;
+  void set_ask_volumes(int index, int32_t value);
+  void add_ask_volumes(int32_t value);
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >&
+      ask_volumes() const;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >*
+      mutable_ask_volumes();
+
   // double last_price = 2;
   void clear_last_price();
   double last_price() const;
@@ -1589,6 +1681,12 @@ class Tick final :
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
   struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::RepeatedField< double > bid_prices_;
+    ::PROTOBUF_NAMESPACE_ID::RepeatedField< double > ask_prices_;
+    ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t > bid_volumes_;
+    mutable std::atomic<int> _bid_volumes_cached_byte_size_;
+    ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t > ask_volumes_;
+    mutable std::atomic<int> _ask_volumes_cached_byte_size_;
     double last_price_;
     double bid_price_;
     uint32_t instrument_id_;
@@ -9366,6 +9464,9 @@ class ManualOrderRequest final :
 
   enum : int {
     kSideFieldNumber = 2,
+    kOrderTypeFieldNumber = 6,
+    kPriceTypeFieldNumber = 7,
+    kVolumeConditionFieldNumber = 8,
     kInstrumentIdFieldNumber = 1,
     kVolumeFieldNumber = 4,
     kPriceFieldNumber = 3,
@@ -9383,6 +9484,48 @@ class ManualOrderRequest final :
   const std::string& _internal_side() const;
   inline PROTOBUF_ALWAYS_INLINE void _internal_set_side(const std::string& value);
   std::string* _internal_mutable_side();
+  public:
+
+  // string order_type = 6;
+  void clear_order_type();
+  const std::string& order_type() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_order_type(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_order_type();
+  PROTOBUF_NODISCARD std::string* release_order_type();
+  void set_allocated_order_type(std::string* order_type);
+  private:
+  const std::string& _internal_order_type() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_order_type(const std::string& value);
+  std::string* _internal_mutable_order_type();
+  public:
+
+  // string price_type = 7;
+  void clear_price_type();
+  const std::string& price_type() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_price_type(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_price_type();
+  PROTOBUF_NODISCARD std::string* release_price_type();
+  void set_allocated_price_type(std::string* price_type);
+  private:
+  const std::string& _internal_price_type() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_price_type(const std::string& value);
+  std::string* _internal_mutable_price_type();
+  public:
+
+  // string volume_condition = 8 [deprecated = true];
+  PROTOBUF_DEPRECATED void clear_volume_condition();
+  PROTOBUF_DEPRECATED const std::string& volume_condition() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  PROTOBUF_DEPRECATED void set_volume_condition(ArgT0&& arg0, ArgT... args);
+  PROTOBUF_DEPRECATED std::string* mutable_volume_condition();
+  PROTOBUF_NODISCARD PROTOBUF_DEPRECATED std::string* release_volume_condition();
+  PROTOBUF_DEPRECATED void set_allocated_volume_condition(std::string* volume_condition);
+  private:
+  const std::string& _internal_volume_condition() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_volume_condition(const std::string& value);
+  std::string* _internal_mutable_volume_condition();
   public:
 
   // uint32 instrument_id = 1;
@@ -9436,6 +9579,9 @@ class ManualOrderRequest final :
     ::PROTOBUF_NAMESPACE_ID::internal::HasBits<1> _has_bits_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr side_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr order_type_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr price_type_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr volume_condition_;
     uint32_t instrument_id_;
     int32_t volume_;
     double price_;
@@ -11854,6 +12000,194 @@ inline void Tick::_internal_set_recv_ts_ns(int64_t value) {
 inline void Tick::set_recv_ts_ns(int64_t value) {
   _internal_set_recv_ts_ns(value);
   // @@protoc_insertion_point(field_set:omm.proto.Tick.recv_ts_ns)
+}
+
+// repeated double bid_prices = 9;
+inline int Tick::_internal_bid_prices_size() const {
+  return _impl_.bid_prices_.size();
+}
+inline int Tick::bid_prices_size() const {
+  return _internal_bid_prices_size();
+}
+inline void Tick::clear_bid_prices() {
+  _impl_.bid_prices_.Clear();
+}
+inline double Tick::_internal_bid_prices(int index) const {
+  return _impl_.bid_prices_.Get(index);
+}
+inline double Tick::bid_prices(int index) const {
+  // @@protoc_insertion_point(field_get:omm.proto.Tick.bid_prices)
+  return _internal_bid_prices(index);
+}
+inline void Tick::set_bid_prices(int index, double value) {
+  _impl_.bid_prices_.Set(index, value);
+  // @@protoc_insertion_point(field_set:omm.proto.Tick.bid_prices)
+}
+inline void Tick::_internal_add_bid_prices(double value) {
+  _impl_.bid_prices_.Add(value);
+}
+inline void Tick::add_bid_prices(double value) {
+  _internal_add_bid_prices(value);
+  // @@protoc_insertion_point(field_add:omm.proto.Tick.bid_prices)
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< double >&
+Tick::_internal_bid_prices() const {
+  return _impl_.bid_prices_;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< double >&
+Tick::bid_prices() const {
+  // @@protoc_insertion_point(field_list:omm.proto.Tick.bid_prices)
+  return _internal_bid_prices();
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< double >*
+Tick::_internal_mutable_bid_prices() {
+  return &_impl_.bid_prices_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< double >*
+Tick::mutable_bid_prices() {
+  // @@protoc_insertion_point(field_mutable_list:omm.proto.Tick.bid_prices)
+  return _internal_mutable_bid_prices();
+}
+
+// repeated double ask_prices = 10;
+inline int Tick::_internal_ask_prices_size() const {
+  return _impl_.ask_prices_.size();
+}
+inline int Tick::ask_prices_size() const {
+  return _internal_ask_prices_size();
+}
+inline void Tick::clear_ask_prices() {
+  _impl_.ask_prices_.Clear();
+}
+inline double Tick::_internal_ask_prices(int index) const {
+  return _impl_.ask_prices_.Get(index);
+}
+inline double Tick::ask_prices(int index) const {
+  // @@protoc_insertion_point(field_get:omm.proto.Tick.ask_prices)
+  return _internal_ask_prices(index);
+}
+inline void Tick::set_ask_prices(int index, double value) {
+  _impl_.ask_prices_.Set(index, value);
+  // @@protoc_insertion_point(field_set:omm.proto.Tick.ask_prices)
+}
+inline void Tick::_internal_add_ask_prices(double value) {
+  _impl_.ask_prices_.Add(value);
+}
+inline void Tick::add_ask_prices(double value) {
+  _internal_add_ask_prices(value);
+  // @@protoc_insertion_point(field_add:omm.proto.Tick.ask_prices)
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< double >&
+Tick::_internal_ask_prices() const {
+  return _impl_.ask_prices_;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< double >&
+Tick::ask_prices() const {
+  // @@protoc_insertion_point(field_list:omm.proto.Tick.ask_prices)
+  return _internal_ask_prices();
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< double >*
+Tick::_internal_mutable_ask_prices() {
+  return &_impl_.ask_prices_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< double >*
+Tick::mutable_ask_prices() {
+  // @@protoc_insertion_point(field_mutable_list:omm.proto.Tick.ask_prices)
+  return _internal_mutable_ask_prices();
+}
+
+// repeated int32 bid_volumes = 11;
+inline int Tick::_internal_bid_volumes_size() const {
+  return _impl_.bid_volumes_.size();
+}
+inline int Tick::bid_volumes_size() const {
+  return _internal_bid_volumes_size();
+}
+inline void Tick::clear_bid_volumes() {
+  _impl_.bid_volumes_.Clear();
+}
+inline int32_t Tick::_internal_bid_volumes(int index) const {
+  return _impl_.bid_volumes_.Get(index);
+}
+inline int32_t Tick::bid_volumes(int index) const {
+  // @@protoc_insertion_point(field_get:omm.proto.Tick.bid_volumes)
+  return _internal_bid_volumes(index);
+}
+inline void Tick::set_bid_volumes(int index, int32_t value) {
+  _impl_.bid_volumes_.Set(index, value);
+  // @@protoc_insertion_point(field_set:omm.proto.Tick.bid_volumes)
+}
+inline void Tick::_internal_add_bid_volumes(int32_t value) {
+  _impl_.bid_volumes_.Add(value);
+}
+inline void Tick::add_bid_volumes(int32_t value) {
+  _internal_add_bid_volumes(value);
+  // @@protoc_insertion_point(field_add:omm.proto.Tick.bid_volumes)
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >&
+Tick::_internal_bid_volumes() const {
+  return _impl_.bid_volumes_;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >&
+Tick::bid_volumes() const {
+  // @@protoc_insertion_point(field_list:omm.proto.Tick.bid_volumes)
+  return _internal_bid_volumes();
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >*
+Tick::_internal_mutable_bid_volumes() {
+  return &_impl_.bid_volumes_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >*
+Tick::mutable_bid_volumes() {
+  // @@protoc_insertion_point(field_mutable_list:omm.proto.Tick.bid_volumes)
+  return _internal_mutable_bid_volumes();
+}
+
+// repeated int32 ask_volumes = 12;
+inline int Tick::_internal_ask_volumes_size() const {
+  return _impl_.ask_volumes_.size();
+}
+inline int Tick::ask_volumes_size() const {
+  return _internal_ask_volumes_size();
+}
+inline void Tick::clear_ask_volumes() {
+  _impl_.ask_volumes_.Clear();
+}
+inline int32_t Tick::_internal_ask_volumes(int index) const {
+  return _impl_.ask_volumes_.Get(index);
+}
+inline int32_t Tick::ask_volumes(int index) const {
+  // @@protoc_insertion_point(field_get:omm.proto.Tick.ask_volumes)
+  return _internal_ask_volumes(index);
+}
+inline void Tick::set_ask_volumes(int index, int32_t value) {
+  _impl_.ask_volumes_.Set(index, value);
+  // @@protoc_insertion_point(field_set:omm.proto.Tick.ask_volumes)
+}
+inline void Tick::_internal_add_ask_volumes(int32_t value) {
+  _impl_.ask_volumes_.Add(value);
+}
+inline void Tick::add_ask_volumes(int32_t value) {
+  _internal_add_ask_volumes(value);
+  // @@protoc_insertion_point(field_add:omm.proto.Tick.ask_volumes)
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >&
+Tick::_internal_ask_volumes() const {
+  return _impl_.ask_volumes_;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >&
+Tick::ask_volumes() const {
+  // @@protoc_insertion_point(field_list:omm.proto.Tick.ask_volumes)
+  return _internal_ask_volumes();
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >*
+Tick::_internal_mutable_ask_volumes() {
+  return &_impl_.ask_volumes_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >*
+Tick::mutable_ask_volumes() {
+  // @@protoc_insertion_point(field_mutable_list:omm.proto.Tick.ask_volumes)
+  return _internal_mutable_ask_volumes();
 }
 
 // -------------------------------------------------------------------
@@ -17789,6 +18123,156 @@ inline void ManualOrderRequest::_internal_set_book_id(uint32_t value) {
 inline void ManualOrderRequest::set_book_id(uint32_t value) {
   _internal_set_book_id(value);
   // @@protoc_insertion_point(field_set:omm.proto.ManualOrderRequest.book_id)
+}
+
+// string order_type = 6;
+inline void ManualOrderRequest::clear_order_type() {
+  _impl_.order_type_.ClearToEmpty();
+}
+inline const std::string& ManualOrderRequest::order_type() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ManualOrderRequest.order_type)
+  return _internal_order_type();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void ManualOrderRequest::set_order_type(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.order_type_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:omm.proto.ManualOrderRequest.order_type)
+}
+inline std::string* ManualOrderRequest::mutable_order_type() {
+  std::string* _s = _internal_mutable_order_type();
+  // @@protoc_insertion_point(field_mutable:omm.proto.ManualOrderRequest.order_type)
+  return _s;
+}
+inline const std::string& ManualOrderRequest::_internal_order_type() const {
+  return _impl_.order_type_.Get();
+}
+inline void ManualOrderRequest::_internal_set_order_type(const std::string& value) {
+  
+  _impl_.order_type_.Set(value, GetArenaForAllocation());
+}
+inline std::string* ManualOrderRequest::_internal_mutable_order_type() {
+  
+  return _impl_.order_type_.Mutable(GetArenaForAllocation());
+}
+inline std::string* ManualOrderRequest::release_order_type() {
+  // @@protoc_insertion_point(field_release:omm.proto.ManualOrderRequest.order_type)
+  return _impl_.order_type_.Release();
+}
+inline void ManualOrderRequest::set_allocated_order_type(std::string* order_type) {
+  if (order_type != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.order_type_.SetAllocated(order_type, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.order_type_.IsDefault()) {
+    _impl_.order_type_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.ManualOrderRequest.order_type)
+}
+
+// string price_type = 7;
+inline void ManualOrderRequest::clear_price_type() {
+  _impl_.price_type_.ClearToEmpty();
+}
+inline const std::string& ManualOrderRequest::price_type() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ManualOrderRequest.price_type)
+  return _internal_price_type();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void ManualOrderRequest::set_price_type(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.price_type_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:omm.proto.ManualOrderRequest.price_type)
+}
+inline std::string* ManualOrderRequest::mutable_price_type() {
+  std::string* _s = _internal_mutable_price_type();
+  // @@protoc_insertion_point(field_mutable:omm.proto.ManualOrderRequest.price_type)
+  return _s;
+}
+inline const std::string& ManualOrderRequest::_internal_price_type() const {
+  return _impl_.price_type_.Get();
+}
+inline void ManualOrderRequest::_internal_set_price_type(const std::string& value) {
+  
+  _impl_.price_type_.Set(value, GetArenaForAllocation());
+}
+inline std::string* ManualOrderRequest::_internal_mutable_price_type() {
+  
+  return _impl_.price_type_.Mutable(GetArenaForAllocation());
+}
+inline std::string* ManualOrderRequest::release_price_type() {
+  // @@protoc_insertion_point(field_release:omm.proto.ManualOrderRequest.price_type)
+  return _impl_.price_type_.Release();
+}
+inline void ManualOrderRequest::set_allocated_price_type(std::string* price_type) {
+  if (price_type != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.price_type_.SetAllocated(price_type, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.price_type_.IsDefault()) {
+    _impl_.price_type_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.ManualOrderRequest.price_type)
+}
+
+// string volume_condition = 8 [deprecated = true];
+inline void ManualOrderRequest::clear_volume_condition() {
+  _impl_.volume_condition_.ClearToEmpty();
+}
+inline const std::string& ManualOrderRequest::volume_condition() const {
+  // @@protoc_insertion_point(field_get:omm.proto.ManualOrderRequest.volume_condition)
+  return _internal_volume_condition();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void ManualOrderRequest::set_volume_condition(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.volume_condition_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:omm.proto.ManualOrderRequest.volume_condition)
+}
+inline std::string* ManualOrderRequest::mutable_volume_condition() {
+  std::string* _s = _internal_mutable_volume_condition();
+  // @@protoc_insertion_point(field_mutable:omm.proto.ManualOrderRequest.volume_condition)
+  return _s;
+}
+inline const std::string& ManualOrderRequest::_internal_volume_condition() const {
+  return _impl_.volume_condition_.Get();
+}
+inline void ManualOrderRequest::_internal_set_volume_condition(const std::string& value) {
+  
+  _impl_.volume_condition_.Set(value, GetArenaForAllocation());
+}
+inline std::string* ManualOrderRequest::_internal_mutable_volume_condition() {
+  
+  return _impl_.volume_condition_.Mutable(GetArenaForAllocation());
+}
+inline std::string* ManualOrderRequest::release_volume_condition() {
+  // @@protoc_insertion_point(field_release:omm.proto.ManualOrderRequest.volume_condition)
+  return _impl_.volume_condition_.Release();
+}
+inline void ManualOrderRequest::set_allocated_volume_condition(std::string* volume_condition) {
+  if (volume_condition != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.volume_condition_.SetAllocated(volume_condition, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.volume_condition_.IsDefault()) {
+    _impl_.volume_condition_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:omm.proto.ManualOrderRequest.volume_condition)
 }
 
 // -------------------------------------------------------------------

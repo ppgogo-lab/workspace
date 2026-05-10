@@ -56,6 +56,31 @@ bool instrument_in_scope(const TradingEngine& engine,
     return engine.instruments()[instrument_id].product_index == request_product_index;
 }
 
+std::string normalize_condition_text(std::string value) {
+    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::toupper(ch));
+    });
+    return value;
+}
+
+OrderPriceType parse_order_price_type(std::string value) {
+    value = normalize_condition_text(std::move(value));
+    return value == "MARKET" ? OrderPriceType::Market : OrderPriceType::Limit;
+}
+
+OrderType parse_order_type(std::string value, std::string legacy_volume_condition) {
+    value = normalize_condition_text(std::move(value));
+    legacy_volume_condition = normalize_condition_text(std::move(legacy_volume_condition));
+    if (value == "FOK") return OrderType::FOK;
+    if (value == "FAK") return OrderType::FAK;
+    if (value == "IOC") {
+        return (legacy_volume_condition == "ALL" || legacy_volume_condition == "CV")
+            ? OrderType::FOK
+            : OrderType::FAK;
+    }
+    return OrderType::GFD;
+}
+
 const char* order_status_name(OrderStatus status) noexcept {
     switch (status) {
     case OrderStatus::New: return "New";
@@ -277,6 +302,12 @@ void populate_tick(const TopOfBookTick& tick, omm::proto::Tick* msg) {
     msg->set_ask_volume(tick.ask_volume[0]);
     msg->set_exchange_ts_ns(tick.exchange_ts_ns);
     msg->set_recv_ts_ns(tick.recv_ts_ns);
+    for (int i = 0; i < 5; ++i) {
+        msg->add_bid_prices(tick.bid_price[i]);
+        msg->add_ask_prices(tick.ask_price[i]);
+        msg->add_bid_volumes(tick.bid_volume[i]);
+        msg->add_ask_volumes(tick.ask_volume[i]);
+    }
 }
 
 omm::proto::RiskAlert::AlertType alert_type_to_proto(SystemAlertType type) noexcept {
@@ -701,7 +732,8 @@ public:
         Order o{};
         o.instrument_id   = static_cast<uint16_t>(req->instrument_id());
         o.side            = (req->side() == "sell") ? Side::Sell : Side::Buy;
-        o.order_type      = OrderType::Limit;
+        o.price_type      = parse_order_price_type(req->price_type());
+        o.order_type      = parse_order_type(req->order_type(), req->volume_condition());
         o.price           = req->price();
         o.volume          = req->volume();
         o.client_order_id = engine_.next_manual_order_id();

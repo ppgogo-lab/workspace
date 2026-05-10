@@ -102,7 +102,8 @@ void SimpleMMStrategy::send_hedge_order(uint16_t underlying_id,
     o.instrument_id   = underlying_id;
     o.product_index   = product_idx_;
     o.side            = side;
-    o.order_type      = OrderType::Market;
+    o.price_type      = OrderPriceType::Market;
+    o.order_type      = OrderType::GFD;
     o.volume          = qty;
     o.is_hedge        = true;
     o.send_ts         = get_monotonic_ns();

@@ -58,6 +58,7 @@ if(WIN32)
       src/gui/trader_main_window_blotter_models.cpp
       src/gui/trader_main_window_arbitrage_panel.cpp
       src/gui/trader_main_window_controls_panel.cpp
+      src/gui/trader_main_window_order_depth_panel.cpp
       src/gui/trader_main_window_panel_interactions.cpp
       src/gui/trader_main_window_positions_panel.cpp
       src/gui/trader_main_window_primary_interactions.cpp
@@ -410,6 +411,7 @@ if(OMM_BUILD_TRADER_GUI)
       src/gui/trader_main_window_blotter_models.cpp
       src/gui/trader_main_window_arbitrage_panel.cpp
       src/gui/trader_main_window_controls_panel.cpp
+      src/gui/trader_main_window_order_depth_panel.cpp
       src/gui/trader_main_window_panel_interactions.cpp
       src/gui/trader_main_window_positions_panel.cpp
       src/gui/trader_main_window_primary_interactions.cpp

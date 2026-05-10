@@ -162,7 +162,8 @@ protected:
                     hedge.instrument_id = i;
                     hedge.product_index = product_idx_;
                     hedge.side = (portfolio_delta_ > 0) ? Side::Sell : Side::Buy;
-                    hedge.order_type = OrderType::Market;
+                    hedge.price_type = OrderPriceType::Market;
+                    hedge.order_type = OrderType::GFD;
                     hedge.volume = static_cast<Volume>(std::fabs(portfolio_delta_));
                     hedge.is_hedge = true;
                     hedge.send_ts = event.trigger_ts_ns;

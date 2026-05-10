@@ -80,6 +80,8 @@ struct TraderMainWindow::Impl {
     uint32_t selected_product_index{0};
     uint32_t selected_instrument_id{0};
     uint32_t selected_manual_book_id{0};
+    uint32_t selected_order_depth_instrument_id{0};
+    uint32_t selected_order_depth_book_id{0};
     uint32_t selected_pms_book_id{0};
     uint32_t selected_pms_product_index{0xFFFFFFFFu};
     int selected_arb_strategy_type{static_cast<int>(omm::proto::ARB_STRATEGY_NONE)};
@@ -91,6 +93,7 @@ struct TraderMainWindow::Impl {
     uint32_t params_editor_product_index{0xFFFFFFFFu};
     QString last_risk_action_text{"Risk thresholds not updated yet"};
     QString last_operator_status_text{"Waiting for login"};
+    QString last_order_depth_message{"Waiting for order depth"};
     QString last_login_username;
     OrderBlotterModel* order_blotter_model{nullptr};
     QuoteBlotterModel* quote_blotter_model{nullptr};
